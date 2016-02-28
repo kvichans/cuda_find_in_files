@@ -1,0 +1,11 @@
+[info]
+title=Find in Files
+desc=Shows dialog "Find in Files" to search text in many files, and show results in "Find Results" panel
+type=cudatext-plugin
+subdir=cuda_find_in_files
+
+[item1]
+section=commands
+caption=Find in Files\Dialog
+method=show_dlg
+
