@@ -85,7 +85,7 @@ class Command:
         sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
     
         DLG_W0, \
-        DLG_H0  = (700, 315)
+        DLG_H0  = (700, 325)
         TXT_W   = 380
 
         what_s  = what
@@ -134,36 +134,36 @@ class Command:
                      +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=TXT_W    ,items=what_l                           )] # 
                                                 
                      +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&In files:')        ,hint=mask_h)] # &i
-                     +[dict(cid='incl',tp='cb'      ,t=GAP+25       ,l=cmb_l    ,w=TXT_W    ,items=incl_l                           )] # 
+                     +[dict(cid='incl',tp='cb'      ,t=GAP+27       ,l=cmb_l    ,w=TXT_W    ,items=incl_l                           )] # 
                     +([] if wo_excl else []                         
                      +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('Not in files:')     ,hint=mask_h)] # 
-                     +[dict(cid='excl',tp='cb'      ,t=GAP+50       ,l=cmb_l    ,w=TXT_W    ,items=excl_l                           )] # 
+                     +[dict(cid='excl',tp='cb'      ,t=GAP+54       ,l=cmb_l    ,w=TXT_W    ,items=excl_l                           )] # 
                     )                                               
                      +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                      +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap=_('I&n folder:')                   )] # &n
-                     +[dict(cid='fold',tp='cb'      ,t=gap1+75      ,l=cmb_l    ,w=TXT_W    ,items=fold_l                           )] # 
+                     +[dict(cid='fold',tp='cb'      ,t=gap1+81      ,l=cmb_l    ,w=TXT_W    ,items=fold_l                           )] # 
                      +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Browse...')        ,hint=brow_h)] # &b
                      +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
-                     +[dict(cid='dept',tp='cb-ro'   ,t=gap1+100     ,l=tl2_l    ,w=120      ,items=dept_l                           )] # 
+                     +[dict(cid='dept',tp='cb-ro'   ,t=gap1+108     ,l=tl2_l    ,w=120      ,items=dept_l                           )] # 
                     +([] if wo_repl else []                         
                      +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
-                     +[dict(cid='repl',tp='cb'      ,t=gap1+125     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
+                     +[dict(cid='repl',tp='cb'      ,t=gap1+135     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
                      +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Re&place')                      )] # &p
                     )                                               
                     +([] if wo_adva else  []                        
-                     +[dict(           tp='lb'      ,t=gap2+160     ,l=GAP      ,w=150      ,cap=_('== Adv. report options ==')     )] # 
+                     +[dict(           tp='lb'      ,t=gap2+170     ,l=GAP      ,w=150      ,cap=_('== Adv. report options ==')     )] # 
                      +[dict(           tp='lb'      ,tid='cllc'     ,l=GAP      ,w=100      ,cap=_('Co&llect:')                     )] # &l
-                     +[dict(cid='cllc',tp='cb-ro'   ,t=gap2+180     ,l=GAP+100  ,r=cmb_l    ,items=cllc_l                           )] # 
-                     +[dict(cid='join',tp='ch'      ,t=gap2+205     ,l=GAP      ,w=150      ,cap=join_c                             )] # &d
-                     +[dict(cid='toed',tp='ch'      ,t=gap2+230     ,l=GAP      ,w=150      ,cap=toed_c                             )] # 
+                     +[dict(cid='cllc',tp='cb-ro'   ,t=gap2+190     ,l=GAP+100  ,r=cmb_l    ,items=cllc_l                           )] # 
+                     +[dict(cid='join',tp='ch'      ,t=gap2+217     ,l=GAP      ,w=150      ,cap=join_c                             )] # &d
+                     +[dict(cid='toed',tp='ch'      ,t=gap2+244     ,l=GAP      ,w=150      ,cap=toed_c                             )] # 
                                                 
-                     +[dict(           tp='lb'      ,t=gap2+160     ,l=tl2_l    ,w=150      ,cap=_('== Adv. find options ==')       )] # 
+                     +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. find options ==')       )] # 
                      +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
-                     +[dict(cid='skip',tp='cb-ro'   ,t=gap2+180     ,l=tl2_l+100,w=150      ,items=skip_l                           )] # 
+                     +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190     ,l=tl2_l+100,w=150      ,items=skip_l                           )] # 
                      +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100      ,cap=_('S&ort file list:')              )] # &o
-                     +[dict(cid='sort',tp='cb-ro'   ,t=gap2+205     ,l=tl2_l+100,w=150      ,items=sort_l                           )] # 
+                     +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217     ,l=tl2_l+100,w=150      ,items=sort_l                           )] # 
                      +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('Firsts (&0=all):')  ,hint=frst_h)] # &0
-                     +[dict(cid='frst',tp='ed'      ,t=gap2+230     ,l=tl2_l+100,w=150                                              )] # 
+                     +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,w=150                                              )] # 
                     )                                                                                                               
                      +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-50 ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Help...')                      )] # &h
                      +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Find'),props='1'                )] #    default
@@ -413,7 +413,7 @@ RegExp tips:
                     ,progressor = ProgressAndBreak()
                     )
                 pass;          #LOG and log('frs={}, rpt_data=\n{}',frs, pf(rpt_data))
-                app.msg_status(_('Not matches found')
+                app.msg_status(_('Matches not found')
                                 if 0==len(rpt_data) else
                                f(_('Found {} match(es) in {} file(s)'), frs, len(rpt_data))
                             )
@@ -647,6 +647,12 @@ def collect_files(how_walk, progressor=None):
             progressor.set_progress(_('Collect files in: ')+dirpath)
             if progressor.need_break():
                 return []
+        if hidn:
+            # Cut hidden dirs
+            dir4cut  = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
+            for dirname in dir4cut:
+                dirnames.remove(dirname)
+            
         walk_depth  = 0 \
                         if os.path.samefile(dirpath, root) else \
                       1+os.path.relpath(dirpath, root).count(os.sep)
@@ -698,7 +704,7 @@ if os.name == 'nt':
     import ctypes
     FILE_ATTRIBUTE_HIDDEN = 0x02
 def is_hidden_file(path):
-    """ Cross platform hidden file test  """
+    """ Cross platform hidden file/dir test  """
     if os.name == 'nt':
         # For Windows use file attribute.
         attrs   = ctypes.windll.kernel32.GetFileAttributesW(path)
