@@ -79,7 +79,8 @@ class Command:
         pset_h  = _('Save options for future.\rRestore saved options')
         dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 level'), _('3 level'), _('4 level'), _('5 level')]
         join_c  = _('Appen&d to results')
-        toed_c  = _('Show results in editor')
+        toed_c  = _('Show in editor')
+        reed_c  = _('Reuse tab')
         cllc_l  = [_('All matches'), _('Match counts'), _('Filenames')]
         skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, Binary')]
         sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
@@ -100,6 +101,7 @@ class Command:
         cllc_s  = opts.get('cllc', stores.get('cllc', '0'))
         join_s  = opts.get('join', stores.get('join', '0'))
         toed_s  = opts.get('toed', stores.get('toed', '0'))
+        reed_s  = opts.get('reed', stores.get('reed', '0'))
         skip_s  = opts.get('skip', stores.get('skip', '0'))
         sort_s  = opts.get('sort', stores.get('sort', '0'))
         frst_s  = opts.get('frst', stores.get('frst', '0'))
@@ -115,7 +117,7 @@ class Command:
             wo_repl = True #stores.get('wo_repl', True)
             wo_adva = stores.get('wo_adva', True)
            #c_more  = 'Show "Ad&v"' if wo_adva else 'Hide "Ad&v"'
-            c_more  = _('Mor&e>>') if wo_adva else _('L&ess<<')
+            c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
             gap1    = (GAP- 25 if wo_excl else GAP)
             gap2    = (GAP- 25 if wo_repl else GAP)+gap1
             gap3    = (GAP-115 if wo_adva else GAP)+gap2
@@ -134,17 +136,17 @@ class Command:
                      +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=TXT_W    ,items=what_l                           )] # 
                                                 
                      +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&In files:')        ,hint=mask_h)] # &i
-                     +[dict(cid='incl',tp='cb'      ,t=GAP+27       ,l=cmb_l    ,w=TXT_W    ,items=incl_l                           )] # 
+                     +[dict(cid='incl',tp='cb'      ,t=GAP+28       ,l=cmb_l    ,w=TXT_W    ,items=incl_l                           )] # 
                     +([] if wo_excl else []                         
                      +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('Not in files:')     ,hint=mask_h)] # 
-                     +[dict(cid='excl',tp='cb'      ,t=GAP+54       ,l=cmb_l    ,w=TXT_W    ,items=excl_l                           )] # 
+                     +[dict(cid='excl',tp='cb'      ,t=GAP+56       ,l=cmb_l    ,w=TXT_W    ,items=excl_l                           )] # 
                     )                                               
                      +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                      +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap=_('I&n folder:')                   )] # &n
-                     +[dict(cid='fold',tp='cb'      ,t=gap1+81      ,l=cmb_l    ,w=TXT_W    ,items=fold_l                           )] # 
+                     +[dict(cid='fold',tp='cb'      ,t=gap1+84      ,l=cmb_l    ,w=TXT_W    ,items=fold_l                           )] # 
                      +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Browse...')        ,hint=brow_h)] # &b
                      +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
-                     +[dict(cid='dept',tp='cb-ro'   ,t=gap1+108     ,l=tl2_l    ,w=120      ,items=dept_l                           )] # 
+                     +[dict(cid='dept',tp='cb-ro'   ,t=gap1+112     ,l=tl2_l    ,w=120      ,items=dept_l                           )] # 
                     +([] if wo_repl else []                         
                      +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
                      +[dict(cid='repl',tp='cb'      ,t=gap1+135     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
@@ -156,6 +158,7 @@ class Command:
                      +[dict(cid='cllc',tp='cb-ro'   ,t=gap2+190     ,l=GAP+100  ,r=cmb_l    ,items=cllc_l                           )] # 
                      +[dict(cid='join',tp='ch'      ,t=gap2+217     ,l=GAP      ,w=150      ,cap=join_c                             )] # &d
                      +[dict(cid='toed',tp='ch'      ,t=gap2+244     ,l=GAP      ,w=150      ,cap=toed_c                             )] # 
+                     +[dict(cid='reed',tp='ch'      ,t=gap2+244     ,l=GAP+150  ,w=150      ,cap=reed_c                             )] # 
                                                 
                      +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. find options ==')       )] # 
                      +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
@@ -189,6 +192,7 @@ class Command:
                 vals.update(dict( cllc=cllc_s
                                  ,join=join_s
                                  ,toed=toed_s
+                                 ,reed=reed_s
                                  ,skip=skip_s
                                  ,sort=sort_s
                                  ,frst=frst_s))
@@ -211,6 +215,7 @@ class Command:
                 cllc_s  = vals['cllc']
                 join_s  = vals['join']
                 toed_s  = vals['toed']
+                reed_s  = vals['reed']
                 skip_s  = vals['skip']
                 sort_s  = vals['sort']
                 frst_s  = vals['frst']
@@ -228,6 +233,7 @@ class Command:
             stores['cllc']  = cllc_s
             stores['join']  = join_s
             stores['toed']  = toed_s
+            stores['reed']  = reed_s
             stores['skip']  = skip_s
             stores['sort']  = sort_s
             stores['frst']  = frst_s
@@ -283,6 +289,7 @@ RegExp tips:
                     cllc_s = ps.get('cllc', cllc_s)
                     join_s = ps.get('join', join_s)
                     toed_s = ps.get('toed', toed_s)
+                    reed_s = ps.get('reed', reed_s)
                     skip_s = ps.get('skip', skip_s)
                     sort_s = ps.get('sort', sort_s)
                     frst_s = ps.get('frst', frst_s)
@@ -321,6 +328,7 @@ RegExp tips:
                         ps['cllc']  = cllc_s
                         ps['join']  = join_s
                         ps['toed']  = toed_s
+                        ps['reed']  = reed_s
                         pass
                     pset_l += [ps]
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
@@ -384,32 +392,35 @@ RegExp tips:
                     app.msg_box(_('Fix quotes in "Not in files"'), app.MB_OK) 
                     focused     = 'excl'
                     continue#while
+                how_walk   =dict(
+                     root       =fold_s
+                    ,file_incl  =incl_s
+                    ,file_excl  =excl_s
+                    ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', ...]
+                    ,skip_hidn  =skip_s in ('1', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
+                    ,skip_binr  =skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
+                    ,sort_type  =apx.icase( sort_s=='0','' 
+                                           ,sort_s=='1','date,desc' 
+                                           ,sort_s=='2','date,asc' ,'') # [' ', 'By date, from newest', 'By date, from oldest']
+                    ,only_frst  =int(frst_s)
+                    )
+                what_find  =dict(
+                     find       =what_s
+                    ,mult       =False
+                    ,reex       =reex01=='1'
+                    ,case       =case01=='1'
+                    ,word       =word01=='1'
+                    )
+                what_save  =dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
+                     count      = btn=='!cnt' or  cllc_s!='2'
+                    ,place      = btn!='!cnt' and cllc_s=='0'
+                    ,fragm      = btn!='!cnt' and cllc_s=='0' #and reex01=='0'
+                    ,lines      = btn!='!cnt' and cllc_s=='0' #and reex01=='0'
+                    )
                 rpt_data, frs= find_in_files(
-                     how_walk   =dict(
-                         root       =fold_s
-                        ,file_incl  =incl_s
-                        ,file_excl  =excl_s
-                        ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', ...]
-                        ,skip_hidn  =skip_s in ('1', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
-                        ,skip_binr  =skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
-                        ,sort_type  =apx.icase( sort_s=='0','' 
-                                               ,sort_s=='1','date,desc' 
-                                               ,sort_s=='2','date,asc' ,'') # [' ', 'By date, from newest', 'By date, from oldest']
-                        ,only_frst  =int(frst_s)
-                        )
-                    ,what_find  =dict(
-                         find       =what_s
-                        ,mult       =False
-                        ,reex       =reex01=='1'
-                        ,case       =case01=='1'
-                        ,word       =word01=='1'
-                        )
-                    ,what_save  =dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
-                         count      = btn=='!cnt' or  cllc_s!='2'
-                        ,place      = btn!='!cnt' and cllc_s=='0'
-                        ,fragm      = btn!='!cnt' and cllc_s=='0' #and reex01=='0'
-                        ,lines      = btn!='!cnt' and cllc_s=='0' #and reex01=='0'
-                        )
+                     how_walk   = how_walk
+                    ,what_find  = what_find
+                    ,what_save  = what_save
                     ,progressor = ProgressAndBreak()
                     )
                 pass;          #LOG and log('frs={}, rpt_data=\n{}',frs, pf(rpt_data))
@@ -417,11 +428,53 @@ RegExp tips:
                                 if 0==len(rpt_data) else
                                f(_('Found {} match(es) in {} file(s)'), frs, len(rpt_data))
                             )
+                if '1'==vals['toed']:
+                    self._report_to_tab(rpt_data, dict(frs=frs, files=len(rpt_data)), '1'==vals['reed'], '1'==vals['join'], how_walk, what_find, what_save)
            #while
 #       return (res, data)
 
 #       open(cfg_json, 'w').write(json.dumps(stores, indent=4))
        #def show_dlg
+
+    last_ed_num = 0
+    def _report_to_tab(self, rpt_data, rpt_stat, reed_tab, join_to_end, how_walk, what_find, what_save):
+        pass;                   LOG and log('join_to_end={}',join_to_end)
+        rpt_ed  = None
+        start_ln= 0
+        if reed_tab or join_to_end:
+            for h in app.ed_handles(): 
+                try_ed   = app.Editor(h)
+                if try_ed.get_prop( app.PROP_TAG) == 'f-in-f_'+str(self.last_ed_num):
+                    rpt_ed  = try_ed
+                    if join_to_end:
+                        start_ln= -1
+                    else:
+                        rpt_ed.set_text_all('')
+                    pass;      LOG and log('found ed',)
+                    break #for h
+        if rpt_ed is None:
+            app.file_open('')
+            self.last_ed_num += 1
+            ed.set_prop(            app.PROP_TAG,    'f-in-f_'+str(self.last_ed_num))
+            rpt_ed  = ed
+
+        rpt_ed.set_text_line(start_ln, f(_('Search for "{}" in folder "{}" ({} matches in {} files)')
+                                ,what_find['find']
+                                ,how_walk['root']
+                                ,rpt_stat['frs']
+                                ,rpt_stat['files']))
+        for path_d in rpt_data:
+            path    = path_d['file']
+            if False:pass
+            elif 1==len(path_d):
+                rpt_ed.set_text_line(    -1, path)
+            elif 2==len(path_d):
+                rpt_ed.set_text_line(    -1, f('{}: #{}', path, path_d['count']))
+            elif 3==len(path_d):
+                items   = path_d['items']
+                for item in items:
+                    rpt_ed.set_text_line(-1, f(_('{}({}): {}'), path, 1+item.get('row',0), item.get('line','')))
+       #def _report_to_tab
    #class Commandc
 
 def add_to_history(val, lst, max_len, unicase=True):
@@ -443,6 +496,7 @@ def add_to_history(val, lst, max_len, unicase=True):
     return lst
    #def add_to_history
 
+##############################################################################
 def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None):
     """ Scan files by how_walk with keys:
             'root'         !str
@@ -519,7 +573,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None
     pass;                   t=log('?? files (==',) if LOG else 0
     for path_n, path in enumerate(files):
         if progressor and 0==path_n%17:
-            progressor.set_progress(f('Seaching: {}% (found {} match(es) in {} file(s))', round(100*path_n/len(files),2), rsp_frs, len(rsp_l)))
+            progressor.set_progress(f('Seaching: {}% (found {} match(es) in {} file(s))', int(100*path_n/len(files)), rsp_frs, len(rsp_l)))
+#           progressor.set_progress(f('Seaching: {}% (found {} match(es) in {} file(s))', round(100*path_n/len(files),2), rsp_frs, len(rsp_l)))
             if progressor.need_break():
                 break#for path
         try:
@@ -545,15 +600,17 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None
                         continue#for path
                     items   = []
                     for mtch in mtchs:
-                        item    =       dict(place=(ln, mtch.start(), mtch.end()-mtch.start()))
+                        ln      = 0#??
+                        item    =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
                         if fra_b:
                             item.update(dict(fragm=mtch.group()))
                         if lin_b:
-                            item.update(dict(lines=line))
+                            line    = ''#??
+                            item.update(dict(line=line))
                         items  += [item]
-                    rsp_l  += [dict(file=path
-                                ,count=count
-                                ,items=items)]
+                    rsp_l  += [dict( file=path
+                                    ,count=count
+                                    ,items=items)]
                     rsp_frs+= count
                     continue#for path
                #if not mult_b:
@@ -569,24 +626,24 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None
                     else:
                         for mtch in mtchs:
                             count  += 1
-                            item    =       dict(place=(ln, mtch.start(), mtch.end()-mtch.start()))
+                            item    =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
                             if fra_b:
                                 item.update(dict(fragm=mtch.group()))
                             if lin_b:
-                                item.update(dict(lines=line))
+                                item.update(dict(line=line))
                             items  += [item]
                    #for line
                 if not count:
                     continue#for path
                 if not plc_b:
                     # Only counting
-                    rsp_l  += [dict(file=path
-                                ,count=count)]
+                    rsp_l  += [dict( file=path
+                                    ,count=count)]
                     rsp_frs+= count
                 else:
-                    rsp_l  += [dict(file=path
-                                ,count=count
-                                ,items=items)]
+                    rsp_l  += [dict( file=path
+                                    ,count=count
+                                    ,items=items)]
                     rsp_frs+= count
                #with h_path
         except Exception as ex:
