@@ -438,7 +438,7 @@ RegExp tips:
 
     last_ed_num = 0
     def _report_to_tab(self, rpt_data, rpt_stat, reed_tab, join_to_end, how_walk, what_find, what_save):
-        pass;                   LOG and log('join_to_end={}',join_to_end)
+        pass;                  #LOG and log('join_to_end={}',join_to_end)
         rpt_ed  = None
         start_ln= 0
         if reed_tab or join_to_end:
@@ -450,7 +450,7 @@ RegExp tips:
                         start_ln= -1
                     else:
                         rpt_ed.set_text_all('')
-                    pass;      LOG and log('found ed',)
+                    pass;      #LOG and log('found ed',)
                     break #for h
         if rpt_ed is None:
             app.file_open('')
@@ -473,9 +473,27 @@ RegExp tips:
             elif 3==len(path_d):
                 items   = path_d['items']
                 for item in items:
-                    rpt_ed.set_text_line(-1, f(_('{}({}): {}'), path, 1+item.get('row',0), item.get('line','')))
+                    prefix  = f('{}({}): ', path, 1+item.get('row',0))
+                    rpt_ed.set_text_line(-1, f('{}{}', prefix, item.get('line','')))
+                    new_row = rpt_ed.get_line_count()-2
+                    pass;       LOG and log('len(prefix)={}',len(prefix))
+                    pass;       LOG and log('new_row={}',(new_row))
+                    if 'col' in item and 'ln' in item:
+                        import cudatext_colors as clrs
+                        color_bg= rpt_ed.get_prop(app.PROP_COLOR, clrs.COLOR_ID_TextBg)
+                        # 1=solid, 2=dash, 3=solid 2pixel, 4=dotted, 5=rounded, 6=wave
+                        rpt_ed.attr(app.MARKERS_ADD
+                                , x=item['col']+len(prefix), y=new_row, len=item['ln']
+                                , border_left   =0
+                                , border_right  =0
+                                , border_down   =4
+                                , border_up     =0
+                                , color_bg=color_bg)
+#                               , color_bg=0xFFFFFF)
+        pass;                  #LOG and rpt_ed.set_text_line(-1, '')
+        pass;                  #LOG and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
        #def _report_to_tab
-   #class Commandc
+   #class Command
 
 def add_to_history(val, lst, max_len, unicase=True):
     """ Add/Move val to list head.
@@ -526,18 +544,18 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None
             ,{file:'path'
              ,count:int                 if what_save['count']
              ,items:[
-                ,place:(row,col,len)    if what_save['place'] and not what_save['fragm']
+                {row:N,col:N,ln:N}      if what_save['place'] and not what_save['fragm']
              ]}
             ,{file:'path'
              ,count:int                 if what_save['count']
              ,items:[
-                ,place:(row,col,len)    if what_save['place']
-                ,fragm:'text'           if what_save['fragm']
+                {row:N,col:N,ln:N       if what_save['place']
+                ,fragm:'text'}          if what_save['fragm']
              }
             ,{file:'path'
              ,count:int                 if what_save['count']
              ,items:[
-                {place:(row,col,len)    if what_save['place']
+                {row:N,col:N,ln:N       if what_save['place']
                 ,fragm:'text'           if what_save['fragm']
                 ,lines:'line'           if what_save['lines']
                 }
