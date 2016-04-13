@@ -7,6 +7,6 @@ homepage=https://github.com/kvichans/cuda_find_in_files
 
 [item1]
 section=commands
-caption=Find in Files\Dialog
+caption=Find in Files
 method=show_dlg
 

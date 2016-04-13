@@ -2,7 +2,6 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.1.1 2016-04-08'
 ToDo: (see end of file)
 '''
 
@@ -428,8 +427,8 @@ RegExp tips:
                                 if 0==len(rpt_data) else
                                f(_('Found {} match(es) in {} file(s)'), frs, len(rpt_data))
                             )
-                if '1'==vals['toed']:
-                    self._report_to_tab(rpt_data, dict(frs=frs, files=len(rpt_data)), '1'==vals['reed'], '1'==vals['join'], how_walk, what_find, what_save)
+                if '1'==toed_s:
+                    self._report_to_tab(rpt_data, dict(frs=frs, files=len(rpt_data)), '1'==reed_s, '1'==join_s, how_walk, what_find, what_save)
            #while
 #       return (res, data)
 
@@ -457,6 +456,11 @@ RegExp tips:
             self.last_ed_num += 1
             ed.set_prop(            app.PROP_TAG,    'f-in-f_'+str(self.last_ed_num))
             rpt_ed  = ed
+        else:
+            rpt_ed.focus()
+
+        if reed_tab or not join_to_end:
+            rpt_ed.attr(app.MARKERS_DELETE_ALL)
 
         rpt_ed.set_text_line(start_ln, f(_('Search for "{}" in folder "{}" ({} matches in {} files)')
                                 ,what_find['find']
@@ -476,20 +480,13 @@ RegExp tips:
                     prefix  = f('{}({}): ', path, 1+item.get('row',0))
                     rpt_ed.set_text_line(-1, f('{}{}', prefix, item.get('line','')))
                     new_row = rpt_ed.get_line_count()-2
-                    pass;       LOG and log('len(prefix)={}',len(prefix))
-                    pass;       LOG and log('new_row={}',(new_row))
+                    pass;      #LOG and log('len(prefix)={}',len(prefix))
+                    pass;      #LOG and log('new_row={}',(new_row))
                     if 'col' in item and 'ln' in item:
-                        import cudatext_colors as clrs
-                        color_bg= rpt_ed.get_prop(app.PROP_COLOR, clrs.COLOR_ID_TextBg)
-                        # 1=solid, 2=dash, 3=solid 2pixel, 4=dotted, 5=rounded, 6=wave
                         rpt_ed.attr(app.MARKERS_ADD
                                 , x=item['col']+len(prefix), y=new_row, len=item['ln']
-                                , border_left   =0
-                                , border_right  =0
-                                , border_down   =4
-                                , border_up     =0
-                                , color_bg=color_bg)
-#                               , color_bg=0xFFFFFF)
+                                , border_down=4  # 1=solid, 2=dash, 3=solid 2pixel, 4=dotted, 5=rounded, 6=wave
+                                )
         pass;                  #LOG and rpt_ed.set_text_line(-1, '')
         pass;                  #LOG and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
        #def _report_to_tab
