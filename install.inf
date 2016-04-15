@@ -5,8 +5,37 @@ type=cudatext-plugin
 subdir=cuda_find_in_files
 homepage=https://github.com/kvichans/cuda_find_in_files
 
-[item1]
+[item99]
 section=commands
-caption=Find in Files
+caption=&Find in Files\&Dialog
 method=show_dlg
 
+[item11]
+section=commands
+caption=&Find in Files\Navigate by result (to &same group)
+method=nav_to_src_same
+;menu=0
+
+[item121]
+section=commands
+caption=&Find in Files\Navigate by result (to &next group)
+method=nav_to_src_next
+;menu=0
+
+[item122]
+section=commands
+caption=&Find in Files\Navigate by result (to &prev group)
+method=nav_to_src_prev
+;menu=0
+
+[item131]
+section=commands
+caption=&Find in Files\Navigate by result (to &next group, activate)
+method=nav_to_src_next_act
+;menu=0
+
+[item132]
+section=commands
+caption=&Find in Files\Navigate by result (to &prev group, activate)
+method=nav_to_src_prev_act
+;menu=0
