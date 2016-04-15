@@ -476,6 +476,7 @@ RegExp tips:
             rpt_ed  = ed
         else:
             rpt_ed.focus()
+        rpt_ed.set_prop(app.PROP_LEXER_FILE, 'Search results')  #??
 
         start_ln= 0
         if join_to_end:
@@ -844,7 +845,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None
                 items   = []
                 lines   = h_path.readlines()
                 for ln,line in enumerate(lines):
-                    line    = line.rstrip(c10, c13)
+                    line    = line.rstrip(c10+c13)
                     mtchs   = list(pttn.finditer(line))
                     if not plc_b:
                         # Only counting
