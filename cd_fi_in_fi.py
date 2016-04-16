@@ -65,25 +65,25 @@ class Command:
         max_hist= apx.get_opt('ui_max_history_edits', 20)
         cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
         stores  = apx._json_loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
-        mask_h  = _('Space separated masks.\rQuote as "m a s k" if space is need.\rUse ? for any character and * for any fragment')
+        mask_h  = _('Space separated masks.\rDouble-quote mask, if space need.\rUse ? for any char and * for any fragment.')
 #       incl_h  = mask_h+_('\rEmpty equal *.*')
-        reex_h  = _('Reg.ex')
+        reex_h  = _('Regular expression')
         case_h  = _('Case sensitive')
         word_h  = _('Whole words')
         brow_h  = _('Select folder')
         curr_h  = _('Use folder of current file')
-        more_h  = _('Show/Hide advance options')
+        more_h  = _('Show/Hide advanced options')
         adju_h  = _('Change dialog layout')
-        frst_h  = _('Use only N first files for searching')
-        enco_h  = f(_('Which encoding will be use\rLocale = {}'), locale.getpreferredencoding())
-        coun_h  = _('Only count matches in files.\rAs Find with Collect:"Match counts".')
-        pset_h  = _('Save options for future.\rRestore saved options')
+        frst_h  = _('Search only inside N first found files')
+        enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
+        coun_h  = _('Count matches only.\rIt is like doing Find with option Collect:"Match counts".')
+        pset_h  = _('Save options for future.\rRestore saved options.')
         dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 level'), _('3 level'), _('4 level'), _('5 level')]
         enco_l  = [_('Locale only (fastest)'), _('UTF-8 only (fastest)'), _('UTF-8->Local'), _('UTF-8->Locale->detect (slow)'), _('Detect all (slowest)')]
-        join_c  = _('Appen&d to results')
+        join_c  = _('Appen&d results')
         toed_c  = _('Show in editor')
-        reed_c  = _('Reuse tab')
-        cllc_l  = [_('All matches'), _('Match counts'), _('Filenames')]
+        reed_c  = _('Reuse editor tab')
+        cllc_l  = [_('Normal matches'), _('Count only'), _('Filenames only')]
         skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, Binary')]
         sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
     
