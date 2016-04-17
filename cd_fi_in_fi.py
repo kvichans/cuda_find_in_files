@@ -29,7 +29,7 @@ _       = get_translation(__file__)
 class ProgressAndBreak:
     """ Helper for 
         - Show progress of working
-        - Allow user to break long procces
+        - Allow user to stop long procces
     """
     def __init__(self):
         app.app_proc(app.PROC_SET_ESCAPE, '0')
@@ -40,7 +40,7 @@ class ProgressAndBreak:
     def need_break(self, with_request=False, process_hint=''):
         was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
         if was_esc and with_request:
-            if app.ID_YES == app.msg_box(_('Break process?'), app.MB_YESNO):
+            if app.ID_YES == app.msg_box(_('Cancel search?'), app.MB_YESNO):
                 return True
             app.app_proc(app.PROC_SET_ESCAPE, '0')
             was_esc = False
@@ -65,7 +65,7 @@ class Command:
         max_hist= apx.get_opt('ui_max_history_edits', 20)
         cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
         stores  = apx._json_loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
-        mask_h  = _('Space separated masks.\rDouble-quote mask, if space need.\rUse ? for any char and * for any fragment.')
+        mask_h  = _('Space-separated file masks.\rDouble-quote mask, which needs space-char.\rUse ? for any character and * for any fragment.')
 #       incl_h  = mask_h+_('\rEmpty equal *.*')
         reex_h  = _('Regular expression')
         case_h  = _('Case sensitive')
@@ -76,15 +76,15 @@ class Command:
         adju_h  = _('Change dialog layout')
         frst_h  = _('Search only inside N first found files')
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
-        coun_h  = _('Count matches only.\rIt is like doing Find with option Collect:"Match counts".')
+        coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
         pset_h  = _('Save options for future.\rRestore saved options.')
-        dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 level'), _('3 level'), _('4 level'), _('5 level')]
+        dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
         enco_l  = [_('Locale only (fastest)'), _('UTF-8 only (fastest)'), _('UTF-8->Local'), _('UTF-8->Locale->detect (slow)'), _('Detect all (slowest)')]
         join_c  = _('Appen&d results')
         toed_c  = _('Show in editor')
         reed_c  = _('Reuse editor tab')
         cllc_l  = [_('Normal matches'), _('Count only'), _('Filenames only')]
-        skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, Binary')]
+        skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, binary')]
         sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
     
         DLG_W0, \
@@ -163,12 +163,12 @@ class Command:
                      +[dict(cid='toed',tp='ch'      ,t=gap2+244     ,l=GAP      ,w=150      ,cap=toed_c                             )] # 
                      +[dict(cid='reed',tp='ch'      ,t=gap2+244     ,l=GAP+150  ,w=150      ,cap=reed_c                             )] # 
                                                 
-                     +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. find options ==')       )] # 
+                     +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. search options ==')       )] # 
                      +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
                      +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190     ,l=tl2_l+100,w=180      ,items=skip_l                           )] # 
                      +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100      ,cap=_('S&ort file list:')              )] # &o
                      +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217     ,l=tl2_l+100,w=180      ,items=sort_l                           )] # 
-                     +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('Firsts (&0=all):')  ,hint=frst_h)] # &0
+                     +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('First items (&0=all):')  ,hint=frst_h)] # &0
                      +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,w=180                                              )] # 
                      +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings:')        ,hint=enco_h)] # 
                      +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l                           )] # 
@@ -265,15 +265,15 @@ RegExp tips:
 - Format for found groups in Replace: \1
 ''')
                 DW, DH      = 600, 400
-                dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
+                dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,
                      [dict(cid='htx',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,1,1'                                  ) #  ro,mono,border
-                     ,dict(          tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('RegExp on python.org'),props=RE_DOC_REF )
+                     ,dict(          tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. help on python.org'),props=RE_DOC_REF )
                      ,dict(cid='-'  ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
                      ], dict(htx=HELP_BODY), focus_cid='htx')
                 continue#while
             if btn=='pres':
                 pset_l  = stores.setdefault('pset', [])
-                dlg_list= [f(_('Restore: {nm}\t[{il}]In files, [{fo}]In folder, [{aa}].*aAw, [{fn}]Adv. find, [{rp}]Adv. report')
+                dlg_list= [f(_('Restore: {nm}\t[{il}]In files, [{fo}]In folder, [{aa}].*aAw, [{fn}]Adv. search, [{rp}]Adv. report')
                             ,nm=ps['name']
                             ,il=ps.get('_il_',' ')
                             ,fo=ps.get('_fo_',' ')
@@ -310,7 +310,7 @@ RegExp tips:
                         , _('Save "In files"/"Not in files" (0/1)')                   , '1'   # 1
                         , _('Save "In folder"/"Subfolders" (0/1)')                    , '1'   # 2
                         , _('Save ".*"/"aA"/"w" (0/1)')                               , '1'   # 3
-                        , _('Save (Adv. find) "Skip"/"Sort"/"Firsts/Encodings" (0/1)'), '1'   # 4
+                        , _('Save (Adv. search) "Skip"/"Sort"/"Firsts/Encodings" (0/1)'), '1'   # 4
                         , _('Save (Adv. report) "Collect"/"Append"/"In editor" (0/1)'), '1'   # 5
                         )
                     if not custs or not custs[0] :   continue#while
@@ -351,9 +351,9 @@ RegExp tips:
                 continue#while
             if btn=='cust':
                 custs   = app.dlg_input_ex(3, _('Adjust dialog')
-                    , _('Width edit Find/Replace/... (min 300)'), str(stores.get('wd_txts', 300))
-                    , _('Width button Browse/Help    (min 100)'), str(stores.get('wd_btns', 100))
-                    , _('Show Exclude masks (0/1)')             , str(0 if stores.get('wo_excl', True) else 1)
+                    , _('Width of edits Find/Replace (min 300)'), str(stores.get('wd_txts', 300))
+                    , _('Width of buttons Browse/Help (min 100)'), str(stores.get('wd_btns', 100))
+                    , _('Show exclude masks (0/1)')             , str(0 if stores.get('wo_excl', True) else 1)
 #                   , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
                     )
                 if custs is not None:
@@ -377,30 +377,30 @@ RegExp tips:
                 pass
             elif btn in ('!cnt', '!fnd'):
                 if not what_s:
-                    app.msg_box(_('Fill "Find"'), app.MB_OK) 
+                    app.msg_box(_('Fill the "Find" field'), app.MB_OK) 
                     focused     = 'what'
                     continue#while
                 if reex01=='1':
                     try:
                         re.compile(what_s)
                     except Exception as ex:
-                        app.msg_box(f(_('Set proper "Find"\n\nError:\n{}'),ex), app.MB_OK) 
+                        app.msg_box(f(_('Set correct "Find" reg.ex.\n\nError:\n{}'),ex), app.MB_OK) 
                         focused     = 'what'
                         continue#while
                 if not fold_s or not os.path.isdir(fold_s):
-                    app.msg_box(_('Set real "In folder"'), app.MB_OK) 
+                    app.msg_box(_('Set existing "In folder" value'), app.MB_OK) 
                     focused     = 'fold'
                     continue#while
                 if not incl_s:
-                    app.msg_box(_('Fill "In files"'), app.MB_OK) 
+                    app.msg_box(_('Fill the "In files" field'), app.MB_OK) 
                     focused     = 'incl'
                     continue#while
                 if 0 != incl_s.count('"')%2:
-                    app.msg_box(_('Fix quotes in "In files"'), app.MB_OK) 
+                    app.msg_box(_('Fix quotes in the "In files" field'), app.MB_OK) 
                     focused     = 'incl'
                     continue#while
                 if 0 != excl_s.count('"')%2:
-                    app.msg_box(_('Fix quotes in "Not in files"'), app.MB_OK) 
+                    app.msg_box(_('Fix quotes in the "Not in files" field'), app.MB_OK) 
                     focused     = 'excl'
                     continue#while
                 how_walk   =dict(
@@ -438,7 +438,7 @@ RegExp tips:
                     ,progressor = ProgressAndBreak()
                     )
                 pass;          #LOG and log('frs={}, rpt_data=\n{}',frs, pf(rpt_data))
-                app.msg_status(_('Matches not found')
+                app.msg_status(_('No matches found')
                                 if 0==len(rpt_data) else
                                f(_('Found {} match(es) in {} file(s)'), frs, len(rpt_data))
                             )
