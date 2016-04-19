@@ -1,41 +1,46 @@
 [info]
 title=Find in Files
-desc=Shows dialog "Find in Files" to search text in many files, and show results in "Find Results" panel
+desc=Shows dialog "Find in Files" to search for text in multiple files, and show results in editor tab
 type=cudatext-plugin
 subdir=cuda_find_in_files
 homepage=https://github.com/kvichans/cuda_find_in_files
 
-[item99]
+[item1]
 section=commands
 caption=&Find in Files\&Dialog
 method=show_dlg
 
-[item11]
+[item2]
 section=commands
-caption=&Find in Files\Navigate by result (to &same group)
+caption=&Find in Files\-
+method=nn
+
+[item10]
+section=commands
+caption=&Find in Files\Navigate to source, to &same group
 method=nav_to_src_same
 ;menu=0
 
-[item121]
+[item11]
 section=commands
-caption=&Find in Files\Navigate by result (to &next group)
+caption=&Find in Files\Navigate to source, to &next group
 method=nav_to_src_next
 ;menu=0
 
-[item122]
+[item12]
 section=commands
-caption=&Find in Files\Navigate by result (to &prev group)
+caption=&Find in Files\Navigate to source, to &prev group
 method=nav_to_src_prev
 ;menu=0
 
-[item131]
+[item13]
 section=commands
-caption=&Find in Files\Navigate by result (to &next group, activate)
+caption=&Find in Files\Navigate to source, to &next group, activate
 method=nav_to_src_next_act
 ;menu=0
 
-[item132]
+[item14]
 section=commands
-caption=&Find in Files\Navigate by result (to &prev group, activate)
+caption=&Find in Files\Navigate to source, to &prev group, activate
 method=nav_to_src_prev_act
 ;menu=0
