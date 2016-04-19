@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.4.1 2016-04-13'
+    '0.4.5 2016-04-19'
 ToDo: (see end of file)
 '''
 
@@ -49,24 +49,14 @@ class ProgressAndBreak:
 
 GAP     = 5
 
+TOTB_USED_TAB    = _('<used/new tab>')
+TOTB_NEW_TAB     = _('<new tab>')
 class Command:
-#   def show_dlg(self):
-#       self.show_dlg_( what='step', opts={
-#           'repl':'other',
-#           'incl':'*.*',
-#           'excl':'',
-#           'fold':r'c:\temp\try-ff',
-#           'dept':-1,
-#           'case':'1',
-#           'word':'1',
-#           'reex':'1',
-#       })
     def show_dlg(self, what='', opts={}):
         max_hist= apx.get_opt('ui_max_history_edits', 20)
         cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
         stores  = apx._json_loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
         mask_h  = _('Space-separated file masks.\rDouble-quote mask, which needs space-char.\rUse ? for any character and * for any fragment.')
-#       incl_h  = mask_h+_('\rEmpty equal *.*')
         reex_h  = _('Regular expression')
         case_h  = _('Case sensitive')
         word_h  = _('Whole words')
@@ -80,16 +70,19 @@ class Command:
         pset_h  = _('Save options for future.\rRestore saved options.')
         dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
         enco_l  = [_('Locale only (fastest)'), _('UTF-8 only (fastest)'), _('UTF-8->Local'), _('UTF-8->Locale->detect (slow)'), _('Detect all (slowest)')]
-        join_c  = _('Appen&d results')
-        toed_c  = _('Show in editor')
+#       join_c  = _('Appen&d results')
+#       totb_c  = _('Show in')
+        toed_c  = _('Show in tab')
         reed_c  = _('Reuse editor tab')
         cllc_l  = [_('Normal matches'), _('Count only'), _('Filenames only')]
-        skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, binary')]
+        skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, Binary')]
         sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
+        shtp_l  = [_("Compact"), _('Middle'), _('Sparse')]
     
         DLG_W0, \
         DLG_H0  = (700, 355)
-        TXT_W   = 380
+        TXT_W0  = 400
+        BTN_W0  = 100
 
         what_s  = what
         repl_s  = opts.get('repl', '')
@@ -102,8 +95,10 @@ class Command:
         dept_n  = opts.get('dept', stores.get('dept',  0)-1)+1
         cllc_s  = opts.get('cllc', stores.get('cllc', '0'))
         join_s  = opts.get('join', stores.get('join', '0'))
+        totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = str(min(1, int(totb_s)))
         toed_s  = opts.get('toed', stores.get('toed', '0'))
         reed_s  = opts.get('reed', stores.get('reed', '0'))
+        shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
         skip_s  = opts.get('skip', stores.get('skip', '0'))
         sort_s  = opts.get('sort', stores.get('sort', '0'))
         frst_s  = opts.get('frst', stores.get('frst', '0'))
@@ -115,6 +110,7 @@ class Command:
             excl_l  = [s for s in stores.get('excl', []) if s ]
             fold_l  = [s for s in stores.get('fold', []) if s ]
             repl_l  = [s for s in stores.get('repl', []) if s ]
+            totb_l  = [TOTB_NEW_TAB, TOTB_USED_TAB] + get_live_restabs()
         
             wo_excl = stores.get('wo_excl', True)
             wo_repl = True #stores.get('wo_repl', True)
@@ -124,14 +120,16 @@ class Command:
             gap1    = (GAP- 25 if wo_excl else GAP)
             gap2    = (GAP- 25 if wo_repl else GAP)+gap1
             gap3    = (GAP-115 if wo_adva else GAP)+gap2
-            DLG_W,\
-            DLG_H   = (DLG_W0, DLG_H0+gap3)
+            TXT_W   = stores.get('wd_txts', 400)
+            BTN_W   = stores.get('wd_btns', 100)
             lbl_l   = GAP+35*3+GAP
             cmb_l   = lbl_l+100
-            tl2_l   = lbl_l+200
+            tl2_l   = lbl_l+220
             tbn_l   = cmb_l+TXT_W+GAP
+            DLG_W,\
+            DLG_H   = (tbn_l+BTN_W+GAP, DLG_H0+gap3)
 
-            cnts    = ([]                                                                                                              # gmqvxyz
+            cnts    = ([]                                                                                                              # gmqvxz
                      +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
                      +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
                      +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+35*2 ,w=35       ,cap='"&w"'                 ,hint=word_h)] # &w
@@ -147,39 +145,49 @@ class Command:
                      +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                      +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap=_('I&n folder:')                   )] # &n
                      +[dict(cid='fold',tp='cb'      ,t=gap1+84      ,l=cmb_l    ,w=TXT_W    ,items=fold_l                           )] # 
-                     +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Browse...')        ,hint=brow_h)] # &b
+                     +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=BTN_W    ,cap=_('&Browse...')        ,hint=brow_h)] # &b
+#                    +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Browse...')        ,hint=brow_h)] # &b
                      +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
                      +[dict(cid='dept',tp='cb-ro'   ,t=gap1+112     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
                     +([] if wo_repl else []                         
                      +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
                      +[dict(cid='repl',tp='cb'      ,t=gap1+135     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
-                     +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Re&place')                      )] # &p
+                     +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Re&place')                      )] # &p
+#                    +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Re&place')                      )] # &p
                     )                                               
                     +([] if wo_adva else  []                        
                      +[dict(           tp='lb'      ,t=gap2+170     ,l=GAP      ,w=150      ,cap=_('== Adv. report options ==')     )] # 
                      +[dict(           tp='lb'      ,tid='cllc'     ,l=GAP      ,w=100      ,cap=_('Co&llect:')                     )] # &l
-                     +[dict(cid='cllc',tp='cb-ro'   ,t=gap2+190     ,l=GAP+100  ,r=cmb_l    ,items=cllc_l                           )] # 
-                     +[dict(cid='join',tp='ch'      ,t=gap2+217     ,l=GAP      ,w=150      ,cap=join_c                             )] # &d
-                     +[dict(cid='toed',tp='ch'      ,t=gap2+244     ,l=GAP      ,w=150      ,cap=toed_c                             )] # 
-                     +[dict(cid='reed',tp='ch'      ,t=gap2+244     ,l=GAP+150  ,w=150      ,cap=reed_c                             )] # 
+                     +[dict(cid='cllc',tp='cb-ro'   ,t=gap2+190     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
+                     +[dict(           tp='lb'      ,tid='totb'     ,l=GAP      ,w=100      ,cap=_('Show in&:')                     )] # &:
+                     +[dict(cid='totb',tp='cb-ro'   ,t=gap2+217     ,l=GAP+80   ,r=cmb_l    ,items=totb_l                           )] # 
+                     +[dict(cid='join',tp='ch'      ,t=gap2+244     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
+                     +[dict(           tp='lb'      ,tid='shtp'     ,l=GAP      ,w=100      ,cap=_('Tree t&ype:')                   )] # &y
+                     +[dict(cid='shtp',tp='cb-ro'   ,t=gap2+271     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l           ,en='0'         )] # 
+                     +[dict(cid='toed',tp='ch'      ,t=gap2+298     ,l=GAP      ,w=150      ,cap=toed_c             ,en='0'         )] # 
+                     +[dict(cid='reed',tp='ch'      ,t=gap2+298     ,l=GAP+150  ,w=150      ,cap=reed_c             ,en='0'         )] # 
                                                 
-                     +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. search options ==')       )] # 
+                     +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. search options ==')     )] # 
                      +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
                      +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190     ,l=tl2_l+100,w=180      ,items=skip_l                           )] # 
                      +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100      ,cap=_('S&ort file list:')              )] # &o
                      +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217     ,l=tl2_l+100,w=180      ,items=sort_l                           )] # 
-                     +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('First items (&0=all):')  ,hint=frst_h)] # &0
+                     +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('Firsts (&0=all):')  ,hint=frst_h)] # &0
                      +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,w=180                                              )] # 
                      +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings:')        ,hint=enco_h)] # 
-                     +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l                           )] # 
+                     +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l           ,en='0'         )] # 
                     )                                                                                                               
-                     +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-50 ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Help...')                      )] # &h
-                     +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Find'),props='1'                )] #    default
-                     +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Coun&t')            ,hint=coun_h)] # &t
+                     +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-50 ,l=tbn_l    ,w=BTN_W    ,cap=_('&Help...')                      )] # &h
+#                    +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-50 ,l=tbn_l    ,r=DLG_W-GAP,cap=_('&Help...')                      )] # &h
+                     +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Find'),props='1'                )] #    default
+#                    +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Find'),props='1'                )] #    default
+                     +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Coun&t')            ,hint=coun_h)] # &t
+#                    +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Coun&t')            ,hint=coun_h)] # &t
                      +[dict(cid='more',tp='bt'      ,t=DLG_H-GAP-25 ,l=GAP      ,w=35*3     ,cap=c_more                 ,hint=more_h)] # &e
                      +[dict(cid='cust',tp='bt'      ,t=DLG_H-GAP-25 ,l=GAP*2+35*3,w=35*3    ,cap=_('Ad&just...')        ,hint=adju_h)] # &j
                      +[dict(cid='pres',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-95 ,w=90       ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
-                     +[dict(cid='-'   ,tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Close')                         )] # 
+                     +[dict(cid='-'   ,tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l    ,w=BTN_W    ,cap=_('Close')                         )] # 
+#                    +[dict(cid='-'   ,tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l    ,r=DLG_W-GAP,cap=_('Close')                         )] # 
                     )
             vals    =       dict( reex=reex01
                                  ,case=case01
@@ -196,8 +204,10 @@ class Command:
             if not wo_adva:
                 vals.update(dict( cllc=cllc_s
                                  ,join=join_s
-                                 ,toed=toed_s
-                                 ,reed=reed_s
+                                     ,toed=toed_s
+                                     ,reed=reed_s
+                                 ,totb=totb_s
+                                 ,shtp=shtp_s
                                  ,skip=skip_s
                                  ,sort=sort_s
                                  ,frst=frst_s
@@ -221,6 +231,8 @@ class Command:
             if not wo_adva:     
                 cllc_s  = vals['cllc']
                 join_s  = vals['join']
+                totb_s  = vals['totb']
+                shtp_s  = vals['shtp']
                 toed_s  = vals['toed']
                 reed_s  = vals['reed']
                 skip_s  = vals['skip']
@@ -240,32 +252,36 @@ class Command:
             stores['repl']  = add_to_history(repl_s, stores.get('repl', []), max_hist, unicase=False)
             stores['cllc']  = cllc_s
             stores['join']  = join_s
+            stores['totb']  = str(min(1, int(totb_s)))
+            stores['shtp']  = shtp_s
             stores['toed']  = toed_s
             stores['reed']  = reed_s
             stores['skip']  = skip_s
             stores['sort']  = sort_s
             stores['frst']  = frst_s
             stores['enco']  = enco_s
+            stores.pop('toed',None)
+            stores.pop('reed',None)
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             
             if btn=='help':
                 l           = '\n'
                 RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
-                HELP_BODY   = _(
-r'''Masks "In file" and "Not in file" can use 
+                HELP_BODY   = _(r'''
+Masks "In file" and "Not in file" can use 
     ?       for any single symbol,
     *       for everything (may be empty),
     [seq]   any character in seq,
     [!seq]  any character not in seq. 
 Option "w" is ignored if 
-    option ".*" turns on.
+    option ".*" turns on,
     "Find" contains not only letters, digits and "_".
-Long-term searching can be interrupted with Esc 
-RegExp tips:
-- Format for found groups in Replace: \1
-''')
+Long-term searching can be interrupted with Esc.
+''').strip()
+#Reg.ex. tips:
+#- Format for found groups in Replace: \1
                 DW, DH      = 600, 400
-                dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,
+                dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
                      [dict(cid='htx',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,1,1'                                  ) #  ro,mono,border
                      ,dict(          tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. help on python.org'),props=RE_DOC_REF )
                      ,dict(cid='-'  ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
@@ -297,6 +313,8 @@ RegExp tips:
                     word01 = ps.get('word', word01)
                     cllc_s = ps.get('cllc', cllc_s)
                     join_s = ps.get('join', join_s)
+                    totb_s = ps.get('totb', totb_s);    totb_s = str(min(1, int(totb_s)))
+                    shtp_s = ps.get('shtp', shtp_s)
                     toed_s = ps.get('toed', toed_s)
                     reed_s = ps.get('reed', reed_s)
                     skip_s = ps.get('skip', skip_s)
@@ -306,12 +324,12 @@ RegExp tips:
                     app.msg_status(_('Restore preset: ')+ps['name'])
                 else:
                     custs   = app.dlg_input_ex(6, _('Save preset')
-                        , _('Preset name')                                            , f(_('Preset #{}'), 1+len(pset_l))
-                        , _('Save "In files"/"Not in files" (0/1)')                   , '1'   # 1
-                        , _('Save "In folder"/"Subfolders" (0/1)')                    , '1'   # 2
-                        , _('Save ".*"/"aA"/"w" (0/1)')                               , '1'   # 3
-                        , _('Save (Adv. search) "Skip"/"Sort"/"Firsts/Encodings" (0/1)'), '1'   # 4
-                        , _('Save (Adv. report) "Collect"/"Append"/"In editor" (0/1)'), '1'   # 5
+                        , _('Preset name')                                                  , f(_('Preset #{}'), 1+len(pset_l))
+                        , _('Save "In files"/"Not in files" (0/1)')                         , '1'   # 1
+                        , _('Save "In folder"/"Subfolders" (0/1)')                          , '1'   # 2
+                        , _('Save ".*"/"aA"/"w" (0/1)')                                     , '1'   # 3
+                        , _('Save (Adv. search) "Skip"/"Sort"/"Firsts/Encodings" (0/1)')    , '1'   # 4
+                        , _('Save (Adv. report) "Collect"/"Append"/"In Tab"/"Tree" (0/1)')  , '1'   # 5
                         )
                     if not custs or not custs[0] :   continue#while
                     ps      = OrdDict([('name',custs[0])])
@@ -338,6 +356,8 @@ RegExp tips:
                         ps['_rp_']  = 'x'
                         ps['cllc']  = cllc_s
                         ps['join']  = join_s
+                        ps['totb']  = str(min(1, int(totb_s)))
+                        ps['shtp']  = shtp_s
                         ps['toed']  = toed_s
                         ps['reed']  = reed_s
                         pass
@@ -351,16 +371,16 @@ RegExp tips:
                 continue#while
             if btn=='cust':
                 custs   = app.dlg_input_ex(3, _('Adjust dialog')
-                    , _('Width of edits Find/Replace (min 300)'), str(stores.get('wd_txts', 300))
-                    , _('Width of buttons Browse/Help (min 100)'), str(stores.get('wd_btns', 100))
-                    , _('Show exclude masks (0/1)')             , str(0 if stores.get('wo_excl', True) else 1)
-#                   , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
+                    , _('Width of edits Find/Replace (min 400)'), str(stores.get('wd_txts', 400))
+                    , _('Width of buttons Browse/Help (min 100)'),str(stores.get('wd_btns', 100))
+                    , _('Show Exclude masks (0/1)')             , str(0 if stores.get('wo_excl', True) else 1)
+        #                   , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
                     )
                 if custs is not None:
-                    stores['wd_txts']   = max(300, int(custs[0]))
+                    stores['wd_txts']   = max(400, int(custs[0]))
                     stores['wd_btns']   = max(100, int(custs[1]))
                     stores['wo_excl']   = (custs[2]=='0')
-#                   stores['wo_repl']   = (custs[3]=='0')
+        #                   stores['wo_repl']   = (custs[3]=='0')
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
                 continue#while
 
@@ -442,50 +462,83 @@ RegExp tips:
                                 if 0==len(rpt_data) else
                                f(_('Found {} match(es) in {} file(s)'), frs, len(rpt_data))
                             )
-                if '1'==toed_s:
-                    self._report_to_tab(rpt_data, dict(frs=frs, files=len(rpt_data)), '1'==reed_s, '1'==join_s, how_walk, what_find, what_save)
+#               if '1'==toed_s:
+                self._report_to_tab(rpt_data
+                                   ,dict(frs    =frs
+                                        ,files  =len(rpt_data)
+                                        )
+                                   ,dict(totb   =totb_l[int(totb_s)]
+                                        ,shtp   =shtp_l[int(shtp_s)]
+                                        ,join   ='1'==join_s
+                                        )
+                                   ,how_walk, what_find, what_save)
+                totb_s  = str(min(1, int(totb_s)))
            #while
-#       return (res, data)
-
-#       open(cfg_json, 'w').write(json.dumps(stores, indent=4))
        #def show_dlg
 
     last_ed_num = 0
-    def _report_to_tab(self, rpt_data, rpt_stat, reed_tab, join_to_end, how_walk, what_find, what_save):
-        pass;                  #LOG and log('join_to_end={}',join_to_end)
+    def _report_to_tab(self, rpt_data, rpt_stat, rpt_type, how_walk, what_find, what_save):
+#   def _report_to_tab(self, rpt_data, rpt_stat, reed_tab, join_to_end, how_walk, what_find, what_save):
+        pass;                  #LOG and log('rpt_type={}',rpt_type)
         rpt_ed  = None
-        if reed_tab: #or join_to_end:
+        def create_new(title_ext=''):
+            app.file_open('')
+            new_ed  = ed
+            self.last_ed_num += 1
+            new_ed.set_prop(        app.PROP_ENC,       'UTF-8')
+            new_ed.set_prop(        app.PROP_TAG,       'FiF_'+str(self.last_ed_num))
+            new_ed.set_prop(        app.PROP_TAB_TITLE, _('Results')+title_ext)  #??
+            return new_ed
+        title_ext   = f(' ({})', what_find['find'][:10])
+        if False:pass
+        elif rpt_type['totb']==TOTB_NEW_TAB:
+            pass;              #LOG and log('!new',)
+            rpt_ed  = create_new(title_ext)
+        elif rpt_type['totb']==TOTB_USED_TAB: #if reed_tab: #or join_to_end:
+            pass;              #LOG and log('!find used',)
             # Try to use prev or old
             olds    = []
             for h in app.ed_handles(): 
-                try_ed   = app.Editor(h)
-                if try_ed.get_prop( app.PROP_TAG).startswith('f-in-f_'):
-                    olds+= [(try_ed.get_prop( app.PROP_TAG), try_ed)]
-                if try_ed.get_prop( app.PROP_TAG) == 'f-in-f_'+str(self.last_ed_num):
+                try_ed  = app.Editor(h)
+                ed_tag  = try_ed.get_prop(app.PROP_TAG, '')
+                pass;          #LOG and log('tit, ed_tag={}',(try_ed.get_prop(app.PROP_TAB_TITLE), ed_tag))
+                if ed_tag.startswith('FiF_'):
+                    olds+= [(ed_tag, try_ed)]
+                if ed_tag == 'FiF_'+str(self.last_ed_num):
                     rpt_ed  = try_ed
                     pass;      #LOG and log('found ed',)
                     break #for h
+            pass;              #LOG and log('found={}',)
             if rpt_ed is None and olds:
-                rpt_ed  = max(olds)[1]
-        if rpt_ed is None:
-            # Create new
-            app.file_open('')
-            self.last_ed_num += 1
-            ed.set_prop(            app.PROP_ENC,    'UTF-8')
-            ed.set_prop(            app.PROP_TAG,    'f-in-f_'+str(self.last_ed_num))
-            rpt_ed  = ed
+                rpt_ed  = max(olds)[1]  # last used ed
+                pass;          #LOG and log('get from olds',)
         else:
-            rpt_ed.focus()
-        rpt_ed.set_prop(app.PROP_LEXER_FILE, 'Search results')  #??
+            # Try to use pointed
+            the_title   = rpt_type['totb']
+            cands       = [app.Editor(h) for h in app.ed_handles() 
+                            if app.Editor(h).get_prop(app.PROP_TAB_TITLE)==the_title]
+            rpt_ed      = cands[0] if cands else None
+            
+        rpt_ed  = create_new(title_ext) if rpt_ed is None else rpt_ed
+        rpt_ed.focus()
+        rpt_ed.set_prop(            app.PROP_LEXER_FILE, 'Search results')  #??
 
         start_ln= 0
-        if join_to_end:
+        if rpt_type['join']: #join_to_end:
             start_ln= -1
         else:
             rpt_ed.set_text_all('')
             rpt_ed.attr(app.MARKERS_DELETE_ALL)
 
-        rpt_ed.set_text_line(start_ln, f(_('+Search for "{}" in folder "{}" ({} matches in {} files)')
+        def append_line(line, to_ed=rpt_ed):
+            if to_ed.get_line_count()==1 and not to_ed.get_text_line(0):
+                # Empty doc
+                to_ed.set_text_line(0, line)
+            else:
+                to_ed.set_text_line(-1, line)
+#               to_ed.insert(0, to_ed.get_line_count(), line+'\n')
+#       rpt_ed.set_text_line(start_ln, f(_('+Search for "{}" in folder "{}" ({} matches in {} files)')
+        append_line(f(_('+Search for "{}" in folder "{}" ({} matches in {} files)')
                                 ,what_find['find']
                                 ,how_walk['root']
                                 ,rpt_stat['frs']
@@ -494,14 +547,17 @@ RegExp tips:
             path    = path_d['file']
             if False:pass
             elif 1==len(path_d):
-                rpt_ed.set_text_line(    -1, c9+'<'+path+'>')
+#               rpt_ed.set_text_line(    -1, c9+'<'+path+'>')
+                append_line(c9+'<'+path+'>')
             elif 2==len(path_d):
-                rpt_ed.set_text_line(    -1, c9+f('<{}>: #{}', path, path_d['count']))
+#               rpt_ed.set_text_line(    -1, c9+f('<{}>: #{}', path, path_d['count']))
+                append_line(c9+f('<{}>: #{}', path, path_d['count']))
             elif 3==len(path_d):
                 items   = path_d['items']
                 for item in items:
                     prefix  = c9+f('<{}({})>: ', path, 1+item.get('row',0))
-                    rpt_ed.set_text_line(-1, f('{}{}', prefix, item.get('line','')))
+#                   rpt_ed.set_text_line(-1, f('{}{}', prefix, item.get('line','')))
+                    append_line(f('{}{}', prefix, item.get('line','')))
                     new_row = rpt_ed.get_line_count()-2
                     pass;      #LOG and log('len(prefix)={}',len(prefix))
                     pass;      #LOG and log('new_row={}',(new_row))
@@ -514,11 +570,6 @@ RegExp tips:
         pass;                  #LOG and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
        #def _report_to_tab
        
-    def nav_to_src_same(self):      self._nav_to_src('same', 'move')
-    def nav_to_src_next(self):      self._nav_to_src('next', 'stay')
-    def nav_to_src_prev(self):      self._nav_to_src('prev', 'stay')
-    def nav_to_src_next_act(self):  self._nav_to_src('next', 'move')
-    def nav_to_src_prev_act(self):  self._nav_to_src('prev', 'move')
     def _nav_to_src(self, where, how_act='move'):
         """ Try to open file and navigate to row[+col+sel].
             FiF-res structure variants
@@ -626,6 +677,9 @@ RegExp tips:
                 op_ed.set_caret(cl, rw)
             else:
                 op_ed.set_caret(cl+ln, rw, cl, rw)
+            if rw!=-1:
+                top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', ed_cfg=op_ed)))
+                op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
 
             if how_act=='move':
                 op_ed.focus()
@@ -701,6 +755,14 @@ def add_to_history(val, lst, max_len, unicase=True):
     return lst
    #def add_to_history
 
+def get_live_restabs():
+    rsp = []
+    for h in app.ed_handles():
+        try_ed  = app.Editor(h)
+        if try_ed.get_prop(app.PROP_TAG).startswith('FiF'):
+            rsp+= [try_ed.get_prop(app.PROP_TAB_TITLE)]
+    return rsp
+   #def get_live_restabs
 ##############################################################################
 def find_in_files(how_walk:dict, what_find:dict, what_save:dict, progressor=None):
     """ Scan files by how_walk:
@@ -1022,9 +1084,11 @@ ToDo
 [+][kv-kv][08apr16] if []==stores.get('incl')?
 [ ][kv-kv][08apr16] Del/Edit presets
 [+][kv-kv][08apr16] status report: Found N fragments in M files
-[ ][kv-kv][14apr16] dont create new tab - reuse tab with max tag
+[+][kv-kv][14apr16] dont create new tab - reuse tab with max tag
 [ ][kv-kv][14apr16] opt: "compact output" (file:frag) or "lined" (file:\nfrag)
 [ ][a1-kv][15apr16] use ed selection for 'what'
 [ ][kv-kv][15apr16] use next group for new tab
-[ ][kv-kv][15apr16] dont fill if 0 matches
+[?][kv-kv][15apr16] dont fill if 0 matches
+[ ][kv-kv][18apr16] wait ESC when fill tab
+[ ][kv-kv][18apr16] allow dir in What (like ST)
 '''

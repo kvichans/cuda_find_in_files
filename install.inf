@@ -1,6 +1,6 @@
 [info]
 title=Find in Files
-desc=Shows dialog "Find in Files" to search for text in multiple files, and show results in editor tab
+desc=Shows dialog "Find in Files" to search text in many files, and show results in "Find Results" panel
 type=cudatext-plugin
 subdir=cuda_find_in_files
 homepage=https://github.com/kvichans/cuda_find_in_files
@@ -13,34 +13,34 @@ method=show_dlg
 [item2]
 section=commands
 caption=&Find in Files\-
-method=nn
+method=_
 
-[item10]
+[item11]
 section=commands
 caption=&Find in Files\Navigate to source, to &same group
 method=nav_to_src_same
 ;menu=0
 
-[item11]
+[item121]
 section=commands
 caption=&Find in Files\Navigate to source, to &next group
 method=nav_to_src_next
 ;menu=0
 
-[item12]
+[item122]
 section=commands
 caption=&Find in Files\Navigate to source, to &prev group
 method=nav_to_src_prev
 ;menu=0
 
-[item13]
+[item131]
 section=commands
-caption=&Find in Files\Navigate to source, to &next group, activate
+caption=&Find in Files\Navigate to source, to next group, with &activate
 method=nav_to_src_next_act
 ;menu=0
 
-[item14]
+[item132]
 section=commands
-caption=&Find in Files\Navigate to source, to &prev group, activate
+caption=&Find in Files\Navigate to source, to prev group, with a&ctivate
 method=nav_to_src_prev_act
 ;menu=0
