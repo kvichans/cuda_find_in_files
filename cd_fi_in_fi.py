@@ -60,6 +60,8 @@ SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 
 class Command:
+    def find_in_ed(self):
+        pass
     def show_dlg(self, what='', opts={}):
         max_hist= apx.get_opt('ui_max_history_edits', 20)
         cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
@@ -620,7 +622,10 @@ class Command:
                 prefix  = ''
                 new_row = -1
                 pre_rw  = -1
-                path    = '' if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL) else path
+                if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
+                    append_line(c9dt+'<'+os.path.basename(path)+'>')
+                    path= '' 
+                    c9dt= c9*(1+dept)
                 for item in items:
                     src_rw  = item.get('row', 0)
                     if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL) and \
@@ -1253,7 +1258,7 @@ ToDo
 [+][kv-kv][20apr16] msg_st('', T) 
 [ ][kv-kv][20apr16] fold old res-reports before append new
 [ ][kv-kv][21apr16] Show stage time in stat-data
-[ ][kv-kv][21apr16] Add %% to msg about stopping
+[+][kv-kv][21apr16] Add %% to msg about stopping
 [ ][kv-kv][21apr16] Hidden ops: lexers, wait 2nd+3rd ESC
 [ ][kv-kv][21apr16] Add plugin cmd "Find in cur file"
 '''
