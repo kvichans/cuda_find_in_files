@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.5.3 2016-04-22'
+    '0.5.4 2016-04-22'
 ToDo: (see end of file)
 '''
 
@@ -59,9 +59,9 @@ def fit_mark_style_for_attr(js):
     V_L     = ['solid', 'dash', '2px', 'dotted', 'rounded', 'wave']
     shex2int= lambda shexRGB: int(shexRGB[4:6]+shexRGB[2:4]+shexRGB[0:2], 16)
     kwargs  = {}
-    if js.get('bg_c', ''):      kwargs['color_bg']      = shex2int(js['bg_c'])
-    if js.get('font_c', ''):    kwargs['color_font']    = shex2int(js['font_c'])
-    if js.get('border_c', ''):  kwargs['color_border']  = shex2int(bs['border_c'])
+    if js.get('bg_c', ''):      kwargs['color_bg']      = shex2int(js['bg_c'].lstrip('#'))
+    if js.get('font_c', ''):    kwargs['color_font']    = shex2int(js['font_c'].lstrip('#'))
+    if js.get('border_c', ''):  kwargs['color_border']  = shex2int(bs['border_c'].lstrip('#'))
     if js.get('font_b', False): kwargs['font_bold']     = 1
     if js.get('font_i', False): kwargs['font_italic']   = 1
     jsbr    = js.get('border', {})
@@ -90,17 +90,21 @@ TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
 SHTP_SHORT_RCL  = _('path(r:c:l):line')
 SHTP_SHORT_0R   = _('path/(··r):line')
+SHTP_SHORT_0RC  = _('path/(··r:··c:··l):line')
 SHTP_MIDDL_R    = _('dir/file(r):line')
 SHTP_MIDDL_RCL  = _('dir/file(r:c:l):line')
 SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
-shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R, SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL]
+shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R, SHTP_SHORT_0RC, SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL]
 
 lexers_l        = apx.get_opt('fif_lexers', ['Search results', 'FiF'])
 FIF_LEXER       = select_lexer(lexers_l)
-lexers_l        = map(lambda s: s.upper(), lexers_l)
+lexers_l        = list(map(lambda s: s.upper(), lexers_l))
+USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start', False)
+USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start', False)
 ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop', False)
+REPORT_FAIL     = apx.get_opt('fif_report_no_matches', False)
 CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success', False)
 MARK_STYLE      = apx.get_opt('fif_mark_style', {'border':{'b':'dotted'}})
 MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
@@ -148,20 +152,20 @@ class Command:
                     '\r  path(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
-                    '\r      <full_path(row:col:len)>: line with ALL marked fragments'
+                    '\r      <full_path(row[:col:len])>: line with ALL marked fragments'
                     '\rAligned - report all source lines with vert-align:'
-                    '\r  path/(··r):line'
+                    '\r  path/(··r[:··c:··l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <full_path>: #count'
-                    '\r        <(  row)>: line with ALL marked fragments'
+                    '\r        <(  row[:  col:  len])>: line with ALL marked fragments'
                     '\rMiddle - report separated folders and fragments:'
                     '\r  dir/file(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <root>: #count'
                     '\r        <dir>: #count'
-                    '\r          <file.ext(row:col:len)>: line with ONE marked fragment'
+                    '\r          <file.ext(row[:col:len])>: line with ONE marked fragment'
                     '\rSparse - report separated folders and lines and fragments:'
                     '\r  dir/file/(r[:c:l]):line'
                     '\r  Tree scheme'
@@ -169,7 +173,7 @@ class Command:
                     '\r      <root>: #count'
                     '\r        <dir>: #count'
                     '\r          <file.ext>: #count'
-                    '\r            <(row:col:len)>: line with ONE marked fragment'
+                    '\r            <(row[:col:len])>: line with ONE marked fragment'
                     '\rFor sorted files only "Compact" options are used.'
                    )
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
@@ -185,11 +189,17 @@ class Command:
         TXT_W0  = 400
         BTN_W0  = 100
 
-        what_s  = what
+        what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
         repl_s  = opts.get('repl', '')
         reex01  = opts.get('reex', stores.get('reex', '0'))
         case01  = opts.get('case', stores.get('case', '0'))
         word01  = opts.get('word', stores.get('word', '0'))
+        if USE_EDFIND_OPS:
+            ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
+            # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp,  b - Back
+            reex01  = '1' if 'r' in ed_opt else '0'
+            case01  = '1' if 'c' in ed_opt else '0'
+            word01  = '1' if 'w' in ed_opt else '0'
         incl_s  = opts.get('incl', stores.get('incl',  [''])[0])
         excl_s  = opts.get('excl', stores.get('excl',  [''])[0])
         fold_s  = opts.get('fold', stores.get('fold',  [''])[0])
@@ -366,14 +376,18 @@ class Command:
         picking files, 
         finding fragments, 
         reporting.
-    ESC stop any stage. When picking and finding, ESC stop only this stage, so next stage begins.
-• Extra options for "user.json" (need restart after chanhing). Default values:
+    ESC stops any stage. When picking and finding, ESC stops only this stage, so next stage begins.
+• Extra options for "user.json" (need restart after changing). Default values:
+    // Fill Find with selection from current file when dialog starts
+    "fif_use_selection_on_start":false,
+    // Copy find-options ".*", "aA", "w" from editor find to dialog on start
+    "fif_use_edfind_opt_on_start":false,
     // ESC will stop all stages 
     "fif_esc_full_stop":false,
     // Style to mark found fragment in source line
     // Full form
     //    "fif_mark_style":{{"bg_c":"", "font_c":"", "font_b":false, "font_i":false, "border_c":"", "border":{{"l":"","r":"","b":"","t":""}}}},
-    //  Color values: "" - skip, "RRGGBB" - hex-digits
+    //  Color values: "" - skip, "#RRGGBB" - hex-digits
     //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
     "fif_mark_style":{{"border":{{"b":"dotted"}}}},
     // Close dialog if searching was success
@@ -596,6 +610,7 @@ class Command:
                             if 0==frfls else \
                           f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
                 progressor.set_progress(msg_rpt)
+                if 0==frgms and not REPORT_FAIL:    continue#while
                 self._report_to_tab(
                     rpt_data
                    ,rpt_info
@@ -605,7 +620,7 @@ class Command:
                    )
                 progressor.set_progress(msg_rpt)
                 ################################
-                if 0<frgms and CLOSE_AFTER_GOOD: break#while
+                if 0<frgms and CLOSE_AFTER_GOOD:    break#while
            #while
        #def show_dlg
 
@@ -687,14 +702,22 @@ class Command:
                                 ,rpt_info['frgms']
                                 ,rpt_info['files']))
         root    = how_walk['root']
-        rw_wd   = 6 # max rw=999 999 999
-        if shtp==SHTP_SHORT_0R:
+        rw_wd   = 0
+        cl_wd   = 0
+        ln_wd   = 0
+        if shtp in (SHTP_SHORT_0R, SHTP_SHORT_0RC):
             # Find max(len(str(row)))
             max_rw  = 0
+            max_cl  = 0
+            max_ln  = 0
             for path_d in rpt_data:
                 for item in path_d.get('items', ''):
                     max_rw  = max(max_rw, item.get('row', 0))
+                    max_cl  = max(max_cl, item.get('col', 0))
+                    max_ln  = max(max_ln, item.get('ln', 0))
             rw_wd   = len(str(max_rw))
+            cl_wd   = len(str(max_cl))
+            ln_wd   = len(str(max_ln))
         for path_n, path_d in enumerate(rpt_data):
 #
 #           pass;               break
@@ -707,7 +730,7 @@ class Command:
                     append_line(         f('\t<{}>', progressor.prefix))
                     break#for path
             path    = path_d['file']
-            if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL) and \
+            if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R, SHTP_SHORT_0RC) and \
                 path!=root:
                 path= os.path.relpath(path, root)
             dept    = 1+path_d.get('dept', 0)
@@ -722,7 +745,7 @@ class Command:
                 prefix  = ''
                 new_row = -1
                 pre_rw  = -1
-                if shtp in (SHTP_SHORT_0R):
+                if shtp in (SHTP_SHORT_0R, SHTP_SHORT_0RC):
                     append_line(c9dt+f('<{}>: #{}', path, len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
@@ -735,14 +758,21 @@ class Command:
 #                   pass;       break
 #
                     src_rw  = item.get('row', 0)
-                    if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R) and \
+                    if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R, SHTP_SHORT_0RC) and \
                         src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
                         # Add mark in old line
                         pass
                         mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                     else:
-                        if shtp in (SHTP_SHORT_0R):
-                            prefix  = c9dt+f('<{}({})>: ', path, str(1+src_rw).rjust(rw_wd, ' '))
+                        if False:pass
+                        elif shtp in (SHTP_SHORT_0R):
+                            prefix  = c9dt+f('<{}({})>: ',       path, str(1+src_rw).rjust(rw_wd, ' '))
+                        elif shtp in (SHTP_SHORT_0RC):
+                            src_cl  = item['col']
+                            src_ln  = item['ln']
+                            prefix  = c9dt+f('<{}({}:{}:{})>: ', path, str(1+src_rw).rjust(rw_wd, ' ')
+                                                                     , str(1+src_cl).rjust(cl_wd, ' ')
+                                                                     , str(  src_ln).rjust(ln_wd, ' '))
                         else:
                             prefix  = c9dt+f('<{}({})>: ', path, 1+src_rw)
                         if 'col' in item and 'ln' in item and \
@@ -799,21 +829,21 @@ class Command:
                                r'(?P<C>:\d+)?'      # Col?
                                r'(?P<L>:\d+)?\)>')  # Len?
         reSR    = re.compile(  r'(?P<S>\t+)'        # Shift !
-                            r'<\((?P<R>\d+)'        # Row   !
-                               r'(?P<C>:\d+)?'      # Col?
-                               r'(?P<L>:\d+)?\)>')  # Len?
+                            r'<\((?P<R> *\d+)'      # Row   !
+                               r'(?P<C>: *\d+)?'    # Col?
+                               r'(?P<L>: *\d+)?\)>')# Len?
         def parse_line(line, what):
             if what=='SP':
                 mtSP    = reSP.search(line)
                 if mtSP:
                     gdct= mtSP.groupdict()
-                    pass;           LOG and log('mtSP gdct={}', gdct)
+                    pass;      #LOG and log('mtSP gdct={}', gdct)
                     return mtSP.group(0),   gdct['S'], gdct['P']
                 return [None]*3
             mtSR   = reSR.search(line)
             if mtSR: 
                 gdct= mtSR.groupdict()
-                pass;           LOG and log('mtSR gdct={}', gdct)
+                pass;          #LOG and log('mtSR gdct={}', gdct)
                 cl  = gdct['C']
                 ln  = gdct['L']
                 return mtSR.group(0),   gdct['S'], '' \
@@ -821,7 +851,7 @@ class Command:
             mtSPR   = reSPR.search(line)
             if mtSPR:   
                 gdct= mtSPR.groupdict()
-                pass;           LOG and log('mtSPR gdct={}', gdct)
+                pass;          #LOG and log('mtSPR gdct={}', gdct)
                 cl  = gdct['C']
                 ln  = gdct['L']
                 return mtSPR.group(0),  gdct['S'], gdct['P'] \
@@ -829,7 +859,7 @@ class Command:
             mtSP    = reSP.search(line)
             if mtSP:
                 gdct= mtSP.groupdict()
-                pass;           LOG and log('mtSP gdct={}', gdct)
+                pass;          #LOG and log('mtSP gdct={}', gdct)
                 return mtSP.group(0),   gdct['S'], gdct['P'], -1, -1, -1
             return [None]*6
            #def parse_line
@@ -840,8 +870,8 @@ class Command:
         path,   \
         rw,cl,ln= parse_line(line, 'all')
         if not full:            return  app.msg_status(f(_("At the line {} no data for navigation"), 1+row))
-        pass;                   LOG and log('full={}', full)
-        pass;                   LOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
+        pass;                  #LOG and log('full={}', full)
+        pass;                  #LOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
         def open_and_nav(path, rw=-1, cl=-1, ln=-1):
             if not os.path.isfile(path):    return
             ed.set_prop(app.PROP_TAG, 'FiF:open_and_nav')
@@ -911,21 +941,21 @@ class Command:
         # Try to build path from prev lines
         for t_row in range(row-1, -1, -1):
             t_line  = ed.get_text_line(t_row)
-            pass;               LOG and log('t_row, t_line={}', (t_row, t_line))
+            pass;              #LOG and log('t_row, t_line={}', (t_row, t_line))
             if t_line.startswith('+'):  break#for t_row
 #           if row-step < 0:    return app.msg_status(f(_("At the line {} no data for navigation"), 1))
             t_fll,  \
             t_sft,  \
             t_pth   = parse_line(t_line, 'SP')
-            pass;               LOG and log('t_sft, t_pth={}', (t_sft, t_pth))
+            pass;              #LOG and log('t_sft, t_pth={}', (t_sft, t_pth))
             if len(t_sft) == len(shft): 
-                pass;           LOG and log('skip: t_sft==shft', ())
+                pass;          #LOG and log('skip: t_sft==shft', ())
                 continue#for t_row
             if len(t_sft) >  len(shft):
-                pass;           LOG and log('bad: t_sft>shft', ())
+                pass;          #LOG and log('bad: t_sft>shft', ())
                 return app.msg_status(f(_("At the line {} no data for navigation"), t_row))
             path    = os.path.join(t_pth, path) if path else t_pth
-            pass;               LOG and log('new path={}', (path))
+            pass;              #LOG and log('new path={}', (path))
             if os.path.isfile(path):
                 open_and_nav(path, rw, cl, ln)
                 return
@@ -1367,7 +1397,7 @@ ToDo
 [+][kv-kv][08apr16] status report: Found N fragments in M files
 [+][kv-kv][14apr16] dont create new tab - reuse tab with max tag
 [+][kv-kv][14apr16] opt: "compact output" (file:frag) or "lined" (file:\nfrag)
-[ ][a1-kv][15apr16] use ed selection for 'what'
+[+][a1-kv][15apr16] use ed selection for 'what'
 [ ][kv-kv][15apr16] use next group for new tab
 [?][kv-kv][15apr16] dont fill if 0 matches
 [+][kv-kv][18apr16] wait ESC when fill tab
@@ -1377,9 +1407,9 @@ ToDo
 [ ][kv-kv][20apr16] fold old res-reports before append new
 [ ][kv-kv][21apr16] Show stage time in stat-data
 [+][kv-kv][21apr16] Add %% to msg about stopping
-[ ][kv-kv][21apr16] Extra ops: lexers, wait 2nd+3rd ESC
+[+][kv-kv][21apr16] Extra ops: lexers, wait 2nd+3rd ESC
 [+][kv-kv][21apr16] Add plugin cmd "Find in cur file"
-[?][kv-kv][22apr16] Transfer ops from local Find
-[ ][a1-kv][22apr16] Extra ops: Style for mark
-[ ][kv-kv][22apr16] Extra ops: Hide dlg after good res
+[+][kv-kv][22apr16] Transfer ops from local Find
+[+][a1-kv][22apr16] Extra ops: Style for mark
+[+][kv-kv][22apr16] Extra ops: Hide dlg after good res
 '''
