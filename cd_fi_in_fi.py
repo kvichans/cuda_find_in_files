@@ -105,6 +105,7 @@ USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start', False)
 USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start', False)
 ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop', False)
 REPORT_FAIL     = apx.get_opt('fif_report_no_matches', False)
+FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res', False)
 CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success', False)
 MARK_STYLE      = apx.get_opt('fif_mark_style', {'border':{'b':'dotted'}})
 MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
@@ -386,6 +387,8 @@ class Command:
     "fif_use_edfind_opt_on_start":false,
     // Need reporting if nothing found
     "fif_report_no_matches":false,
+    // Before append result fold all previous ones
+    "fif_fold_prev_res":false,
     // Style to mark found fragment in source line
     // Full form
     //    "fif_mark_style":{{"bg_c":"", "font_c":"", "font_b":false, "font_i":false, "border_c":"", "border":{{"l":"","r":"","b":"","t":""}}}},
@@ -674,14 +677,16 @@ class Command:
         self.last_ed_num += 1
         rpt_ed.set_prop(app.PROP_TAG,       'FiF_'+str(self.last_ed_num))
         rpt_ed.focus()
-        rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #??
 
         # Prepare tab
         if not rpt_type['join']:
             rpt_ed.set_text_all('')
             rpt_ed.attr(app.MARKERS_DELETE_ALL)
+        elif FOLD_PREV_RES:
+            fold_all_found(rpt_ed, '+Search for ')
 
         # Fill tab
+        rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
         def mark_fragment(rw, cl, ln, to_ed=rpt_ed):
             to_ed.attr(app.MARKERS_ADD
                     , x=cl, y=rw, len=ln
@@ -966,6 +971,30 @@ class Command:
         return app.msg_status(f(_("At the line {} no data for navigation"), 1+row))
        #def _nav_to_src
    #class Command
+
+def fold_all_found(rpt_ed, what):
+    user_opt= app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
+    # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp,  b - Back
+    rpt_ed.set_caret(0, 0)
+    rpt_ed.cmd(cmds.cmd_FinderAction, chr(1).join([]
+        +['findnext']
+        +[what]
+        +['']
+        +['c']
+    ))
+    pass;                      #LOG and log('row,sel={}',(rpt_ed.get_carets()[0][1], rpt_ed.get_text_sel()))
+    while rpt_ed.get_text_sel():
+        rpt_ed.set_caret(1, rpt_ed.get_carets()[0][1])
+        rpt_ed.cmd(cmds.cmd_FoldingFoldAtCurLine)
+        rpt_ed.cmd(cmds.cmd_FinderAction, chr(1).join([]
+            +['findnext']
+            +[what]
+            +['']
+            +['cf']
+        ))
+        pass;                  #LOG and log('row,sel={}',(rpt_ed.get_carets()[0][1], rpt_ed.get_text_sel()))
+    app.app_proc(app.PROC_SET_FIND_OPTIONS, user_opt)
+   #def fold_all_found
 
 def add_to_history(val, lst, max_len, unicase=True):
     """ Add/Move val to list head.
@@ -1401,7 +1430,7 @@ ToDo
 [+][kv-kv][14apr16] opt: "compact output" (file:frag) or "lined" (file:\nfrag)
 [+][a1-kv][15apr16] use ed selection for 'what'
 [ ][kv-kv][15apr16] use next group for new tab
-[?][kv-kv][15apr16] dont fill if 0 matches
+[+][kv-kv][15apr16] dont fill if 0 matches
 [+][kv-kv][18apr16] wait ESC when fill tab
 [?][kv-kv][18apr16] allow dir in What (like ST)
 [?][kv-kv][19apr16] allow many roots
@@ -1415,4 +1444,6 @@ ToDo
 [+][a1-kv][22apr16] Extra ops: Style for mark
 [+][kv-kv][22apr16] Extra ops: Hide dlg after good res
 [ ][kv-kv][22apr16] Tips and ExtraOpts in dlg Help
+[ ][kv-kv][22apr16] Use text from Cud for modifyed files
+[ ][kv-kv][22apr16] Set caret to 1st fragment
 '''
