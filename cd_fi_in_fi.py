@@ -122,13 +122,13 @@ class Command:
         ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
         # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp,  b - Back
         self.show_dlg(what=ed.get_text_sel(), opts=dict(
-             reex = '1' if 'r' in ed_opt else '0'
-            ,case = '1' if 'c' in ed_opt else '0'
-            ,word = '1' if 'w' in ed_opt else '0'
-            ,incl = os.path.basename(filename)
+#            reex = '1' if 'r' in ed_opt else '0'
+#           ,case = '1' if 'c' in ed_opt else '0'
+#           ,word = '1' if 'w' in ed_opt else '0'
+             incl = os.path.basename(filename)
             ,fold = os.path.dirname(filename)
             ,cllc = str(cllc_l.index(CLLC_MATCH))
-            ,shtp = str(shtp_l.index(SHTP_SPARS_RCL))
+#           ,shtp = str(shtp_l.index(SHTP_SPARS_RCL))
             ))
        #def find_in_ed
     def show_dlg(self, what='', opts={}):
@@ -383,7 +383,9 @@ class Command:
     // Copy find-options ".*", "aA", "w" from editor find to dialog on start
     "fif_use_edfind_opt_on_start":false,
     // ESC will stop all stages 
-    "fif_esc_full_stop":false,
+    "fif_use_edfind_opt_on_start":false,
+    // Need reporting if nothing found
+    "fif_report_no_matches":false,
     // Style to mark found fragment in source line
     // Full form
     //    "fif_mark_style":{{"bg_c":"", "font_c":"", "font_b":false, "font_i":false, "border_c":"", "border":{{"l":"","r":"","b":"","t":""}}}},
@@ -1412,4 +1414,5 @@ ToDo
 [+][kv-kv][22apr16] Transfer ops from local Find
 [+][a1-kv][22apr16] Extra ops: Style for mark
 [+][kv-kv][22apr16] Extra ops: Hide dlg after good res
+[ ][kv-kv][22apr16] Tips and ExtraOpts in dlg Help
 '''
