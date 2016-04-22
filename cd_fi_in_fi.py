@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.5.1 2016-04-21'
+    '0.5.3 2016-04-22'
 ToDo: (see end of file)
 '''
 
@@ -48,20 +48,85 @@ class ProgressAndBreak:
         return was_esc
    #class ProgressAndBreak
 
+def fit_mark_style_for_attr(js):
+    """ Convert 
+            {"bg_c":"", "font_c":"", "font_b":false, "font_i":false
+            ,"border_c":"", "border":{"l":"","r":"","b":"","t":""}}
+        to dict with params for call ed.attr
+            (color_bg=COLOR_NONE, color_font=COLOR_NONE, font_bold=0, font_italic=0, 
+            color_border=COLOR_NONE, border_left=0, border_right=0, border_down=0, border_up=0)
+    """
+    V_L     = ['solid', 'dash', '2px', 'dotted', 'rounded', 'wave']
+    shex2int= lambda shexRGB: int(shexRGB[4:6]+shexRGB[2:4]+shexRGB[0:2], 16)
+    kwargs  = {}
+    if js.get('bg_c', ''):      kwargs['color_bg']      = shex2int(js['bg_c'])
+    if js.get('font_c', ''):    kwargs['color_font']    = shex2int(js['font_c'])
+    if js.get('border_c', ''):  kwargs['color_border']  = shex2int(bs['border_c'])
+    if js.get('font_b', False): kwargs['font_bold']     = 1
+    if js.get('font_i', False): kwargs['font_italic']   = 1
+    jsbr    = js.get('border', {})
+    if jsbr.get('l', ''):       kwargs['border_left']   = V_L.index(jsbr['l'])+1
+    if jsbr.get('r', ''):       kwargs['border_right']  = V_L.index(jsbr['r'])+1
+    if jsbr.get('b', ''):       kwargs['border_down']   = V_L.index(jsbr['b'])+1
+    if jsbr.get('t', ''):       kwargs['border_up']     = V_L.index(jsbr['t'])+1
+    return kwargs
+   #def fit_mark_style_for_attr
+   
+def select_lexer(need_lxrs):
+    all_lxrs  = app.lexer_proc(app.LEXER_GET_LIST, '').splitlines()
+    all_lxrs  = [lxr for lxr in all_lxrs if app.lexer_proc(app.LEXER_GET_ENABLED, lxr)]
+    for lxr in need_lxrs:
+        if lxr in all_lxrs:
+            return lxr
+    return ''
+
 GAP     = 5
 
+CLLC_MATCH      = _('Normal matches')
+CLLC_COUNT      = _('Count only')
+CLLC_FNAME      = _('Filenames only')
 TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
 SHTP_SHORT_RCL  = _('path(r:c:l):line')
+SHTP_SHORT_0R   = _('path/(··r):line')
 SHTP_MIDDL_R    = _('dir/file(r):line')
 SHTP_MIDDL_RCL  = _('dir/file(r:c:l):line')
 SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
+cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
+shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R, SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL]
 
+lexers_l        = apx.get_opt('fif_lexers', ['Search results', 'FiF'])
+FIF_LEXER       = select_lexer(lexers_l)
+lexers_l        = map(lambda s: s.upper(), lexers_l)
+ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop', False)
+CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success', False)
+MARK_STYLE      = apx.get_opt('fif_mark_style', {'border':{'b':'dotted'}})
+MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
 class Command:
     def find_in_ed(self):
-        pass
+        if ed.get_prop(app.PROP_MODIFIED):
+            ans = app.msg_box(_('File modified.\nDo you want save it?'), app.MB_YESNOCANCEL) 
+            if ans==app.ID_CANCEL:  return
+            if ans==app.ID_YES:
+                ed.save()
+        filename= ed.get_filename()
+        if not filename:            return app.msg_status(_("Command works only with file on disk"))
+        crts    = ed.get_carets()
+        if len(crts)>1:             return app.msg_status(_("Command doesn't work with multi-carets"))
+        ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
+        # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp,  b - Back
+        self.show_dlg(what=ed.get_text_sel(), opts=dict(
+             reex = '1' if 'r' in ed_opt else '0'
+            ,case = '1' if 'c' in ed_opt else '0'
+            ,word = '1' if 'w' in ed_opt else '0'
+            ,incl = os.path.basename(filename)
+            ,fold = os.path.dirname(filename)
+            ,cllc = str(cllc_l.index(CLLC_MATCH))
+            ,shtp = str(shtp_l.index(SHTP_SPARS_RCL))
+            ))
+       #def find_in_ed
     def show_dlg(self, what='', opts={}):
         max_hist= apx.get_opt('ui_max_history_edits', 20)
         cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
@@ -69,8 +134,8 @@ class Command:
         mask_h  = _('Space-separated file masks.\rDouble-quote mask, which needs space-char.\rUse ? for any character and * for any fragment.')
         reex_h  = _('Regular expression')
         case_h  = _('Case sensitive')
-        word_h  = _('Whole words. Option is ignored if'
-                    '\r    option ".*" turns on,'
+        word_h  = _('Option "Whole words". It is ignored when'
+                    '\r    ".*" is turned on,'
                     '\r    "Find" contains not only letters, digits and "_".'
                     )
         brow_h  = _('Select folder')
@@ -78,38 +143,42 @@ class Command:
         more_h  = _('Show/Hide advanced options')
         adju_h  = _('Change dialog layout')
         frst_h  = _('Search only inside N first found files')
-        shtp_h  = _(  'Format fot report tree structure.'
-                    '\rCompact - each found line with full file info:'
-                    '\r    full_path(r[:c:l]):line'
+        shtp_h  = _(  'Format of the reported tree structure.'
+                    '\rCompact - report all found line with full file info:'
+                    '\r  path(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
-                    '\r      <full_path>(row:col:len):<line with ALL marked fragments>'
-                    '\rMiddle - separated folders and fragments:'
-                    '\r    dir/file(r[:c:l]):line'
+                    '\r      <full_path(row:col:len)>: line with ALL marked fragments'
+                    '\rAligned - report all source lines with vert-align:'
+                    '\r  path/(··r):line'
+                    '\r  Tree scheme'
+                    '\r    +Search for "*"'
+                    '\r      <full_path>: #count'
+                    '\r        <(  row)>: line with ALL marked fragments'
+                    '\rMiddle - report separated folders and fragments:'
+                    '\r  dir/file(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <root>: #count'
                     '\r        <dir>: #count'
-                    '\r          <file.ext>(row:col:len): <line with ONE marked fragment>'
-                    '\rSparse - separated folders and lines and fragments:'
-                    '\r    dir/file/(r[:c:l]):line'
+                    '\r          <file.ext(row:col:len)>: line with ONE marked fragment'
+                    '\rSparse - report separated folders and lines and fragments:'
+                    '\r  dir/file/(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <root>: #count'
                     '\r        <dir>: #count'
                     '\r          <file.ext>: #count'
-                    '\r            (row:col:len): <line with ONE marked fragment>'
-                    '\rFor sorted files only "Compact" option is used.'
+                    '\r            <(row:col:len)>: line with ONE marked fragment'
+                    '\rFor sorted files only "Compact" options are used.'
                    )
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
         coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
         pset_h  = _('Save options for future.\rRestore saved options.')
         dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
         enco_l  = [_('Locale only (fastest)'), _('UTF-8 only (fastest)'), _('UTF-8->Local'), _('UTF-8->Locale->detect (slow)'), _('Detect all (slowest)')]
-        cllc_l  = [_('Normal matches'), _('Count only'), _('Filenames only')]
         skip_l  = [' ', _('Hidden'), _('Binary'), _('Hidden, Binary')]
         sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
-        shtp_l  = [SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL]
     
         DLG_W0, \
         DLG_H0  = (700, 355)
@@ -152,7 +221,7 @@ class Command:
             gap3    = (GAP-115 if wo_adva else GAP)+gap2
             TXT_W   = stores.get('wd_txts', 400)
             BTN_W   = stores.get('wd_btns', 100)
-            lbl_l   = GAP+35*3+GAP
+            lbl_l   = GAP+35*3+GAP+25
             cmb_l   = lbl_l+100
             tl2_l   = lbl_l+220
             tbn_l   = cmb_l+TXT_W+GAP
@@ -172,12 +241,12 @@ class Command:
                      +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('Not in files:')     ,hint=mask_h)] # 
                      +[dict(cid='excl',tp='cb'      ,t=GAP+56       ,l=cmb_l    ,w=TXT_W    ,items=excl_l                           )] # 
                     )                                               
-                     +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                      +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap=_('I&n folder:')                   )] # &n
                      +[dict(cid='fold',tp='cb'      ,t=gap1+84      ,l=cmb_l    ,w=TXT_W    ,items=fold_l                           )] # 
                      +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=BTN_W    ,cap=_('&Browse...')        ,hint=brow_h)] # &b
                      +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
                      +[dict(cid='dept',tp='cb-ro'   ,t=gap1+112     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
+                     +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                     +([] if wo_repl else []                         
                      +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
                      +[dict(cid='repl',tp='cb'      ,t=gap1+135     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
@@ -284,15 +353,33 @@ class Command:
                 l           = '\n'
                 RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
                 HELP_BODY   = _(r'''
-•Values of "In file" and "Not in file" can contains
-    ?       for any single symbol,
-    *       for everything (may be empty),
+• Values of "In file" and "Not in file" can contain
+    ?       for any single char,
+    *       for any substring (may be empty),
     [seq]   any character in seq,
     [!seq]  any character not in seq. 
-•{word}
-•Option "Tree type":
+• "w" - {word}
+• Option "Tree type":
     {shtp}
-•Long-term searching can be interrupted with Esc.
+• Long-term searching can be interrupted with ESC.
+    Search has three stages: 
+        picking files, 
+        finding fragments, 
+        reporting.
+    ESC stop any stage. When picking and finding, ESC stop only this stage, so next stage begins.
+• Extra options for "user.json" (need restart after chanhing). Default values:
+    // ESC will stop all stages 
+    "fif_esc_full_stop":false,
+    // Style to mark found fragment in source line
+    // Full form
+    //    "fif_mark_style":{{"bg_c":"", "font_c":"", "font_b":false, "font_i":false, "border_c":"", "border":{{"l":"","r":"","b":"","t":""}}}},
+    //  Color values: "" - skip, "RRGGBB" - hex-digits
+    //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
+    "fif_mark_style":{{"border":{{"b":"dotted"}}}},
+    // Close dialog if searching was success
+    "fif_hide_if_success":false,
+    // List of lexer names. First available will be applyed.
+    "fif_lexers":["Search results"],
 ''').strip().format(word=word_h.replace('\r', '\n')
                    ,shtp=shtp_h.replace('\r', '\n    '))
 #Reg.ex. tips:
@@ -475,11 +562,12 @@ class Command:
                     ,case       =case01=='1'
                     ,word       =word01=='1'
                     )
+                cllc_v      = cllc_l[int(cllc_s)]
                 what_save   =dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
-                     count      = btn=='!cnt' or  cllc_s!='2'
-                    ,place      = btn!='!cnt' and cllc_s=='0'
-                    ,fragm      = btn!='!cnt' and cllc_s=='0' #and reex01=='0'
-                    ,lines      = btn!='!cnt' and cllc_s=='0' #and reex01=='0'
+                     count      = btn=='!cnt' or  cllc_v!=CLLC_FNAME
+                    ,place      = btn!='!cnt' and cllc_v==CLLC_MATCH
+#                   ,fragm      = btn!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
+                    ,lines      = btn!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
                     )
                 shtp_v      = shtp_l[int(shtp_s)]
                 how_rpt     =dict(
@@ -487,6 +575,7 @@ class Command:
                     ,shtp   =shtp_v if sort_s=='0' or shtp_v in (SHTP_SHORT_R, SHTP_SHORT_RCL) else SHTP_SHORT_R
                     ,join   ='1'==join_s
                     )
+                totb_s  = str(min(1, int(totb_s)))
                 ################################
                 progressor = ProgressAndBreak()
                 rpt_data, rpt_info = find_in_files(
@@ -496,6 +585,9 @@ class Command:
                     ,how_rpt    = how_rpt
                     ,progressor = progressor
                     )
+                if not rpt_data and not rpt_info: 
+                    app.msg_status(_("Search stopped"))
+                    continue#while
                 frfls   = rpt_info['files']
                 frgms   = rpt_info['frgms']
                 ################################
@@ -513,14 +605,13 @@ class Command:
                    )
                 progressor.set_progress(msg_rpt)
                 ################################
-                
-                totb_s  = str(min(1, int(totb_s)))
+                if 0<frgms and CLOSE_AFTER_GOOD: break#while
            #while
        #def show_dlg
 
     last_ed_num = 0
     def _report_to_tab(self, rpt_data, rpt_info, rpt_type, how_walk, what_find, what_save, progressor=None):
-        pass;                  #LOG and log('rpt_type={}',rpt_type)
+        pass;                   LOG and log('rpt_type={}',rpt_type)
         
         # Select/Create tab for report
         rpt_ed  = None
@@ -543,8 +634,9 @@ class Command:
             for h in app.ed_handles(): 
                 try_ed  = app.Editor(h)
                 ed_tag  = try_ed.get_prop(app.PROP_TAG, '')
+                ed_lxr  = try_ed.get_prop(app.PROP_LEXER_FILE, '')
                 pass;          #LOG and log('tit, ed_tag={}',(try_ed.get_prop(app.PROP_TAB_TITLE), ed_tag))
-                if ed_tag.startswith('FiF_'):
+                if ed_tag.startswith('FiF_') or ed_lxr.upper() in lexers_l:
                     olds+= [(ed_tag, try_ed)]
                 if ed_tag == 'FiF_'+str(self.last_ed_num):
                     rpt_ed  = try_ed
@@ -565,22 +657,19 @@ class Command:
         self.last_ed_num += 1
         rpt_ed.set_prop(app.PROP_TAG,       'FiF_'+str(self.last_ed_num))
         rpt_ed.focus()
-        rpt_ed.set_prop(app.PROP_LEXER_FILE,'Search results')  #??
+        rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #??
 
         # Prepare tab
         if not rpt_type['join']:
             rpt_ed.set_text_all('')
             rpt_ed.attr(app.MARKERS_DELETE_ALL)
 
-        # Fit rpt_data for type as Compact, Middle, Sparse
-        pass
-#       if  shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL):
-        
         # Fill tab
         def mark_fragment(rw, cl, ln, to_ed=rpt_ed):
             to_ed.attr(app.MARKERS_ADD
                     , x=cl, y=rw, len=ln
-                    , border_down=4  # 1=solid, 2=dash, 3=solid 2pixel, 4=dotted, 5=rounded, 6=wave
+                    , **MARK_STYLE
+#                   , border_down=4  # 1=solid, 2=dash, 3=2pixel, 4=dotted, 5=rounded, 6=wave
                     )
         def append_line(line, to_ed=rpt_ed):
             ''' Append one line to end of to_ed. Return row of added line.'''
@@ -598,7 +687,18 @@ class Command:
                                 ,rpt_info['frgms']
                                 ,rpt_info['files']))
         root    = how_walk['root']
+        rw_wd   = 6 # max rw=999 999 999
+        if shtp==SHTP_SHORT_0R:
+            # Find max(len(str(row)))
+            max_rw  = 0
+            for path_d in rpt_data:
+                for item in path_d.get('items', ''):
+                    max_rw  = max(max_rw, item.get('row', 0))
+            rw_wd   = len(str(max_rw))
         for path_n, path_d in enumerate(rpt_data):
+#
+#           pass;               break
+#
             if progressor and 0==path_n%17:
                 pc  = int(100*path_n/len(rpt_data))
                 progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
@@ -622,18 +722,29 @@ class Command:
                 prefix  = ''
                 new_row = -1
                 pre_rw  = -1
+                if shtp in (SHTP_SHORT_0R):
+                    append_line(c9dt+f('<{}>: #{}', path, len(items)))
+                    path= '' 
+                    c9dt= c9*(1+dept)
                 if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
-                    append_line(c9dt+'<'+os.path.basename(path)+'>')
+                    append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
                 for item in items:
+#
+#                   pass;       break
+#
                     src_rw  = item.get('row', 0)
-                    if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL) and \
+                    if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHORT_0R) and \
                         src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
                         # Add mark in old line
+                        pass
                         mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                     else:
-                        prefix  = c9dt+f('<{}({})>: ', path, 1+src_rw)
+                        if shtp in (SHTP_SHORT_0R):
+                            prefix  = c9dt+f('<{}({})>: ', path, str(1+src_rw).rjust(rw_wd, ' '))
+                        else:
+                            prefix  = c9dt+f('<{}({})>: ', path, 1+src_rw)
                         if 'col' in item and 'ln' in item and \
                             shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL):
                             prefix  = c9dt+f('<{}({}:{}:{})>: ', path, 1+src_rw, 1+item['col'], item['ln'])
@@ -647,6 +758,10 @@ class Command:
         pass;                  #LOG and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
         # AT-hack to update folding
+        pass;                   LOG and log('?? set lxr',)
+        rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
+#       rpt_ed.set_prop(app.PROP_LEXER_FILE, 'Search results')  #??
+        pass;                   LOG and log('ok set lxr',)
         line0 = rpt_ed.get_text_line(0)
         rpt_ed.set_text_line(0, '')
         rpt_ed.set_text_line(0, line0)
@@ -846,7 +961,7 @@ def get_live_restabs():
         tag     = try_ed.get_prop(app.PROP_TAG)
         lxr     = try_ed.get_prop(app.PROP_LEXER_FILE)
         if False:pass
-        elif lxr.upper() in ('FiF'.upper(), 'Search results'.upper()):
+        elif lxr.upper() in lexers_l:
             rsp+= [try_ed.get_prop(app.PROP_TAB_TITLE)]
         elif tag.startswith('FiF'):
             rsp+= [try_ed.get_prop(app.PROP_TAB_TITLE)]
@@ -907,6 +1022,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
              }
             ,...]
     """
+    pass;                      #LOG and log('ESC_FULL_STOP={}',ESC_FULL_STOP)
     pass;                      #LOG and log('how_walk={}',pf(how_walk))
     pass;                      #LOG and log('what_find={}',pf(what_find))
     pass;                      #LOG and log('what_save={}',pf(what_save))
@@ -919,6 +1035,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 
     files,  \
     cllc_stp= collect_files(how_walk, progressor)
+    if cllc_stp and ESC_FULL_STOP:   return [], {}
     pass;                       LOG and log('#collect_files={}',len(files))
     pass;                      #LOG and log('files={}',pf(files))
     rsp_i['cllc_files']     = len(files)
@@ -940,7 +1057,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 
     cnt_b   = what_save['count']
     plc_b   = what_save['place']
-    fra_b   = what_save['fragm']
+    fra_b   = False#what_save['fragm']
     lin_b   = what_save['lines']
     shtp    = how_rpt['shtp']
     spr_dirs= shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL)   # Separate dir in rsp
@@ -969,8 +1086,9 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                                     , pc
                                     , rsp_i['frgms'], rsp_i['files']))
             if progressor.need_break():
+                if ESC_FULL_STOP:   return [], {}
                 rsp_i['find_stopped']   = True
-                progressor.prefix += f(_('(Searching stopped {}%)'), pc)
+                progressor.prefix += f(_('(Finding stopped {}%)'), pc)
                 break#for path
         
         prntdct = None
@@ -1152,7 +1270,7 @@ def collect_files(how_walk, progressor=None):
         if progressor and 0==dir_n%17:
             progressor.set_progress(f(_('(ESC?)(#{}) Picking files in: {}'), len(rsp), dirpath))
             if progressor.need_break():
-#               return []
+                if ESC_FULL_STOP:   return [], True
                 stoped  = True
                 progressor.prefix += _('(Picking stopped)')
                 break#for dirpath
@@ -1259,6 +1377,9 @@ ToDo
 [ ][kv-kv][20apr16] fold old res-reports before append new
 [ ][kv-kv][21apr16] Show stage time in stat-data
 [+][kv-kv][21apr16] Add %% to msg about stopping
-[ ][kv-kv][21apr16] Hidden ops: lexers, wait 2nd+3rd ESC
-[ ][kv-kv][21apr16] Add plugin cmd "Find in cur file"
+[ ][kv-kv][21apr16] Extra ops: lexers, wait 2nd+3rd ESC
+[+][kv-kv][21apr16] Add plugin cmd "Find in cur file"
+[?][kv-kv][22apr16] Transfer ops from local Find
+[ ][a1-kv][22apr16] Extra ops: Style for mark
+[ ][kv-kv][22apr16] Extra ops: Hide dlg after good res
 '''

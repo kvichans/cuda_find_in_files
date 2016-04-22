@@ -5,18 +5,18 @@ type=cudatext-plugin
 subdir=cuda_find_in_files
 homepage=https://github.com/kvichans/cuda_find_in_files
 
-[item10]
-section=commands
-caption=Find in Files\Find in current file
-method=find_in_ed
-menu=0
-
 [item1]
 section=commands
-caption=&Find in Files\&Dialog
+caption=&Find in Files\&Find in files...
 method=show_dlg
 
 [item2]
+section=commands
+caption=&Find in Files\Find in &current file...
+method=find_in_ed
+;menu=0
+
+[item10]
 section=commands
 caption=&Find in Files\-
 method=_
