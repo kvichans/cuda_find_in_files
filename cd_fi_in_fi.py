@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.5.5 2016-04-25'
+    '0.5.6 2016-04-26'
 ToDo: (see end of file)
 '''
 
@@ -22,31 +22,9 @@ c9, c10, c13    = chr(9), chr(10), chr(13)
 pass;                           LOG = (-2==-2)  # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
+pass;                           ##!! need correct
 
-# I18N
-_       = get_translation(__file__)
-
-class ProgressAndBreak:
-    """ Helper for 
-        - Show progress of working
-        - Allow user to stop long procces
-    """
-    def __init__(self):
-        self.prefix = ''
-        app.app_proc(app.PROC_SET_ESCAPE, '0')
-
-    def set_progress(self, msg:str):
-        app.msg_status(self.prefix+msg, process_messages=True)
-
-    def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
-        was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
-        app.app_proc(app.PROC_SET_ESCAPE, '0')
-        if was_esc and with_request:
-            if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO):
-                return True
-            was_esc = False
-        return was_esc
-   #class ProgressAndBreak
+_   = get_translation(__file__) # I18N
 
 def fit_mark_style_for_attr(js:dict)->dict:
     """ Convert 
@@ -59,16 +37,16 @@ def fit_mark_style_for_attr(js:dict)->dict:
     V_L     = ['solid', 'dash', '2px', 'dotted', 'rounded', 'wave']
     shex2int= lambda shexRGB: int(shexRGB[4:6]+shexRGB[2:4]+shexRGB[0:2], 16)
     kwargs  = {}
-    if js.get('color_back', ''):     kwargs['color_bg']      = shex2int(js['color_back'].lstrip('#'))
-    if js.get('color_font', ''):     kwargs['color_font']    = shex2int(js['color_font'].lstrip('#'))
+    if js.get('color_back'  , ''):   kwargs['color_bg']      = shex2int(js['color_back'].lstrip('#'))
+    if js.get('color_font'  , ''):   kwargs['color_font']    = shex2int(js['color_font'].lstrip('#'))
     if js.get('color_border', ''):   kwargs['color_border']  = shex2int(js['color_border'].lstrip('#'))
-    if js.get('font_bold', False):   kwargs['font_bold']     = 1
-    if js.get('font_italic', False): kwargs['font_italic']   = 1
+    if js.get('font_bold'   , False):kwargs['font_bold']     = 1
+    if js.get('font_italic' , False):kwargs['font_italic']   = 1
     jsbr    = js.get('borders', {})
-    if jsbr.get('l', ''):       kwargs['border_left']   = V_L.index(jsbr['l'])+1
-    if jsbr.get('r', ''):       kwargs['border_right']  = V_L.index(jsbr['r'])+1
-    if jsbr.get('b', ''):       kwargs['border_down']   = V_L.index(jsbr['b'])+1
-    if jsbr.get('t', ''):       kwargs['border_up']     = V_L.index(jsbr['t'])+1
+    if jsbr.get('left'  , ''):       kwargs['border_left']   = V_L.index(jsbr['left'  ])+1
+    if jsbr.get('right' , ''):       kwargs['border_right']  = V_L.index(jsbr['right' ])+1
+    if jsbr.get('bottom', ''):       kwargs['border_down']   = V_L.index(jsbr['bottom'])+1
+    if jsbr.get('top'   , ''):       kwargs['border_up']     = V_L.index(jsbr['top'   ])+1
     return kwargs
    #def fit_mark_style_for_attr
    
@@ -82,6 +60,7 @@ def select_lexer(need_lxrs:list)->str:
 
 GAP     = 5
 
+IN_OPEN_FILES   = _('<Open Files>')
 TOP_RES_SIGN    = _('+Search for')
 CLLC_MATCH      = _('Normal matches')
 CLLC_COUNT      = _('Count only')
@@ -100,16 +79,16 @@ SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL]
 
-lexers_l        = apx.get_opt('fif_lexers', ['Search results', 'FiF'])
+lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = select_lexer(lexers_l)
 lexers_l        = list(map(lambda s: s.upper(), lexers_l))
-USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start', False)
-USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start', False)
-ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop', False)
-REPORT_FAIL     = apx.get_opt('fif_report_no_matches', False)
-FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res', False)
-CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success', False)
-MARK_STYLE      = apx.get_opt('fif_mark_style', {'border':{'b':'dotted'}})
+USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
+USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
+ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
+REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
+FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
+CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
+MARK_STYLE      = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
 MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
 class Command:
     def find_in_ed(self):
@@ -122,18 +101,13 @@ class Command:
         if not filename:            return app.msg_status(_("Command works only with file on disk"))
         crts    = ed.get_carets()
         if len(crts)>1:             return app.msg_status(_("Command doesn't work with multi-carets"))
-#       ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
-        # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp,  b - Back
         self.show_dlg(what=ed.get_text_sel(), opts=dict(
-#            reex = '1' if 'r' in ed_opt else '0'
-#           ,case = '1' if 'c' in ed_opt else '0'
-#           ,word = '1' if 'w' in ed_opt else '0'
              incl = os.path.basename(filename)
             ,fold = os.path.dirname(filename)
             ,cllc = str(cllc_l.index(CLLC_MATCH))
-#           ,shtp = str(shtp_l.index(SHTP_SPARS_RCL))
             ))
        #def find_in_ed
+
     def show_dlg(self, what='', opts={}):
         max_hist= apx.get_opt('ui_max_history_edits', 20)
         cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
@@ -150,23 +124,22 @@ class Command:
         more_h  = _('Show/Hide advanced options')
         adju_h  = _('Change dialog layout')
         frst_h  = _('Search only inside N first found files')
-        shtp_h  = _(  'Format of the reported tree structure.'
+        shtp_h  = f(_(  'Format of the reported tree structure.'
                     '\rCompact - report all found line with full file info:'
-                    '\r  path(r[:c:l]):line'
+                    '\r  path(r[:c:l]):line - as compact as posible.'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <full_path(row[:col:len])>: line with ALL marked fragments'
-                    '\rAligned - report all source lines with vert-align:'
-                    '\r  path··(··r[:··c:··l]):line'
+                    '\r  path··(··r[:··c:··l]):line - ver-align each parts.'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <full_path  (  row[:  col:  len])>: line with ALL marked fragments'
-                    '\r  path/(··r[:··c:··l]):line'
+                    '\rMiddle - report separated folders and fragments:'
+                    '\r  path/(··r[:··c:··l]):line - vert-aligned row/col/len '
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <full_path>: #count'
                     '\r        <(  row[:  col:  len])>: line with ALL marked fragments'
-                    '\rMiddle - report separated folders and fragments:'
                     '\r  dir/file(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
@@ -181,8 +154,12 @@ class Command:
                     '\r        <dir>: #count'
                     '\r          <file.ext>: #count'
                     '\r            <(row[:col:len])>: line with ONE marked fragment'
-                    '\rFor sorted files only "Compact" options are used.'
-                   )
+                    '\rFor '
+                    '\r  sorted files'
+                    '\rand'
+                    '\r  In folder={}'
+                    '\ronly options without separated folders or files are used.'
+                   ),IN_OPEN_FILES)
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
         coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
         pset_h  = _('Save options for future.\rRestore saved options.')
@@ -203,7 +180,7 @@ class Command:
         word01  = opts.get('word', stores.get('word', '0'))
         if USE_EDFIND_OPS:
             ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
-            # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp,  b - Back
+            # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
             reex01  = '1' if 'r' in ed_opt else '0'
             case01  = '1' if 'c' in ed_opt else '0'
             word01  = '1' if 'w' in ed_opt else '0'
@@ -366,86 +343,13 @@ class Command:
             stores.pop('reed',None)
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             
+            if btn=='more':
+                stores['wo_adva']       = not stores.get('wo_adva', True)
+                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+                continue#while
+
             if btn=='help':
-#               l           = '\n'
-                RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
-                TIPS_BODY   = _(r'''
-• Values of "In file" and "Not in file" can contain
-    ?       for any single char,
-    *       for any substring (may be empty),
-    [seq]   any character in seq,
-    [!seq]  any character not in seq. 
-• "w" - {word}
-• Long-term searching can be interrupted with ESC.
-    Search has three stages: 
-        picking files, 
-        finding fragments, 
-        reporting.
-    ESC stops any stage. When picking and finding, ESC stops only this stage, so next stage begins.
-''').strip().format(word=word_h.replace('\r', '\n'))
-                TREE_BODY   = _(r'''
-Option "Tree type" - {shtp}
-''').strip().format(shtp=shtp_h.replace('\r', '\n'))
-                OPTS_BODY   = _(r'''
-Extra options for "user.json" (need restart after changing). Default values:
-    // Fill Find with selection from current file when dialog starts
-    "fif_use_selection_on_start":false,
-    
-    // Copy find-options ".*", "aA", "w" from editor find to dialog on start
-    "fif_use_edfind_opt_on_start":false,
-    
-    // ESC will stop all stages 
-    "fif_use_edfind_opt_on_start":false,
-    
-    // Need reporting if nothing found
-    "fif_report_no_matches":false,
-    
-    // Style to mark found fragment in report-text
-    // Full form
-    //    "fif_mark_style":{{
-    //      "color_back":"", 
-    //      "color_font":"",
-    //      "font_bold":false, 
-    //      "font_italic":false,
-    //      "color_border":"", 
-    //      "borders":{{"l":"","r":"","b":"","t":""}}
-    //    }},
-    //  Color values: "" - skip, "#RRGGBB" - hex-digits
-    //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
-    "fif_mark_style":{{"borders":{{"b":"dotted"}}}},
-    
-    // Close dialog if searching was success
-    "fif_hide_if_success":false,
-    
-    // List of lexer names. First available will be applyed.
-    "fif_lexers":["Search results"],
-''').strip()
-#   // Before append result fold all previous ones
-#   "fif_fold_prev_res":false,
-#   
-#               HELP_BODY   = _(r'''
-#''').strip().format(word=word_h.replace('\r', '\n')
-#                  ,shtp=shtp_h.replace('\r', '\n    '))
-#Reg.ex. tips:
-#- Format for found groups in Replace: \1
-                DW, DH      = 600, 600
-                vals_hlp    = dict(htxt=TIPS_BODY)
-                while_hlp   = True
-                while while_hlp:
-                    btn_hlp,    \
-                    vals_hlp    = dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
-                         [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
-                         ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
-                         ,dict(cid='tips',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                                 )
-                         ,dict(cid='tree',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                                 )
-                         ,dict(cid='opts',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                                 )
-                         ,dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
-                         ], vals_hlp, focus_cid='htxt')
-                    if btn_hlp is None or btn_hlp=='-': break#while while_hlp
-                    if False:pass
-                    elif btn_hlp=='tips':   vals_hlp["htxt"] = TIPS_BODY
-                    elif btn_hlp=='tree':   vals_hlp["htxt"] = TREE_BODY
-                    elif btn_hlp=='opts':   vals_hlp["htxt"] = OPTS_BODY
+                dlg_help(word_h, shtp_h)
                 continue#while
             
             if btn=='pres':
@@ -459,11 +363,18 @@ Extra options for "user.json" (need restart after changing). Default values:
                             ,rp=ps.get('_rp_',' ')
                             ) 
                             for ps in pset_l] \
-                        + [_('Delete preset\tSelect name...')
+                        + [f(_('In folder={}\tFind in current text of all opened files'), IN_OPEN_FILES)
+                          ,_('Delete preset\tSelect name...')
                           ,_('Save current options as preset\tSelect options for save...')]
+                ind_inop= len(pset_l)
+                ind_del = len(pset_l)+1
+                ind_save= len(pset_l)+2
                 ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))
                 if ps_ind is None:  continue#while
                 if False:pass
+                elif ps_ind==ind_inop:
+                    # Find in open files
+                    fold_s = IN_OPEN_FILES
                 elif ps_ind<len(pset_l):
                     # Restore
                     ps  = pset_l[ps_ind]
@@ -482,16 +393,16 @@ Extra options for "user.json" (need restart after changing). Default values:
                     sort_s = ps.get('sort', sort_s)
                     frst_s = ps.get('frst', frst_s)
                     enco_s = ps.get('enco', enco_s)
-                    app.msg_status(_('Restore preset: ')+ps['name'])
-                elif ps_ind==len(pset_l) and pset_l:
+                    app.msg_status(_('Restored preset: ')+ps['name'])
+                elif ps_ind==ind_del and pset_l:
                     # Delete
                     ind4del = app.dlg_menu(app.MENU_LIST, '\n'.join([ps['name'] for ps in pset_l]))
                     if ind4del is None:  continue#while
                     ps      = pset_l[ind4del]
                     del pset_l[ind4del]
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-                    app.msg_status(_('Delete preset: ')+ps['name'])
-                elif ps_ind==len(pset_l)+1:
+                    app.msg_status(_('Deleted preset: ')+ps['name'])
+                elif ps_ind==ind_save:
                     # Save
                     custs   = app.dlg_input_ex(6, _('Save preset')
                         , _('Preset name')                                                  , f(_('Preset #{}'), 1+len(pset_l))
@@ -531,24 +442,20 @@ Extra options for "user.json" (need restart after changing). Default values:
                         pass
                     pset_l += [ps]
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-                    app.msg_status(_('Save new preset'))
+                    app.msg_status(_('Saved preset: ')+ps['name'])
                 
-            if btn=='more':
-                stores['wo_adva']       = not stores.get('wo_adva', True)
-                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-                continue#while
             if btn=='cust':
                 custs   = app.dlg_input_ex(3, _('Adjust dialog')
                     , _('Width of edits Find/Replace (min 400)'), str(stores.get('wd_txts', 400))
                     , _('Width of buttons Browse/Help (min 100)'),str(stores.get('wd_btns', 100))
                     , _('Show Exclude masks (0/1)')             , str(0 if stores.get('wo_excl', True) else 1)
-        #                   , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
+        #           , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
                     )
                 if custs is not None:
                     stores['wd_txts']   = max(400, int(custs[0]))
                     stores['wd_btns']   = max(100, int(custs[1]))
                     stores['wo_excl']   = (custs[2]=='0')
-        #                   stores['wo_repl']   = (custs[3]=='0')
+        #           stores['wo_repl']   = (custs[3]=='0')
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
                 continue#while
 
@@ -575,8 +482,8 @@ Extra options for "user.json" (need restart after changing). Default values:
                         app.msg_box(f(_('Set correct "Find" reg.ex.\n\nError:\n{}'),ex), app.MB_OK) 
                         focused     = 'what'
                         continue#while
-                if not fold_s or not os.path.isdir(fold_s):
-                    app.msg_box(_('Set existing "In folder" value'), app.MB_OK) 
+                if fold_s!=IN_OPEN_FILES and (not fold_s or not os.path.isdir(fold_s)):
+                    app.msg_box(f(_('Set existing "In folder" value or use "{}" (see Presets)'), IN_OPEN_FILES), app.MB_OK) 
                     focused     = 'fold'
                     continue#while
                 if not incl_s:
@@ -591,9 +498,14 @@ Extra options for "user.json" (need restart after changing). Default values:
                     app.msg_box(_('Fix quotes in the "Not in files" field'), app.MB_OK) 
                     focused     = 'excl'
                     continue#while
-                if shtp_l[int(shtp_s)] not in (SHTP_SHORT_R, SHTP_SHORT_RCL) and \
+                if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
                    sort_s!='0':
-                    app.msg_box(_('Conflict "Sort file list" and "Tree type" options.\n\nSee Help.'), app.MB_OK) 
+                    app.msg_box(_('Conflict "Sort file list" and "Tree type" options.\n\nSee Help--Tree.'), app.MB_OK) 
+                    focused     = 'shtp'
+                    continue#while
+                if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+                   fold_s==IN_OPEN_FILES:
+                    app.msg_box(f(_('Conflict "{}" and "Tree type" options.\n\nSee Help--Tree.'),IN_OPEN_FILES), app.MB_OK) 
                     focused     = 'shtp'
                     continue#while
                 focused     = 'what'
@@ -741,7 +653,7 @@ Extra options for "user.json" (need restart after changing). Default values:
 #               to_ed.insert(0, to_ed.get_line_count(), line+'\n')
             return to_ed.get_line_count()-2
         shtp    = rpt_type['shtp']
-        row4crt = append_line(f(_('{} "{}" in folder "{}" ({} matches in {} files)')
+        row4crt = append_line(f(_('{} "{}" in "{}" ({} matches in {} files)')
                                 ,TOP_RES_SIGN
                                 ,what_find['find']
                                 ,how_walk['root']
@@ -955,13 +867,14 @@ Extra options for "user.json" (need restart after changing). Default values:
             if not op_ed:
                 # Open it
                 ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
-                grps    = len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
+                grps    = get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
                 op_grp  = apx.icase(False,-1
                                 ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
                                 ,where=='same'                                          , -1
                                 ,where=='next'                                          , (ed_grp+1)%grps
                                 ,where=='prev'                                          , (ed_grp-1)%grps
                                 )
+                pass;          #LOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
                 app.file_open(path, op_grp)
                 op_ed   = ed
             op_ed.focus()
@@ -992,21 +905,21 @@ Extra options for "user.json" (need restart after changing). Default values:
             open_and_nav(path, rw, cl, ln)
             return
         testings="""
-+Search for "smtH" in folder "c:\temp\try-ff" (10 matches in 7 files)
++Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
 	<c:\temp\try-ff\s1\t1-s1.txt>
 		<(3)>: SMTH
 		<(3:2)>: SMTH
 		<(3:2:2)>: SMTH
-+Search for "smtH" in folder "c:\temp\try-ff" (10 matches in 7 files)
++Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
 	<c:\temp\try-ff\s1>
 		<t1-s1.txt(5)>: SMTH
 		<t1-s1.txt(5:4)>: SMTH
 		<t1-s1.txt(5:4:2)>: SMTH
-+Search for "smtH" in folder "c:\temp\try-ff" (10 matches in 7 files)
++Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
 	<c:\temp\try-ff\s1\t1-s1.txt(3)>: SMTH
-+Search for "smtH" in folder "c:\temp\try-ff" (10 matches in 7 files)
++Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
 	<c:\temp\try-ff\s1\t1-s1.txt>: #4
-+Search for "smtH" in folder "c:\temp\try-ff" (7 matches in 7 files)
++Search for "smtH" in "c:\temp\try-ff" (7 matches in 7 files)
 	<c:\temp\try-ff\s1\t2-s1.txt>
         """
         # Try to build path from prev lines
@@ -1036,6 +949,114 @@ Extra options for "user.json" (need restart after changing). Default values:
        #def _nav_to_src
    #class Command
 
+def dlg_help(word_h, shtp_h):
+    RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
+    TIPS_BODY   = _(r'''
+• Values of "In file" and "Not in file" can contain
+    ?       for any single char,
+    *       for any substring (may be empty),
+    [seq]   any character in seq,
+    [!seq]  any character not in seq. 
+ 
+• Set special value "{tags}" in "In folder" to search in texts of all opened files.
+    Preset "In folder={tags}" will help you.
+    To find in tab likes "Untitled2" use mask "*" in field "In files".
+ 
+• "w" - {word}
+ 
+• Long-term searching can be interrupted with ESC.
+    Search has three stages: 
+        picking files, 
+        finding fragments, 
+        reporting.
+    ESC stops any stage. When picking and finding, ESC stops only this stage, so next stage begins.
+''').strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES)
+#• Reg.ex. tips:
+#   Format for found groups in Replace: \1
+    TREE_BODY   = _(r'''
+Option "Tree type" - {shtp}
+''').strip().format(shtp=shtp_h.replace('\r', '\n'))
+    OPTS_BODY   = _(r'''
+Extra options for "user.json" (need restart after changing). 
+Default values:
+    // Fill Find with selection from current file when dialog starts
+    "fif_use_selection_on_start":false,
+    
+    // Copy find-options ".*", "aA", "w" from editor find to dialog on start
+    "fif_use_edfind_opt_on_start":false,
+    
+    // ESC will stop all stages 
+    "fif_esc_full_stop":false,
+    
+    // Close dialog if searching was success
+    "fif_hide_if_success":false,
+    
+    // Need reporting if nothing found
+    "fif_report_no_matches":false,
+    
+    // Style to mark found fragment in report-text
+    // Full form
+    //    "fif_mark_style":{
+    //      "color_back":"", 
+    //      "color_font":"",
+    //      "font_bold":false, 
+    //      "font_italic":false,
+    //      "color_border":"", 
+    //      "borders":{"left":"","right":"","bottom":"","top":""}
+    //    },
+    //  Color values: "" - skip, "#RRGGBB" - hex-digits
+    //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
+    "fif_mark_style":{"borders":{"b":"dotted"}},
+    
+    // List of lexer names. First available will be applyed.
+    "fif_lexers":["Search results"],
+''').strip()
+#   // Before append result fold all previous ones
+#   "fif_fold_prev_res":false,
+#   
+    DW, DH      = 600, 600
+    vals_hlp    = dict(htxt=TIPS_BODY)
+    while_hlp   = True
+    while while_hlp:
+        btn_hlp,    \
+        vals_hlp    = dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
+             [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
+             ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
+             ,dict(cid='tips',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                                 )
+             ,dict(cid='tree',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                                 )
+             ,dict(cid='opts',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                                 )
+             ,dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
+             ], vals_hlp, focus_cid='htxt')
+        if btn_hlp is None or btn_hlp=='-': break#while while_hlp
+        if False:pass
+        elif btn_hlp=='tips':   vals_hlp["htxt"] = TIPS_BODY
+        elif btn_hlp=='tree':   vals_hlp["htxt"] = TREE_BODY
+        elif btn_hlp=='opts':   vals_hlp["htxt"] = OPTS_BODY
+       #while while_hlp
+   #def dlg_help
+
+class ProgressAndBreak:
+    """ Helper for 
+        - Show progress of working
+        - Allow user to stop long procces
+    """
+    def __init__(self):
+        self.prefix = ''
+        app.app_proc(app.PROC_SET_ESCAPE, '0')
+
+    def set_progress(self, msg:str):
+        app.msg_status(self.prefix+msg, process_messages=True)
+
+    def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
+        was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
+        app.app_proc(app.PROC_SET_ESCAPE, '0')
+        if was_esc and with_request:
+            if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO):
+                return True
+            was_esc = False
+        return was_esc
+   #class ProgressAndBreak
+
 def fold_all_found_up(rpt_ed:app.Editor, what:str):
     user_opt= app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
     # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp
@@ -1043,7 +1064,7 @@ def fold_all_found_up(rpt_ed:app.Editor, what:str):
     rpt_ed.cmd(    cmds.cmd_FinderAction, chr(1).join(['findprev', what, '', 'cf']))
     pass;                       LOG and log('row,sel={}',(rpt_ed.get_carets()[0][1], rpt_ed.get_text_sel()))
 #   while rpt_ed.get_text_sel():
-    for i in range(2):
+    for i in range(2):  ##!!
         pass;                   LOG and log('row,sel={}',(rpt_ed.get_carets()[0][1], rpt_ed.get_text_sel()))
         rpt_ed.set_caret(1, rpt_ed.get_carets()[0][1])
         rpt_ed.cmd(cmds.cmd_FoldingFoldAtCurLine)
@@ -1087,7 +1108,7 @@ def get_live_restabs()->list:
 ##############################################################################
 def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, progressor=None)->(list, dict):
     """ Scan files by how_walk:
-            'root'         !str
+            'root'         !str         disk folder or <in open files> to scan tabs
             'depth'         int(-1)    -1=all, 0=only root
             'file_incl'    !str
             'file_excl'     str('')
@@ -1096,7 +1117,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             'skip_hidn'     bool(T)
             'skip_binr'     bool(F) 
             'skip_size'     int(0)      0=all Kbyte
-        to find in it fragments by what_find:
+        to find fragments by what_find:
             'find'         !str
             'enco_type'     str('')     '','?'
             'mult'          bool(F)     Multylines 
@@ -1149,8 +1170,11 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                   ,find_stopped=False
                   ,brow_files=0, files=0, frgms=0)
 
+    root    = how_walk['root']
     files,  \
-    cllc_stp= collect_files(how_walk, progressor)
+    cllc_stp= collect_tabs(how_walk) \
+                if root==IN_OPEN_FILES else \
+              collect_files(how_walk, progressor)
     if cllc_stp and ESC_FULL_STOP:   return [], {}
     pass;                       LOG and log('#collect_files={}',len(files))
     pass;                      #LOG and log('files={}',pf(files))
@@ -1176,12 +1200,66 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     fra_b   = False#what_save['fragm']
     lin_b   = what_save['lines']
     shtp    = how_rpt['shtp']
+
+    def find_for_body(   body:str, dept:int, rsp_l:list, rsp_i:list):
+        if pttn.search(body):
+            rsp_l           += [dict(dept=dept, file=path)]
+            rsp_i['files']  += 1
+            rsp_i['frgms']  += 1
+    def find_for_lines(lines:list, dept:int, rsp_l:list, rsp_i:list)->int:
+        count   = 0
+        items   = []
+        for ln,line in enumerate(lines):
+            line    = line.rstrip(c10+c13)
+            mtchs   = list(pttn.finditer(line))
+            if not plc_b:
+                # Only counting
+                count  += len(mtchs)
+            else:
+                for mtch in mtchs:
+                    count  += 1
+                    item    =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
+                    if fra_b:
+                        item.update(dict(fragm=mtch.group()))
+                    if lin_b:
+                        item.update(dict(line=line))
+                    items  += [item]
+           #for line
+        if not count:
+            # No matches
+            return count #continue#for path
+        if not plc_b:
+            # Only counting
+            rsp_l  += [dict( dept=dept
+                            ,file=path
+                            ,count=count)]
+        else:
+            rsp_l  += [dict( dept=dept
+                            ,file=path
+                            ,count=count
+                            ,items=items)]
+        rsp_i['files']  += 1
+        rsp_i['frgms']  += count
+        return count
+       #def find_for_lines
+
+    if root==IN_OPEN_FILES:
+        # Find in tabs
+        for path, h_tab in files:
+            try_ed  = app.Editor(h_tab)
+            if not cnt_b:
+                # Only path finding
+                find_for_body(try_ed.get_text_all()                                         , 0, rsp_l, rsp_i)
+                continue#for path
+            find_for_lines([try_ed.get_text_line(r) for r in range(try_ed.get_line_count())], 0, rsp_l, rsp_i)
+           #for path
+        return rsp_l, rsp_i
+        
     spr_dirs= shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL)   # Separate dir in rsp
-    root    = how_walk['root']
 
     def get_prnt_path_dct(path, tree):
 #       while True:
-        for i in range(5):
+        for i in range(5):##!!
             if not path:        return None
             if path in tree:    return tree[path]
             path = os.path.dirname(path)
@@ -1226,100 +1304,22 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 pass;          #LOG and log('tree4rsp={}',tree4rsp)
         dept    = 1+prntdct['dept'] if prntdct else 0
         try:
-            # Detect encoding
-#           detector.reset()
-#           with open(path, 'rb') as h_path:
-#               line = h_path.readline()
-#               lines= 1
-#               bytes= len(line)
-#               while line:
-#                   detector.feed(line)
-#                   if detector.done: break
-#                   line = h_path.readline()
-#                   lines+= 1
-#                   bytes+= len(line)
-#           detector.close()
-#           pass;               LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
-#                                           ,lines, bytes, detector.done, detector.result)
-#           encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
-            encoding    = locale.getpreferredencoding()
+            # Find in file
+            encoding    = detect_encoding(path)#, detector)
             # Read
             with open(path, encoding=encoding) as h_path:
                 rsp_i['brow_files']     += 1
                 if not cnt_b:
                     # Only path finding
-                    body    = h_path.read()
-                    if pttn.search(body):
-                        rsp_l           += [dict(dept=dept, file=path)]
-                        rsp_i['files']  += 1
-                        rsp_i['frgms']  += 1
+                    find_for_body(       h_path.read()      , dept, rsp_l, rsp_i)
                     continue#for path
-
-#               if mult_b:
-#                   # Find MULTILINE fragments
-#                   body    = h_path.read()
-#                   mtchs   = list(pttn.finditer(body))
-#                   count   = len(mtchs)
-#                   if not plc_b:
-#                       # Only counting
-#                       rsp_l  += [dict(file=path
-#                                   ,count=count)]
-#                       continue#for path
-#                   items   = []
-#                   for mtch in mtchs:
-#                       ln      = 0#??
-#                       item    =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
-#                       if fra_b:
-#                           item.update(dict(fragm=mtch.group()))
-#                       if lin_b:
-#                           line    = ''#??
-#                           item.update(dict(line=line))
-#                       items  += [item]
-#                   rsp_l  += [dict( file=path
-#                                   ,count=count
-#                                   ,items=items)]
-#                   continue#for path
-
-               #if not mult_b:
-                # Find IN-LINE fragments
-                count   = 0
-                items   = []
-                lines   = h_path.readlines()
-                for ln,line in enumerate(lines):
-                    line    = line.rstrip(c10+c13)
-                    mtchs   = list(pttn.finditer(line))
-                    if not plc_b:
-                        # Only counting
-                        count  += len(mtchs)
-                    else:
-                        for mtch in mtchs:
-                            count  += 1
-                            item    =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
-                            if fra_b:
-                                item.update(dict(fragm=mtch.group()))
-                            if lin_b:
-                                item.update(dict(line=line))
-                            items  += [item]
-                   #for line
+                count   = find_for_lines(h_path.readlines() , dept, rsp_l, rsp_i)
                 if not count:
-                    # No matches
                     continue#for path
-                if not plc_b:
-                    # Only counting
-                    rsp_l  += [dict( dept=dept
-                                    ,file=path
-                                    ,count=count)]
-                else:
-                    rsp_l  += [dict( dept=dept
-                                    ,file=path
-                                    ,count=count
-                                    ,items=items)]
-                rsp_i['files']  += 1
-                rsp_i['frgms']  += count
                 if prntdct:
 #                   prntdct['count']+=count
 #                   prntdct = prntdct['prnt']
-                    for i in range(5):
+                    for i in range(5):  ##!!
                         if not prntdct:  break
 #                   while prntdct:
                         prntdct['count']+=count
@@ -1333,6 +1333,43 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     pass;                       LOG and log('ok files ==) #rsp_i={}',rsp_i)
     return rsp_l, rsp_i
    #def find_in_files
+
+def prep_filename_masks(mask:str)->list:
+    mask    = mask.strip()
+    if '"' in mask:
+        # Temporary replace all ' ' into "" to '/'
+        re_binqu= re.compile(r'"([^"]+) ([^"]+)"')
+        while re_binqu.search(mask):
+            mask= re_binqu.sub(r'"\1/\2"', mask) 
+        masks   = mask.split(' ')
+        masks   = [m.strip('"').replace('/', ' ') for m in masks if m]
+    else:
+        masks   = mask.split(' ')
+    masks   = [m for m in masks if m]
+    return masks
+   #def prep_filename_masks
+    
+def collect_tabs(how_walk:dict)->list:
+    """ how_walk keys:
+            'file_incl'    !str
+            'file_excl'     str('')
+    """
+    incl    = how_walk[    'file_incl'    ].strip()
+    excl    = how_walk.get('file_excl', '').strip()
+    incls   = prep_filename_masks(incl)
+    excls   = prep_filename_masks(excl)
+    rsp     = []
+    for h_tab in app.ed_handles(): 
+        try_ed  = app.Editor(h_tab)
+        filename= try_ed.get_filename()
+        title   = try_ed.get_prop(app.PROP_TAB_TITLE, '')
+        if not      any(map(lambda cl:fnmatch(title, cl), incls)):   continue#for h
+        if excl and any(map(lambda cl:fnmatch(title, cl), excls)):   continue#for h
+        path    = filename if filename else '<CudaText>/'+title
+        rsp    += [(path, h_tab)]
+       #for h_tab
+    return rsp, False
+   #def collect_tabs
 
 def collect_files(how_walk:dict, progressor=None)->list:
     """ how_walk keys:
@@ -1361,21 +1398,8 @@ def collect_files(how_walk:dict, progressor=None)->list:
     size    = how_walk.get('skip_size', 0)
     frst    = how_walk.get('only_frst', 0)
     sort    = how_walk.get('sort_type', '')
-    def prep_masks(mask:str)->list:
-        mask    = mask.strip()
-        if '"' in mask:
-            # Temporary replace all ' ' into "" to '/'
-            re_binqu= re.compile(r'"([^"]+) ([^"]+)"')
-            while re_binqu.search(mask):
-                mask= re_binqu.sub(r'"\1/\2"', mask) 
-            masks   = mask.split(' ')
-            masks   = [m.strip('"').replace('/', ' ') for m in masks if m]
-        else:
-            masks   = mask.split(' ')
-        masks   = [m for m in masks if m]
-        return masks
-    incls   = prep_masks(incl)
-    excls   = prep_masks(excl)
+    incls   = prep_filename_masks(incl)
+    excls   = prep_filename_masks(excl)
     pass;                      #LOG and log('incls={}',incls)
     pass;                      #LOG and log('excls={}',excls)
     dir_n   = 0
@@ -1429,7 +1453,27 @@ def collect_files(how_walk:dict, progressor=None)->list:
             rsp = rsp[:frst]
     return rsp, stoped
    #def collect_files
-    
+
+def detect_encoding(path): #, detector= UniversalDetector()):
+#   detector.reset()
+#   with open(path, 'rb') as h_path:
+#       line = h_path.readline()
+#       lines= 1
+#       bytes= len(line)
+#       while line:
+#           detector.feed(line)
+#           if detector.done: break
+#           line = h_path.readline()
+#           lines+= 1
+#           bytes+= len(line)
+#   detector.close()
+#   pass;               LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
+#                                   ,lines, bytes, detector.done, detector.result)
+#   encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
+    encoding    = locale.getpreferredencoding()
+    return encoding
+   #def detect_encoding
+
 TEXTCHARS = bytearray({7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f})
 def is_birary_file(path:str, blocksize=1024, def_ans=None)->bool:
     if not os.path.isfile(path):    return def_ans
@@ -1456,6 +1500,23 @@ def is_hidden_file(path:str)->bool:
     # For *nix use a '.' prefix.
     return os.path.basename(path).startswith('.')
    #def is_hidden_file
+
+def get_groups_count():
+    gr_mode = app.app_proc(app.PROC_GET_GROUPING, '')
+    if gr_mode==app.GROUPS_ONE      :return 1
+    if gr_mode==app.GROUPS_2VERT    :return 2
+    if gr_mode==app.GROUPS_2HORZ    :return 2
+    if gr_mode==app.GROUPS_3VERT    :return 3
+    if gr_mode==app.GROUPS_3HORZ    :return 3
+    if gr_mode==app.GROUPS_3PLUS    :return 3
+    if gr_mode==app.GROUPS_1P2VERT  :return 3
+    if gr_mode==app.GROUPS_1P2HORZ  :return 3
+    if gr_mode==app.GROUPS_4VERT    :return 4
+    if gr_mode==app.GROUPS_4HORZ    :return 4
+    if gr_mode==app.GROUPS_4GRID    :return 4
+    if gr_mode==app.GROUPS_6GRID    :return 6
+    return 1
+    
 
 if __name__ == '__main__' :     # Tests
     Command().show_dlg()    #??
@@ -1501,4 +1562,7 @@ ToDo
 [+][kv-kv][22apr16] Tips and ExtraOpts in dlg Help
 [?][kv-kv][22apr16] Use text from Cud (not from disk!) for modifyed files
 [ ][kv-kv][22apr16] Set caret to 1st fragment (with scroll)
+[ ][at-kv][26apr16] Move select_lexer,get_groups_count,html2rgb to cudax_lib
+[?][kv-kv][26apr16] AsSubl: empty InFiles, InFolder ==> find in open files (ready preset?)
+[ ][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
 '''
