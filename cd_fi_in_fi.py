@@ -373,9 +373,9 @@ class Command:
                             ,rp=ps.get('_rp_',' ')
                             ) 
                             for ps in pset_l] \
-                        + [f(_('In folder={}\tFind in current text of all opened files'), IN_OPEN_FILES)
+                        + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
                           ,_('Delete preset\tSelect name...')
-                          ,_('Save current options as preset\tSelect options for save...')]
+                          ,_('Save as preset\tSelect options for save...')]
                 ind_inop= len(pset_l)
                 ind_del = len(pset_l)+1
                 ind_save= len(pset_l)+2
@@ -748,27 +748,28 @@ class Command:
                         mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                     else:
                         if False:pass
-                        elif shtp in (SHTP_SH_AL_RCL):
+                        elif shtp in (SHTP_SH_AL_RCL, SHTP_ALIGN_RCL):
+                            path_s  = path if shtp in (SHTP_ALIGN_RCL) else path.ljust(         fl_wd, ' ')
                             src_cl  = item.get('col', -1)
                             src_ln  = item.get('ln', -1)
                             src_cl_s= '' if -1==src_cl else str(1+src_cl)
                             src_ln_s= '' if -1==src_ln else str(  src_ln)
-                            prefix  = c9dt+f('<{}({}:{}:{})>: ', path.ljust(         fl_wd, ' ')
+                            prefix  = c9dt+f('<{}({}:{}:{})>: ', path_s
                                                                , str(1+src_rw).rjust(rw_wd, ' ')
                                                                ,      src_cl_s.rjust(cl_wd, ' ')
                                                                ,      src_ln_s.rjust(ln_wd, ' '))
                         elif shtp in (SHTP_ALIGN_R):
                             prefix  = c9dt+f('<{}({})>: ',       path
                                                                , str(1+src_rw).rjust(rw_wd, ' '))
-                        elif shtp in (SHTP_ALIGN_RCL):
-                            src_cl  = item.get('col', -1)
-                            src_ln  = item.get('ln', -1)
-                            src_cl_s= '' if -1==src_cl else str(1+src_cl)
-                            src_ln_s= '' if -1==src_ln else str(  src_ln)
-                            prefix  = c9dt+f('<{}({}:{}:{})>: ', path
-                                                               , str(1+src_rw).rjust(rw_wd, ' ')
-                                                               ,      src_cl_s.rjust(cl_wd, ' ')
-                                                               ,      src_ln_s.rjust(ln_wd, ' '))
+#                       elif shtp in (SHTP_ALIGN_RCL):
+#                           src_cl  = item.get('col', -1)
+#                           src_ln  = item.get('ln', -1)
+#                           src_cl_s= '' if -1==src_cl else str(1+src_cl)
+#                           src_ln_s= '' if -1==src_ln else str(  src_ln)
+#                           prefix  = c9dt+f('<{}({}:{}:{})>: ', path
+#                                                              , str(1+src_rw).rjust(rw_wd, ' ')
+#                                                              ,      src_cl_s.rjust(cl_wd, ' ')
+#                                                              ,      src_ln_s.rjust(ln_wd, ' '))
                         else:
                             prefix  = c9dt+f('<{}({})>: ', path,     1+src_rw)
                         if 'col' in item and 'ln' in item and \
@@ -984,9 +985,9 @@ def dlg_help(word_h, shtp_h, cntx_h):
     [seq]   any character in seq,
     [!seq]  any character not in seq. 
  
-• Set special value "{tags}" in "In folder" to search in texts of all opened files.
-    Preset "In folder={tags}" will help you.
-    To find in tab likes "Untitled2" use mask "*" in field "In files".
+• Set special value "{tags}" for field "In folder" to search in all opened documents.
+    Preset "In folder={tags}" helps to do this.
+    To search in unsaved tab use mask "*" in field "In files".
  
 • "w" - {word}
  
@@ -1019,6 +1020,9 @@ Default values:
     
     // Need reporting if nothing found
     "fif_report_no_matches":false,
+    
+    // "Show context" will append N around source lines to report
+    "fif_context_width":1,
     
     // Style to mark found fragment in report-text
     // Full form
@@ -1227,7 +1231,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     lin_b   = what_save['lines']
     shtp    = how_rpt['shtp']
     cntx    = how_rpt['cntx']
-    ext_lns = 1 if cntx else 0
+    ext_lns = apx.get_opt('fif_context_width', 1) if cntx else 0
 
     def find_for_body(   body:str, dept:int, rsp_l:list, rsp_i:list):
         if pttn.search(body):
@@ -1602,5 +1606,5 @@ ToDo
 [ ][kv-kv][22apr16] Set caret to 1st fragment (with scroll)
 [ ][at-kv][26apr16] Move select_lexer,get_groups_count,html2rgb to cudax_lib
 [?][kv-kv][26apr16] AsSubl: empty InFiles, InFolder ==> find in open files (ready preset?)
-[ ][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
+[+][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
 '''
