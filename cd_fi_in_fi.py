@@ -22,7 +22,7 @@ c9, c10, c13    = chr(9), chr(10), chr(13)
 pass;                           LOG = (-2==-2)  # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
-pass;                           ##!! need correct
+pass;                           ##!! waits correction
 
 _   = get_translation(__file__) # I18N
 
@@ -77,7 +77,11 @@ SHTP_MIDDL_RCL  = _('dir/file(r:c:l):line')
 SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
-shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL]
+shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
+                  ,SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL
+                  ,SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                  ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                  ]
 
 lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = select_lexer(lexers_l)
@@ -160,6 +164,7 @@ class Command:
                     '\r  In folder={}'
                     '\ronly options without separated folders or files are used.'
                    ),IN_OPEN_FILES)
+        cntx_h  = _('Append around source lines in Results')
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
         coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
         pset_h  = _('Save options for future.\rRestore saved options.')
@@ -192,6 +197,7 @@ class Command:
         join_s  = opts.get('join', stores.get('join', '0'))
         totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = str(min(1, int(totb_s)))
         shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
+        cntx_s  = opts.get('cntx', stores.get('cntx', '0'))
         skip_s  = opts.get('skip', stores.get('skip', '0'))
         sort_s  = opts.get('sort', stores.get('sort', '0'))
         frst_s  = opts.get('frst', stores.get('frst', '0'))
@@ -222,7 +228,7 @@ class Command:
             DLG_W,\
             DLG_H   = (tbn_l+BTN_W+GAP, DLG_H0+gap3)
 
-            cnts    = ([]                                                                                                              # gmqvxz
+            cnts    = ([]                                                                                                              # gmqvz
                      +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
                      +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
                      +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+35*2 ,w=35       ,cap='"&w"'                 ,hint=word_h)] # &w
@@ -255,6 +261,7 @@ class Command:
                      +[dict(cid='join',tp='ch'      ,t=gap2+244     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
                      +[dict(           tp='lb'      ,tid='shtp'     ,l=GAP      ,w=100      ,cap=_('Tree t&ype:')       ,hint=shtp_h)] # &y
                      +[dict(cid='shtp',tp='cb-ro'   ,t=gap2+271     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
+                     +[dict(cid='cntx',tp='ch'      ,t=gap2+298     ,l=GAP+80   ,w=150      ,cap=_('Show conte&xt')     ,hint=cntx_h)] # &x
                                                 
                      +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. search options ==')     )] # 
                      +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
@@ -291,6 +298,7 @@ class Command:
                                  ,join=join_s
                                  ,totb=totb_s
                                  ,shtp=shtp_s
+                                 ,cntx=cntx_s
                                  ,skip=skip_s
                                  ,sort=sort_s
                                  ,frst=frst_s
@@ -316,6 +324,7 @@ class Command:
                 join_s  = vals['join']
                 totb_s  = vals['totb']
                 shtp_s  = vals['shtp']
+                cntx_s  = vals['cntx']
                 skip_s  = vals['skip']
                 sort_s  = vals['sort']
                 frst_s  = vals['frst']
@@ -335,6 +344,7 @@ class Command:
             stores['join']  = join_s
             stores['totb']  = str(min(1, int(totb_s)))
             stores['shtp']  = shtp_s
+            stores['cntx']  = cntx_s
             stores['skip']  = skip_s
             stores['sort']  = sort_s
             stores['frst']  = frst_s
@@ -349,7 +359,7 @@ class Command:
                 continue#while
 
             if btn=='help':
-                dlg_help(word_h, shtp_h)
+                dlg_help(word_h, shtp_h, cntx_h)
                 continue#while
             
             if btn=='pres':
@@ -389,6 +399,7 @@ class Command:
                     join_s = ps.get('join', join_s)
                     totb_s = ps.get('totb', totb_s);    totb_s = str(min(1, int(totb_s)))
                     shtp_s = ps.get('shtp', shtp_s)
+                    cntx_s = ps.get('cntx', cntx_s)
                     skip_s = ps.get('skip', skip_s)
                     sort_s = ps.get('sort', sort_s)
                     frst_s = ps.get('frst', frst_s)
@@ -439,6 +450,7 @@ class Command:
                         ps['join']  = join_s
                         ps['totb']  = str(min(1, int(totb_s)))
                         ps['shtp']  = shtp_s
+                        ps['cntx']  = cntx_s
                         pass
                     pset_l += [ps]
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
@@ -498,12 +510,16 @@ class Command:
                     app.msg_box(_('Fix quotes in the "Not in files" field'), app.MB_OK) 
                     focused     = 'excl'
                     continue#while
-                if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+                if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                                          ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                                          ) and \
                    sort_s!='0':
                     app.msg_box(_('Conflict "Sort file list" and "Tree type" options.\n\nSee Help--Tree.'), app.MB_OK) 
                     focused     = 'shtp'
                     continue#while
-                if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+                if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                                          ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                                          ) and \
                    fold_s==IN_OPEN_FILES:
                     app.msg_box(f(_('Conflict "{}" and "Tree type" options.\n\nSee Help--Tree.'),IN_OPEN_FILES), app.MB_OK) 
                     focused     = 'shtp'
@@ -542,6 +558,7 @@ class Command:
                 how_rpt     =dict(
                      totb   =totb_l[int(totb_s)]
                     ,shtp   =shtp_v if sort_s=='0' or shtp_v in (SHTP_SHORT_R, SHTP_SHORT_RCL) else SHTP_SHORT_R
+                    ,cntx   ='1'==cntx_s
                     ,join   ='1'==join_s
                     )
                 totb_s  = str(min(1, int(totb_s)))
@@ -710,7 +727,7 @@ class Command:
                     append_line(c9dt+f('<{}>: #{}', path, len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
-                if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
+                if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):#, SHTP_SPARS_R11, SHTP_SPARS_R22):
                     append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
@@ -719,6 +736,11 @@ class Command:
 #                   pass;       break
 #
                     src_rw  = item.get('row', 0)
+                    if -1==src_rw:
+                        # Separator
+                        append_line(c9dt+'<>:')
+                        continue#for path_n
+                    
                     if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and \
                         src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
                         # Add mark in old line
@@ -727,22 +749,26 @@ class Command:
                     else:
                         if False:pass
                         elif shtp in (SHTP_SH_AL_RCL):
-                            src_cl  = item['col']
-                            src_ln  = item['ln']
+                            src_cl  = item.get('col', -1)
+                            src_ln  = item.get('ln', -1)
+                            src_cl_s= '' if -1==src_cl else str(1+src_cl)
+                            src_ln_s= '' if -1==src_ln else str(  src_ln)
                             prefix  = c9dt+f('<{}({}:{}:{})>: ', path.ljust(         fl_wd, ' ')
                                                                , str(1+src_rw).rjust(rw_wd, ' ')
-                                                               , str(1+src_cl).rjust(cl_wd, ' ')
-                                                               , str(  src_ln).rjust(ln_wd, ' '))
+                                                               ,      src_cl_s.rjust(cl_wd, ' ')
+                                                               ,      src_ln_s.rjust(ln_wd, ' '))
                         elif shtp in (SHTP_ALIGN_R):
                             prefix  = c9dt+f('<{}({})>: ',       path
                                                                , str(1+src_rw).rjust(rw_wd, ' '))
                         elif shtp in (SHTP_ALIGN_RCL):
-                            src_cl  = item['col']
-                            src_ln  = item['ln']
+                            src_cl  = item.get('col', -1)
+                            src_ln  = item.get('ln', -1)
+                            src_cl_s= '' if -1==src_cl else str(1+src_cl)
+                            src_ln_s= '' if -1==src_ln else str(  src_ln)
                             prefix  = c9dt+f('<{}({}:{}:{})>: ', path
                                                                , str(1+src_rw).rjust(rw_wd, ' ')
-                                                               , str(1+src_cl).rjust(cl_wd, ' ')
-                                                               , str(  src_ln).rjust(ln_wd, ' '))
+                                                               ,      src_cl_s.rjust(cl_wd, ' ')
+                                                               ,      src_ln_s.rjust(ln_wd, ' '))
                         else:
                             prefix  = c9dt+f('<{}({})>: ', path,     1+src_rw)
                         if 'col' in item and 'ln' in item and \
@@ -949,7 +975,7 @@ class Command:
        #def _nav_to_src
    #class Command
 
-def dlg_help(word_h, shtp_h):
+def dlg_help(word_h, shtp_h, cntx_h):
     RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
     TIPS_BODY   = _(r'''
 • Values of "In file" and "Not in file" can contain
@@ -1134,6 +1160,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                                         SHTP_SHORT_* - save each full path
                                         SHTP_MIDDL_* - save separately root, mid-dir, file.ext
                                         SHTP_SPARS_* - save separately root, mid-dir, file.ext and each (row):line
+            'cntx'          bool(F)     Append around lines                      
         Return 
             [{file:'path'}          if not what_save['count']
             ,{file:'path'
@@ -1197,9 +1224,10 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 
     cnt_b   = what_save['count']
     plc_b   = what_save['place']
-    fra_b   = False#what_save['fragm']
     lin_b   = what_save['lines']
     shtp    = how_rpt['shtp']
+    cntx    = how_rpt['cntx']
+    ext_lns = 1 if cntx else 0
 
     def find_for_body(   body:str, dept:int, rsp_l:list, rsp_i:list):
         if pttn.search(body):
@@ -1218,12 +1246,20 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             else:
                 for mtch in mtchs:
                     count  += 1
-                    item    =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
-                    if fra_b:
-                        item.update(dict(fragm=mtch.group()))
-                    if lin_b:
-                        item.update(dict(line=line))
-                    items  += [item]
+                    for ext_ln in range(max(0, ln-ext_lns), ln):
+                        item    =       dict(row=ext_ln)
+                        if lin_b:  item.update(dict(line=lines[ext_ln]))
+                        items  += [item]
+                    item        =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
+                    if lin_b:      item.update(dict(line=line))
+                    items      += [item]
+                    for ext_ln in range(ln+1, min(len(lines), ln+ext_lns+1)):
+                        item    =       dict(row=ext_ln)
+                        if lin_b:  item.update(dict(line=lines[ext_ln]))
+                        items  += [item]
+                    if ext_lns>0:
+                        # Separator
+                        items  += [dict(row=-1, line='')]
            #for line
         if not count:
             # No matches
@@ -1255,7 +1291,9 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
            #for path
         return rsp_l, rsp_i
         
-    spr_dirs= shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL)   # Separate dir in rsp
+    spr_dirs= shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                      ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                      )   # Separate dir in rsp
 
     def get_prnt_path_dct(path, tree):
 #       while True:
