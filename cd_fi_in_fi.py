@@ -50,8 +50,8 @@ class ProgressAndBreak:
 
 def fit_mark_style_for_attr(js:dict)->dict:
     """ Convert 
-            {"bg_c":"", "font_c":"", "font_b":false, "font_i":false
-            ,"border_c":"", "border":{"l":"","r":"","b":"","t":""}}
+            {"color_back":"", "color_font":"", "font_bold":false, "font_italic":false
+            ,"color_border":"", "borders":{"l":"","r":"","b":"","t":""}}
         to dict with params for call ed.attr
             (color_bg=COLOR_NONE, color_font=COLOR_NONE, font_bold=0, font_italic=0, 
             color_border=COLOR_NONE, border_left=0, border_right=0, border_down=0, border_up=0)
@@ -59,12 +59,12 @@ def fit_mark_style_for_attr(js:dict)->dict:
     V_L     = ['solid', 'dash', '2px', 'dotted', 'rounded', 'wave']
     shex2int= lambda shexRGB: int(shexRGB[4:6]+shexRGB[2:4]+shexRGB[0:2], 16)
     kwargs  = {}
-    if js.get('bg_c', ''):      kwargs['color_bg']      = shex2int(js['bg_c'].lstrip('#'))
-    if js.get('font_c', ''):    kwargs['color_font']    = shex2int(js['font_c'].lstrip('#'))
-    if js.get('border_c', ''):  kwargs['color_border']  = shex2int(js['border_c'].lstrip('#'))
-    if js.get('font_b', False): kwargs['font_bold']     = 1
-    if js.get('font_i', False): kwargs['font_italic']   = 1
-    jsbr    = js.get('border', {})
+    if js.get('color_back', ''):     kwargs['color_bg']      = shex2int(js['color_back'].lstrip('#'))
+    if js.get('color_font', ''):     kwargs['color_font']    = shex2int(js['color_font'].lstrip('#'))
+    if js.get('color_border', ''):   kwargs['color_border']  = shex2int(js['color_border'].lstrip('#'))
+    if js.get('font_bold', False):   kwargs['font_bold']     = 1
+    if js.get('font_italic', False): kwargs['font_italic']   = 1
+    jsbr    = js.get('borders', {})
     if jsbr.get('l', ''):       kwargs['border_left']   = V_L.index(jsbr['l'])+1
     if jsbr.get('r', ''):       kwargs['border_right']  = V_L.index(jsbr['r'])+1
     if jsbr.get('b', ''):       kwargs['border_down']   = V_L.index(jsbr['b'])+1
@@ -400,17 +400,19 @@ Extra options for "user.json" (need restart after changing). Default values:
     // Need reporting if nothing found
     "fif_report_no_matches":false,
     
-    // Style to mark found fragment in source line
+    // Style to mark found fragment in report-text
     // Full form
     //    "fif_mark_style":{{
-    //      "bg_c":"", 
-    //      "font_c":"", "font_b":false, "font_i":false,
-    //      "border_c":"", 
-    //      "border":{{"l":"","r":"","b":"","t":""}}
+    //      "color_back":"", 
+    //      "color_font":"",
+    //      "font_bold":false, 
+    //      "font_italic":false,
+    //      "color_border":"", 
+    //      "borders":{{"l":"","r":"","b":"","t":""}}
     //    }},
     //  Color values: "" - skip, "#RRGGBB" - hex-digits
     //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
-    "fif_mark_style":{{"border":{{"b":"dotted"}}}},
+    "fif_mark_style":{{"borders":{{"b":"dotted"}}}},
     
     // Close dialog if searching was success
     "fif_hide_if_success":false,
