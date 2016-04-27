@@ -96,18 +96,26 @@ MARK_STYLE      = apx.get_opt('fif_mark_style'              , {'borders':{'botto
 MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
 class Command:
     def find_in_ed(self):
-        if ed.get_prop(app.PROP_MODIFIED):
-            ans = app.msg_box(_('File modified.\nDo you want save it?'), app.MB_YESNOCANCEL) 
-            if ans==app.ID_CANCEL:  return
-            if ans==app.ID_YES:
-                ed.save()
+#       if ed.get_prop(app.PROP_MODIFIED):
+#           ans = app.msg_box(_('File modified.\nDo you want save it?'), app.MB_YESNOCANCEL) 
+#           if ans==app.ID_CANCEL:  return
+#           if ans==app.ID_YES:
+#               ed.save()
         filename= ed.get_filename()
-        if not filename:            return app.msg_status(_("Command works only with file on disk"))
-        crts    = ed.get_carets()
-        if len(crts)>1:             return app.msg_status(_("Command doesn't work with multi-carets"))
-        self.show_dlg(what=ed.get_text_sel(), opts=dict(
-             incl = os.path.basename(filename)
-            ,fold = os.path.dirname(filename)
+#       if not filename:            return app.msg_status(_("Command works only with file on disk"))
+#       crts    = ed.get_carets()
+#       if len(crts)>1:             return app.msg_status(_("Command doesn't work with multi-carets"))
+        self.show_dlg(what='', opts=dict(
+             incl = os.path.basename(filename) if filename else ed.get_prop(app.PROP_TAB_TITLE)
+            ,fold = IN_OPEN_FILES
+            ,cllc = str(cllc_l.index(CLLC_MATCH))
+            ))
+       #def find_in_ed
+
+    def find_in_tags(self):
+        self.show_dlg(what='', opts=dict(
+             incl = '*'
+            ,fold = IN_OPEN_FILES
             ,cllc = str(cllc_l.index(CLLC_MATCH))
             ))
        #def find_in_ed
@@ -179,6 +187,7 @@ class Command:
 #       BTN_W0  = 100
 
         what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
+        what_s  = what_s.splitlines()[0]
         repl_s  = opts.get('repl', '')
         reex01  = opts.get('reex', stores.get('reex', '0'))
         case01  = opts.get('case', stores.get('case', '0'))
@@ -657,7 +666,6 @@ class Command:
             to_ed.attr(app.MARKERS_ADD
                     , x=cl, y=rw, len=ln
                     , **MARK_STYLE
-#                   , border_down=4  # 1=solid, 2=dash, 3=2pixel, 4=dotted, 5=rounded, 6=wave
                     )
         def append_line(line:str, to_ed=rpt_ed)->int:
             ''' Append one line to end of to_ed. Return row of added line.'''
@@ -883,7 +891,7 @@ class Command:
         pass;                  #LOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
         def open_and_nav(path:str, rw=-1, cl=-1, ln=-1):
             if not os.path.isfile(path):    return
-            ed.set_prop(app.PROP_TAG, 'FiF:open_and_nav')
+            ed.set_prop(app.PROP_TAG, 'FiF=open_and_nav')
             op_ed   = None
             # Already opened?
             for h in app.ed_handles(): 
@@ -912,7 +920,7 @@ class Command:
                 op_ed.set_caret(0,      rw)
             elif cl==-1:
                 l_ln= len(op_ed.get_text_line(rw))
-                op_ed.set_caret(l_ln,   rw,   0,  rw)
+                op_ed.set_caret(0,   rw,   l_ln,  rw)   # inverted sel for show line head if window is narrow 
             elif ln==-1:
                 op_ed.set_caret(cl,     rw)
             else:
@@ -925,7 +933,7 @@ class Command:
                 op_ed.focus()
             else:
                 the_ed  = [app.Editor(h) for h in app.ed_handles() 
-                            if app.Editor(h).get_prop(app.PROP_TAG)=='FiF:open_and_nav'][0]
+                            if app.Editor(h).get_prop(app.PROP_TAG)=='FiF=open_and_nav'][0]
                 the_ed.focus()
            #def open_and_nav
         if os.path.isfile(path):
@@ -1407,7 +1415,7 @@ def collect_tabs(how_walk:dict)->list:
         title   = try_ed.get_prop(app.PROP_TAB_TITLE, '')
         if not      any(map(lambda cl:fnmatch(title, cl), incls)):   continue#for h
         if excl and any(map(lambda cl:fnmatch(title, cl), excls)):   continue#for h
-        path    = filename if filename else '<CudaText>/'+title
+        path    = filename if filename else '{CudaText}/'+title
         rsp    += [(path, h_tab)]
        #for h_tab
     return rsp, False

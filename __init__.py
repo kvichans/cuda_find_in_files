@@ -3,6 +3,7 @@ RLS  = CommandRLS()
 class Command:
     def show_dlg(self, what='', opts={}):   return RLS.show_dlg(what, opts)
     def find_in_ed(self):                   return RLS.find_in_ed()
+    def find_in_tags(self):                 return RLS.find_in_tags()
     def nav_to_src_same(self):              return RLS._nav_to_src('same', 'move')
     def nav_to_src_next(self):              return RLS._nav_to_src('next', 'stay')
     def nav_to_src_prev(self):              return RLS._nav_to_src('prev', 'stay')

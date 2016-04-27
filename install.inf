@@ -12,8 +12,14 @@ method=show_dlg
 
 [item2]
 section=commands
-caption=&Find in Files\Find in &current file...
+caption=&Find in Files\Find in &current tag...
 method=find_in_ed
+;menu=0
+
+[item3]
+section=commands
+caption=&Find in Files\Find in &all tags...
+method=find_in_tags
 ;menu=0
 
 [item10]
