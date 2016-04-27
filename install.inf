@@ -12,13 +12,13 @@ method=show_dlg
 
 [item2]
 section=commands
-caption=&Find in Files\Find in &current tag...
+caption=&Find in Files\Find in &current tab...
 method=find_in_ed
 ;menu=0
 
 [item3]
 section=commands
-caption=&Find in Files\Find in &all tags...
+caption=&Find in Files\Find in &all tabs...
 method=find_in_tags
 ;menu=0
 
@@ -47,12 +47,12 @@ method=nav_to_src_prev
 
 [item131]
 section=commands
-caption=&Find in Files\Navigate to source, to next group, with &activate
+caption=&Find in Files\Navigate to source, to next group, and &activate
 method=nav_to_src_next_act
 ;menu=0
 
 [item132]
 section=commands
-caption=&Find in Files\Navigate to source, to prev group, with a&ctivate
+caption=&Find in Files\Navigate to source, to prev group, and a&ctivate
 method=nav_to_src_prev_act
 ;menu=0
