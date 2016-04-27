@@ -187,7 +187,7 @@ class Command:
 #       BTN_W0  = 100
 
         what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
-        what_s  = what_s.splitlines()[0]
+        what_s  = what_s.splitlines()[0] if what_s else ''
         repl_s  = opts.get('repl', '')
         reex01  = opts.get('reex', stores.get('reex', '0'))
         case01  = opts.get('case', stores.get('case', '0'))
@@ -1610,9 +1610,9 @@ ToDo
 [+][a1-kv][22apr16] Extra ops: Style for mark
 [+][kv-kv][22apr16] Extra ops: Hide dlg after good res
 [+][kv-kv][22apr16] Tips and ExtraOpts in dlg Help
-[?][kv-kv][22apr16] Use text from Cud (not from disk!) for modifyed files
+[+][kv-kv][22apr16] Use text from Cud (not from disk!) for modifyed files
 [ ][kv-kv][22apr16] Set caret to 1st fragment (with scroll)
 [ ][at-kv][26apr16] Move select_lexer,get_groups_count,html2rgb to cudax_lib
-[?][kv-kv][26apr16] AsSubl: empty InFiles, InFolder ==> find in open files (ready preset?)
+[+][kv-kv][26apr16] AsSubl: empty InFiles, InFolder ==> find in open files (ready preset?)
 [+][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
 '''
