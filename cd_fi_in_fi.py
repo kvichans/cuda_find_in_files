@@ -669,6 +669,8 @@ class Command:
                     )
         def append_line(line:str, to_ed=rpt_ed)->int:
             ''' Append one line to end of to_ed. Return row of added line.'''
+            pass;              #LOG and log('line={}',repr(line))
+            line    = line.rstrip('\r\n')
             if to_ed.get_line_count()==1 and not to_ed.get_text_line(0):
                 # Empty doc
                 to_ed.set_text_line(0, line)
