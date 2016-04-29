@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.5.6 2016-04-26'
+    '0.5.7 2016-04-29'
 ToDo: (see end of file)
 '''
 
@@ -19,7 +19,10 @@ OrdDict = collections.OrderedDict
 c9, c10, c13    = chr(9), chr(10), chr(13) 
 #FROM_API_VERSION= '1.0.119'
 
-pass;                           LOG = (-2==-2)  # Do or dont logging.
+pass;                           LOG     = (-1==-1)  # Do or dont logging.
+pass;                           FNDLOG  = (-2== 2) and LOG
+pass;                           RPTLOG  = (-3== 3) and LOG
+pass;                           NAVLOG  = (-4== 4) and LOG
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -50,13 +53,13 @@ def fit_mark_style_for_attr(js:dict)->dict:
     return kwargs
    #def fit_mark_style_for_attr
    
-def select_lexer(need_lxrs:list)->str:
-    all_lxrs  = app.lexer_proc(app.LEXER_GET_LIST, '').splitlines()
-    all_lxrs  = [lxr for lxr in all_lxrs if app.lexer_proc(app.LEXER_GET_ENABLED, lxr)]
-    for lxr in need_lxrs:
-        if lxr in all_lxrs:
-            return lxr
-    return ''
+#def select_lexer(need_lxrs:list)->str:
+#   all_lxrs  = app.lexer_proc(app.LEXER_GET_LIST, '').splitlines()
+#   all_lxrs  = [lxr for lxr in all_lxrs if app.lexer_proc(app.LEXER_GET_ENABLED, lxr)]
+#   for lxr in need_lxrs:
+#       if lxr in all_lxrs:
+#           return lxr
+#   return ''
 
 GAP     = 5
 
@@ -78,13 +81,13 @@ SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
-                  ,SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL
+#                 ,SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL
                   ,SHTP_MIDDL_R, SHTP_MIDDL_RCL
                   ,SHTP_SPARS_R, SHTP_SPARS_RCL
                   ]
 
 lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
-FIF_LEXER       = select_lexer(lexers_l)
+FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
 lexers_l        = list(map(lambda s: s.upper(), lexers_l))
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
@@ -172,7 +175,9 @@ class Command:
                     '\r  In folder={}'
                     '\ronly options without separated folders or files are used.'
                    ),IN_OPEN_FILES)
-        cntx_h  = _('Append around source lines in Results')
+#       cntx_h  = _('Append around source lines in Results')
+        cntx_h  = _('Show result line and both its nearest lines, above and below result')
+        algn_h  = _("Align path/row/col/len (what are) in Results lines with found fragment")
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
         coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
         pset_h  = _('Save options for future.\rRestore saved options.')
@@ -207,6 +212,7 @@ class Command:
         totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = str(min(1, int(totb_s)))
         shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
         cntx_s  = opts.get('cntx', stores.get('cntx', '0'))
+        algn_s  = opts.get('algn', stores.get('algn', '0'))
         skip_s  = opts.get('skip', stores.get('skip', '0'))
         sort_s  = opts.get('sort', stores.get('sort', '0'))
         frst_s  = opts.get('frst', stores.get('frst', '0'))
@@ -237,7 +243,7 @@ class Command:
             DLG_W,\
             DLG_H   = (tbn_l+BTN_W+GAP, DLG_H0+gap3)
 
-            cnts    = ([]                                                                                                              # gmqvz
+            cnts    = ([]                                                                                                              # gmqvyz
                      +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
                      +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
                      +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+35*2 ,w=35       ,cap='"&w"'                 ,hint=word_h)] # &w
@@ -268,8 +274,9 @@ class Command:
                      +[dict(           tp='lb'      ,tid='totb'     ,l=GAP      ,w=100      ,cap=_('Show in&:')                     )] # &:
                      +[dict(cid='totb',tp='cb-ro'   ,t=gap2+217     ,l=GAP+80   ,r=cmb_l    ,items=totb_l                           )] # 
                      +[dict(cid='join',tp='ch'      ,t=gap2+244     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
-                     +[dict(           tp='lb'      ,tid='shtp'     ,l=GAP      ,w=100      ,cap=_('Tree t&ype:')       ,hint=shtp_h)] # &y
+                     +[dict(           tp='lb'      ,tid='shtp'     ,l=GAP      ,w=100      ,cap=_('Tree type &/:')     ,hint=shtp_h)] # &/
                      +[dict(cid='shtp',tp='cb-ro'   ,t=gap2+271     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
+                     +[dict(cid='algn',tp='ch'      ,t=gap2+298     ,l=GAP      ,w=100      ,cap=_('Align &|')          ,hint=algn_h)] # &|
                      +[dict(cid='cntx',tp='ch'      ,t=gap2+298     ,l=GAP+80   ,w=150      ,cap=_('Show conte&xt')     ,hint=cntx_h)] # &x
                                                 
                      +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. search options ==')     )] # 
@@ -308,6 +315,7 @@ class Command:
                                  ,totb=totb_s
                                  ,shtp=shtp_s
                                  ,cntx=cntx_s
+                                 ,algn=algn_s
                                  ,skip=skip_s
                                  ,sort=sort_s
                                  ,frst=frst_s
@@ -334,6 +342,7 @@ class Command:
                 totb_s  = vals['totb']
                 shtp_s  = vals['shtp']
                 cntx_s  = vals['cntx']
+                algn_s  = vals['algn']
                 skip_s  = vals['skip']
                 sort_s  = vals['sort']
                 frst_s  = vals['frst']
@@ -354,6 +363,7 @@ class Command:
             stores['totb']  = str(min(1, int(totb_s)))
             stores['shtp']  = shtp_s
             stores['cntx']  = cntx_s
+            stores['algn']  = algn_s
             stores['skip']  = skip_s
             stores['sort']  = sort_s
             stores['frst']  = frst_s
@@ -384,7 +394,7 @@ class Command:
                             for ps in pset_l] \
                         + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
                           ,_('Delete preset\tSelect name...')
-                          ,_('Save as preset\tSelect options for save...')]
+                          ,_('Save as preset\tSelect options to save...')]
                 ind_inop= len(pset_l)
                 ind_del = len(pset_l)+1
                 ind_save= len(pset_l)+2
@@ -409,6 +419,7 @@ class Command:
                     totb_s = ps.get('totb', totb_s);    totb_s = str(min(1, int(totb_s)))
                     shtp_s = ps.get('shtp', shtp_s)
                     cntx_s = ps.get('cntx', cntx_s)
+                    algn_s = ps.get('algn', algn_s)
                     skip_s = ps.get('skip', skip_s)
                     sort_s = ps.get('sort', sort_s)
                     frst_s = ps.get('frst', frst_s)
@@ -460,6 +471,7 @@ class Command:
                         ps['totb']  = str(min(1, int(totb_s)))
                         ps['shtp']  = shtp_s
                         ps['cntx']  = cntx_s
+                        ps['algn']  = algn_s
                         pass
                     pset_l += [ps]
                     open(cfg_json, 'w').write(json.dumps(stores, indent=4))
@@ -535,7 +547,7 @@ class Command:
                     continue#while
                 focused     = 'what'
                 how_walk    =dict(
-                     root       =fold_s
+                     root       =fold_s.rstrip(r'\/')
                     ,file_incl  =incl_s
                     ,file_excl  =excl_s
                     ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', ...]
@@ -557,18 +569,20 @@ class Command:
                     ,word       =word01=='1'
                     )
                 cllc_v      = cllc_l[int(cllc_s)]
-                what_save   =dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
+                what_save   = dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
                      count      = btn=='!cnt' or  cllc_v!=CLLC_FNAME
                     ,place      = btn!='!cnt' and cllc_v==CLLC_MATCH
 #                   ,fragm      = btn!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
                     ,lines      = btn!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
                     )
                 shtp_v      = shtp_l[int(shtp_s)]
-                how_rpt     =dict(
-                     totb   =totb_l[int(totb_s)]
-                    ,shtp   =shtp_v if sort_s=='0' or shtp_v in (SHTP_SHORT_R, SHTP_SHORT_RCL) else SHTP_SHORT_R
-                    ,cntx   ='1'==cntx_s
-                    ,join   ='1'==join_s
+                how_rpt     = dict(
+                     totb   =    totb_l[int(totb_s)]
+                    ,sprd   =    sort_s=='0' and          shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL)
+                    ,shtp   =    shtp_v if sort_s=='0' or shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL) else SHTP_SHORT_R
+                    ,cntx   =    '1'==cntx_s
+                    ,algn   =    '1'==algn_s
+                    ,join   =    '1'==join_s
                     )
                 totb_s  = str(min(1, int(totb_s)))
                 ################################
@@ -607,9 +621,9 @@ class Command:
 
     last_ed_num = 0
     def _report_to_tab(self, rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, what_find:dict, what_save:dict, progressor=None):
-        pass;                   LOG and log('rpt_type={}',rpt_type)
+        pass;                   RPTLOG and log('rpt_type={}',rpt_type)
         
-        # Select/Create tab for report
+        # Choose/Create tab for report
         rpt_ed  = None
         def create_new(title_ext='')->app.Editor:
             app.file_open('')
@@ -621,27 +635,28 @@ class Command:
         title_ext   = f(' ({})', what_find['find'][:10])
         if False:pass
         elif rpt_type['totb']==TOTB_NEW_TAB:
-            pass;              #LOG and log('!new',)
+            pass;              #RPTLOG and log('!new',)
             rpt_ed  = create_new(title_ext)
         elif rpt_type['totb']==TOTB_USED_TAB: #if reed_tab: #or join_to_end:
-            pass;              #LOG and log('!find used',)
+            pass;              #RPTLOG and log('!find used',)
             # Try to use prev or old
             olds    = []
             for h in app.ed_handles(): 
                 try_ed  = app.Editor(h)
                 ed_tag  = try_ed.get_prop(app.PROP_TAG, '')
+                ed_id   = try_ed.get_prop(app.PROP_TAB_ID)
                 ed_lxr  = try_ed.get_prop(app.PROP_LEXER_FILE, '')
-                pass;          #LOG and log('tit, ed_tag={}',(try_ed.get_prop(app.PROP_TAB_TITLE), ed_tag))
+                pass;          #RPTLOG and log('tit, ed_tag={}',(try_ed.get_prop(app.PROP_TAB_TITLE), ed_tag))
                 if ed_tag.startswith('FiF_') or ed_lxr.upper() in lexers_l:
-                    olds+= [(ed_tag, try_ed)]
+                    olds+= [(ed_tag, ed_id)]
                 if ed_tag == 'FiF_'+str(self.last_ed_num):
                     rpt_ed  = try_ed
-                    pass;      #LOG and log('found ed',)
+                    pass;      #RPTLOG and log('found ed',)
                     break #for h
-            pass;              #LOG and log('found={}',)
+            pass;              #RPTLOG and log('found={}',)
             if rpt_ed is None and olds:
-                rpt_ed  = max(olds)[1]  # last used ed
-                pass;          #LOG and log('get from olds',)
+                rpt_ed  = apx.get_tab_by_id(max(olds)[1])  # last used ed
+                pass;          #RPTLOG and log('get from olds',)
         else:
             # Try to use pointed
             the_title   = rpt_type['totb']
@@ -650,6 +665,8 @@ class Command:
             rpt_ed      = cands[0] if cands else None
             
         rpt_ed  = create_new(title_ext) if rpt_ed is None else rpt_ed
+        if rpt_ed.get_filename():
+            rpt_ed.set_prop(app.PROP_TAB_TITLE, os.path.basename(rpt_ed.get_filename())+title_ext)  #??
         self.last_ed_num += 1
         rpt_ed.set_prop(app.PROP_TAG,       'FiF_'+str(self.last_ed_num))
         rpt_ed.focus()
@@ -662,14 +679,14 @@ class Command:
         # Fill tab
         rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
         def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed):
-            pass;              #LOG and log('rw={}',rw)
+            pass;              #RPTLOG and log('rw={}',rw)
             to_ed.attr(app.MARKERS_ADD
                     , x=cl, y=rw, len=ln
                     , **MARK_STYLE
                     )
         def append_line(line:str, to_ed=rpt_ed)->int:
             ''' Append one line to end of to_ed. Return row of added line.'''
-            pass;              #LOG and log('line={}',repr(line))
+            pass;              #RPTLOG and log('line={}',repr(line))
             line    = line.rstrip('\r\n')
             if to_ed.get_line_count()==1 and not to_ed.get_text_line(0):
                 # Empty doc
@@ -679,37 +696,45 @@ class Command:
                 to_ed.set_text_line(-1, line)
 #               to_ed.insert(0, to_ed.get_line_count(), line+'\n')
             return to_ed.get_line_count()-2
-        shtp    = rpt_type['shtp']
-        row4crt = append_line(f(_('{} "{}" in "{}" ({} matches in {} files)')
-                                ,TOP_RES_SIGN
-                                ,what_find['find']
-                                ,how_walk['root']
-                                ,rpt_info['frgms']
-                                ,rpt_info['files']))
-        root    = how_walk['root']
-        fl_wd   = 0
-        rw_wd   = 0
-        cl_wd   = 0
-        ln_wd   = 0
-        if shtp in (SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL):
+           #def append_line
+        def calc_width(rpt_data, algn, need_rcl, need_pth, only_fn):
             # Find max(len(*)) for path, row, col, ln
-            max_rw  = 0
-            max_cl  = 0
-            max_ln  = 0
+            fl_wd, rw_wd, cl_wd, ln_wd  = 0, 0, 0, 0
+            if not algn:
+                return fl_wd, rw_wd, cl_wd, ln_wd
+            max_rw, max_cl, max_ln      = 0, 0, 0
             for path_d in rpt_data:
-                fl_wd       = max(fl_wd , len(path_d['file']))
+                path        = path_d['file']         if need_pth                else ''
+                path        = os.path.basename(path) if need_pth and only_fn    else path
+                fl_wd       = max(fl_wd , len(path))
                 for item in path_d.get('items', ''):
                     max_rw  = max(max_rw, item.get('row', 0))
+                    if not need_rcl:    continue#for path_d
                     max_cl  = max(max_cl, item.get('col', 0))
                     max_ln  = max(max_ln, item.get('ln', 0))
+                   #for path_d
             rw_wd   = len(str(max_rw))
             cl_wd   = len(str(max_cl))
             ln_wd   = len(str(max_ln))
-            pass;               LOG and log('fl_wd,rw_wd,cl_wd,ln_wd={}',(fl_wd,rw_wd,cl_wd,ln_wd))
+            return fl_wd, rw_wd, cl_wd, ln_wd
+           #def calc_width
+        shtp    = rpt_type['shtp']
+        algn    = rpt_type['algn']
+        need_rcl= shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL)
+        need_pth= shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL)
+        only_fn = shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL)
+        pass;                   RPTLOG and log('algn, need_rcl, need_pth, only_fn={}',(algn, need_rcl, need_pth, only_fn))
+        fl_wd, rw_wd, cl_wd, ln_wd  = calc_width(rpt_data, algn, need_rcl, need_pth, only_fn)
+        pass;                   RPTLOG and log('fl_wd,rw_wd,cl_wd,ln_wd={}',(fl_wd,rw_wd,cl_wd,ln_wd))
+        root    = how_walk['root']
+
+        row4crt = append_line(f(_('{} "{}" in "{}" ({} matches in {} files)')
+                                ,TOP_RES_SIGN
+                                ,what_find['find']
+                                ,root
+                                ,rpt_info['frgms']
+                                ,rpt_info['files']))
         for path_n, path_d in enumerate(rpt_data):
-#
-#           pass;               break
-#
             if progressor and 0==path_n%17:
                 pc  = int(100*path_n/len(rpt_data))
                 progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
@@ -718,13 +743,22 @@ class Command:
                     append_line(         f('\t<{}>', progressor.prefix))
                     break#for path
             path    = path_d['file']
-            if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and \
+            pass;               RPTLOG and log('path={}',path)
+#           if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and 
+#           if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL,                 SHTP_MIDDL_R, SHTP_MIDDL_RCL) and 
+            if shtp     in (SHTP_MIDDL_R, SHTP_MIDDL_RCL) and \
+                path!=root:
+                path= os.path.basename(path)
+                pass;           RPTLOG and log('(basename)path={}',path)
+            if shtp     in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
                 path!=root:
                 path= os.path.relpath(path, root)
+                pass;           RPTLOG and log('(rel)path={}',path)
             dept    = 1+path_d.get('dept', 0)
             c9dt    = c9*dept
-            has_cnt = 'count' in path_d and path_d['count']     # skip count==0
+            has_cnt = 'count' in path_d and 0<path_d['count']     # skip count==0
             has_itm = 'items' in path_d
+            pass;               RPTLOG and log('has_cnt,has_itm,c9dt={}',(has_cnt,has_itm,repr(c9dt)))
             if False:pass
             elif not has_cnt and not has_itm:   append_line(c9dt+'<'+path+'>')
             elif     has_cnt and not has_itm:   append_line(c9dt+f('<{}>: #{}', path, path_d['count']))
@@ -733,86 +767,121 @@ class Command:
                 prefix  = ''
                 new_row = -1
                 pre_rw  = -1
-                if shtp in (SHTP_ALIGN_R, SHTP_ALIGN_RCL):
-                    append_line(c9dt+f('<{}>: #{}', path, len(items)))
-                    path= '' 
-                    c9dt= c9*(1+dept)
-                if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):#, SHTP_SPARS_R11, SHTP_SPARS_R22):
+#               if shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL) and algn:
+##               if shtp in (SHTP_ALIGN_R, SHTP_ALIGN_RCL):
+#                   append_line(c9dt+f('<{}>: #{}', path, len(items)))
+#                   path= '' 
+#                   c9dt= c9*(1+dept)
+#                   pass;       RPTLOG and log('MIDDL path,c9dt={}',(path,repr(c9dt)))
+                if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
                     append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
+                    pass;       RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
                 for item in items:
-#
-#                   pass;       break
-#
                     src_rw  = item.get('row', 0)
                     if -1==src_rw:
                         # Separator
                         append_line(c9dt+'<>:')
                         continue#for path_n
-                    
-                    if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and \
+                    if  shtp not in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
                         src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
                         # Add mark in old line
-                        pass
                         mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
-                    else:
-                        if False:pass
-                        elif shtp in (SHTP_SH_AL_RCL, SHTP_ALIGN_RCL):
-                            path_s  = path if shtp in (SHTP_ALIGN_RCL) else path.ljust(         fl_wd, ' ')
-                            src_cl  = item.get('col', -1)
-                            src_ln  = item.get('ln', -1)
-                            src_cl_s= '' if -1==src_cl else str(1+src_cl)
-                            src_ln_s= '' if -1==src_ln else str(  src_ln)
-                            prefix  = c9dt+f('<{}({}:{}:{})>: ', path_s
-                                                               , str(1+src_rw).rjust(rw_wd, ' ')
-                                                               ,      src_cl_s.rjust(cl_wd, ' ')
-                                                               ,      src_ln_s.rjust(ln_wd, ' '))
-                        elif shtp in (SHTP_ALIGN_R):
-                            prefix  = c9dt+f('<{}({})>: ',       path
-                                                               , str(1+src_rw).rjust(rw_wd, ' '))
-#                       elif shtp in (SHTP_ALIGN_RCL):
+                        continue#for path_n
+
+                    src_cl  = item.get('col', -1)
+                    src_ln  = item.get('ln', -1)
+                    src_rw_s=                       str(1+src_rw)
+                    src_cl_s= '' if -1==src_cl else str(1+src_cl)
+                    src_ln_s= '' if -1==src_ln else str(  src_ln)
+                    if algn:
+                        path    = path.ljust(    fl_wd, ' ')
+                        src_rw_s= src_rw_s.rjust(rw_wd, ' ')
+                        src_cl_s= src_cl_s.rjust(cl_wd, ' ')
+                        src_ln_s= src_ln_s.rjust(ln_wd, ' ')
+                    prefix  = c9dt+f('<{}({}:{}:{})>: ', path, src_rw_s, src_cl_s, src_ln_s)    \
+                                if      need_pth and     need_rcl else                          \
+                              c9dt+f('<{}({})>: '      , path, src_rw_s                    )    \
+                                if      need_pth and not need_rcl else                          \
+                              c9dt+f('<({}:{}:{})>: '  ,       src_rw_s, src_cl_s, src_ln_s)    \
+                                if  not need_pth and     need_rcl else                          \
+                              c9dt+f('<({})>: '        ,       src_rw_s                    )
+                    new_row = append_line(prefix+item.get('line',''))
+                    pass;      #RPTLOG and log('new_row, prefix={}',(new_row, prefix))
+                    if need_rcl and 'col' in item and 'ln' in item:
+                        mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
+                    pre_rw  = src_rw
+                   #for item              
+                    
+#                   
+##                   if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and 
+#                   if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL,                 SHTP_MIDDL_R, SHTP_MIDDL_RCL) and \
+#                       src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
+#                       # Add mark in old line
+#                       pass
+#                       mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
+#                   else:
+#                   if False:
+#                       if False:pass
+#                       elif shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL) and algn:
+##                       elif shtp in (SHTP_SH_AL_RCL, SHTP_ALIGN_RCL):
+#                           path_s  = path if shtp in (SHTP_MIDDL_RCL) else path.ljust(fl_wd, ' ')
+##                           path_s  = path if shtp in (SHTP_ALIGN_RCL) else path.ljust(fl_wd, ' ')
+#                          #pass;   LOG and log('path_s={}',path_s)
 #                           src_cl  = item.get('col', -1)
 #                           src_ln  = item.get('ln', -1)
 #                           src_cl_s= '' if -1==src_cl else str(1+src_cl)
 #                           src_ln_s= '' if -1==src_ln else str(  src_ln)
-#                           prefix  = c9dt+f('<{}({}:{}:{})>: ', path
+#                           prefix  = c9dt+f('<{}({}:{}:{})>: ', path_s
 #                                                              , str(1+src_rw).rjust(rw_wd, ' ')
 #                                                              ,      src_cl_s.rjust(cl_wd, ' ')
 #                                                              ,      src_ln_s.rjust(ln_wd, ' '))
-                        else:
-                            prefix  = c9dt+f('<{}({})>: ', path,     1+src_rw)
-                        if 'col' in item and 'ln' in item and \
-                            shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL):
-                            prefix  = c9dt+f('<{}({}:{}:{})>: ', path
-                                                               ,     1+src_rw
-                                                               ,     1+item['col']
-                                                               ,       item['ln'])
-                        new_row = append_line(prefix+item.get('line',''))
-                        pass;  #LOG and log('shtp, prefix={}',(shtp,prefix))
-                        pass;  #LOG and log('new_row, prefix={}',(new_row, prefix))
-                        if 'col' in item and 'ln' in item:
-                            mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
-                    pre_rw  = src_rw
-        pass;                  #LOG and rpt_ed.set_text_line(-1, '')
-        pass;                  #LOG and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
+#                           pass;   LOG and log('SHORT|MIDDL_RCL prefix={}',prefix)
+#                       elif shtp in (SHTP_MIDDL_R) and algn:
+##                       elif shtp in (SHTP_ALIGN_R):
+#                           prefix  = c9dt+f('<{}({})>: ',       path
+#                                                              , str(1+src_rw).rjust(rw_wd, ' '))
+#                           pass;   LOG and log('SHORT_R prefix={}',prefix)
+#                       else:
+#                           prefix  = c9dt+f('<{}({})>: ', path,     1+src_rw)
+#                           pass;   LOG and log('OTHER prefix={}',prefix)
+##                       if 'col' in item and 'ln' in item and 
+#                       if 'col' in item and 'ln' in item and not algn and \
+#                           shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL):
+#                           prefix  = c9dt+f('<{}({}:{}:{})>: ', path
+#                                                              ,     1+src_rw
+#                                                              ,     1+item['col']
+#                                                              ,       item['ln'])
+#                           pass;   LOG and log('ALL_RCL prefix={}',prefix)
+#                       new_row = append_line(prefix+item.get('line',''))
+#                       pass;  #LOG and log('shtp, prefix={}',(shtp,prefix))
+#                       pass;  #LOG and log('new_row, prefix={}',(new_row, prefix))
+#                       if 'col' in item and 'ln' in item:
+#                           mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
+#                   pre_rw  = src_rw
+ 
+        pass;                   # Append work data to report
+        pass;                  #rpt_ed.set_text_line(-1, '')
+        pass;                  #rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
+        pass;                  #rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
         # AT-hack to update folding
-        pass;                   LOG and log('?? set lxr',)
+        pass;                   RPTLOG and log('?? set lxr',)
         rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
-        pass;                   LOG and log('ok set lxr',)
+        pass;                   RPTLOG and log('ok set lxr',)
         line0 = rpt_ed.get_text_line(0)
         rpt_ed.set_text_line(0, '')
         rpt_ed.set_text_line(0, line0)
         
-        pass;                   LOG and log('row4crt={}',row4crt)
+        pass;                  #RPTLOG and log('row4crt={}',row4crt)
         rpt_ed.set_caret(0, row4crt)
-        if rpt_type['join'] and FOLD_PREV_RES:
-            pass;               LOG and log('?? fold',)
-#           fold_all_found_up(rpt_ed, TOP_RES_SIGN)
-            rpt_ed.cmd(cmds.cCommand_FoldAll)
-#           rpt_ed.cmd(cmds.cmd_FoldingUnfoldAtCurLine)
-#           rpt_ed.set_caret(0, row4crt)
+#       if rpt_type['join'] and FOLD_PREV_RES:
+#           pass;               RPTLOG and log('?? fold',)
+##           fold_all_found_up(rpt_ed, TOP_RES_SIGN)
+#           rpt_ed.cmd(cmds.cCommand_FoldAll)
+##           rpt_ed.cmd(cmds.cmd_FoldingUnfoldAtCurLine)
+##           rpt_ed.set_caret(0, row4crt)
        #def _report_to_tab
        
     def _nav_to_src(self, where:str, how_act='move'):
@@ -836,6 +905,7 @@ class Command:
                 ¬¬¬<(row:col)>: info
                 ¬¬¬<(row:col:len)>: info
         """
+        pass;                   NAVLOG and log('where, how_act={}',(where, how_act))
         crts    = ed.get_carets()
         if len(crts)>1:         return app.msg_status(_("Command doesn't work with multi-carets"))
         
@@ -851,18 +921,18 @@ class Command:
                                r'(?P<C>: *\d+)?'    # Col?
                                r'(?P<L>: *\d+)?\)>')# Len?
         def parse_line(line:str, what:str)->list:
-            pass;              #LOG and log('what, line={}',(what, line))
+            pass;               NAVLOG and log('what, line={}',(what, line))
             if what=='SP':
                 mtSP    = reSP.search(line)
                 if mtSP:
                     gdct= mtSP.groupdict()
-                    pass;      #LOG and log('ok mtSP gdct={}', gdct)
+                    pass;       NAVLOG and log('ok mtSP gdct={}', gdct)
                     return mtSP.group(0),   gdct['S'], gdct['P']
                 return [None]*3
             mtSR   = reSR.search(line)
             if mtSR:
                 gdct= mtSR.groupdict()
-                pass;          #LOG and log('ok mtSR gdct={}', gdct)
+                pass;           NAVLOG and log('ok mtSR gdct={}', gdct)
                 cl  = gdct['C']
                 ln  = gdct['L']
                 return mtSR.group(0),   gdct['S'], '' \
@@ -870,7 +940,7 @@ class Command:
             mtSPR   = reSPR.search(line)
             if mtSPR:   
                 gdct= mtSPR.groupdict()
-                pass;          #LOG and log('ok mtSPR gdct={}', gdct)
+                pass;           NAVLOG and log('ok mtSPR gdct={}', gdct)
                 cl  = gdct['C']
                 ln  = gdct['L']
                 return mtSPR.group(0),  gdct['S'], gdct['P'].rstrip() \
@@ -878,7 +948,7 @@ class Command:
             mtSP    = reSP.search(line)
             if mtSP:
                 gdct= mtSP.groupdict()
-                pass;          #LOG and log('ok mtSP gdct={}', gdct)
+                pass;           NAVLOG and log('ok mtSP gdct={}', gdct)
                 return mtSP.group(0),   gdct['S'], gdct['P'], -1, -1, -1
             return [None]*6
            #def parse_line
@@ -889,29 +959,42 @@ class Command:
         path,   \
         rw,cl,ln= parse_line(line, 'all')
         if not full:            return  app.msg_status(f(_("At the line {} no data for navigation"), 1+row))
-        pass;                  #LOG and log('full={}', full)
-        pass;                  #LOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
+        pass;                   NAVLOG and log('full={}', full)
+        pass;                   NAVLOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
         def open_and_nav(path:str, rw=-1, cl=-1, ln=-1):
-            if not os.path.isfile(path):    return
-            ed.set_prop(app.PROP_TAG, 'FiF=open_and_nav')
+            pass;               NAVLOG and log('path,rw,cl,ln={}',(path,rw,cl,ln))
             op_ed   = None
+            if path.startswith(_('tab:')):
+                tab_id  = int(path.split('/')[0].split(':')[1])
+                pass;           NAVLOG and log('tab_id={}',(tab_id))
+                op_ed   = apx.get_tab_by_id(tab_id)
+                if not op_ed:   return  app.msg_status(f(_("No tab for navigation"), ))
+            elif not os.path.isfile(path):
+                pass;           NAVLOG and log('not isfile',())
+                return
+            the_ed_id   = ed.get_prop(app.PROP_TAB_ID)
+            the_ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
+            pass;               NAVLOG and log('the_ed_id={}',(the_ed_id))
+#           ed.set_prop(app.PROP_TAG, 'FiF=open_and_nav')
             # Already opened?
-            for h in app.ed_handles(): 
-                t_ed  = app.Editor(h)
-                if t_ed.get_filename() and os.path.samefile(path, t_ed.get_filename()):
-                    op_ed   = t_ed
-                    break
+            if not op_ed:
+                for h in app.ed_handles(): 
+                    t_ed  = app.Editor(h)
+                    if t_ed.get_filename() and os.path.samefile(path, t_ed.get_filename()):
+                        op_ed   = t_ed
+                        pass;   NAVLOG and log('found filename',())
+                        break
             if not op_ed:
                 # Open it
                 ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
-                grps    = get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
+                grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
                 op_grp  = apx.icase(False,-1
                                 ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
                                 ,where=='same'                                          , -1
                                 ,where=='next'                                          , (ed_grp+1)%grps
                                 ,where=='prev'                                          , (ed_grp-1)%grps
                                 )
-                pass;          #LOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
+                pass;           NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
                 app.file_open(path, op_grp)
                 op_ed   = ed
             op_ed.focus()
@@ -922,7 +1005,7 @@ class Command:
                 op_ed.set_caret(0,      rw)
             elif cl==-1:
                 l_ln= len(op_ed.get_text_line(rw))
-                op_ed.set_caret(0,   rw,   l_ln,  rw)   # inverted sel for show line head if window is narrow 
+                op_ed.set_caret(0,   rw,   l_ln,  rw)   # inverted sel to show line head if window is narrow 
             elif ln==-1:
                 op_ed.set_caret(cl,     rw)
             else:
@@ -931,14 +1014,16 @@ class Command:
                 top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', ed_cfg=op_ed)))
                 op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
 
-            if how_act=='move':
+            if how_act=='move' or the_ed_grp == ed.get_prop(app.PROP_INDEX_GROUP):
                 op_ed.focus()
             else:
-                the_ed  = [app.Editor(h) for h in app.ed_handles() 
-                            if app.Editor(h).get_prop(app.PROP_TAG)=='FiF=open_and_nav'][0]
+                the_ed  = apx.get_tab_by_id(the_ed_id)
+#               the_ed  = [app.Editor(h) for h in app.ed_handles() 
+#                           if app.Editor(h).get_prop(app.PROP_TAG)=='FiF=open_and_nav'][0]
                 the_ed.focus()
            #def open_and_nav
-        if os.path.isfile(path):
+        pass;                   NAVLOG and log('path={}', (path))
+        if os.path.isfile(path) or path.startswith(_('tab:')):
             open_and_nav(path, rw, cl, ln)
             return
         testings="""
@@ -962,21 +1047,22 @@ class Command:
         # Try to build path from prev lines
         for t_row in range(row-1, -1, -1):
             t_line  = ed.get_text_line(t_row)
-            pass;              #LOG and log('t_row, t_line={}', (t_row, t_line))
-            if t_line.startswith('+'):  break#for t_row
+            pass;               NAVLOG and log('t_row, t_line={}', (t_row, t_line))
+            if t_line.startswith('+'):                              break#for t_row         as top
+            if len(shft) <= len(t_line)-len(t_line.lstrip('\t')):   continue#for t_row      as same level
 #           if row-step < 0:    return app.msg_status(f(_("At the line {} no data for navigation"), 1))
             t_fll,  \
             t_sft,  \
             t_pth   = parse_line(t_line, 'SP')
-            pass;              #LOG and log('t_sft, t_pth={}', (t_sft, t_pth))
+            pass;               NAVLOG and log('t_sft, t_pth={}', (t_sft, t_pth))
             if len(t_sft) == len(shft): 
-                pass;          #LOG and log('skip: t_sft==shft', ())
+                pass;           NAVLOG and log('skip: t_sft==shft', ())
                 continue#for t_row
             if len(t_sft) >  len(shft):
-                pass;          #LOG and log('bad: t_sft>shft', ())
-                return app.msg_status(f(_("At the line {} no data for navigation"), t_row))
+                pass;           NAVLOG and log('bad: t_sft>shft', ())
+                return app.msg_status(f(_("At the line {} bad data for navigation"), 1+t_row))
             path    = os.path.join(t_pth, path) if path else t_pth
-            pass;              #LOG and log('new path={}', (path))
+            pass;               NAVLOG and log('new path={}', (path))
             if os.path.isfile(path):
                 open_and_nav(path, rw, cl, ln)
                 return
@@ -997,7 +1083,7 @@ def dlg_help(word_h, shtp_h, cntx_h):
  
 • Set special value "{tags}" for field "In folder" to search in all opened documents.
     Preset "In folder={tags}" helps to do this.
-    To search in unsaved tab use mask "*" in field "In files".
+    To search in unsaved tabs use mask "*" in field "In files".
  
 • "w" - {word}
  
@@ -1046,7 +1132,7 @@ Default values:
     //    },
     //  Color values: "" - skip, "#RRGGBB" - hex-digits
     //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
-    "fif_mark_style":{"borders":{"b":"dotted"}},
+    "fif_mark_style":{"borders":{"bottom":"dotted"}},
     
     // List of lexer names. First available will be applyed.
     "fif_lexers":["Search results"],
@@ -1055,47 +1141,34 @@ Default values:
 #   "fif_fold_prev_res":false,
 #   
     DW, DH      = 600, 600
-    vals_hlp    = dict(htxt=TIPS_BODY)
+#   vals_hlp    = dict(htxt=TIPS_BODY)
+    vals_hlp    = dict(htxt=TIPS_BODY
+                      ,tips=True
+                      ,tree=False
+                      ,opts=False
+                      )
     while_hlp   = True
     while while_hlp:
         btn_hlp,    \
         vals_hlp    = dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
              [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
              ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
-             ,dict(cid='tips',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                                 )
-             ,dict(cid='tree',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                                 )
-             ,dict(cid='opts',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                                 )
+#            ,dict(cid='tips',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                                 )
+#            ,dict(cid='tree',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                                 )
+#            ,dict(cid='opts',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                                 )
+             ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                ,act='1'         )
+             ,dict(cid='tree',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                ,act='1'         )
+             ,dict(cid='opts',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                ,act='1'         )
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
              ], vals_hlp, focus_cid='htxt')
+        pass;                  #LOG and log('vals_hlp={}',vals_hlp)
         if btn_hlp is None or btn_hlp=='-': break#while while_hlp
         if False:pass
-        elif btn_hlp=='tips':   vals_hlp["htxt"] = TIPS_BODY
-        elif btn_hlp=='tree':   vals_hlp["htxt"] = TREE_BODY
-        elif btn_hlp=='opts':   vals_hlp["htxt"] = OPTS_BODY
+        elif btn_hlp=='tips':   vals_hlp["htxt"] = TIPS_BODY; vals_hlp["tips"] = True; vals_hlp["tree"] = False;vals_hlp["opts"] = False
+        elif btn_hlp=='tree':   vals_hlp["htxt"] = TREE_BODY; vals_hlp["tips"] = False;vals_hlp["tree"] = True; vals_hlp["opts"] = False
+        elif btn_hlp=='opts':   vals_hlp["htxt"] = OPTS_BODY; vals_hlp["tips"] = False;vals_hlp["tree"] = False;vals_hlp["opts"] = True
        #while while_hlp
    #def dlg_help
-
-class ProgressAndBreak:
-    """ Helper for 
-        - Show progress of working
-        - Allow user to stop long procces
-    """
-    def __init__(self):
-        self.prefix = ''
-        app.app_proc(app.PROC_SET_ESCAPE, '0')
-
-    def set_progress(self, msg:str):
-        app.msg_status(self.prefix+msg, process_messages=True)
-
-    def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
-        was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
-        app.app_proc(app.PROC_SET_ESCAPE, '0')
-        if was_esc and with_request:
-            if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO):
-                return True
-            was_esc = False
-        return was_esc
-   #class ProgressAndBreak
 
 def fold_all_found_up(rpt_ed:app.Editor, what:str):
     user_opt= app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
@@ -1170,11 +1243,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             'fragm'         bool(F)     Need fragments
             'lines'         bool(T)     Need lines with fragments
         From par how_rpt use keys: 
-            'shtp'          str         in (SHTP_SHORT_*, SHTP_MIDDL_*, SHTP_SPARS_*)
-                                        SHTP_SHORT_* - save each full path
-                                        SHTP_MIDDL_* - save separately root, mid-dir, file.ext
-                                        SHTP_SPARS_* - save separately root, mid-dir, file.ext and each (row):line
-            'cntx'          bool(F)     Append around lines                      
+            'sprd'          bool(F)     Separate dirs
+            'cntx'          bool(F)     Append around lines
         Return 
             [{file:'path'}          if not what_save['count']
             ,{file:'path'
@@ -1200,10 +1270,10 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
              }
             ,...]
     """
-    pass;                      #LOG and log('ESC_FULL_STOP={}',ESC_FULL_STOP)
-    pass;                      #LOG and log('how_walk={}',pf(how_walk))
-    pass;                      #LOG and log('what_find={}',pf(what_find))
-    pass;                      #LOG and log('what_save={}',pf(what_save))
+    pass;                      #FNDLOG and log('ESC_FULL_STOP={}',ESC_FULL_STOP)
+    pass;                      #FNDLOG and log('how_walk={}',pf(how_walk))
+    pass;                      #FNDLOG and log('what_find={}',pf(what_find))
+    pass;                      #FNDLOG and log('what_save={}',pf(what_save))
 
     rsp_l   = []
     rsp_i   = dict(cllc_files=0
@@ -1217,8 +1287,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 if root==IN_OPEN_FILES else \
               collect_files(how_walk, progressor)
     if cllc_stp and ESC_FULL_STOP:   return [], {}
-    pass;                       LOG and log('#collect_files={}',len(files))
-    pass;                      #LOG and log('files={}',pf(files))
+    pass;                       FNDLOG and log('#collect_files={}',len(files))
+    pass;                      #FNDLOG and log('files={}',pf(files))
     rsp_i['cllc_files']     = len(files)
     rsp_i['cllc_stopped']   = cllc_stp
     
@@ -1233,13 +1303,18 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             pttn_s  = r'\b'+pttn_s+r'\b'
         else:
             pttn_s  = re.escape(pttn_s)
-    pass;                      #LOG and log('pttn_s, flags={}',(pttn_s, flags))
+    pass;                      #FNDLOG and log('pttn_s, flags={}',(pttn_s, flags))
     pttn    = re.compile(pttn_s, flags)
 
     cnt_b   = what_save['count']
     plc_b   = what_save['place']
     lin_b   = what_save['lines']
-    shtp    = how_rpt['shtp']
+    spr_dirs= how_rpt['sprd']
+#   shtp    = how_rpt['shtp']
+#   spr_dirs= shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+#                     ,SHTP_SPARS_R, SHTP_SPARS_RCL
+#                     )   # Separate dir in rsp
+
     cntx    = how_rpt['cntx']
     ext_lns = apx.get_opt('fif_context_width', 1) if cntx else 0
 
@@ -1305,24 +1380,20 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
            #for path
         return rsp_l, rsp_i
         
-    spr_dirs= shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
-                      ,SHTP_SPARS_R, SHTP_SPARS_RCL
-                      )   # Separate dir in rsp
-
     def get_prnt_path_dct(path, tree):
 #       while True:
-        for i in range(5):##!!
+        for i in range(25):##!!
             if not path:        return None
             if path in tree:    return tree[path]
             path = os.path.dirname(path)
         return None
     tree4rsp= {}                # {path:rsp_l[?]} 
                                 # (1) store dir-items, 
-                                # (2) tree-parent-links in item of rsp_l for sum 'count' for dir
+                                # (2) tree-parent-links in item of rsp_l to sum 'count' for dir
     if spr_dirs:    # Separate dir in rsp
         tree4rsp[root]  = dict(dept=0, file=root, count=0, prnt=None)
         rsp_l          += [tree4rsp[root]]
-        pass;                  #LOG and log('tree4rsp={}',tree4rsp)
+        pass;                  #FNDLOG and log('tree4rsp={}',tree4rsp)
     pass;                       t=log('?? files (==',) if LOG else 0
 #   detector= UniversalDetector()
     for path_n, path in enumerate(files):
@@ -1342,19 +1413,21 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             # For dir with path need to add item in rsp_l
             #   NB! Rely to Up-Down dir sequence in files
             pathdir = os.path.dirname(path)
-            pass;              #LOG and log('?path,pathdir={}',(path,pathdir))
+            pass;              #FNDLOG and log('?path,pathdir={}',(path,pathdir))
             prntdct = tree4rsp.get(pathdir)
             if not prntdct:
                 prntdct = get_prnt_path_dct(pathdir, tree4rsp)
+                pass;          #FNDLOG and log('prntdct={}',prntdct)
                 if not prntdct:
-                    pass;       LOG and log('no prntdct=',())
+                    pass;      #FNDLOG and log('no prntdct=',())
                 if prntdct:
                     dct     = dict(dept=1+prntdct['dept'], file=pathdir, count=0, prnt=prntdct)
                     tree4rsp[pathdir]= dct
                     rsp_l  += [dct]
                     prntdct = dct
-                pass;          #LOG and log('tree4rsp={}',tree4rsp)
+                pass;          #FNDLOG and log('tree4rsp={}',tree4rsp)
         dept    = 1+prntdct['dept'] if prntdct else 0
+        pass;                  #FNDLOG and log('dept={}',dept)
         try:
             # Find in file
             encoding    = detect_encoding(path)#, detector)
@@ -1371,12 +1444,12 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 if prntdct:
 #                   prntdct['count']+=count
 #                   prntdct = prntdct['prnt']
-                    for i in range(5):  ##!!
+                    for i in range(25):  ##!!
                         if not prntdct:  break
 #                   while prntdct:
                         prntdct['count']+=count
                         prntdct  = prntdct['prnt']
-                    pass;      #LOG and log('tree4rsp={}',tree4rsp)
+                    pass;      #FNDLOG and log('tree4rsp={}',tree4rsp)
                #with h_path
         except Exception as ex:
             print(f(_('Cannot open "{}": {}'), path, ex))
@@ -1415,9 +1488,10 @@ def collect_tabs(how_walk:dict)->list:
         try_ed  = app.Editor(h_tab)
         filename= try_ed.get_filename()
         title   = try_ed.get_prop(app.PROP_TAB_TITLE, '')
+        tab_id  = try_ed.get_prop(app.PROP_TAB_ID, '')
         if not      any(map(lambda cl:fnmatch(title, cl), incls)):   continue#for h
         if excl and any(map(lambda cl:fnmatch(title, cl), excls)):   continue#for h
-        path    = filename if filename else '{CudaText}/'+title
+        path    = filename if filename else f(_('tab:')+'{}/{}', tab_id, title)
         rsp    += [(path, h_tab)]
        #for h_tab
     return rsp, False
@@ -1553,22 +1627,44 @@ def is_hidden_file(path:str)->bool:
     return os.path.basename(path).startswith('.')
    #def is_hidden_file
 
-def get_groups_count():
-    gr_mode = app.app_proc(app.PROC_GET_GROUPING, '')
-    if gr_mode==app.GROUPS_ONE      :return 1
-    if gr_mode==app.GROUPS_2VERT    :return 2
-    if gr_mode==app.GROUPS_2HORZ    :return 2
-    if gr_mode==app.GROUPS_3VERT    :return 3
-    if gr_mode==app.GROUPS_3HORZ    :return 3
-    if gr_mode==app.GROUPS_3PLUS    :return 3
-    if gr_mode==app.GROUPS_1P2VERT  :return 3
-    if gr_mode==app.GROUPS_1P2HORZ  :return 3
-    if gr_mode==app.GROUPS_4VERT    :return 4
-    if gr_mode==app.GROUPS_4HORZ    :return 4
-    if gr_mode==app.GROUPS_4GRID    :return 4
-    if gr_mode==app.GROUPS_6GRID    :return 6
-    return 1
+#def get_groups_count():
+#   gr_mode = app.app_proc(app.PROC_GET_GROUPING, '')
+#   if gr_mode==app.GROUPS_ONE      :return 1
+#   if gr_mode==app.GROUPS_2VERT    :return 2
+#   if gr_mode==app.GROUPS_2HORZ    :return 2
+#   if gr_mode==app.GROUPS_3VERT    :return 3
+#   if gr_mode==app.GROUPS_3HORZ    :return 3
+#   if gr_mode==app.GROUPS_3PLUS    :return 3
+#   if gr_mode==app.GROUPS_1P2VERT  :return 3
+#   if gr_mode==app.GROUPS_1P2HORZ  :return 3
+#   if gr_mode==app.GROUPS_4VERT    :return 4
+#   if gr_mode==app.GROUPS_4HORZ    :return 4
+#   if gr_mode==app.GROUPS_4GRID    :return 4
+#   if gr_mode==app.GROUPS_6GRID    :return 6
+#   return 1
     
+
+class ProgressAndBreak:
+    """ Helper for 
+        - Show progress of working
+        - Allow user to stop long procces
+    """
+    def __init__(self):
+        self.prefix = ''
+        app.app_proc(app.PROC_SET_ESCAPE, '0')
+
+    def set_progress(self, msg:str):
+        app.msg_status(self.prefix+msg, process_messages=True)
+
+    def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
+        was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
+        app.app_proc(app.PROC_SET_ESCAPE, '0')
+        if was_esc and with_request:
+            if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO):
+                return True
+            was_esc = False
+        return was_esc
+   #class ProgressAndBreak
 
 if __name__ == '__main__' :     # Tests
     Command().show_dlg()    #??

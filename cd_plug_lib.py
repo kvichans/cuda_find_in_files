@@ -268,6 +268,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                                 hint        (opt)(str) Tooltip
                                 en          (opt)('0'|'1'|True|False) Enabled-state
                                 props       (opt)(str) See wiki
+                                act         (opt)('0'|'1'|True|False) Will close dlg when changed
                                 items            (str|list) String as in wiki. List structure by types:
                                                             [v1,v2,]     For combo, combo_ro, listbox, checkgroup, radiogroup, checklistbox
                                                             (head, body) For listview, checklistview 
@@ -387,6 +388,10 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                 # For checklistbox, checklistview: index+";"+checks 
                 in_val = ';'.join( (in_val[0], ','.join( in_val[1]) ) )
             lst+= ['val='+str(in_val)]
+
+        if 'act' in cnt:    # must be last in lst
+            val     = cnt['act']
+            lst    += ['act='+('1' if val in [True, '1'] else '0')]
         pass;                      #LOG and log('lst={}',lst)
         ctrls_l+= [chr(1).join(lst)]
     pass;                  #LOG and log('ok ctrls_l={}',pformat(ctrls_l, width=120))
@@ -433,7 +438,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
 #######################################################
 #######################################################
 if __name__ == '__main__' :     # Tests
-    def ask_number(ask, def_val):
+    def test_ask_number(ask, def_val):
         cnts=[dict(        tp='lb',tid='v',l=3 ,w=70,cap=ask)
              ,dict(cid='v',tp='ed',t=3    ,l=73,w=70)
              ,dict(cid='!',tp='bt',t=45   ,l=3 ,w=70,cap='OK',props='1')
