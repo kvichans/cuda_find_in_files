@@ -730,7 +730,7 @@ class Command:
                               c9dt+f('<({})>: '        ,       src_rw_s                    )
                     new_row = append_line(prefix+item.get('line',''))
                     pass;      #RPTLOG and log('new_row, prefix={}',(new_row, prefix))
-                    if need_rcl and 'col' in item and 'ln' in item:
+                    if 'col' in item and 'ln' in item:
                         mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                     pre_rw  = src_rw
                    #for item              
