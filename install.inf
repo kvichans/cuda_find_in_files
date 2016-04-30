@@ -19,7 +19,7 @@ method=find_in_ed
 [item3]
 section=commands
 caption=&Find in Files\Find in &all tabs...
-method=find_in_tags
+method=find_in_tabs
 ;menu=0
 
 [item10]
