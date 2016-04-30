@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.5.7 2016-04-29'
+    '0.5.8 2016-04-29'
 ToDo: (see end of file)
 '''
 
@@ -20,9 +20,9 @@ c9, c10, c13    = chr(9), chr(10), chr(13)
 #FROM_API_VERSION= '1.0.119'
 
 pass;                           LOG     = (-1==-1)  # Do or dont logging.
-pass;                           FNDLOG  = (-2== 2) and LOG
-pass;                           RPTLOG  = (-3== 3) and LOG
-pass;                           NAVLOG  = (-4== 4) and LOG
+pass;                           FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
+pass;                           RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
+pass;                           NAVLOG  = (-4== 4) and LOG or apx.get_opt('fif_NAVLOG', False)
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -38,11 +38,15 @@ def fit_mark_style_for_attr(js:dict)->dict:
             color_border=COLOR_NONE, border_left=0, border_right=0, border_down=0, border_up=0)
     """
     V_L     = ['solid', 'dash', '2px', 'dotted', 'rounded', 'wave']
-    shex2int= lambda shexRGB: int(shexRGB[4:6]+shexRGB[2:4]+shexRGB[0:2], 16)
+#   shex2int= lambda shexRGB: int(shexRGB[4:6]+shexRGB[2:4]+shexRGB[0:2], 16)
+    shex2int= apx.html_color_to_int
     kwargs  = {}
-    if js.get('color_back'  , ''):   kwargs['color_bg']      = shex2int(js['color_back'].lstrip('#'))
-    if js.get('color_font'  , ''):   kwargs['color_font']    = shex2int(js['color_font'].lstrip('#'))
-    if js.get('color_border', ''):   kwargs['color_border']  = shex2int(js['color_border'].lstrip('#'))
+#   if js.get('color_back'  , ''):   kwargs['color_bg']      = shex2int(js['color_back'].lstrip('#'))
+#   if js.get('color_font'  , ''):   kwargs['color_font']    = shex2int(js['color_font'].lstrip('#'))
+#   if js.get('color_border', ''):   kwargs['color_border']  = shex2int(js['color_border'].lstrip('#'))
+    if js.get('color_back'  , ''):   kwargs['color_bg']      = shex2int(js['color_back'])
+    if js.get('color_font'  , ''):   kwargs['color_font']    = shex2int(js['color_font'])
+    if js.get('color_border', ''):   kwargs['color_border']  = shex2int(js['color_border'])
     if js.get('font_bold'   , False):kwargs['font_bold']     = 1
     if js.get('font_italic' , False):kwargs['font_italic']   = 1
     jsbr    = js.get('borders', {})
@@ -72,16 +76,12 @@ TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
 SHTP_SHORT_RCL  = _('path(r:c:l):line')
-SHTP_SH_AL_RCL  = _('path··(··r:··c:··l):line')
-SHTP_ALIGN_R    = _('path/(··r):line')
-SHTP_ALIGN_RCL  = _('path/(··r:··c:··l):line')
 SHTP_MIDDL_R    = _('dir/file(r):line')
 SHTP_MIDDL_RCL  = _('dir/file(r:c:l):line')
 SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
-#                 ,SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL
                   ,SHTP_MIDDL_R, SHTP_MIDDL_RCL
                   ,SHTP_SPARS_R, SHTP_SPARS_RCL
                   ]
@@ -95,19 +95,12 @@ ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
 REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
 FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
 CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
+LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
 MARK_STYLE      = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
 MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
 class Command:
     def find_in_ed(self):
-#       if ed.get_prop(app.PROP_MODIFIED):
-#           ans = app.msg_box(_('File modified.\nDo you want save it?'), app.MB_YESNOCANCEL) 
-#           if ans==app.ID_CANCEL:  return
-#           if ans==app.ID_YES:
-#               ed.save()
         filename= ed.get_filename()
-#       if not filename:            return app.msg_status(_("Command works only with file on disk"))
-#       crts    = ed.get_carets()
-#       if len(crts)>1:             return app.msg_status(_("Command doesn't work with multi-carets"))
         self.show_dlg(what='', opts=dict(
              incl = os.path.basename(filename) if filename else ed.get_prop(app.PROP_TAB_TITLE)
             ,fold = IN_OPEN_FILES
@@ -115,7 +108,7 @@ class Command:
             ))
        #def find_in_ed
 
-    def find_in_tags(self):
+    def find_in_tabs(self):
         self.show_dlg(what='', opts=dict(
              incl = '*'
             ,fold = IN_OPEN_FILES
@@ -131,38 +124,29 @@ class Command:
         reex_h  = _('Regular expression')
         case_h  = _('Case sensitive')
         word_h  = _('Option "Whole words". It is ignored when'
-                    '\r    ".*" is turned on,'
+                    '\r    Regular expression (".*") is turned on,'
                     '\r    "Find" contains not only letters, digits and "_".'
                     )
-        brow_h  = _('Select folder')
+        brow_h  = _('Choose folder')
         curr_h  = _('Use folder of current file')
         more_h  = _('Show/Hide advanced options')
         adju_h  = _('Change dialog layout')
         frst_h  = _('Search only inside N first found files')
         shtp_h  = f(_(  'Format of the reported tree structure.'
                     '\rCompact - report all found line with full file info:'
-                    '\r  path(r[:c:l]):line - as compact as posible.'
+                    '\r    path(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <full_path(row[:col:len])>: line with ALL marked fragments'
-                    '\r  path··(··r[:··c:··l]):line - ver-align each parts.'
-                    '\r  Tree scheme'
-                    '\r    +Search for "*"'
-                    '\r      <full_path  (  row[:  col:  len])>: line with ALL marked fragments'
                     '\rMiddle - report separated folders and fragments:'
-                    '\r  path/(··r[:··c:··l]):line - vert-aligned row/col/len '
-                    '\r  Tree scheme'
-                    '\r    +Search for "*"'
-                    '\r      <full_path>: #count'
-                    '\r        <(  row[:  col:  len])>: line with ALL marked fragments'
-                    '\r  dir/file(r[:c:l]):line'
+                    '\r    dir/file(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <root>: #count'
                     '\r        <dir>: #count'
                     '\r          <file.ext(row[:col:len])>: line with ONE marked fragment'
                     '\rSparse - report separated folders and lines and fragments:'
-                    '\r  dir/file/(r[:c:l]):line'
+                    '\r    dir/file/(r[:c:l]):line'
                     '\r  Tree scheme'
                     '\r    +Search for "*"'
                     '\r      <root>: #count'
@@ -173,11 +157,12 @@ class Command:
                     '\r  sorted files'
                     '\rand'
                     '\r  In folder={}'
-                    '\ronly options without separated folders or files are used.'
+                    '\ronly Compact options are used.'
                    ),IN_OPEN_FILES)
 #       cntx_h  = _('Append around source lines in Results')
         cntx_h  = _('Show result line and both its nearest lines, above and below result')
-        algn_h  = _("Align path/row/col/len (what are) in Results lines with found fragment")
+#       algn_h  = _("Align path/row/col/len (what are) in Results lines with found fragment")
+        algn_h  = _("Align columns (filenames/numbers) by widest column width")
         enco_h  = f(_('In which encoding to read files\rDefault encoding: {}'), locale.getpreferredencoding())
         coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
         pset_h  = _('Save options for future.\rRestore saved options.')
@@ -229,9 +214,8 @@ class Command:
             wo_excl = stores.get('wo_excl', True)
             wo_repl = True #stores.get('wo_repl', True)
             wo_adva = stores.get('wo_adva', True)
-           #c_more  = 'Show "Ad&v"' if wo_adva else 'Hide "Ad&v"'
             c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
-            gap1    = (GAP- 25 if wo_excl else GAP)
+            gap1    = (GAP- 25 if wo_excl else GAP)     -2
             gap2    = (GAP- 25 if wo_repl else GAP)+gap1
             gap3    = (GAP-115 if wo_adva else GAP)+gap2
             TXT_W   = stores.get('wd_txts', 400)
@@ -382,100 +366,46 @@ class Command:
                 continue#while
             
             if btn=='pres':
-                pset_l  = stores.setdefault('pset', [])
-                dlg_list= [f(_('Restore: {nm}\t[{il}]In files, [{fo}]In folder, [{aa}].*aAw, [{fn}]Adv. search, [{rp}]Adv. report')
-                            ,nm=ps['name']
-                            ,il=ps.get('_il_',' ')
-                            ,fo=ps.get('_fo_',' ')
-                            ,aa=ps.get('_aa_',' ')
-                            ,fn=ps.get('_fn_',' ')
-                            ,rp=ps.get('_rp_',' ')
-                            ) 
-                            for ps in pset_l] \
-                        + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
-                          ,_('Delete preset\tSelect name...')
-                          ,_('Save as preset\tSelect options to save...')]
-                ind_inop= len(pset_l)
-                ind_del = len(pset_l)+1
-                ind_save= len(pset_l)+2
-                ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))
-                if ps_ind is None:  continue#while
-                if False:pass
-                elif ps_ind==ind_inop:
-                    # Find in open files
-                    fold_s = IN_OPEN_FILES
-                elif ps_ind<len(pset_l):
-                    # Restore
-                    ps  = pset_l[ps_ind]
-                    incl_s = ps.get('incl', incl_s)
-                    excl_s = ps.get('excl', excl_s)
-                    fold_s = ps.get('fold', fold_s)
-                    dept_n = ps.get('dept', dept_n)
-                    reex01 = ps.get('reex', reex01)
-                    case01 = ps.get('case', case01)
-                    word01 = ps.get('word', word01)
-                    cllc_s = ps.get('cllc', cllc_s)
-                    join_s = ps.get('join', join_s)
-                    totb_s = ps.get('totb', totb_s);    totb_s = str(min(1, int(totb_s)))
-                    shtp_s = ps.get('shtp', shtp_s)
-                    cntx_s = ps.get('cntx', cntx_s)
-                    algn_s = ps.get('algn', algn_s)
-                    skip_s = ps.get('skip', skip_s)
-                    sort_s = ps.get('sort', sort_s)
-                    frst_s = ps.get('frst', frst_s)
-                    enco_s = ps.get('enco', enco_s)
-                    app.msg_status(_('Restored preset: ')+ps['name'])
-                elif ps_ind==ind_del and pset_l:
-                    # Delete
-                    ind4del = app.dlg_menu(app.MENU_LIST, '\n'.join([ps['name'] for ps in pset_l]))
-                    if ind4del is None:  continue#while
-                    ps      = pset_l[ind4del]
-                    del pset_l[ind4del]
-                    open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-                    app.msg_status(_('Deleted preset: ')+ps['name'])
-                elif ps_ind==ind_save:
-                    # Save
-                    custs   = app.dlg_input_ex(6, _('Save preset')
-                        , _('Preset name')                                                  , f(_('Preset #{}'), 1+len(pset_l))
-                        , _('Save "In files"/"Not in files" (0/1)')                         , '1'   # 1
-                        , _('Save "In folder"/"Subfolders" (0/1)')                          , '1'   # 2
-                        , _('Save ".*"/"aA"/"w" (0/1)')                                     , '1'   # 3
-                        , _('Save (Adv. search) "Skip"/"Sort"/"Firsts/Encodings" (0/1)')    , '1'   # 4
-                        , _('Save (Adv. report) "Collect"/"Append"/"In Tab"/"Tree" (0/1)')  , '1'   # 5
-                        )
-                    if not custs or not custs[0] :   continue#while
-                    ps      = OrdDict([('name',custs[0])])
-                    if custs[1]=='1':
-                        ps['_il_']  = 'x'
-                        ps['incl']  = incl_s
-                        ps['excl']  = excl_s
-                    if custs[2]=='1':
-                        ps['_fo_']  = 'x'
-                        ps['fold']  = fold_s
-                        ps['dept']  = dept_n
-                    if custs[3]=='1':
-                        ps['_aa_']  = 'x'
-                        ps['reex']  = reex01
-                        ps['case']  = case01
-                        ps['word']  = word01
-                    if custs[4]=='1':
-                        ps['_fn_']  = 'x'
-                        ps['skip']  = skip_s
-                        ps['sort']  = sort_s
-                        ps['frst']  = frst_s
-                        ps['enco']  = enco_s
-                    if custs[5]=='1':
-                        ps['_rp_']  = 'x'
-                        ps['cllc']  = cllc_s
-                        ps['join']  = join_s
-                        ps['totb']  = str(min(1, int(totb_s)))
-                        ps['shtp']  = shtp_s
-                        ps['cntx']  = cntx_s
-                        ps['algn']  = algn_s
-                        pass
-                    pset_l += [ps]
-                    open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-                    app.msg_status(_('Saved preset: ')+ps['name'])
+                ans = dlg_press(stores, cfg_json,
+                incl_s,
+                excl_s,
+                fold_s,
+                dept_n,
+                reex01,
+                case01,
+                word01,
+                cllc_s,
+                join_s,
+                totb_s,
+                shtp_s,
+                cntx_s,
+                algn_s,
+                skip_s,
+                sort_s,
+                frst_s,
+                enco_s,
+                )
+                if ans is not None:
+                    (
+                    incl_s,
+                    excl_s,
+                    fold_s,
+                    dept_n,
+                    reex01,
+                    case01,
+                    word01,
+                    cllc_s,
+                    join_s,
+                    totb_s,
+                    shtp_s,
+                    cntx_s,
+                    algn_s,
+                    skip_s,
+                    sort_s,
+                    frst_s,
+                    enco_s,
+                    )   = ans
+                continue#while
                 
             if btn=='cust':
                 custs   = app.dlg_input_ex(3, _('Adjust dialog')
@@ -632,7 +562,7 @@ class Command:
             new_ed.set_prop(app.PROP_TAB_TITLE, _('Results')+title_ext)  #??
             return new_ed
         
-        title_ext   = f(' ({})', what_find['find'][:10])
+        title_ext   = f(' ({})', what_find['find'][:LEN_TRG_IN_TITLE])
         if False:pass
         elif rpt_type['totb']==TOTB_NEW_TAB:
             pass;              #RPTLOG and log('!new',)
@@ -694,7 +624,6 @@ class Command:
                 return 0
             else:
                 to_ed.set_text_line(-1, line)
-#               to_ed.insert(0, to_ed.get_line_count(), line+'\n')
             return to_ed.get_line_count()-2
            #def append_line
         def calc_width(rpt_data, algn, need_rcl, need_pth, only_fn):
@@ -735,7 +664,7 @@ class Command:
                                 ,rpt_info['frgms']
                                 ,rpt_info['files']))
         for path_n, path_d in enumerate(rpt_data):
-            if progressor and 0==path_n%17:
+            if progressor and 0==path_n%37:
                 pc  = int(100*path_n/len(rpt_data))
                 progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
                 if progressor.need_break():
@@ -744,8 +673,6 @@ class Command:
                     break#for path
             path    = path_d['file']
             pass;               RPTLOG and log('path={}',path)
-#           if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and 
-#           if shtp not in (SHTP_SHORT_R, SHTP_SHORT_RCL,                 SHTP_MIDDL_R, SHTP_MIDDL_RCL) and 
             if shtp     in (SHTP_MIDDL_R, SHTP_MIDDL_RCL) and \
                 path!=root:
                 path= os.path.basename(path)
@@ -767,12 +694,6 @@ class Command:
                 prefix  = ''
                 new_row = -1
                 pre_rw  = -1
-#               if shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL) and algn:
-##               if shtp in (SHTP_ALIGN_R, SHTP_ALIGN_RCL):
-#                   append_line(c9dt+f('<{}>: #{}', path, len(items)))
-#                   path= '' 
-#                   c9dt= c9*(1+dept)
-#                   pass;       RPTLOG and log('MIDDL path,c9dt={}',(path,repr(c9dt)))
                 if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
                     append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
                     path= '' 
@@ -813,58 +734,12 @@ class Command:
                         mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                     pre_rw  = src_rw
                    #for item              
-                    
-#                   
-##                   if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SH_AL_RCL, SHTP_ALIGN_R, SHTP_ALIGN_RCL) and 
-#                   if  shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL,                 SHTP_MIDDL_R, SHTP_MIDDL_RCL) and \
-#                       src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
-#                       # Add mark in old line
-#                       pass
-#                       mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
-#                   else:
-#                   if False:
-#                       if False:pass
-#                       elif shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL) and algn:
-##                       elif shtp in (SHTP_SH_AL_RCL, SHTP_ALIGN_RCL):
-#                           path_s  = path if shtp in (SHTP_MIDDL_RCL) else path.ljust(fl_wd, ' ')
-##                           path_s  = path if shtp in (SHTP_ALIGN_RCL) else path.ljust(fl_wd, ' ')
-#                          #pass;   LOG and log('path_s={}',path_s)
-#                           src_cl  = item.get('col', -1)
-#                           src_ln  = item.get('ln', -1)
-#                           src_cl_s= '' if -1==src_cl else str(1+src_cl)
-#                           src_ln_s= '' if -1==src_ln else str(  src_ln)
-#                           prefix  = c9dt+f('<{}({}:{}:{})>: ', path_s
-#                                                              , str(1+src_rw).rjust(rw_wd, ' ')
-#                                                              ,      src_cl_s.rjust(cl_wd, ' ')
-#                                                              ,      src_ln_s.rjust(ln_wd, ' '))
-#                           pass;   LOG and log('SHORT|MIDDL_RCL prefix={}',prefix)
-#                       elif shtp in (SHTP_MIDDL_R) and algn:
-##                       elif shtp in (SHTP_ALIGN_R):
-#                           prefix  = c9dt+f('<{}({})>: ',       path
-#                                                              , str(1+src_rw).rjust(rw_wd, ' '))
-#                           pass;   LOG and log('SHORT_R prefix={}',prefix)
-#                       else:
-#                           prefix  = c9dt+f('<{}({})>: ', path,     1+src_rw)
-#                           pass;   LOG and log('OTHER prefix={}',prefix)
-##                       if 'col' in item and 'ln' in item and 
-#                       if 'col' in item and 'ln' in item and not algn and \
-#                           shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL):
-#                           prefix  = c9dt+f('<{}({}:{}:{})>: ', path
-#                                                              ,     1+src_rw
-#                                                              ,     1+item['col']
-#                                                              ,       item['ln'])
-#                           pass;   LOG and log('ALL_RCL prefix={}',prefix)
-#                       new_row = append_line(prefix+item.get('line',''))
-#                       pass;  #LOG and log('shtp, prefix={}',(shtp,prefix))
-#                       pass;  #LOG and log('new_row, prefix={}',(new_row, prefix))
-#                       if 'col' in item and 'ln' in item:
-#                           mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
-#                   pre_rw  = src_rw
  
         pass;                   # Append work data to report
-        pass;                  #rpt_ed.set_text_line(-1, '')
-        pass;                  #rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
-        pass;                  #rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
+        pass;                   DBG_DATA_TO_REPORT  = apx.get_opt('fif_DBG_data_to_report', False)
+        pass;                   DBG_DATA_TO_REPORT and rpt_ed.set_text_line(-1, '')
+        pass;                   DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
+        pass;                   DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
         # AT-hack to update folding
         pass;                   RPTLOG and log('?? set lxr',)
@@ -1072,6 +947,139 @@ class Command:
        #def _nav_to_src
    #class Command
 
+def dlg_press(stores, cfg_json,
+                incl_s,
+                excl_s,
+                fold_s,
+                dept_n,
+                reex01,
+                case01,
+                word01,
+                cllc_s,
+                join_s,
+                totb_s,
+                shtp_s,
+                cntx_s,
+                algn_s,
+                skip_s,
+                sort_s,
+                frst_s,
+                enco_s):
+    pset_l  = stores.setdefault('pset', [])
+    dlg_list= [f(_('Restore: {nm}\t[{il}]In files, [{fo}]In folder, [{aa}].*aAw, [{fn}]Adv. search, [{rp}]Adv. report')
+                ,nm=ps['name']
+                ,il=ps.get('_il_',' ')
+                ,fo=ps.get('_fo_',' ')
+                ,aa=ps.get('_aa_',' ')
+                ,fn=ps.get('_fn_',' ')
+                ,rp=ps.get('_rp_',' ')
+                ) 
+                for ps in pset_l] \
+            + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
+              ,_('Delete preset\tSelect name...')
+              ,_('Save as preset\tSelect options to save...')]
+    ind_inop= len(pset_l)
+    ind_del = len(pset_l)+1
+    ind_save= len(pset_l)+2
+    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))
+    if ps_ind is None:  return #continue#while
+    if False:pass
+    elif ps_ind==ind_inop:
+        # Find in open files
+        fold_s = IN_OPEN_FILES
+    elif ps_ind<len(pset_l):
+        # Restore
+        ps  = pset_l[ps_ind]
+        incl_s = ps.get('incl', incl_s)
+        excl_s = ps.get('excl', excl_s)
+        fold_s = ps.get('fold', fold_s)
+        dept_n = ps.get('dept', dept_n)
+        reex01 = ps.get('reex', reex01)
+        case01 = ps.get('case', case01)
+        word01 = ps.get('word', word01)
+        cllc_s = ps.get('cllc', cllc_s)
+        join_s = ps.get('join', join_s)
+        totb_s = ps.get('totb', totb_s);    totb_s = str(min(1, int(totb_s)))
+        shtp_s = ps.get('shtp', shtp_s)
+        cntx_s = ps.get('cntx', cntx_s)
+        algn_s = ps.get('algn', algn_s)
+        skip_s = ps.get('skip', skip_s)
+        sort_s = ps.get('sort', sort_s)
+        frst_s = ps.get('frst', frst_s)
+        enco_s = ps.get('enco', enco_s)
+        app.msg_status(_('Restored preset: ')+ps['name'])
+    elif ps_ind==ind_del and pset_l:
+        # Delete
+        ind4del = app.dlg_menu(app.MENU_LIST, '\n'.join([ps['name'] for ps in pset_l]))
+        if ind4del is None:  return #continue#while
+        ps      = pset_l[ind4del]
+        del pset_l[ind4del]
+        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        app.msg_status(_('Deleted preset: ')+ps['name'])
+    elif ps_ind==ind_save:
+        # Save
+        custs   = app.dlg_input_ex(6, _('Save preset')
+            , _('Preset name')                                                  , f(_('Preset #{}'), 1+len(pset_l))
+            , _('Save "In files"/"Not in files" (0/1)')                         , '1'   # 1
+            , _('Save "In folder"/"Subfolders" (0/1)')                          , '1'   # 2
+            , _('Save ".*"/"aA"/"w" (0/1)')                                     , '1'   # 3
+            , _('Save (Adv. search) "Skip"/"Sort"/"Firsts/Encodings" (0/1)')    , '1'   # 4
+            , _('Save (Adv. report) "Collect"/"Append"/"In Tab"/"Tree" (0/1)')  , '1'   # 5
+            )
+        if not custs or not custs[0] :   return #continue#while
+        ps      = OrdDict([('name',custs[0])])
+        if custs[1]=='1':
+            ps['_il_']  = 'x'
+            ps['incl']  = incl_s
+            ps['excl']  = excl_s
+        if custs[2]=='1':
+            ps['_fo_']  = 'x'
+            ps['fold']  = fold_s
+            ps['dept']  = dept_n
+        if custs[3]=='1':
+            ps['_aa_']  = 'x'
+            ps['reex']  = reex01
+            ps['case']  = case01
+            ps['word']  = word01
+        if custs[4]=='1':
+            ps['_fn_']  = 'x'
+            ps['skip']  = skip_s
+            ps['sort']  = sort_s
+            ps['frst']  = frst_s
+            ps['enco']  = enco_s
+        if custs[5]=='1':
+            ps['_rp_']  = 'x'
+            ps['cllc']  = cllc_s
+            ps['join']  = join_s
+            ps['totb']  = str(min(1, int(totb_s)))
+            ps['shtp']  = shtp_s
+            ps['cntx']  = cntx_s
+            ps['algn']  = algn_s
+            pass
+        pset_l += [ps]
+        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        app.msg_status(_('Saved preset: ')+ps['name'])
+    return      (
+                incl_s,
+                excl_s,
+                fold_s,
+                dept_n,
+                reex01,
+                case01,
+                word01,
+                cllc_s,
+                join_s,
+                totb_s,
+                shtp_s,
+                cntx_s,
+                algn_s,
+                skip_s,
+                sort_s,
+                frst_s,
+                enco_s,
+                )
+   #def dlg_press
+
 def dlg_help(word_h, shtp_h, cntx_h):
     RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
     TIPS_BODY   = _(r'''
@@ -1113,6 +1121,9 @@ Default values:
     
     // Close dialog if searching was success
     "fif_hide_if_success":false,
+    
+    // What part of target ("Find") will appear in title of the result tab
+    "fif_len_target_in_title":10,
     
     // Need reporting if nothing found
     "fif_report_no_matches":false,
@@ -1533,7 +1544,7 @@ def collect_files(how_walk:dict, progressor=None)->list:
         pass;                  #LOG and log('dirpath, #filenames={}',(dirpath, len(filenames)))
         pass;                  #LOG and log('dirpath, dirnames, filenames={}',(dirpath, dirnames, filenames))
         dir_n   += dir_n
-        if progressor and 0==dir_n%17:
+        if progressor and 0==dir_n%13:
             progressor.set_progress(f(_('(ESC?)(#{}) Picking files in: {}'), len(rsp), dirpath))
             if progressor.need_break():
                 if ESC_FULL_STOP:   return [], True
@@ -1710,7 +1721,11 @@ ToDo
 [+][kv-kv][22apr16] Tips and ExtraOpts in dlg Help
 [+][kv-kv][22apr16] Use text from Cud (not from disk!) for modifyed files
 [ ][kv-kv][22apr16] Set caret to 1st fragment (with scroll)
-[ ][at-kv][26apr16] Move select_lexer,get_groups_count,html2rgb to cudax_lib
+[+][at-kv][26apr16] Move select_lexer,get_groups_count,html2rgb to cudax_lib
 [+][kv-kv][26apr16] AsSubl: empty InFiles, InFolder ==> find in open files (ready preset?)
 [+][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
+[+][kv-kv][29apr16] extra inf in title: 10 must be opts
+[ ][kv-kv][29apr16] aligning for MIDDL need in each dir 
+[ ][kv-kv][29apr16] find_in_ed must pass to dlg title + tab_id
+[ ][kv-kv][29apr16] extract 'pres' to dlg_preset
 '''
