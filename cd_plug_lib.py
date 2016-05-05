@@ -16,7 +16,7 @@ import  cudatext        as app
 import  cudax_lib       as apx
 #from   cudax_lib   import log
 
-c13,c9  = chr(13),chr(9)
+c13,c10,c9  = chr(13),chr(10),chr(9)
 REDUCTS = {'lb'     :'label'
         ,  'ln-lb'  :'linklabel'
         ,  'ed'     :'edit'
@@ -160,7 +160,7 @@ class Tr :
                 # Отменить все замеры
                 self.stms   = []
                 
-        return msg.replace('¬',c9).replace('¶',c13)
+        return msg.replace('¬',c9).replace('¶',c10)
         # Tr.format
 
     @staticmethod
