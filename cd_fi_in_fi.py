@@ -340,9 +340,6 @@ Default values:
         vals_hlp    = dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
              [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
              ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
-#            ,dict(cid='tips',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                                 )
-#            ,dict(cid='tree',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                                 )
-#            ,dict(cid='opts',tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                                 )
              ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                ,act='1'         )
              ,dict(cid='tree',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                ,act='1'         )
              ,dict(cid='opts',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                ,act='1'         )
@@ -357,7 +354,7 @@ Default values:
        #while while_hlp
    #def dlg_help
 
-def dlg_fif(self, what='', opts={}):
+def dlg_fif(what='', opts={}):
     max_hist= apx.get_opt('ui_max_history_edits', 20)
     cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
     stores  = apx._json_loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
@@ -557,7 +554,7 @@ def dlg_fif(self, what='', opts={}):
                  +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('Firsts (&0=all):')  ,hint=frst_h)] # &0
                  +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,w=180                                              )] # 
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings:')        ,hint=enco_h)] # 
-                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l           ,en='1'         )] # 
+                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l                           )] # 
                 )                                                                                                               
                  +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-50 ,l=tbn_l    ,w=BTN_W    ,cap=_('&Help...')                      )] # &h
                  +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Find'),props='1'                )] #    default
@@ -771,7 +768,7 @@ def dlg_fif(self, what='', opts={}):
                 ,skip_binr  =skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
                 ,sort_type  =apx.icase( sort_s=='0','' 
                                        ,sort_s=='1','date,desc' 
-                                       ,sort_s=='2','date,asc' ,'') # [' ', 'By date, from newest', 'By date, from oldest']
+                                       ,sort_s=='2','date,asc' ,'')
                 ,only_frst  =int(frst_s)
                 ,enco       =enco_l[int(enco_s)].split(', ')
                 )
@@ -1568,7 +1565,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                    #with
             except Exception as ex:
                 if enco_n == len(enco_l)-1:
-                    print(f(_('Cannot read "{}" (enco={}/{}): {}'), path, enco_s, enco_l, ex))
+                    print(f(_('Cannot read "{}" (encoding={}/{}): {}'), path, enco_s, enco_l, ex))
            #for encd_n
        #for path
     pass;                      #t=None
@@ -1727,23 +1724,6 @@ def is_hidden_file(path:str)->bool:
     return os.path.basename(path).startswith('.')
    #def is_hidden_file
 
-#def get_groups_count():
-#   gr_mode = app.app_proc(app.PROC_GET_GROUPING, '')
-#   if gr_mode==app.GROUPS_ONE      :return 1
-#   if gr_mode==app.GROUPS_2VERT    :return 2
-#   if gr_mode==app.GROUPS_2HORZ    :return 2
-#   if gr_mode==app.GROUPS_3VERT    :return 3
-#   if gr_mode==app.GROUPS_3HORZ    :return 3
-#   if gr_mode==app.GROUPS_3PLUS    :return 3
-#   if gr_mode==app.GROUPS_1P2VERT  :return 3
-#   if gr_mode==app.GROUPS_1P2HORZ  :return 3
-#   if gr_mode==app.GROUPS_4VERT    :return 4
-#   if gr_mode==app.GROUPS_4HORZ    :return 4
-#   if gr_mode==app.GROUPS_4GRID    :return 4
-#   if gr_mode==app.GROUPS_6GRID    :return 6
-#   return 1
-    
-
 class ProgressAndBreak:
     """ Helper for 
         - Show progress of working
@@ -1814,8 +1794,8 @@ ToDo
 [+][kv-kv][26apr16] AsSubl: empty InFiles, InFolder ==> find in open files (ready preset?)
 [+][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
 [+][kv-kv][29apr16] extra inf in title: 10 must be opts
-[ ][kv-kv][29apr16] aligning for MIDDL need in each dir 
+[?][kv-kv][29apr16] aligning for MIDDL need in each dir 
 [ ][kv-kv][29apr16] find_in_ed must pass to dlg title + tab_id
-[ ][kv-kv][29apr16] extract 'pres' to dlg_preset
-[ ][kv-kv][04may16] BUG? Encoding ex breaks reading file ==> next encoding doubles stat data
+[+][kv-kv][29apr16] extract 'pres' to dlg_preset
+[-][kv-kv][04may16] BUG? Encoding ex breaks reading file ==> next encoding doubles stat data
 '''
