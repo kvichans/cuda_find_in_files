@@ -1418,6 +1418,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         return encoding
        #def detect_encoding
     detector= UniversalDetector() if ENCO_DETD in enco_l else None
+    rpt_enc_fail= apx.get_opt('fif_log_encoding_fail', False)
 
     def find_for_body(   body:str, dept:int, rsp_l:list, rsp_i:list):
         if pttn.search(body):
@@ -1566,7 +1567,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                     break#for enco_n
                    #with
             except Exception as ex:
-                if enco_n == len(enco_l)-1:
+                if rpt_enc_fail and enco_n == len(enco_l)-1:
                     print(f(_('Cannot read "{}" (encoding={}/{}): {}'), path, enco_s, enco_l, ex))
            #for encd_n
        #for path
