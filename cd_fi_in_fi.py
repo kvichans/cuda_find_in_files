@@ -1709,7 +1709,7 @@ TEXTCHARS = bytearray({7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f})
 def is_birary_file(path:str, blocksize=BLOCKSIZE, def_ans=None)->bool:
     if not os.path.isfile(path):    return def_ans
     try:
-        block   = open(path, 'r').read(blocksize)
+        block   = open(path, 'br').read(blocksize)
         if not      block:  return False
         if b'\0' in block:  return True
         return bool(block.translate(None, TEXTCHARS))
