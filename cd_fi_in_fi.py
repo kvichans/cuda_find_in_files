@@ -1656,6 +1656,10 @@ def collect_files(how_walk:dict, progressor=None)->list:
                 stoped  = True
                 progressor.prefix += _('(Picking stopped)')
                 break#for dirpath
+        # Cut links
+        dir4cut  = [dirname for dirname in dirnames if os.path.islink(os.path.join(dirpath, dirname))]
+        for dirname in dir4cut:
+            dirnames.remove(dirname)
         if hidn:
             # Cut hidden dirs
             dir4cut  = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
@@ -1674,6 +1678,7 @@ def collect_files(how_walk:dict, progressor=None)->list:
             if not      any(map(lambda cl:fnmatch(filename, cl), incls)):   continue#for filename
             if excl and any(map(lambda cl:fnmatch(filename, cl), excls)):   continue#for filename
             path    = os.path.join(dirpath, filename)
+            if          os.path.islink(path):                               continue#for filename
             if hidn and is_hidden_file(path):                               continue#for filename
             if binr and is_birary_file(path):                               continue#for filename
             if size and os.path.getsize(path) > size*1024:                  continue#for filename
