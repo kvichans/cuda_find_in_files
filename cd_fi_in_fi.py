@@ -19,6 +19,7 @@ OrdDict = collections.OrderedDict
 c9, c10, c13    = chr(9), chr(10), chr(13) 
 #FROM_API_VERSION= '1.0.119'
 
+pass;                           Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-1==-1)  # Do or dont logging.
 pass;                           FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
 pass;                           RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
@@ -1356,8 +1357,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     """
     pass;                      #FNDLOG and log('ESC_FULL_STOP={}',ESC_FULL_STOP)
     pass;                      #FNDLOG and log('how_walk={}',pf(how_walk))
-    pass;                      #FNDLOG and log('what_find={}',pf(what_find))
-    pass;                      #FNDLOG and log('what_save={}',pf(what_save))
+    pass;                       FNDLOG and log('what_find={}',pf(what_find))
+    pass;                       FNDLOG and log('what_save={}',pf(what_save))
 
     rsp_l   = []
     rsp_i   = dict(cllc_files=0
@@ -1503,6 +1504,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 #   pass;                       t=log('?? files (==',) if FNDLOG else 0
     
     for path_n, path in enumerate(files):
+        pass;                   FNDLOG and log('path_n, path={}',(path_n, path))
         if progressor and 0==path_n%17:
             pc  = int(100*path_n/len(files))
             progressor.set_progress( f(_('(ESC?) Seaching: {}% (found {} match(es) in {} file(s))')
@@ -1657,18 +1659,18 @@ def collect_files(how_walk:dict, progressor=None)->list:
                 progressor.prefix += _('(Picking stopped)')
                 break#for dirpath
         # Cut links
-        dir4cut  = [dirname for dirname in dirnames if os.path.islink(os.path.join(dirpath, dirname))]
+        dir4cut     = [dirname for dirname in dirnames if os.path.islink(os.path.join(dirpath, dirname))]
         for dirname in dir4cut:
             dirnames.remove(dirname)
         if hidn:
             # Cut hidden dirs
-            dir4cut  = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
+            dir4cut = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
             for dirname in dir4cut:
                 dirnames.remove(dirname)
             
         walk_depth  = 0 \
                         if os.path.samefile(dirpath, root) else \
-                      1+os.path.relpath(dirpath, root).count(os.sep)
+                      1 +  os.path.relpath( dirpath, root).count(os.sep)
         pass;                  #LOG and log('depth,walk_depth={}',(depth,walk_depth))
         if walk_depth>depth>0:
             pass;              #LOG and log('skip by >depth',())
@@ -1698,6 +1700,7 @@ def collect_files(how_walk:dict, progressor=None)->list:
         rsp     = [tp[1] for tp in sorted(tm_pth, reverse=(sort=='date,desc'))]
         if len(rsp)>=frst>0:
             rsp = rsp[:frst]
+    pass;                       LOG and log('|rsp|, stoped={}',(len(rsp), stoped))
     return rsp, stoped
    #def collect_files
 
