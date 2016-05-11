@@ -149,7 +149,7 @@ def dlg_press(stores, cfg_json,
     ind_inop= len(pset_l)
     ind_del = len(pset_l)+1
     ind_save= len(pset_l)+2
-    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))
+    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-press
     if ps_ind is None:  return #continue#while
     if False:pass
     elif ps_ind==ind_inop:
@@ -338,7 +338,8 @@ Default values:
     while_hlp   = True
     while while_hlp:
         btn_hlp,    \
-        vals_hlp    = dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,
+        vals_hlp,   \
+        chds_hlp    = dlg_wrapper(_('Help for "Find in files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
              [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
              ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
              ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                ,act='1'         )
@@ -510,7 +511,7 @@ def dlg_fif(what='', opts={}):
         tbn_l   = cmb_l+TXT_W+GAP
         DLG_W,\
         DLG_H   = (tbn_l+BTN_W+GAP, DLG_H0+gap3)
-
+        #NOTE: fif-cnts
         cnts    = ([]                                                                                                              # gmqvyz
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
@@ -590,8 +591,9 @@ def dlg_fif(what='', opts={}):
                              ,enco=enco_s
                             ))
         pass;                  #LOG and log('vals={}',pf(vals))
-        btn,vals    = dlg_wrapper(_('Find in Files'), DLG_W, DLG_H, cnts, vals, focus_cid=focused)
+        btn,vals,chds=dlg_wrapper(_('Find in Files'), DLG_W, DLG_H, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
+        focused     = chds[0] if 1==len(chds) else focused
         pass;                  #LOG and log('vals={}',pf(vals))
         reex01      = vals['reex']
         case01      = vals['case']
@@ -692,6 +694,7 @@ def dlg_fif(what='', opts={}):
             continue#while
                 
         if btn=='cust':
+            #NOTE: dlg-cust
             custs   = app.dlg_input_ex(3, _('Adjust dialog')
                 , _('Width of edits Find/Replace (min 400)'), str(stores.get('wd_txts', 400))
                 , _('Width of buttons Browse/Help (min 100)'),str(stores.get('wd_btns', 100))
@@ -727,7 +730,7 @@ def dlg_fif(what='', opts={}):
                     re.compile(what_s)
                 except Exception as ex:
                     app.msg_box(f(_('Set correct "Find" reg.ex.\n\nError:\n{}'),ex), app.MB_OK) 
-                    focused     = 'what'
+                    focused = 'what'
                     continue#while
             if fold_s!=IN_OPEN_FILES and (not fold_s or not os.path.isdir(fold_s)):
                 app.msg_box(f(_('Set existing "In folder" value or use "{}" (see Presets)'), IN_OPEN_FILES), app.MB_OK) 
@@ -759,7 +762,7 @@ def dlg_fif(what='', opts={}):
                 app.msg_box(f(_('Conflict "{}" and "Tree type" options.\n\nSee Help--Tree.'),IN_OPEN_FILES), app.MB_OK) 
                 focused     = 'shtp'
                 continue#while
-            focused     = 'what'
+#           focused     = 'what'
             how_walk    =dict(
                  root       =fold_s.rstrip(r'\/')
                 ,file_incl  =incl_s
@@ -799,7 +802,7 @@ def dlg_fif(what='', opts={}):
             totb_s  = str(min(1, int(totb_s)))
             ################################
             progressor = ProgressAndBreak()
-            rpt_data, rpt_info = find_in_files(
+            rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
                  how_walk   = how_walk
                 ,what_find  = what_find
                 ,what_save  = what_save
@@ -818,7 +821,7 @@ def dlg_fif(what='', opts={}):
                       f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
             progressor.set_progress(msg_rpt)
             if 0==frgms and not REPORT_FAIL:    continue#while
-            report_to_tab(
+            report_to_tab(                      #NOTE: run-report
                 rpt_data
                ,rpt_info
                ,how_rpt
@@ -1003,20 +1006,6 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
             else:
                 path= os.path.relpath(path, root)
                 pass;           RPTLOG and log('(root-rel)path={}',path)
-#       if shtp     in (SHTP_MIDDL_R, SHTP_MIDDL_RCL) and \
-#           path!=root:
-#           path= os.path.basename(path)
-#           pass;               RPTLOG and log('path_d={}',path_d)
-#           pass;               RPTLOG and log('(basename)path={}',path)
-#       if shtp     in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
-#           path!=root:
-#           if 'prnt' in path_d:
-#               path= os.path.relpath(path, path_d['prnt']['file'])
-#           else:
-#               path= os.path.relpath(path, root)
-#           pass;               RPTLOG and log('(rel)path={}',path)
-##           path= os.path.relpath(path, root)
-#           pass;               RPTLOG and log('(rel)path={}',path)
         dept    = 1+path_d.get('dept', 0)
         c9dt    = c9*dept
         pass;                   RPTLOG and log('onfn,has_cnt,has_itm,c9dt={}',(onfn,has_cnt,has_itm,repr(c9dt)))
@@ -1632,7 +1621,7 @@ def collect_files(how_walk:dict, progressor=None)->list:
     """
     pass;                       t=log('>>(:)how_walk={}',how_walk) if LOG else 0 
     root    = how_walk['root']
-    if not os.path.isdir(root): return []
+    if not os.path.isdir(root): return [], False
     rsp     = []
     stoped  = False
     incl    = how_walk[    'file_incl'    ].strip()
@@ -1807,4 +1796,7 @@ ToDo
 [ ][kv-kv][29apr16] find_in_ed must pass to dlg title + tab_id
 [+][kv-kv][29apr16] extract 'pres' to dlg_preset
 [-][kv-kv][04may16] BUG? Encoding ex breaks reading file ==> next encoding doubles stat data
+[ ][a1-kv][10may16] Replace in files
+[ ][at-kv][10may16] Checks for preset
+[ ][kv-kv][11may16] Try to save last active control
 '''

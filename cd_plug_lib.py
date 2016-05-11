@@ -278,9 +278,10 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                                 {'cid':val}
             focus           (opt) Control cid for  start focus
         Return
-            btn_cid         Clicked control cid
+            btn_cid         Clicked/changed control cid
             {'cid':val}     Dict of new values for the same (as in_vals) controls
                                 Format of values is same too.
+            [cid]           List of controls with changed values
         Short names for types
             lb      label
             ln-lb   linklabel
@@ -397,7 +398,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
     pass;                  #LOG and log('ok ctrls_l={}',pformat(ctrls_l, width=120))
 
     ans     = app.dlg_custom(title, w, h, '\n'.join(ctrls_l), cid2i.get(focus_cid, -1))
-    if ans is None: return None, None   # btn_cid, {cid:v}
+    if ans is None: return None, None, None   # btn_cid, {cid:v}, [cid]
 
     btn_i,  \
     vals_ls = ans[0], ans[1].splitlines()
@@ -429,10 +430,12 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
            #in_val = ';'.join(in_val[0], ','.join(in_val[1]))
         elif isinstance(in_val, bool): 
             an_val = an_val=='1'
+        elif tp=='listview':
+            an_val = -1 if an_val=='' else int(an_val)
         else: 
             an_val = type(in_val)(an_val)
         an_vals[cid]    = an_val
-    return  btn_cid, an_vals
+    return  btn_cid, an_vals, [cid for cid in in_vals if in_vals[cid]!=an_vals[cid]]
    #def dlg_wrapper
 
 def get_hotkeys_desc(cmd_id, ext_id=None, keys_js=None, def_ans=''):
