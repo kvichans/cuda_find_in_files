@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.9.2 2016-05-05'
+    '0.9.3 2016-05-11'
 ToDo: (see end of file)
 '''
 
@@ -115,32 +115,57 @@ class Command:
         return nav_to_src(where, how_act)
    #class Command
 
-def dlg_press(stores, cfg_json,
-                incl_s,
-                excl_s,
-                fold_s,
-                dept_n,
-                reex01,
-                case01,
-                word01,
-                cllc_s,
-                join_s,
-                totb_s,
-                shtp_s,
-                cntx_s,
-                algn_s,
-                skip_s,
-                sort_s,
-                frst_s,
-                enco_s):
+def dlg_press(stores, cfg_json, invl_l, desc_l):
     pset_l  = stores.setdefault('pset', [])
-    dlg_list= [f(_('Restore: {nm}\t[{il}]In files, [{fo}]In folder, [{aa}].*aAw, [{fn}]Adv. search, [{rp}]Adv. report')
-                ,nm=ps['name']
-                ,il=ps.get('_il_',' ')
-                ,fo=ps.get('_fo_',' ')
-                ,aa=ps.get('_aa_',' ')
-                ,fn=ps.get('_fn_',' ')
-                ,rp=ps.get('_rp_',' ')
+    keys_l  = ['reex','case','word'
+              ,'incl','excl'
+              ,'fold','dept'
+              ,'skip','sort','frst','enco'
+              ,'cllc','totb','join','shtp','algn','cntx']
+    totb_i  = keys_l.index('totb')
+    invl_l  = [v for v in invl_l]
+    invl_l[totb_i]  = str(min(1, int(invl_l[totb_i])))
+    ouvl_l  = [v for v in invl_l]
+    caps_l  = ['.*','aA','"w"'
+              ,'In files','Not in files'
+              ,'In folder','Subfolders'
+              ,'Skip files','Sort file list','Firsts','Encodings'
+              ,'Collect','Show in','Append results','Tree type','Align','Show context']
+    def upgrd(ps:list)->list:
+        if '_aa_' not in ps:  return ps
+        if ps.pop('_aa_', ''):
+            ps['_reex'] = 'x'
+            ps['_case'] = 'x'
+            ps['_word'] = 'x'
+        if ps.pop('_il_', ''):
+            ps['_incl'] = 'x'
+            ps['_excl'] = 'x'
+        if ps.pop('_fo_', ''):
+            ps['_fold'] = 'x'
+            ps['_dept'] = 'x'
+        if ps.pop('_fn_', ''):
+            ps['_skip'] = 'x'
+            ps['_sort'] = 'x'
+            ps['_frst'] = 'x'
+            ps['_enco'] = 'x'
+        if ps.pop('_rp_', ''):
+            ps['_cllc'] = 'x'
+            ps['_totb'] = 'x'
+            ps['_join'] = 'x'
+            ps['_shtp'] = 'x'
+            ps['_algn'] = 'x'
+            ps['_cntx'] = 'x'
+        return ps
+       #def upgrd
+    for ps in pset_l:
+        upgrd(ps)
+    dlg_list= [f(_('Restore: {}\t[{}{}{}].*aAw, [{}{}]In files, [{}{}]In folders, [{}{}{}{}]Adv. search, [{}{}{}{}{}{}]Adv. report')
+                ,ps['name']
+                ,ps['_reex'],ps['_case'],ps['_word']
+                ,ps['_incl'],ps['_excl']
+                ,ps['_fold'],ps['_dept']
+                ,ps['_skip'],ps['_sort'],ps['_frst'],ps['_enco']
+                ,ps['_cllc'],ps['_totb'],ps['_join'],ps['_shtp'],ps['_algn'],ps['_cntx']
                 ) 
                 for ps in pset_l] \
             + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
@@ -150,102 +175,64 @@ def dlg_press(stores, cfg_json,
     ind_del = len(pset_l)+1
     ind_save= len(pset_l)+2
     ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-press
-    if ps_ind is None:  return #continue#while
+    if ps_ind is None:  return None
     if False:pass
     elif ps_ind==ind_inop:
         # Find in open files
-        fold_s = IN_OPEN_FILES
+#       fold_s = IN_OPEN_FILES
+        ouvl_l[keys_l.index('fold')]    = IN_OPEN_FILES
+        return ouvl_l
+        
     elif ps_ind<len(pset_l):
         # Restore
-        ps  = pset_l[ps_ind]
-        incl_s = ps.get('incl', incl_s)
-        excl_s = ps.get('excl', excl_s)
-        fold_s = ps.get('fold', fold_s)
-        dept_n = ps.get('dept', dept_n)
-        reex01 = ps.get('reex', reex01)
-        case01 = ps.get('case', case01)
-        word01 = ps.get('word', word01)
-        cllc_s = ps.get('cllc', cllc_s)
-        join_s = ps.get('join', join_s)
-        totb_s = ps.get('totb', totb_s);    totb_s = str(min(1, int(totb_s)))
-        shtp_s = ps.get('shtp', shtp_s)
-        cntx_s = ps.get('cntx', cntx_s)
-        algn_s = ps.get('algn', algn_s)
-        skip_s = ps.get('skip', skip_s)
-        sort_s = ps.get('sort', sort_s)
-        frst_s = ps.get('frst', frst_s)
-        enco_s = ps.get('enco', enco_s)
+        ps      = pset_l[ps_ind]
+        for i, k in enumerate(keys_l):
+            if ps.get('_'+k, '')=='x':
+                ouvl_l[i]   = ps.get(k, ouvl_l[i])
+        ouvl_l[totb_i]  = str(min(1, int(ouvl_l[totb_i])))
         app.msg_status(_('Restored preset: ')+ps['name'])
+        return ouvl_l
+        
     elif ps_ind==ind_del and pset_l:
         # Delete
         ind4del = app.dlg_menu(app.MENU_LIST, '\n'.join([ps['name'] for ps in pset_l]))
-        if ind4del is None:  return #continue#while
+        if ind4del is None:  return None
         ps      = pset_l[ind4del]
         del pset_l[ind4del]
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         app.msg_status(_('Deleted preset: ')+ps['name'])
+        return None
+        
     elif ps_ind==ind_save:
         # Save
-        custs   = app.dlg_input_ex(6, _('Save preset')
-            , _('Preset name')                                                  , f(_('Preset #{}'), 1+len(pset_l))
-            , _('Save "In files"/"Not in files" (0/1)')                         , '1'   # 1
-            , _('Save "In folder"/"Subfolders" (0/1)')                          , '1'   # 2
-            , _('Save ".*"/"aA"/"w" (0/1)')                                     , '1'   # 3
-            , _('Save Adv. search "Skip"/"Sort"/"Firsts/Encodings" (0/1)')      , '1'   # 4
-            , _('Save Adv. report "Collect"/"Show in"/"Append"/"Tree" (0/1)')   , '1'   # 5
-            )
-        if not custs or not custs[0] :   return #continue#while
-        ps      = OrdDict([('name',custs[0])])
-        if custs[1]=='1':
-            ps['_il_']  = 'x'
-            ps['incl']  = incl_s
-            ps['excl']  = excl_s
-        if custs[2]=='1':
-            ps['_fo_']  = 'x'
-            ps['fold']  = fold_s
-            ps['dept']  = dept_n
-        if custs[3]=='1':
-            ps['_aa_']  = 'x'
-            ps['reex']  = reex01
-            ps['case']  = case01
-            ps['word']  = word01
-        if custs[4]=='1':
-            ps['_fn_']  = 'x'
-            ps['skip']  = skip_s
-            ps['sort']  = sort_s
-            ps['frst']  = frst_s
-            ps['enco']  = enco_s
-        if custs[5]=='1':
-            ps['_rp_']  = 'x'
-            ps['cllc']  = cllc_s
-            ps['join']  = join_s
-            ps['totb']  = str(min(1, int(totb_s)))
-            ps['shtp']  = shtp_s
-            ps['cntx']  = cntx_s
-            ps['algn']  = algn_s
-            pass
+        items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
+        btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+400+GAP,     #NOTE: dlg-pres
+             [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
+             ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
+             ,dict(           tp='lb'    ,t=GAP+45          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
+             ,dict(cid='what',tp='ch-lbx',t=GAP+65,h=400-100,l=GAP          ,w=300  ,items=items               )
+             ,dict(cid='!'   ,tp='bt'    ,t=GAP+400-23      ,l=GAP+300-190  ,w=80   ,cap=_('&Save'),props='1'   ) # &s  default
+             ,dict(cid='-'   ,tp='bt'    ,t=GAP+400-23      ,l=GAP+300-80   ,w=80   ,cap=_('Close')             )
+             ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
+                       ,what=(0,['1']*len(keys_l))), focus_cid='name')
+        pass;                  #LOG and log('vals={}',vals)
+        if btn is None or btn=='-': return None
+        ps_name = vals['name']
+        sl,vals = vals['what']
+        pass;                  #LOG and log('vals={}',vals)
+        ps      = OrdDict([('name',ps_name)])
+        for i, k in enumerate(keys_l):
+            if vals[i]=='1':
+                ps['_'+k] = 'x'
+                ps[    k] = invl_l[i]
+            else:
+                ps['_'+k] = '_'
+        pass;                  #LOG and log('ps={}',(ps))
         pset_l += [ps]
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         app.msg_status(_('Saved preset: ')+ps['name'])
-    return      (
-                incl_s,
-                excl_s,
-                fold_s,
-                dept_n,
-                reex01,
-                case01,
-                word01,
-                cllc_s,
-                join_s,
-                totb_s,
-                shtp_s,
-                cntx_s,
-                algn_s,
-                skip_s,
-                sort_s,
-                frst_s,
-                enco_s,
-                )
+        return None
+    return      ouvl_l
    #def dlg_press
 
 def dlg_help(word_h, shtp_h, cntx_h):
@@ -563,8 +550,10 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Coun&t')            ,hint=coun_h)] # &t
                  +[dict(cid='more',tp='bt'      ,t=DLG_H-GAP-25 ,l=GAP      ,w=35*3     ,cap=c_more                 ,hint=more_h)] # &e
                  +[dict(cid='cust',tp='bt'      ,t=DLG_H-GAP-25 ,l=GAP*2+35*3,w=35*3    ,cap=_('Ad&just...')        ,hint=adju_h)] # &j
-                 +[dict(cid='pres',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-95 ,w=90       ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
                  +[dict(cid='-'   ,tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l    ,w=BTN_W    ,cap=_('Close')                         )] # 
+#                +[dict(cid='pres',tp='bt'      ,t=gap2+165     ,l=tbn_l    ,w=100      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
+                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=105      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
+#                +[dict(cid='pres',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-95 ,w=90       ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
                 )
         vals    =       dict( reex=reex01
                              ,case=case01
@@ -653,44 +642,23 @@ def dlg_fif(what='', opts={}):
             
         if btn=='pres':
             ans = dlg_press(stores, cfg_json,
-            incl_s,
-            excl_s,
-            fold_s,
-            dept_n,
-            reex01,
-            case01,
-            word01,
-            cllc_s,
-            join_s,
-            totb_s,
-            shtp_s,
-            cntx_s,
-            algn_s,
-            skip_s,
-            sort_s,
-            frst_s,
-            enco_s,
-            )
+                       (reex01,case01,word01,
+                        incl_s,excl_s,
+                        fold_s,dept_n,
+                        skip_s,sort_s,frst_s,enco_s,
+                        cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s),
+                       ('On' if reex01=='1' else 'Off','On' if case01=='1' else 'Off','On' if word01=='1' else 'Off',
+                        '"'+incl_s+'"','"'+excl_s+'"',
+                        '"'+fold_s+'"',dept_l[dept_n],
+                        skip_l[int(skip_s)],sort_l[int(sort_s)],frst_s,enco_l[int(enco_s)],
+                        cllc_l[int(cllc_s)],totb_l[int(totb_s)],'On' if join_s=='1' else 'Off',shtp_l[int(shtp_s)],'On' if algn_s=='1' else 'Off','On' if cntx_s=='1' else 'Off')
+                        )
             if ans is not None:
-                (
-                incl_s,
-                excl_s,
-                fold_s,
-                dept_n,
-                reex01,
-                case01,
-                word01,
-                cllc_s,
-                join_s,
-                totb_s,
-                shtp_s,
-                cntx_s,
-                algn_s,
-                skip_s,
-                sort_s,
-                frst_s,
-                enco_s,
-                )   = ans
+                       (reex01,case01,word01,
+                        incl_s,excl_s,
+                        fold_s,dept_n,
+                        skip_s,sort_s,frst_s,enco_s,
+                        cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s)  = ans
             continue#while
                 
         if btn=='cust':
@@ -763,7 +731,7 @@ def dlg_fif(what='', opts={}):
                 focused     = 'shtp'
                 continue#while
 #           focused     = 'what'
-            how_walk    =dict(
+            how_walk    =dict(                                  #NOTE: fif params
                  root       =fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
                 ,file_incl  =incl_s
                 ,file_excl  =excl_s
@@ -982,7 +950,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                             ,root
                             ,rpt_info['frgms']
                             ,rpt_info['files']))
-    for path_n, path_d in enumerate(rpt_data):
+    for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
         if progressor and 0==path_n%37:
             pc  = int(100*path_n/len(rpt_data))
             progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
@@ -1121,7 +1089,7 @@ def nav_to_src(where:str, how_act='move'):
                         r'<\((?P<R> *\d+)'      # Row   !
                            r'(?P<C>: *\d+)?'    # Col?
                            r'(?P<L>: *\d+)?\)>')# Len?
-    def parse_line(line:str, what:str)->list:
+    def parse_line(line:str, what:str)->list:                   #NOTE: nav parse_line
         pass;               NAVLOG and log('what, line={}',(what, line))
         if what=='SP':
             mtSP    = reSP.search(line)
@@ -1219,34 +1187,32 @@ def nav_to_src(where:str, how_act='move'):
             op_ed.focus()
         else:
             the_ed  = apx.get_tab_by_id(the_ed_id)
-#           the_ed  = [app.Editor(h) for h in app.ed_handles() 
-#                       if app.Editor(h).get_prop(app.PROP_TAG)=='FiF=open_and_nav'][0]
             the_ed.focus()
        #def open_and_nav
     pass;                   NAVLOG and log('path={}', (path))
     if os.path.isfile(path) or path.startswith(_('tab:')):
         open_and_nav(path, rw, cl, ln)
         return
-    testings="""
-+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-<c:\temp\try-ff\s1\t1-s1.txt>
-	<(3)>: SMTH
-	<(3:2)>: SMTH
-	<(3:2:2)>: SMTH
-+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-<c:\temp\try-ff\s1>
-	<t1-s1.txt(5)>: SMTH
-	<t1-s1.txt(5:4)>: SMTH
-	<t1-s1.txt(5:4:2)>: SMTH
-+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-<c:\temp\try-ff\s1\t1-s1.txt(3)>: SMTH
-+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-<c:\temp\try-ff\s1\t1-s1.txt>: #4
-+Search for "smtH" in "c:\temp\try-ff" (7 matches in 7 files)
-<c:\temp\try-ff\s1\t2-s1.txt>
-    """
+#   testings="""
+#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
+#<c:\temp\try-ff\s1\t1-s1.txt>
+#	<(3)>: SMTH
+#	<(3:2)>: SMTH
+#	<(3:2:2)>: SMTH
+#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
+#<c:\temp\try-ff\s1>
+#	<t1-s1.txt(5)>: SMTH
+#	<t1-s1.txt(5:4)>: SMTH
+#	<t1-s1.txt(5:4:2)>: SMTH
+#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
+#<c:\temp\try-ff\s1\t1-s1.txt(3)>: SMTH
+#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
+#<c:\temp\try-ff\s1\t1-s1.txt>: #4
+#+Search for "smtH" in "c:\temp\try-ff" (7 matches in 7 files)
+#<c:\temp\try-ff\s1\t2-s1.txt>
+#   """
     # Try to build path from prev lines
-    for t_row in range(row-1, -1, -1):
+    for t_row in range(row-1, -1, -1):                          #NOTE: nav build path
         t_line  = ed.get_text_line(t_row)
         pass;               NAVLOG and log('t_row, t_line={}', (t_row, t_line))
         if t_line.startswith('+'):                              break#for t_row         as top
@@ -1493,7 +1459,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     pass;                       t=log('?? files (==',) if LOG else 0
 #   pass;                       t=log('?? files (==',) if FNDLOG else 0
     
-    for path_n, path in enumerate(files):
+    for path_n, path in enumerate(files):                       #NOTE: scan main loop
         pass;                   FNDLOG and log('path_n, path={}',(path_n, path))
         if progressor and 0==path_n%17:
             pc  = int(100*path_n/len(files))
@@ -1605,7 +1571,7 @@ def collect_tabs(how_walk:dict)->list:
     return rsp, False
    #def collect_tabs
 
-def collect_files(how_walk:dict, progressor=None)->list:
+def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     """ how_walk keys:
             'root'         !str
             'depth'         int(-1)    -1=all, 0=only root

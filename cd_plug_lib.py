@@ -387,7 +387,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                 in_val = ','.join(in_val)
             elif tp in ['checklistbox', 'checklistview'] and isinstance(in_val, tuple):
                 # For checklistbox, checklistview: index+";"+checks 
-                in_val = ';'.join( (in_val[0], ','.join( in_val[1]) ) )
+                in_val = ';'.join( (str(in_val[0]), ','.join( in_val[1]) ) )
             lst+= ['val='+str(in_val)]
 
         if 'act' in cnt:    # must be last in lst
