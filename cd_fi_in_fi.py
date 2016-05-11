@@ -764,7 +764,7 @@ def dlg_fif(what='', opts={}):
                 continue#while
 #           focused     = 'what'
             how_walk    =dict(
-                 root       =fold_s.rstrip(r'\/')
+                 root       =fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
                 ,file_incl  =incl_s
                 ,file_excl  =excl_s
                 ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', ...]
