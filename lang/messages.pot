@@ -24,11 +24,11 @@ msgid "+Search for"
 msgstr ""
 
 #: cd_fi_in_fi.py:62
-msgid "Normal matches"
+msgid "Usual matches"
 msgstr ""
 
 #: cd_fi_in_fi.py:63
-msgid "Count only"
+msgid "Counts only"
 msgstr ""
 
 #: cd_fi_in_fi.py:64
@@ -68,7 +68,7 @@ msgid "dir/file/(r:c:l):line"
 msgstr ""
 
 #: cd_fi_in_fi.py:78
-msgid "\"detected\""
+msgid "detect"
 msgstr ""
 
 #: cd_fi_in_fi.py:162
@@ -126,19 +126,19 @@ msgstr ""
 #: cd_fi_in_fi.py:240
 msgid ""
 "\n"
-"• Values of \"In file\" and \"Not in file\" can contain\n"
+"â€¢ Values in fields \"In file\" and \"Not in file\" can contain\n"
 "    ?       for any single char,\n"
 "    *       for any substring (may be empty),\n"
 "    [seq]   any character in seq,\n"
 "    [!seq]  any character not in seq. \n"
 " \n"
-"• Set special value \"{tags}\" for field \"In folder\" to search in all opened documents.\n"
+"â€¢ Set special value \"{tags}\" for field \"In folder\" to search in all opened documents.\n"
 "    Preset \"In folder={tags}\" helps to do this.\n"
-"    To search in unsaved tabs use mask \"*\" in field \"In files\".\n"
+"    To search in unsaved tabs, use mask \"*\" in field \"In files\".\n"
 " \n"
-"• \"w\" - {word}\n"
+"â€¢ \"w\" - {word}\n"
 " \n"
-"• Long-term searching can be interrupted with ESC.\n"
+"â€¢ Long-term searches can be interrupted by ESC.\n"
 "    Search has three stages: \n"
 "        picking files, \n"
 "        finding fragments, \n"
@@ -155,31 +155,31 @@ msgstr ""
 #: cd_fi_in_fi.py:265
 msgid ""
 "\n"
-"Extra options for \"user.json\" (need restart after changing). \n"
+"Extra options for \"user.json\" (needed restart after changing). \n"
 "Default values:\n"
-"    // Fill Find with selection from current file when dialog starts\n"
+"    // Use selection-text from current file when dialog opens\n"
 "    \"fif_use_selection_on_start\":false,\n"
 "    \n"
-"    // Copy find-options \".*\", \"aA\", \"w\" from editor find to dialog on start\n"
+"    // Copy options \".*\", \"aA\", \"w\" from CudaText dialog to plugin's dialog\n"
 "    \"fif_use_edfind_opt_on_start\":false,\n"
 "    \n"
-"    // ESC will stop all stages \n"
+"    // ESC stops all stages \n"
 "    \"fif_esc_full_stop\":false,\n"
 "    \n"
-"    // Close dialog if searching was success\n"
+"    // Close dialog if search has found matches\n"
 "    \"fif_hide_if_success\":false,\n"
 "    \n"
-"    // What part of target (\"Find\") will appear in title of the result tab\n"
+"    // Len of substring (of field \"Find\") which appears as title of the search result\n"
 "    \"fif_len_target_in_title\":10,\n"
 "    \n"
-"    // Need reporting if nothing found\n"
+"    // Show report if nothing found\n"
 "    \"fif_report_no_matches\":false,\n"
 "    \n"
-"    // \"Show context\" will append N around source lines to report\n"
+"    // Option \"Show context\" appends N nearest lines to report\n"
 "    \"fif_context_width\":1,\n"
 "    \n"
-"    // Style to mark found fragment in report-text\n"
-"    // Full form\n"
+"    // Style which marks found fragment in report\n"
+"    // Full form:\n"
 "    //    \"fif_mark_style\":{\n"
 "    //      \"color_back\":\"\", \n"
 "    //      \"color_font\":\"\",\n"
@@ -192,21 +192,21 @@ msgid ""
 "    //  Values for border sides: \"solid\", \"dash\", \"2px\", \"dotted\", \"rounded\", \"wave\"\n"
 "    \"fif_mark_style\":{\"borders\":{\"bottom\":\"dotted\"}},\n"
 "    \n"
-"    // Exact encoding to read files\n"
+"    // Default encoding to read files\n"
 "    \"fif_locale_encoding\":\"{def_enco}\",\n"
 "    \n"
-"    // List of lexer names. First available will be applyed.\n"
+"    // List of lexer names for report. First available lexer is be used.\n"
 "    \"fif_lexers\":[\"Search results\"],\n"
 "    \n"
-"    // Skip big files (0 - read all)\n"
+"    // Skip too big files (0 - don't skip)\n"
 "    \"fif_skip_file_size_more_Kb\":0,\n"
 "    \n"
-"    // Size of \"head\" buffer to detect \"binary file\"\n"
+"    // Size of buffer (at file start) to detect binary files\n"
 "    \"fif_read_head_size\":1024,\n"
 msgstr ""
 
 #: cd_fi_in_fi.py:329
-msgid "Help for \"Find in files\""
+msgid "Help for \"Find in Files\""
 msgstr ""
 
 #: cd_fi_in_fi.py:331
@@ -242,7 +242,7 @@ msgid "Case sensitive"
 msgstr ""
 
 #: cd_fi_in_fi.py:353
-msgid "Option \"Whole words\". It is ignored when\r    Regular expression (\".*\") is turned on,\r    \"Find\" contains not only letters, digits and \"_\"."
+msgid "Option \"Whole words\". It is ignored when:\r    Regular expression (\".*\") is turned on,\r    \"Find\" contains not only letters, digits and \"_\"."
 msgstr ""
 
 #: cd_fi_in_fi.py:357
@@ -342,7 +342,7 @@ msgid "Don't sort"
 msgstr ""
 
 #: cd_fi_in_fi.py:400
-msgid "What is encoding to read files.\rFirst suitable will be applyed.\r{} is slow.\r\rDefault encoding: {}"
+msgid "In which encodings to read files.\rFirst suitable will be used.\r{} is slow.\r\rDefault encoding: {}"
 msgstr ""
 
 #: cd_fi_in_fi.py:491
@@ -478,11 +478,11 @@ msgid "Show Exclude masks (0/1)"
 msgstr ""
 
 #: cd_fi_in_fi.py:674
-msgid "Show Replace (0/1)"
+msgid "Show Replace field (0/1)"
 msgstr ""
 
 #: cd_fi_in_fi.py:694
-msgid "Are you sure to replace in all found files?"
+msgid "Do you want to _replace_ in all found files?"
 msgstr ""
 
 #: cd_fi_in_fi.py:701
@@ -515,14 +515,14 @@ msgstr ""
 
 #: cd_fi_in_fi.py:732
 msgid ""
-"Conflict \"Sort file list\" and \"Tree type\" options.\n"
+"Conflicting \"Sort file list\" and \"Tree type\" options.\n"
 "\n"
 "See Help--Tree."
 msgstr ""
 
 #: cd_fi_in_fi.py:739
 msgid ""
-"Conflict \"{}\" and \"Tree type\" options.\n"
+"Conflicting \"{}\" and \"Tree type\" options.\n"
 "\n"
 "See Help--Tree."
 msgstr ""
@@ -560,7 +560,7 @@ msgid "Command doesn't work with multi-carets"
 msgstr ""
 
 #: cd_fi_in_fi.py:1139 cd_fi_in_fi.py:1247
-msgid "At the line {} no data for navigation"
+msgid "Line {} has no data for navigation"
 msgstr ""
 
 #: cd_fi_in_fi.py:1145 cd_fi_in_fi.py:1202 cd_fi_in_fi.py:1577
@@ -572,7 +572,7 @@ msgid "No tab for navigation"
 msgstr ""
 
 #: cd_fi_in_fi.py:1239
-msgid "At the line {} bad data for navigation"
+msgid "Line {} has bad data for navigation"
 msgstr ""
 
 #: cd_fi_in_fi.py:1475
