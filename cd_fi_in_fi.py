@@ -209,8 +209,8 @@ def dlg_press(stores, cfg_json, invl_l, desc_l):
         btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres
              [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
-             ,dict(           tp='lb'    ,t=GAP+60          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
-             ,dict(cid='what',tp='ch-lbx',t=GAP+80,h=385    ,l=GAP          ,w=300  ,items=items               )
+             ,dict(           tp='lb'    ,t=GAP+55          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
+             ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items               )
              ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('&Save'),props='1'   ) # &s  default
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Close')             )
              ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
@@ -487,7 +487,7 @@ def dlg_fif(what='', opts={}):
         wo_repl = True #stores.get('wo_repl', True)
         wo_adva = stores.get('wo_adva', True)
         c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
-        gap1    = (GAP- 25 if wo_excl else GAP)     -2
+        gap1    = (GAP- 28 if wo_excl else GAP)
         gap2    = (GAP- 25 if wo_repl else GAP)+gap1
         gap3    = (GAP-115 if wo_adva else GAP)+gap2
         TXT_W   = stores.get('wd_txts', 400)
@@ -555,6 +555,8 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=105      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
 #                +[dict(cid='pres',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-95 ,w=90       ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
                 )
+        pass;                  #LOG and log('cnts=¶{}',pf(cnts))
+        pass;                  #LOG and log('cnts=¶{}',pf([dict(cid=d['cid'], t=d['t']) for d in cnts if 'cid' in d and 't' in d]))
         vals    =       dict( reex=reex01
                              ,case=case01
                              ,word=word01
