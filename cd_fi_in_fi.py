@@ -335,12 +335,12 @@ Default values:
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
              ], vals_hlp, focus_cid='htxt')
         pass;                  #LOG and log('vals_hlp={}',vals_hlp)
-        if btn_hlp is None or btn_hlp=='-': break#while while_hlp
+        if btn_hlp is None or btn_hlp=='-': break#while_hlp
         if False:pass
         elif btn_hlp=='tips':   vals_hlp["htxt"] = TIPS_BODY; vals_hlp["tips"] = True; vals_hlp["tree"] = False;vals_hlp["opts"] = False
         elif btn_hlp=='tree':   vals_hlp["htxt"] = TREE_BODY; vals_hlp["tips"] = False;vals_hlp["tree"] = True; vals_hlp["opts"] = False
         elif btn_hlp=='opts':   vals_hlp["htxt"] = OPTS_BODY; vals_hlp["tips"] = False;vals_hlp["tree"] = False;vals_hlp["opts"] = True
-       #while while_hlp
+       #while_hlp
    #def dlg_help
 
 def dlg_fif(what='', opts={}):
@@ -475,7 +475,8 @@ def dlg_fif(what='', opts={}):
        #def get_live_restabs
     
     focused = 'what'
-    while True:
+    while_fif   = True
+    while while_fif:
         what_l  = [s for s in stores.get('what', []) if s ]
         incl_l  = [s for s in stores.get('incl', []) if s ]
         excl_l  = [s for s in stores.get('excl', []) if s ]
@@ -484,11 +485,12 @@ def dlg_fif(what='', opts={}):
         totb_l  = [TOTB_NEW_TAB, TOTB_USED_TAB] + get_live_restabs()
         
         wo_excl = stores.get('wo_excl', True)
-        wo_repl = True #stores.get('wo_repl', True)
+        wo_repl = True
+#       wo_repl = stores.get('wo_repl', True)
         wo_adva = stores.get('wo_adva', True)
         c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
         gap1    = (GAP- 28 if wo_excl else GAP)
-        gap2    = (GAP- 25 if wo_repl else GAP)+gap1
+        gap2    = (GAP- 28 if wo_repl else GAP)+gap1
         gap3    = (GAP-115 if wo_adva else GAP)+gap2
         TXT_W   = stores.get('wd_txts', 400)
         BTN_W   = stores.get('wd_btns', 100)
@@ -520,7 +522,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                 +([] if wo_repl else []                         
                  +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
-                 +[dict(cid='repl',tp='cb'      ,t=gap1+135     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
+                 +[dict(cid='repl',tp='cb'      ,t=gap1+140     ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
                  +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Re&place')                      )] # &p
                 )                                               
                 +([] if wo_adva else  []                        
@@ -636,11 +638,11 @@ def dlg_fif(what='', opts={}):
         if btn=='more':
             stores['wo_adva']       = not stores.get('wo_adva', True)
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-            continue#while
+            continue#while_fif
 
         if btn=='help':
             dlg_help(word_h, shtp_h, cntx_h)
-            continue#while
+            continue#while_fif
             
         if btn=='pres':
             ans = dlg_press(stores, cfg_json,
@@ -661,23 +663,23 @@ def dlg_fif(what='', opts={}):
                         fold_s,dept_n,
                         skip_s,sort_s,frst_s,enco_s,
                         cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s)  = ans
-            continue#while
+            continue#while_fif
                 
         if btn=='cust':
             #NOTE: dlg-cust
-            custs   = app.dlg_input_ex(3, _('Adjust dialog')
+            custs   = app.dlg_input_ex(4, _('Adjust dialog')
                 , _('Width of edits Find/Replace (min 400)'), str(stores.get('wd_txts', 400))
                 , _('Width of buttons Browse/Help (min 100)'),str(stores.get('wd_btns', 100))
                 , _('Show Exclude masks (0/1)')             , str(0 if stores.get('wo_excl', True) else 1)
-    #           , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
+                , _('Show Replace (0/1)')                   , str(0 if stores.get('wo_repl', True) else 1)
                 )
             if custs is not None:
                 stores['wd_txts']   = max(400, int(custs[0]))
                 stores['wd_btns']   = max(100, int(custs[1]))
                 stores['wo_excl']   = (custs[2]=='0')
-    #           stores['wo_repl']   = (custs[3]=='0')
+                stores['wo_repl']   = (custs[3]=='0')
                 open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-            continue#while
+            continue#while_fif
 
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if False:pass
@@ -689,7 +691,8 @@ def dlg_fif(what='', opts={}):
             fold_s  = os.path.dirname(path) if path else fold_s
 
         elif btn=='!rep':
-            pass
+            if app.ID_YES != app.msg_box(_('Are you sure to replace in all found files?'), app.MB_YESNO):
+                continue#while_fif
         elif btn in ('!cnt', '!fnd'):
             root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
             root        = os.path.expanduser(root)
@@ -697,45 +700,45 @@ def dlg_fif(what='', opts={}):
             if not what_s:
                 app.msg_box(_('Fill the "Find" field'), app.MB_OK) 
                 focused     = 'what'
-                continue#while
+                continue#while_fif
             if reex01=='1':
                 try:
                     re.compile(what_s)
                 except Exception as ex:
                     app.msg_box(f(_('Set correct "Find" reg.ex.\n\nError:\n{}'),ex), app.MB_OK) 
                     focused = 'what'
-                    continue#while
+                    continue#while_fif
 #           if fold_s!=IN_OPEN_FILES and (not fold_s or not os.path.isdir(fold_s)):
             if fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
                 app.msg_box(f(_('Set existing "In folder" value or use "{}" (see Presets)'), IN_OPEN_FILES), app.MB_OK) 
                 focused     = 'fold'
-                continue#while
+                continue#while_fif
             if not incl_s:
                 app.msg_box(_('Fill the "In files" field'), app.MB_OK) 
                 focused     = 'incl'
-                continue#while
+                continue#while_fif
             if 0 != incl_s.count('"')%2:
                 app.msg_box(_('Fix quotes in the "In files" field'), app.MB_OK) 
                 focused     = 'incl'
-                continue#while
+                continue#while_fif
             if 0 != excl_s.count('"')%2:
                 app.msg_box(_('Fix quotes in the "Not in files" field'), app.MB_OK) 
                 focused     = 'excl'
-                continue#while
+                continue#while_fif
             if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
                                       ,SHTP_SPARS_R, SHTP_SPARS_RCL
                                       ) and \
                sort_s!='0':
                 app.msg_box(_('Conflict "Sort file list" and "Tree type" options.\n\nSee Help--Tree.'), app.MB_OK) 
                 focused     = 'shtp'
-                continue#while
+                continue#while_fif
             if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
                                       ,SHTP_SPARS_R, SHTP_SPARS_RCL
                                       ) and \
                fold_s==IN_OPEN_FILES:
                 app.msg_box(f(_('Conflict "{}" and "Tree type" options.\n\nSee Help--Tree.'),IN_OPEN_FILES), app.MB_OK) 
                 focused     = 'shtp'
-                continue#while
+                continue#while_fif
 #           focused     = 'what'
             how_walk    =dict(                                  #NOTE: fif params
                  root       =root
@@ -785,7 +788,7 @@ def dlg_fif(what='', opts={}):
                 )
             if not rpt_data and not rpt_info: 
                 app.msg_status(_("Search stopped"))
-                continue#while
+                continue#while_fif
             frfls   = rpt_info['files']
             frgms   = rpt_info['frgms']
             ################################
@@ -794,7 +797,7 @@ def dlg_fif(what='', opts={}):
                         if 0==frfls else \
                       f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
             progressor.set_progress(msg_rpt)
-            if 0==frgms and not REPORT_FAIL:    continue#while
+            if 0==frgms and not REPORT_FAIL:    continue#while_fif
             report_to_tab(                      #NOTE: run-report
                 rpt_data
                ,rpt_info
@@ -804,8 +807,8 @@ def dlg_fif(what='', opts={}):
                )
             progressor.set_progress(msg_rpt)
             ################################
-            if 0<frgms and CLOSE_AFTER_GOOD:    break#while
-       #while
+            if 0<frgms and CLOSE_AFTER_GOOD:    break#while_fif
+       #while_fif
    #def dlg_fif
 
 last_ed_num = 0
