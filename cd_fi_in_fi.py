@@ -689,6 +689,9 @@ def dlg_fif(what='', opts={}):
         elif btn=='!rep':
             pass
         elif btn in ('!cnt', '!fnd'):
+            root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
+            root        = os.path.expanduser(root)
+            root        = os.path.expandvars(root)
             if not what_s:
                 app.msg_box(_('Fill the "Find" field'), app.MB_OK) 
                 focused     = 'what'
@@ -700,7 +703,8 @@ def dlg_fif(what='', opts={}):
                     app.msg_box(f(_('Set correct "Find" reg.ex.\n\nError:\n{}'),ex), app.MB_OK) 
                     focused = 'what'
                     continue#while
-            if fold_s!=IN_OPEN_FILES and (not fold_s or not os.path.isdir(fold_s)):
+#           if fold_s!=IN_OPEN_FILES and (not fold_s or not os.path.isdir(fold_s)):
+            if fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
                 app.msg_box(f(_('Set existing "In folder" value or use "{}" (see Presets)'), IN_OPEN_FILES), app.MB_OK) 
                 focused     = 'fold'
                 continue#while
@@ -731,9 +735,6 @@ def dlg_fif(what='', opts={}):
                 focused     = 'shtp'
                 continue#while
 #           focused     = 'what'
-            root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
-            root        = os.path.expanduser(root)
-            root        = os.path.expandvars(root)
             how_walk    =dict(                                  #NOTE: fif params
                  root       =root
                 ,file_incl  =incl_s
