@@ -174,7 +174,7 @@ def dlg_press(stores, cfg_json, invl_l, desc_l):
     ind_inop= len(pset_l)
     ind_del = len(pset_l)+1
     ind_save= len(pset_l)+2
-    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-press
+    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
     if ps_ind is None:  return None
     if False:pass
     elif ps_ind==ind_inop:
@@ -206,13 +206,13 @@ def dlg_press(stores, cfg_json, invl_l, desc_l):
     elif ps_ind==ind_save:
         # Save
         items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
-        btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+400+GAP,     #NOTE: dlg-pres
+        btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres
              [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
-             ,dict(           tp='lb'    ,t=GAP+45          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
-             ,dict(cid='what',tp='ch-lbx',t=GAP+65,h=400-100,l=GAP          ,w=300  ,items=items               )
-             ,dict(cid='!'   ,tp='bt'    ,t=GAP+400-23      ,l=GAP+300-190  ,w=80   ,cap=_('&Save'),props='1'   ) # &s  default
-             ,dict(cid='-'   ,tp='bt'    ,t=GAP+400-23      ,l=GAP+300-80   ,w=80   ,cap=_('Close')             )
+             ,dict(           tp='lb'    ,t=GAP+60          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
+             ,dict(cid='what',tp='ch-lbx',t=GAP+80,h=385    ,l=GAP          ,w=300  ,items=items               )
+             ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('&Save'),props='1'   ) # &s  default
+             ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Close')             )
              ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
                        ,what=(0,['1']*len(keys_l))), focus_cid='name')
         pass;                  #LOG and log('vals={}',vals)
