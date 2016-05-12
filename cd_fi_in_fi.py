@@ -731,8 +731,11 @@ def dlg_fif(what='', opts={}):
                 focused     = 'shtp'
                 continue#while
 #           focused     = 'what'
+            root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
+            root        = os.path.expanduser(root)
+            root        = os.path.expandvars(root)
             how_walk    =dict(                                  #NOTE: fif params
-                 root       =fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
+                 root       =root
                 ,file_incl  =incl_s
                 ,file_excl  =excl_s
                 ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', ...]
