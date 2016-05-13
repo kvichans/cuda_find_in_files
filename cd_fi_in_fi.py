@@ -351,7 +351,7 @@ Default values:
 def dlg_fif(what='', opts={}):
     max_hist= apx.get_opt('ui_max_history_edits', 20)
     cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
-    stores  = apx._json_loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
+    stores  = json.loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
     mask_h  = _('Space-separated file masks.\rDouble-quote mask, which needs space-char.\rUse ? for any character and * for any fragment.')
     reex_h  = _('Regular expression')
     case_h  = _('Case sensitive')
@@ -507,6 +507,7 @@ def dlg_fif(what='', opts={}):
         DLG_H   = (tbn_l+BTN_W+GAP, DLG_H0+gap3)
         #NOTE: fif-cnts
         cnts    = ([]                                                                                                              # gmqvyz
+                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=105      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
                  +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+35*2 ,w=35       ,cap='"&w"'                 ,hint=word_h)] # &w
@@ -516,7 +517,6 @@ def dlg_fif(what='', opts={}):
                 +([] if wo_repl else []                         
                  +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
                  +[dict(cid='repl',tp='cb'      ,t=GAP+28       ,l=cmb_l    ,w=TXT_W    ,items=repl_l                           )] # 
-                 +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Re&place')                      )] # &p
                 )                                               
                                                 
                  +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&In files:')        ,hint=mask_h)] # &i
@@ -532,7 +532,6 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=tbn_l-105,w=100      ,cap=c_more                 ,hint=more_h)] # &e
-                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Ad&just...')        ,hint=adju_h)] # &j
 
                 +([] if wo_adva else  []                        
                  +[dict(           tp='lb'      ,t=gap2+170     ,l=GAP      ,w=150      ,cap=_('== Adv. report options ==')     )] # 
@@ -556,14 +555,14 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings:')        ,hint=enco_h)] # 
                  +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l                           )] # 
                 )                                                                                                               
-                 +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-100-GAP,w=100  ,cap=_('&Help...')                      )] # &h
-#                +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-50 ,l=tbn_l    ,w=BTN_W    ,cap=_('&Help...')                      )] # &h
                  +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Find'),props='1'                )] #    default
+                +([] if wo_repl else []                         
+                 +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Re&place')                      )] # &p
+                )                                               
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Coun&t')            ,hint=coun_h)] # &t
-#                +[dict(cid='more',tp='bt'      ,t=DLG_H-GAP-25 ,l=GAP      ,w=35*3     ,cap=c_more                 ,hint=more_h)] # &e
-#                +[dict(cid='cust',tp='bt'      ,t=DLG_H-GAP-25 ,l=GAP*2+35*3,w=35*3    ,cap=_('Ad&just...')        ,hint=adju_h)] # &j
+                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Ad&just...')        ,hint=adju_h)] # &j
+                 +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-100-GAP,w=100  ,cap=_('&Help...')                      )] # &h
                  +[dict(cid='-'   ,tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l    ,w=BTN_W    ,cap=_('Close')                         )] # 
-                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=105      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
                 )
         pass;                  #LOG and log('cnts=¶{}',pf(cnts))
         pass;                  #LOG and log('gap12={} cnts=¶{}',(gap1,gap2),pf([dict(cid=d['cid'], t=d['t']) for d in cnts if 'cid' in d and 't' in d]))
@@ -1840,4 +1839,5 @@ ToDo
 [+][kv-kv][11may16] Try to save last active control
 [ ][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
+[ ][kv-kv][13may16] UnDo for ReplaceInFiles
 '''
