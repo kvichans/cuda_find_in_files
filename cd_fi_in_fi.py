@@ -966,13 +966,14 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
     need_rcl= shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL)
     need_pth= shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL)
     only_fn = shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL)
+    root    = how_walk['root']
+    repl_b  = what_find['repl'] is not None
     pass;                       RPTLOG and log('algn, need_rcl, need_pth, only_fn={}',(algn, need_rcl, need_pth, only_fn))
     fl_wd, rw_wd, cl_wd, ln_wd  = calc_width(       rpt_data, algn, need_rcl, need_pth, only_fn)
+    rw_wd  += 1 if repl_b else 0
     pass;                       RPTLOG and log('fl_wd,rw_wd,cl_wd,ln_wd={}',(fl_wd,rw_wd,cl_wd,ln_wd))
 #   wds                         = calc_width4depth( rpt_data, algn, need_rcl, need_pth, only_fn)
 #   pass;                       RPTLOG and log('wds={}',(wds))
-    root    = how_walk['root']
-    repl_b  = what_find['repl'] is not None
 
     row4crt = append_line(f(_('{} for "{}" in "{}" ({} matches in {} files)')
                             ,RPT_FIND_SIGN
