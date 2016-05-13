@@ -991,6 +991,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                             ,rpt_info['frgms']
                             ,rpt_info['files'])
                          )
+    rpt_ed.lock()   # Pack undo to one cmd
     for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
         if progressor and 0==path_n%37:
             pc  = int(100*path_n/len(rpt_data))
@@ -1074,8 +1075,10 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                 if 'col' in item and 'ln' in item:
                     mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                 pre_rw  = src_rw
-               #for item              
- 
+               #for item
+           #elif has_itm
+       #for path_n
+    rpt_ed.unlock()   # Pack undo to one cmd
     pass;                       # Append work data to report
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.set_text_line(-1, '')
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
