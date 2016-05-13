@@ -769,6 +769,7 @@ def dlg_fif(what='', opts={}):
                                        ,sort_s=='1','date,desc' 
                                        ,sort_s=='2','date,asc' ,'')
                 ,only_frst  =int(frst_s)
+                ,skip_unwr  =btn=='!rep'
                 ,enco       =enco_l[int(enco_s)].split(', ')
                 )
             what_find   =dict(
@@ -1659,6 +1660,7 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
             'skip_hidn'     bool(T)
             'skip_binr'     bool(F) 
             'skip_size'     int(0)      0=all Kbyte
+            'skip_unwr'     int(F)      
         Return
             [path], stoped
     """
@@ -1673,6 +1675,7 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     hidn    = how_walk.get('skip_hidn', True)
     binr    = how_walk.get('skip_binr', False)
     size    = how_walk.get('skip_size', apx.get_opt('fif_skip_file_size_more_Kb', 0))
+    unwr    = how_walk.get('skip_unwr', False)
     frst    = how_walk.get('only_frst', 0)
     sort    = how_walk.get('sort_type', '')
     incls   = prep_filename_masks(incl)
@@ -1714,6 +1717,7 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
             if excl and any(map(lambda cl:fnmatch(filename, cl), excls)):   continue#for filename
             path    = os.path.join(dirpath, filename)
             if          os.path.islink(path):                               continue#for filename
+            if unwr and not os.access(path, os.W_OK):                       continue#for filename
             if hidn and is_hidden_file(path):                               continue#for filename
             if binr and is_birary_file(path):                               continue#for filename
             if size and os.path.getsize(path) > size*1024:                  continue#for filename
@@ -1847,4 +1851,5 @@ ToDo
 [ ][kv-kv][13may16] UnDo for ReplaceInFiles
 [ ][kv-kv][13may16] Auto-More before focus hidden field
 [ ][kv-kv][13may16] Ask "Want repl in OPEN TABS"
+[ ][kv-kv][13may16] Use os.access(path, os.W_OK)
 '''
