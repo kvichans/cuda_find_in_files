@@ -617,7 +617,7 @@ def dlg_fif(what='', opts={}):
             sort_s  = vals['sort']
             frst_s  = vals['frst']
             enco_s  = vals['enco']
-        pass;                  #LOG and log('what_s,incl_s,fold_s={}',(what_s,incl_s,fold_s))
+        pass;                  #LOG and log('what_s,repl_s,incl_s,fold_s={}',(what_s,repl_s,incl_s,fold_s))
             
         stores['reex']  = reex01
         stores['case']  = case01
@@ -699,7 +699,11 @@ def dlg_fif(what='', opts={}):
 
         elif btn in ('!cnt', '!fnd', '!rep'):
 #           if btn=='!rep' and app.ID_YES != app.msg_box(_('Are you sure to replace in all found files?'), app.MB_YESNO):
-            if btn=='!rep' and app.ID_YES != app.msg_box(_('Do you want to replace in all found files?'), app.MB_YESNO):
+            if  btn=='!rep' \
+            and app.ID_YES != app.msg_box(
+                 f(_('Do you want to replace in all {}?'), 
+                    _('tabs') if fold_s==IN_OPEN_FILES else _('found files'))
+                ,app.MB_YESNO):
                 continue#while_fif
             root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
             root        = os.path.expanduser(root)
@@ -1390,8 +1394,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             pttn_s  = r'\b'+pttn_s+r'\b'
         else:
             pttn_s  = re.escape(pttn_s)
-        repl_s      = re.escape(repl_s) if repl_s is not None else repl_s
-    pass;                      #FNDLOG and log('pttn_s, flags={}',(pttn_s, flags))
+#       repl_s      = re.escape(repl_s) if repl_s is not None else repl_s
+    pass;                      #FNDLOG and log('pttn_s, flags, repl_s={}',(pttn_s, flags, repl_s))
     pttn_r  = re.compile(pttn_s, flags)
 
     cnt_b   = what_save['count']
@@ -1499,7 +1503,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             count   = find_for_lines(lines, 0, rsp_l, rsp_i)
             if repl_s is not None and count:
                 # Change text in ted
-                pass;           LOG and log('lines={}',(lines))
+                pass;          #LOG and log('lines={}',(lines))
                 crts= ted.get_carets()
                 ted.set_text_all(c13.join(lines))
                 ted.set_caret(*crts[0])
@@ -1840,4 +1844,6 @@ ToDo
 [ ][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
 [ ][kv-kv][13may16] UnDo for ReplaceInFiles
+[ ][kv-kv][13may16] Auto-More before focus hidden field
+[ ][kv-kv][13may16] Ask "Want repl in OPEN TABS"
 '''
