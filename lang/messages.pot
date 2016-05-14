@@ -1,6 +1,6 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR ORGANIZATION
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# FiF plugin
+# Copyright (C) kvichans
+# kvichans, 2016
 #
 msgid ""
 msgstr ""
@@ -130,19 +130,19 @@ msgstr ""
 #: cd_fi_in_fi.py:245
 msgid ""
 "\n"
-"• Values in fields \"In file\" and \"Not in file\" can contain\n"
+"â€¢ Values in fields \"In file\" and \"Not in file\" can contain\n"
 "    ?       for any single char,\n"
 "    *       for any substring (may be empty),\n"
 "    [seq]   any character in seq,\n"
 "    [!seq]  any character not in seq. \n"
 " \n"
-"• Set special value \"{tags}\" for field \"In folder\" to search in all opened documents.\n"
+"â€¢ Set special value \"{tags}\" for field \"In folder\" to search in all opened documents.\n"
 "    Preset \"In folder={tags}\" helps to do this.\n"
 "    To search in unsaved tabs, use mask \"*\" in field \"In files\".\n"
 " \n"
-"• \"w\" - {word}\n"
+"â€¢ \"w\" - {word}\n"
 " \n"
-"• Long-term searches can be interrupted by ESC.\n"
+"â€¢ Long-term searches can be interrupted by ESC.\n"
 "    Search has three stages: \n"
 "        picking files, \n"
 "        finding fragments, \n"
@@ -179,7 +179,7 @@ msgid ""
 "    // Show report if nothing found\n"
 "    \"fif_report_no_matches\":false,\n"
 "    \n"
-"    // \"Option \"Show context\" appends N nearest lines to report. Note: 2*N+1 lines will shown for each found line.\n"
+"    // \"Option \"Show context\" appends N nearest lines to report.\n2*N+1 lines will be shown for each found line.\n"
 "    \"fif_context_width\":1,\n"
 "    \n"
 "    // Style which marks found fragment in report\n"
