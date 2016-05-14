@@ -88,8 +88,12 @@ REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
 FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
 CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
-MARK_STYLE      = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
-MARK_STYLE      = fit_mark_style_for_attr(MARK_STYLE)
+MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
+MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
+MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
+MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
+MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
+MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 class Command:
     def find_in_ed(self):
@@ -304,6 +308,8 @@ Default values:
     //  Color values: "" - skip, "#RRGGBB" - hex-digits
     //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
     "fif_mark_style":{"borders":{"bottom":"dotted"}},
+    "fif_mark_true_replace_style":{"borders":{"bottom":"solid"}},
+    "fif_mark_false_replace_style":{"borders":{"bottom":"wave"},"color_border":"#777"},
     
     // Default encoding to read files
     "fif_locale_encoding":"{def_enco}",
@@ -895,11 +901,11 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 
     # Fill tab
     rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
-    def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed):
+    def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed, style=MARK_FIND_STYLE):
         pass;                  #RPTLOG and log('rw={}',rw)
         to_ed.attr(app.MARKERS_ADD
                 , x=cl, y=rw, len=ln
-                , **MARK_STYLE
+                , **style
                 )
     def append_line(line:str, to_ed=rpt_ed)->int:
         ''' Append one line to end of to_ed. Return row of added line.'''
@@ -1050,7 +1056,8 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                     mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
                     continue#for path_n
 
-                repl_o  = repl_b and item.get('res', False)
+                repl_tf = item.get('res', 0)
+                repl_o  = repl_b and repl_tf
 #               rw_wd   = 1+rw_wd   if repl_b else rw_wd
 #               src_rw  = abs(src_rw)
                 src_rw_ = '=' if repl_o else '!' if repl_b else ''
@@ -1077,7 +1084,12 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                 new_row = append_line(prefix+item.get('line',''))
                 pass;          #RPTLOG and log('new_row, prefix={}',(new_row, prefix))
                 if 'col' in item and 'ln' in item:
-                    mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
+                    mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed
+                                 ,MARK_TREPL_STYLE 
+                                    if repl_tf==1 else 
+                                  MARK_FREPL_STYLE 
+                                    if repl_tf==2 else 
+                                  MARK_FIND_STYLE)
                 pre_rw  = src_rw
                #for item
            #elif has_itm
@@ -1481,7 +1493,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                     items      += [dict(row=ln
                                        ,col=                                          mtch0.start()
                                        ,ln =len(line_new)-(len(line_src)-mtch1.end())-mtch0.start()
-                                       ,line=line_new, res=True)]
+                                       ,line=line_new, res=1 if rn==1 else 2)]
                     lines[ln]   = line_new
                     pass;      #LOG and log('Add repl-line={}',(line_new))
            #for line
@@ -1860,9 +1872,10 @@ ToDo
 [+][kv-kv][11may16] Try to save last active control
 [ ][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
-[ ][kv-kv][13may16] UnDo for ReplaceInFiles
+[ ][kv-kv][13may16] UnDo for ReplaceInFiles by report
 [ ][kv-kv][13may16] Auto-Click-More before focus hidden field
-[ ][kv-kv][13may16] Ask "Want repl in OPEN TABS"
+[+][kv-kv][13may16] Ask "Want repl in OPEN TABS"
 [ ][kv-kv][13may16] Use os.access(path, os.W_OK)
-[ ][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
+[+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
+[ ][a1-kv][14may16] Mark new fragments with new styles
 '''
