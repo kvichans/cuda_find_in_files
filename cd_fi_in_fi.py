@@ -288,7 +288,7 @@ Default values:
     // Show report if nothing found
     "fif_report_no_matches":false,
     
-    // "Option "Show context" appends N nearest lines to report. Note: 2*N+1 lines will shown for each found line.
+    // "Option "Show context" appends N nearest lines to report. Note: 2*N+1 lines will be shown for each found line.
     "fif_context_width":1,
     
     // Style which marks found fragment in report
@@ -1037,12 +1037,14 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                 c9dt= c9*(1+dept)
                 pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
             for item in items:
+                pass;          #RPTLOG and log('item={}',(item))
                 src_rw  = item.get('row', 0)
                 if SPRTR==src_rw:
                     # Separator
                     append_line(c9dt+'<>:')
                     continue#for path_n
-                if  shtp not in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+                if  not repl_b and \
+                    shtp not in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
                     src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
                     # Add mark in old line
                     mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
@@ -1056,8 +1058,10 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                 src_cl  = item.get('col', -1)
                 src_ln  = item.get('ln', -1)
                 src_rw_s= src_rw_+                                 str(1+src_rw)
-                src_cl_s= '0' if repl_o else '' if -1==src_cl else str(1+src_cl)
-                src_ln_s= '0' if repl_o else '' if -1==src_ln else str(  src_ln)
+#               src_cl_s= '0' if repl_o else '' if -1==src_cl else str(1+src_cl)
+#               src_ln_s= '0' if repl_o else '' if -1==src_ln else str(  src_ln)
+                src_cl_s= '' if -1==src_cl else str(1+src_cl)
+                src_ln_s= '' if -1==src_ln else str(  src_ln)
                 if algn:
                     path    = path.ljust(    fl_wd, ' ')
                     src_rw_s= src_rw_s.rjust(rw_wd, ' ')
@@ -1470,9 +1474,14 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                         # Separator
                         items  += [dict(row=SPRTR, line='')]
                 if repl_s is not None and mtchs:
-                    line_new,rn  = pttn_r.subn(repl_s, line_src)
+                    mtch0       = mtchs[0] 
+                    mtch1       = mtchs[-1] 
+                    line_new,rn = pttn_r.subn(repl_s, line_src)
                     assert rn==len(mtchs)
-                    items      += [dict(row=ln, line=line_new, res=True)]
+                    items      += [dict(row=ln
+                                       ,col=                                          mtch0.start()
+                                       ,ln =len(line_new)-(len(line_src)-mtch1.end())-mtch0.start()
+                                       ,line=line_new, res=True)]
                     lines[ln]   = line_new
                     pass;      #LOG and log('Add repl-line={}',(line_new))
            #for line
@@ -1852,7 +1861,8 @@ ToDo
 [ ][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
 [ ][kv-kv][13may16] UnDo for ReplaceInFiles
-[ ][kv-kv][13may16] Auto-More before focus hidden field
+[ ][kv-kv][13may16] Auto-Click-More before focus hidden field
 [ ][kv-kv][13may16] Ask "Want repl in OPEN TABS"
 [ ][kv-kv][13may16] Use os.access(path, os.W_OK)
+[ ][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
 '''
