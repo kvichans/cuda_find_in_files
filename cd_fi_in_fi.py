@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.1 2016-05-13'
+    '1.0.2 2016-05-15'
 ToDo: (see end of file)
 '''
 
@@ -840,6 +840,7 @@ def dlg_fif(what='', opts={}):
 SPRTR       = -0xFFFFFFFF
 last_ed_num = 0
 def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, what_find:dict, what_save:dict, progressor=None):
+    pass;                       LOG and log('(== |paths|={}',len(rpt_data))
     pass;                       RPTLOG and log('rpt_type={}',rpt_type)
     pass;                      #RPTLOG and log('rpt_data=¶{}',pf(rpt_data))
     pass;                      #RPTLOG and log('what_find={}',what_find)
@@ -998,13 +999,15 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                             ,rpt_info['files'])
                          )
     rpt_ed.lock()   # Pack undo to one cmd
+    rpt_stop    = False
     for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
-        if progressor and 0==path_n%37:
+        if progressor and (0==path_n%37):# or 0==rpt_ed.get_line_count()%137):
             pc  = int(100*path_n/len(rpt_data))
             progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
             if progressor.need_break():
                 progressor.prefix += f(_('(Reporting stopped {}%)'), pc)
                 append_line(         f('\t<{}>', progressor.prefix))
+                rpt_stop= True
                 break#for path
         has_cnt = 'count' in path_d and 0<path_d['count']     # skip count==0
         has_itm = 'items' in path_d
@@ -1116,6 +1119,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 #       rpt_ed.cmd(cmds.cCommand_FoldAll)
 ##       rpt_ed.cmd(cmds.cmd_FoldingUnfoldAtCurLine)
 ##       rpt_ed.set_caret(0, row4crt)
+    pass;                       LOG and log('==) stoped={}',(rpt_stop))
    #def report_to_tab
        
 def nav_to_src(where:str, how_act='move'):
@@ -1559,7 +1563,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         rsp_l          += [tree4rsp[root]]
         pass;                  #FNDLOG and log('tree4rsp={}',pf(tree4rsp))
     
-    pass;                       t=log('?? files (==',) if LOG else 0
+    pass;                       LOG and log('?? files (== what_find={}',(what_find))
 #   pass;                       t=log('?? files (==',) if FNDLOG else 0
     
     for path_n, path in enumerate(files):                       #NOTE: fif, path loop
@@ -1633,7 +1637,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                     break#for enco_n
                    #with
             except Exception as ex:
-                pass;          #LOG and log('ex={}',(ex))
+                pass;           FNDLOG and log('ex={}',(ex))
                 if rpt_enc_fail and enco_n == len(enco_l)-1:
                     print(f(_('Cannot read "{}" (encoding={}/{}): {}'), path, enco_s, enco_l, ex))
            #for encd_n
@@ -1889,4 +1893,5 @@ ToDo
 [ ][kv-kv][13may16] Use os.access(path, os.W_OK)
 [+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
 [ ][a1-kv][14may16] Mark new fragments with new styles
+[ ][at-kv][14may16] Optim rpt filling
 '''
