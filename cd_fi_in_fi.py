@@ -1431,23 +1431,27 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     enco_l  = how_walk.get('enco', ['UTF-8'])
     def detect_encoding(path, detector):
         detector.reset()
-        with open(path, 'rb') as h_path:
-            pass;              #LOG and log('path={}',(path))
-            line = h_path.readline()
-            lines= 1
-            bytes= len(line)
-            while line:
-                detector.feed(line)
-                if detector.done:
-                    pass;      #LOG and log('done. detector.result={}',(detector.result))
-                    break
+        pass;                  #LOG and log('path={}',(path))
+        try:
+            with open(path, 'rb') as h_path:
                 line = h_path.readline()
-                lines+= 1
-                bytes+= len(line)
-        detector.close()
-        pass;                  #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
-                               #            ,lines,    bytes,   detector.done,    detector.result)
-        encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
+                lines= 1
+                bytes= len(line)
+                while line:
+                    detector.feed(line)
+                    if detector.done:
+                        pass;      #LOG and log('done. detector.result={}',(detector.result))
+                        break
+                    line = h_path.readline()
+                    lines+= 1
+                    bytes+= len(line)
+            detector.close()
+            pass;                  #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
+                                   #            ,lines,    bytes,   detector.done,    detector.result)
+            encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
+        except Exception as ex:
+            pass;              #LOG and log('ex={}',(ex))
+            return locale.getpreferredencoding()
         pass;                  #LOG and log('lines,encoding={}',(lines,encoding))
         return encoding
        #def detect_encoding
