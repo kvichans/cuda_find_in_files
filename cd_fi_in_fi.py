@@ -1432,19 +1432,23 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     def detect_encoding(path, detector):
         detector.reset()
         with open(path, 'rb') as h_path:
+            pass;              #LOG and log('path={}',(path))
             line = h_path.readline()
             lines= 1
             bytes= len(line)
             while line:
                 detector.feed(line)
-                if detector.done: break
+                if detector.done:
+                    pass;      #LOG and log('done. detector.result={}',(detector.result))
+                    break
                 line = h_path.readline()
                 lines+= 1
                 bytes+= len(line)
         detector.close()
-        pass;                      #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
-                                   #            ,lines, bytes, detector.done, detector.result)
+        pass;                  #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
+                               #            ,lines,    bytes,   detector.done,    detector.result)
         encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
+        pass;                  #LOG and log('lines,encoding={}',(lines,encoding))
         return encoding
        #def detect_encoding
     detector= UniversalDetector() if ENCO_DETD in enco_l else None
@@ -1592,6 +1596,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         encd    = ''
         mode    = 'r' if repl_s is None else 'r+'
         for enco_n, enco_s in enumerate(enco_l):
+            pass;              #LOG and log('enco_s={}',(enco_s))
             if enco_s==ENCO_DETD:
                 enco_s  = detect_encoding(path, detector)
                 enco_l[enco_n] = enco_s
@@ -1624,6 +1629,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                     break#for enco_n
                    #with
             except Exception as ex:
+                pass;          #LOG and log('ex={}',(ex))
                 if rpt_enc_fail and enco_n == len(enco_l)-1:
                     print(f(_('Cannot read "{}" (encoding={}/{}): {}'), path, enco_s, enco_l, ex))
            #for encd_n
@@ -1741,6 +1747,7 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
             if excl and any(map(lambda cl:fnmatch(filename, cl), excls)):   continue#for filename
             path    = os.path.join(dirpath, filename)
             if          os.path.islink(path):                               continue#for filename
+            if          not os.access(path, os.R_OK):                       continue#for filename
             if unwr and not os.access(path, os.W_OK):                       continue#for filename
             if hidn and is_hidden_file(path):                               continue#for filename
             if binr and is_birary_file(path):                               continue#for filename
