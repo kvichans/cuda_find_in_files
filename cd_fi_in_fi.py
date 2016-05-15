@@ -1,4 +1,4 @@
-﻿''' Plugin for CudaText editor
+''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
@@ -1757,6 +1757,7 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
             if          os.path.islink(path):                               continue#for filename
             if          not os.access(path, os.R_OK):                       continue#for filename
             if unwr and not os.access(path, os.W_OK):                       continue#for filename
+            if          os.path.getsize(path)==0:                           continue
             if hidn and is_hidden_file(path):                               continue#for filename
             if binr and is_birary_file(path):                               continue#for filename
             if size and os.path.getsize(path) > size*1024:                  continue#for filename
