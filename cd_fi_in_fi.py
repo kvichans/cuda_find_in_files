@@ -1,8 +1,8 @@
-''' Plugin for CudaText editor
+﻿''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.2 2016-05-15'
+    '1.0.3 2016-05-16'
 ToDo: (see end of file)
 '''
 
@@ -1755,12 +1755,12 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
             if excl and any(map(lambda cl:fnmatch(filename, cl), excls)):   continue#for filename
             path    = os.path.join(dirpath, filename)
             if          os.path.islink(path):                               continue#for filename
+            if          os.path.getsize(path) == 0:                         continue#for filename
+            if size and os.path.getsize(path) > size*1024:                  continue#for filename
             if          not os.access(path, os.R_OK):                       continue#for filename
             if unwr and not os.access(path, os.W_OK):                       continue#for filename
-            if          os.path.getsize(path)==0:                           continue
             if hidn and is_hidden_file(path):                               continue#for filename
             if binr and is_birary_file(path):                               continue#for filename
-            if size and os.path.getsize(path) > size*1024:                  continue#for filename
             rsp    += [path]
             if  not sort and len(rsp)>=frst>0:
                 break#for filename
@@ -1891,8 +1891,8 @@ ToDo
 [ ][kv-kv][13may16] UnDo for ReplaceInFiles by report
 [ ][kv-kv][13may16] Auto-Click-More before focus hidden field
 [+][kv-kv][13may16] Ask "Want repl in OPEN TABS"
-[ ][kv-kv][13may16] Use os.access(path, os.W_OK)
+[+][kv-kv][13may16] Use os.access(path, os.W_OK)
 [+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
-[ ][a1-kv][14may16] Mark new fragments with new styles
+[+][a1-kv][14may16] Mark new fragments with new styles
 [ ][at-kv][14may16] Optim rpt filling
 '''
