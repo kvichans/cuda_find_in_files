@@ -6,7 +6,7 @@ Version:
 ToDo: (see end of file)
 '''
 
-import  re, os, sys, locale, json, collections
+import  re, os, sys, locale, json, collections, traceback
 from    fnmatch         import fnmatch
 import  cudatext            as app
 from    cudatext        import ed
@@ -696,12 +696,16 @@ def dlg_fif(what='', opts={}):
 
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if False:pass
-        elif btn=='brow':
-            path    = app.dlg_dir(fold_s)
-            fold_s  = path if path else fold_s
-        elif btn=='cfld':
-            path    = ed.get_filename()
-            fold_s  = os.path.dirname(path) if path else fold_s
+        elif btn in ('brow', 'cfld'):
+            if btn=='brow':
+                path    = app.dlg_dir(fold_s)
+                fold_s  = path                  if path else fold_s
+            if btn=='cfld':
+                path    = ed.get_filename()
+                fold_s  = os.path.dirname(path) if path else fold_s
+            stores['fold']  = add_to_history(fold_s, stores.get('fold', []), max_hist, unicase=(os.name=='nt'))
+            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+            focused = 'fold'
 
         elif btn in ('!cnt', '!fnd', '!rep'):
 #           if btn=='!rep' and app.ID_YES != app.msg_box(_('Are you sure to replace in all found files?'), app.MB_YESNO):
@@ -999,105 +1003,110 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                             ,rpt_info['files'])
                          )
     rpt_ed.lock()   # Pack undo to one cmd
-    rpt_stop    = False
-    for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
-        if progressor and (0==path_n%37):# or 0==rpt_ed.get_line_count()%137):
-            pc  = int(100*path_n/len(rpt_data))
-            progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
-            if progressor.need_break():
-                progressor.prefix += f(_('(Reporting stopped {}%)'), pc)
-                append_line(         f('\t<{}>', progressor.prefix))
-                rpt_stop= True
-                break#for path
-        has_cnt = 'count' in path_d and 0<path_d['count']     # skip count==0
-        has_itm = 'items' in path_d
-        path    = path_d['file']
-        isfl    = path_d.get('isfl')
-        pass;                   RPTLOG and log('path={}',path)
-        if shtp     in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
-            path!=root:
-            if isfl:
-                path= os.path.basename(path)
-                pass;           RPTLOG and log('(basename)path={}',path)
-            elif 'prnt' in path_d and path_d['prnt'] is not None:
-                path= os.path.relpath(path, path_d['prnt']['file'])
-                pass;           RPTLOG and log('(prnt-rel)path={}',path)
-            else:
-                path= os.path.relpath(path, root)
-                pass;           RPTLOG and log('(root-rel)path={}',path)
-        dept    = 1+path_d.get('dept', 0)
-        c9dt    = c9*dept
-        pass;                   RPTLOG and log('onfn,has_cnt,has_itm,c9dt={}',(onfn,has_cnt,has_itm,repr(c9dt)))
-        if False:pass
-        elif not has_cnt and onfn and not isfl: pass
-        elif                 onfn and     isfl: append_line(c9dt+'<'+path+'>')
-        elif     has_cnt and onfn:              append_line(c9dt+f('<{}>: #{}', path, path_d['count']))
-        elif                 onfn:              append_line(c9dt+'<'+path+'>')
-        elif not has_cnt and not has_itm:       pass
-        elif     has_cnt and not has_itm:       append_line(c9dt+f('<{}>: #{}', path, path_d['count']))
-        elif                     has_itm:
-            items   = path_d['items']
-            prefix  = ''
-            new_row = -1
-            pre_rw  = -1
-            if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
-                append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
-                path= '' 
-                c9dt= c9*(1+dept)
-                pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
-            for item in items:
-                pass;          #RPTLOG and log('item={}',(item))
-                src_rw  = item.get('row', 0)
-                if SPRTR==src_rw:
-                    # Separator
-                    append_line(c9dt+'<>:')
-                    continue#for path_n
-                if  not repl_b and \
-                    shtp not in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
-                    src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
-                    # Add mark in old line
-                    mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
-                    continue#for path_n
+    try:
+        rpt_stop    = False
+        for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
+            if progressor and (0==path_n%37):# or 0==rpt_ed.get_line_count()%137):
+                pc  = int(100*path_n/len(rpt_data))
+                progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
+                if progressor.need_break():
+                    progressor.prefix += f(_('(Reporting stopped {}%)'), pc)
+                    append_line(         f('\t<{}>', progressor.prefix))
+                    rpt_stop= True
+                    break#for path
+            has_cnt = 'count' in path_d and 0<path_d['count']     # skip count==0
+            has_itm = 'items' in path_d
+            path    = path_d['file']
+            isfl    = path_d.get('isfl')
+            pass;                   RPTLOG and log('path={}',path)
+            if shtp     in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+                path!=root:
+                if isfl:
+                    path= os.path.basename(path)
+                    pass;           RPTLOG and log('(basename)path={}',path)
+                elif 'prnt' in path_d and path_d['prnt'] is not None:
+                    path= os.path.relpath(path, path_d['prnt']['file'])
+                    pass;           RPTLOG and log('(prnt-rel)path={}',path)
+                else:
+                    path= os.path.relpath(path, root)
+                    pass;           RPTLOG and log('(root-rel)path={}',path)
+            dept    = 1+path_d.get('dept', 0)
+            c9dt    = c9*dept
+            pass;                   RPTLOG and log('onfn,has_cnt,has_itm,c9dt={}',(onfn,has_cnt,has_itm,repr(c9dt)))
+            if False:pass
+            elif not has_cnt and onfn and not isfl: pass
+            elif                 onfn and     isfl: append_line(c9dt+'<'+path+'>')
+            elif     has_cnt and onfn:              append_line(c9dt+f('<{}>: #{}', path, path_d['count']))
+            elif                 onfn:              append_line(c9dt+'<'+path+'>')
+            elif not has_cnt and not has_itm:       pass
+            elif     has_cnt and not has_itm:       append_line(c9dt+f('<{}>: #{}', path, path_d['count']))
+            elif                     has_itm:
+                items   = path_d['items']
+                prefix  = ''
+                new_row = -1
+                pre_rw  = -1
+                if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
+                    append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
+                    path= '' 
+                    c9dt= c9*(1+dept)
+                    pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
+                for item in items:
+                    pass;      #RPTLOG and log('item={}',(item))
+                    src_rw  = item.get('row', 0)
+                    if SPRTR==src_rw:
+                        # Separator
+                        append_line(c9dt+'<>:')
+                        continue#for path_n
+                    if  not repl_b and \
+                        shtp not in (SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+                        src_rw==pre_rw and prefix and new_row!=-1 and 'col' in item and 'ln' in item:
+                        # Add mark in old line
+                        mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed)
+                        continue#for path_n
 
-                repl_tf = item.get('res', 0)
-                repl_o  = repl_b and repl_tf
-#               rw_wd   = 1+rw_wd   if repl_b else rw_wd
-#               src_rw  = abs(src_rw)
-                src_rw_ = '=' if repl_o else '!' if repl_b else ''
-                pass;          #LOG and log('repl_b,repl_o,rw_wd,src_rw_={}',(repl_b,repl_o,rw_wd,src_rw_))
-                src_cl  = item.get('col', -1)
-                src_ln  = item.get('ln', -1)
-                src_rw_s= src_rw_+                                 str(1+src_rw)
-#               src_cl_s= '0' if repl_o else '' if -1==src_cl else str(1+src_cl)
-#               src_ln_s= '0' if repl_o else '' if -1==src_ln else str(  src_ln)
-                src_cl_s= '' if -1==src_cl else str(1+src_cl)
-                src_ln_s= '' if -1==src_ln else str(  src_ln)
-                if algn:
-                    path    = path.ljust(    fl_wd, ' ')
-                    src_rw_s= src_rw_s.rjust(rw_wd, ' ')
-                    src_cl_s= src_cl_s.rjust(cl_wd, ' ')
-                    src_ln_s= src_ln_s.rjust(ln_wd, ' ')
-                prefix  = c9dt+f('<{}({}:{}:{})>: ', path, src_rw_s, src_cl_s, src_ln_s)    \
-                            if      need_pth and     need_rcl else                          \
-                          c9dt+f('<{}({})>: '      , path, src_rw_s                    )    \
-                            if      need_pth and not need_rcl else                          \
-                          c9dt+f('<({}:{}:{})>: '  ,       src_rw_s, src_cl_s, src_ln_s)    \
-                            if  not need_pth and     need_rcl else                          \
-                          c9dt+f('<({})>: '        ,       src_rw_s                    )
-                new_row = append_line(prefix+item.get('line',''))
-                pass;          #RPTLOG and log('new_row, prefix={}',(new_row, prefix))
-                if 'col' in item and 'ln' in item:
-                    mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed
-                                 ,MARK_TREPL_STYLE 
-                                    if repl_tf==1 else 
-                                  MARK_FREPL_STYLE 
-                                    if repl_tf==2 else 
-                                  MARK_FIND_STYLE)
-                pre_rw  = src_rw
-               #for item
-           #elif has_itm
-       #for path_n
-    rpt_ed.unlock()   # Pack undo to one cmd
+                    repl_tf = item.get('res', 0)
+                    repl_o  = repl_b and repl_tf
+    #               rw_wd   = 1+rw_wd   if repl_b else rw_wd
+    #               src_rw  = abs(src_rw)
+                    src_rw_ = '=' if repl_o else '!' if repl_b else ''
+                    pass;          #LOG and log('repl_b,repl_o,rw_wd,src_rw_={}',(repl_b,repl_o,rw_wd,src_rw_))
+                    src_cl  = item.get('col', -1)
+                    src_ln  = item.get('ln', -1)
+                    src_rw_s= src_rw_+                                 str(1+src_rw)
+    #               src_cl_s= '0' if repl_o else '' if -1==src_cl else str(1+src_cl)
+    #               src_ln_s= '0' if repl_o else '' if -1==src_ln else str(  src_ln)
+                    src_cl_s= '' if -1==src_cl else str(1+src_cl)
+                    src_ln_s= '' if -1==src_ln else str(  src_ln)
+                    if algn:
+                        path    = path.ljust(    fl_wd, ' ')
+                        src_rw_s= src_rw_s.rjust(rw_wd, ' ')
+                        src_cl_s= src_cl_s.rjust(cl_wd, ' ')
+                        src_ln_s= src_ln_s.rjust(ln_wd, ' ')
+                    prefix  = c9dt+f('<{}({}:{}:{})>: ', path, src_rw_s, src_cl_s, src_ln_s)    \
+                                if      need_pth and     need_rcl else                          \
+                              c9dt+f('<{}({})>: '      , path, src_rw_s                    )    \
+                                if      need_pth and not need_rcl else                          \
+                              c9dt+f('<({}:{}:{})>: '  ,       src_rw_s, src_cl_s, src_ln_s)    \
+                                if  not need_pth and     need_rcl else                          \
+                              c9dt+f('<({})>: '        ,       src_rw_s                    )
+                    new_row = append_line(prefix+item.get('line',''))
+                    pass;      #RPTLOG and log('new_row, prefix={}',(new_row, prefix))
+                    if 'col' in item and 'ln' in item:
+                        mark_fragment(new_row, item['col']+len(prefix), item['ln'], rpt_ed
+                                     ,MARK_TREPL_STYLE 
+                                        if repl_tf==1 else 
+                                      MARK_FREPL_STYLE 
+                                        if repl_tf==2 else 
+                                      MARK_FIND_STYLE)
+                    pre_rw  = src_rw
+                   #for item
+               #elif has_itm
+           #for path_n
+    except Exception as ex:
+#       log(f(_('Error:{}'),ex)) 
+        log(traceback.format_exc()) 
+    finally:
+        rpt_ed.unlock()   # Pack undo to one cmd
     pass;                       # Append work data to report
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.set_text_line(-1, '')
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
@@ -1895,4 +1904,5 @@ ToDo
 [+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
 [+][a1-kv][14may16] Mark new fragments with new styles
 [ ][at-kv][14may16] Optim rpt filling
+[ ][kv-kv][25may16] Save fold after Browse
 '''
