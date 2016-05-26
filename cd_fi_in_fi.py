@@ -1050,7 +1050,15 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                     path= '' 
                     c9dt= c9*(1+dept)
                     pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
-                for item in items:
+                for item_n, item in enumerate(items):
+                    if progressor and (1000==item_n%1039):
+                        pc  = int(100*path_n/len(rpt_data))
+                        progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
+                        if progressor.need_break():
+                            progressor.prefix += f(_('(Reporting stopped {}%)'), pc)
+                            append_line(         f('\t<{}>', progressor.prefix))
+                            rpt_stop= True
+                            break#for item
                     pass;      #RPTLOG and log('item={}',(item))
                     src_rw  = item.get('row', 0)
                     if SPRTR==src_rw:
@@ -1101,6 +1109,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                     pre_rw  = src_rw
                    #for item
                #elif has_itm
+            if rpt_stop: break#for path
            #for path_n
     except Exception as ex:
 #       log(f(_('Error:{}'),ex)) 
