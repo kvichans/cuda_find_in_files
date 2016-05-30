@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.3 2016-05-16'
+    '1.0.4 2016-05-30'
 ToDo: (see end of file)
 '''
 
@@ -67,6 +67,8 @@ TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
 SHTP_SHORT_RCL  = _('path(r:c:l):line')
+SHTP_SHRTS_R    = _('path/(r):line')
+SHTP_SHRTS_RCL  = _('path/(r:c:l):line')
 SHTP_MIDDL_R    = _('dir/file(r):line')
 SHTP_MIDDL_RCL  = _('dir/file(r:c:l):line')
 SHTP_SPARS_R    = _('dir/file/(r):line')
@@ -75,6 +77,7 @@ cllc_l          = [CLLC_MATCH, CLLC_COUNT, CLLC_FNAME]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
                   ,SHTP_MIDDL_R, SHTP_MIDDL_RCL
                   ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                  ,SHTP_SHRTS_R, SHTP_SHRTS_RCL
                   ]
 ENCO_DETD       = _('<detected>')
 
@@ -800,8 +803,8 @@ def dlg_fif(what='', opts={}):
             shtp_v      = shtp_l[int(shtp_s)]
             how_rpt     = dict(
                  totb   =    totb_l[int(totb_s)]
-                ,sprd   =    sort_s=='0' and          shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL)
-                ,shtp   =    shtp_v if sort_s=='0' or shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL) else SHTP_SHORT_R
+                ,sprd   =              sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
+                ,shtp   =    shtp_v if sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
                 ,cntx   =    '1'==cntx_s
                 ,algn   =    '1'==algn_s
                 ,join   =    '1'==join_s
@@ -975,7 +978,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
     onfn    = not what_save['count']
     shtp    = rpt_type['shtp']
     algn    = rpt_type['algn']
-    need_rcl= shtp in (SHTP_SHORT_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL)
+    need_rcl= shtp in (SHTP_SHORT_RCL, SHTP_SHRTS_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL)
     need_pth= shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL)
     only_fn = shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL)
     root    = how_walk['root']
@@ -1019,7 +1022,9 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
             path    = path_d['file']
             isfl    = path_d.get('isfl')
             pass;                   RPTLOG and log('path={}',path)
-            if shtp     in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
+            if   shtp   in (SHTP_SHRTS_R, SHTP_SHRTS_RCL):
+                pass
+            elif shtp   in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
                 path!=root:
                 if isfl:
                     path= os.path.basename(path)
@@ -1032,7 +1037,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                     pass;           RPTLOG and log('(root-rel)path={}',path)
             dept    = 1+path_d.get('dept', 0)
             c9dt    = c9*dept
-            pass;                   RPTLOG and log('onfn,has_cnt,has_itm,c9dt={}',(onfn,has_cnt,has_itm,repr(c9dt)))
+            pass;                   RPTLOG and log('onfn,has_cnt,isfl,has_itm,c9dt={}',(onfn,has_cnt,isfl,has_itm,repr(c9dt)))
             if False:pass
             elif not has_cnt and onfn and not isfl: pass
             elif                 onfn and     isfl: append_line(c9dt+'<'+path+'>')
@@ -1047,6 +1052,11 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                 pre_rw  = -1
                 if shtp in (SHTP_SPARS_R, SHTP_SPARS_RCL):
                     append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
+                    path= '' 
+                    c9dt= c9*(1+dept)
+                    pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
+                if shtp in (SHTP_SHRTS_R, SHTP_SHRTS_RCL):
+                    append_line(c9dt+f('<{}>: #{}', path, len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
                     pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
@@ -1913,5 +1923,6 @@ ToDo
 [+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
 [+][a1-kv][14may16] Mark new fragments with new styles
 [ ][at-kv][14may16] Optim rpt filling
-[ ][kv-kv][25may16] Save fold after Browse
+[+][kv-kv][25may16] Save fold after Browse
+[+][kv-kv][30may16] Add tree type path/(r):line
 '''
