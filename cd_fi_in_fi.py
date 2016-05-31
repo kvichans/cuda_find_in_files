@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.4 2016-05-30'
+    '1.0.5 2016-05-30'
 ToDo: (see end of file)
 '''
 
@@ -1447,7 +1447,6 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             pttn_s  = r'\b'+pttn_s+r'\b'
         else:
             pttn_s  = re.escape(pttn_s)
-#       repl_s      = re.escape(repl_s) if repl_s is not None else repl_s
     pass;                      #FNDLOG and log('pttn_s, flags, repl_s={}',(pttn_s, flags, repl_s))
     pttn_r  = re.compile(pttn_s, flags)
 
@@ -1535,7 +1534,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                                        ,ln =len(line_new)-(len(line_src)-mtch1.end())-mtch0.start()
                                        ,line=line_new, res=1 if rn==1 else 2)]
                     lines[ln]   = line_new
-                    pass;      #LOG and log('Add repl-line={}',(line_new))
+                    pass;      #LOG and log('line_new={}',(repr(line_new)))
            #for line
         if not count:
             # No matches
@@ -1628,27 +1627,33 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         dept    = 1+prntdct['dept'] if prntdct else 0
         pass;                  #FNDLOG and log('dept={}',dept)
         # Find in file
-        h_path  = None
+#       h_path  = None
         encd    = ''
-        mode    = 'r' if repl_s is None else 'r+'
+        mode    = 'r' #if repl_s is None else 'r+'
         for enco_n, enco_s in enumerate(enco_l):
-            pass;              #LOG and log('enco_s={}',(enco_s))
+            pass;               LOG and log('mode, enco_s={}',(mode, enco_s))
             if enco_s==ENCO_DETD:
                 enco_s  = detect_encoding(path, detector)
                 enco_l[enco_n] = enco_s
             try:
-                with open(path, mode=mode, encoding=enco_s) as h_path:
+#               with open(path, mode=mode, encoding=enco_s) as h_path:
+                if True:
+                    body    = open(path, mode='rb').read().decode(encoding=enco_s)
                     if not cnt_b:
                         # Only path finding
-                        count   = find_for_body( h_path.read(), dept, rsp_l, rsp_i)
+                        count   = find_for_body(body, dept, rsp_l, rsp_i)
+#                       count   = find_for_body( h_path.read(), dept, rsp_l, rsp_i)
 #                       break#for enco_n
                     else:
-                        lines   = h_path.readlines()
+                        lines   = body.splitlines(True)
+#                       lines   = h_path.readlines()
                         count   = find_for_lines(lines, dept, rsp_l, rsp_i)
+                        pass;  #LOG and log('lines={}',(repr(lines)))
                         if repl_s is not None and count:
-                            h_path.seek(0)
-                            h_path.truncate()
-                            h_path.writelines(lines)
+                            open(path, mode='wb').write(''.join(lines).encode(encoding=enco_s))
+#                           h_path.seek(0)
+#                           h_path.truncate()
+#                           h_path.write(''.join(lines))
                         # Change text in file
                     rsp_i['brow_files']     += 1
                     if not count:
@@ -1925,4 +1930,5 @@ ToDo
 [ ][at-kv][14may16] Optim rpt filling
 [+][kv-kv][25may16] Save fold after Browse
 [+][kv-kv][30may16] Add tree type path/(r):line
+[ ][a1-kv][31may16] Use source EOL to save after replacements
 '''

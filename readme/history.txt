@@ -1,3 +1,6 @@
+1.0.5 (2016-05-31)
+fixed: save EOL-type when replace
+
 1.0.4 (2016-05-30)
 added: two report tree type 'path(r):line','path(r:c:l):line'
 
