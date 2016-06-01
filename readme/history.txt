@@ -1,3 +1,6 @@
+1.0.6 (2016-05-31)
+added: ctrl and/or shift when click on buttons
+
 1.0.5 (2016-05-31)
 fixed: save EOL-type when replace
 

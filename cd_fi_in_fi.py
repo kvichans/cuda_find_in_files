@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.5 2016-05-30'
+    '1.0.6 2016-06-01'
 ToDo: (see end of file)
 '''
 
@@ -62,7 +62,7 @@ RPT_FIND_SIGN   = _('+Search')
 RPT_REPL_SIGN   = _('+Replace')
 CLLC_MATCH      = _('Usual matches')
 CLLC_COUNT      = _('Counts only')
-CLLC_FNAME      = _('Filenames only')
+CLLC_FNAME      = _('File names only')
 TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
@@ -123,8 +123,9 @@ class Command:
         return nav_to_src(where, how_act)
    #class Command
 
-def dlg_press(stores, cfg_json, invl_l, desc_l):
+def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
     pset_l  = stores.setdefault('pset', [])
+    stores.setdefault('pset_nnus', 0)
     keys_l  = ['reex','case','word'
               ,'incl','excl'
               ,'fold','dept'
@@ -171,6 +172,9 @@ def dlg_press(stores, cfg_json, invl_l, desc_l):
        #def upgrd
     for ps in pset_l:
         upgrd(ps)
+    if hist_order:
+        pset_l  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)
+
     dlg_list= [f(_('Restore: {}\t[{}{}{}].*aAw, [{}{}]In files, [{}{}]In folders, [{}{}{}{}]Adv. search, [{}{}{}{}{}{}]Adv. report')
                 ,ps['name']
                 ,ps['_reex'],ps['_case'],ps['_word']
@@ -198,6 +202,9 @@ def dlg_press(stores, cfg_json, invl_l, desc_l):
     elif ps_ind<len(pset_l):
         # Restore
         ps      = pset_l[ps_ind]
+        stores['pset_nnus'] += 1
+        ps['nnus'] = stores['pset_nnus']
+        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         for i, k in enumerate(keys_l):
             if ps.get('_'+k, '')=='x':
                 ouvl_l[i]   = ps.get(k, ouvl_l[i])
@@ -233,6 +240,8 @@ def dlg_press(stores, cfg_json, invl_l, desc_l):
         sl,vals = vals['what']
         pass;                  #LOG and log('vals={}',vals)
         ps      = OrdDict([('name',ps_name)])
+        stores['pset_nnus'] += 1
+        ps['nnus'] = stores['pset_nnus']
         for i, k in enumerate(keys_l):
             if vals[i]=='1':
                 ps['_'+k] = 'x'
@@ -368,10 +377,20 @@ def dlg_fif(what='', opts={}):
                 '\r    Regular expression (".*") is turned on,'
                 '\r    "Find" contains not only letters, digits and "_".'
                 )
-    brow_h  = _('Choose folder')
-    curr_h  = _('Use folder of current file')
+    brow_h  = _('Choose folder.'
+                '\rShift+Click - Choose file to find in it.'
+                )
+    cfld_h  = _('Use folder of current file.'
+                '\rShift+Click - Prepare search in the current file.'
+                '\rCtrl+Click  - Prepare search in all tabs.'
+                '\rCtrl+Shift+Click  - Prepare search in the current tab.'
+                )
     more_h  = _('Show/Hide advanced options')
-    adju_h  = _('Change dialog layout')
+    cust_h  = _('Change dialog layout.'
+                '\rCtrl+Click   - Set wider width for fields What/In files...'
+                '\rShift+Click  - Set wider width for buttons Find/.../Close.'
+                '\rAlt+Click    - Set default widths for all fields.'
+                )
     frst_h  = _('Search only inside N first found files')
     shtp_h  = f(_(  'Format of the reported tree structure.'
                 '\rCompact - report all found line with full file info:'
@@ -402,8 +421,24 @@ def dlg_fif(what='', opts={}):
                ),IN_OPEN_FILES)
     cntx_h  = _('Show result line and both its nearest lines, above and below result')
     algn_h  = _("Align columns (filenames/numbers) by widest cell width")
-    coun_h  = _('Count matches only.\rIt is like pressing Find with option Collect: "Count only".')
-    pset_h  = _('Save options for future.\rRestore saved options.')
+    find_h  = f(_('Start search.'
+                '\rShift+Click  - Put report to new tab.'
+                '\r   It is like pressing Find with option "Show in: {}".'
+                '\rAlt+Click  - Append result to exist report.'
+                '\r   It is like pressing Find with option "[x]Append results".'
+                ), TOTB_NEW_TAB)
+    repl_h  = _('Start search and replacement.'
+                '\rShift+Click  - Run without question "Do you want to replace...?"'
+                )
+    coun_h  = f(_('Count matches only.'
+                '\r   It is like pressing Find with option Collect: "{}".'
+                '\rShift+Click  - Find file names.'
+                '\r   It is like pressing Find with option Collect: "{}".'
+                ), CLLC_COUNT, CLLC_FNAME)
+    pset_h  = _('Save options for future. Restore saved options.'
+                '\rAlt+Click  - Show list in history order.'
+                '\rCtrl+Click   - Apply last used preset.'
+                )
     dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
     skip_l  = [_("Don't skip"), _('Hidden'), _('Binary'), _('Hidden, Binary')]
     sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
@@ -539,7 +574,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=BTN_W    ,cap=_('&Browse...')        ,hint=brow_h)] # &b
                  +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
-                 +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=curr_h)] # &c
+                 +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=tbn_l-105,w=100      ,cap=c_more                 ,hint=more_h)] # &e
 
                 +([] if wo_adva else  []                        
@@ -564,12 +599,12 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings:')        ,hint=enco_h)] # 
                  +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l                           )] # 
                 )                                                                                                               
-                 +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Find'),props='1'                )] #    default
+                 +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Find'),props='1'    ,hint=find_h)] #    default
                 +([] if wo_repl else []                         
-                 +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Re&place')                      )] # &p
+                 +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Re&place')          ,hint=repl_h)] # &p
                 )                                               
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Coun&t')            ,hint=coun_h)] # &t
-                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Ad&just...')        ,hint=adju_h)] # &j
+                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Ad&just...')        ,hint=cust_h)] # &j
                  +[dict(cid='help',tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l-100-GAP,w=100  ,cap=_('&Help...')                      )] # &h
                  +[dict(cid='-'   ,tp='bt'      ,t=DLG_H-GAP-25 ,l=tbn_l    ,w=BTN_W    ,cap=_('Close')                         )] # 
                 )
@@ -602,6 +637,10 @@ def dlg_fif(what='', opts={}):
         pass;                  #LOG and log('vals={}',pf(vals))
         btn,vals,chds=dlg_wrapper(_('Find in Files'), DLG_W, DLG_H, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
+        scam        = app.app_proc(app.PROC_GET_KEYSTATE, '') if app.app_api_version()>='1.0.143' else ''
+        btn_p       = btn
+        btn_m       = scam + '/' + btn if scam and scam!='a' else btn   # smth == a/smth
+        pass;                  #LOG and log('btn_p, scam, btn_m={}',(btn_p, scam, btn_m))
         focused     = chds[0] if 1==len(chds) else focused
         pass;                  #LOG and log('vals={}',pf(vals))
         reex01      = vals['reex']
@@ -651,17 +690,42 @@ def dlg_fif(what='', opts={}):
         stores.pop('reed',None)
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             
-        if btn=='more':
+        if btn_p=='more':
             stores['wo_adva']       = not stores.get('wo_adva', True)
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
 
-        if btn=='help':
+        if btn_p=='help':
             dlg_help(word_h, shtp_h, cntx_h)
             continue#while_fif
             
-        if btn=='pres':
-            ans = dlg_press(stores, cfg_json,
+        if btn_m=='c/pres': # Ctrl++Preset - Apply last used preset
+            pset_l  = stores.setdefault('pset', [])
+            if not pset_l:
+                continue#while_fif
+            ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0]
+            reex01  = ps['reex'] if ps.get('_reex', '')=='x' else reex01
+            case01  = ps['case'] if ps.get('_case', '')=='x' else case01
+            word01  = ps['word'] if ps.get('_word', '')=='x' else word01
+            incl_s  = ps['incl'] if ps.get('_incl', '')=='x' else incl_s
+            excl_s  = ps['excl'] if ps.get('_excl', '')=='x' else excl_s
+            fold_s  = ps['fold'] if ps.get('_fold', '')=='x' else fold_s
+            dept_n  = ps['dept'] if ps.get('_dept', '')=='x' else dept_n
+            skip_s  = ps['skip'] if ps.get('_skip', '')=='x' else skip_s
+            sort_s  = ps['sort'] if ps.get('_sort', '')=='x' else sort_s
+            frst_s  = ps['frst'] if ps.get('_frst', '')=='x' else frst_s
+            enco_s  = ps['enco'] if ps.get('_enco', '')=='x' else enco_s
+            cllc_s  = ps['cllc'] if ps.get('_cllc', '')=='x' else cllc_s
+            totb_s  = ps['totb'] if ps.get('_totb', '')=='x' else totb_s
+            join_s  = ps['join'] if ps.get('_join', '')=='x' else join_s
+            shtp_s  = ps['shtp'] if ps.get('_shtp', '')=='x' else shtp_s
+            algn_s  = ps['algn'] if ps.get('_algn', '')=='x' else algn_s
+            cntx_s  = ps['cntx'] if ps.get('_cntx', '')=='x' else cntx_s
+            app.msg_status(_('Restored preset: ')+ps['name'])
+
+        if btn_m=='pres' \
+        or btn_m=='s/pres': # Shift+Preset - Show list in history order
+            ans = dlg_press(stores, cfg_json, btn_m=='s/pres',
                        (reex01,case01,word01,
                         incl_s,excl_s,
                         fold_s,dept_n,
@@ -681,7 +745,17 @@ def dlg_fif(what='', opts={}):
                         cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s)  = ans
             continue#while_fif
                 
-        if btn=='cust':
+        if btn_m=='sc/cust':   # [Ctrl+Shift+]Adjust    = def widths
+            stores['wd_txts']   = 400
+            stores['wd_btns']   = 100
+            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        if btn_m=='s/cust':   # [Shift+]Adjust  = wider eds
+            stores['wd_txts']   = 20 + stores['wd_txts']
+            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        if btn_m=='c/cust':   # [Ctrl+]Adjust  = wider bts
+            stores['wd_btns']   =  5 + stores['wd_btns']
+            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        if btn_m=='cust':
             #NOTE: dlg-cust
             custs   = app.dlg_input_ex(4, _('Adjust dialog')
                 , _('Width of edits Find/Replace (min 400)')        ,str(stores.get('wd_txts', 400))
@@ -699,20 +773,36 @@ def dlg_fif(what='', opts={}):
 
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if False:pass
-        elif btn in ('brow', 'cfld'):
-            if btn=='brow':
+        elif btn_m in ('brow', 'cfld'):
+            if btn_m=='brow':
                 path    = app.dlg_dir(fold_s)
                 fold_s  = path                  if path else fold_s
-            if btn=='cfld':
+            if btn_m=='cfld':
                 path    = ed.get_filename()
                 fold_s  = os.path.dirname(path) if path else fold_s
             stores['fold']  = add_to_history(fold_s, stores.get('fold', []), max_hist, unicase=(os.name=='nt'))
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             focused = 'fold'
+        elif btn_m=='s/cfld': # [Shift+]CurDir = CurFile
+            fn          = ed.get_filename()
+            if os.path.isfile(fn):
+                incl_s  = os.path.basename(fn)
+                fold_s  = os.path.dirname(fn)
+        elif btn_m=='c/cfld': # [Ctrl+]CurDir  = InTabs
+            fold_s      = IN_OPEN_FILES
+        elif btn_m=='sc/cfld': # [Ctrl+Shift+]CurDir = CurTab
+            fn          = ed.get_filename()
+            incl_s      = os.path.basename(fn)
+            fold_s      = IN_OPEN_FILES
+        elif btn_m=='s/brow': # [Shift+]BroDir = BroFile
+            fn          = app.dlg_file(True, '', '', '')
+            if fn and os.path.isfile(fn):
+                incl_s  = os.path.basename(fn)
+                fold_s  = os.path.dirname(fn)
 
-        elif btn in ('!cnt', '!fnd', '!rep'):
+        elif btn_p in ('!cnt', '!fnd', '!rep'):
 #           if btn=='!rep' and app.ID_YES != app.msg_box(_('Are you sure to replace in all found files?'), app.MB_YESNO):
-            if  btn=='!rep' \
+            if  btn_m=='!rep' \
             and app.ID_YES != app.msg_box(
                  f(_('Do you want to replace in all {}?'), 
                     _('tabs') if fold_s==IN_OPEN_FILES else _('found files'))
@@ -732,7 +822,7 @@ def dlg_fif(what='', opts={}):
                     app.msg_box(f(_('Set correct "Find" reg.ex.\n\nError:\n{}'),ex), app.MB_OK) 
                     focused = 'what'
                     continue#while_fif
-                if btn=='!rep':
+                if btn_p=='!rep':
                     try:
                         re.sub(what_s, repl_s, '')
                     except Exception as ex:
@@ -782,12 +872,12 @@ def dlg_fif(what='', opts={}):
                                        ,sort_s=='1','date,desc' 
                                        ,sort_s=='2','date,asc' ,'')
                 ,only_frst  =int(frst_s)
-                ,skip_unwr  =btn=='!rep'
+                ,skip_unwr  =btn_p=='!rep'
                 ,enco       =enco_l[int(enco_s)].split(', ')
                 )
             what_find   =dict(
                  find       =what_s
-                ,repl       =repl_s if btn=='!rep' else None
+                ,repl       =repl_s if btn_p=='!rep' else None
                 ,mult       =False
                 ,reex       =reex01=='1'
                 ,case       =case01=='1'
@@ -795,19 +885,23 @@ def dlg_fif(what='', opts={}):
                 )
             cllc_v      = cllc_l[int(cllc_s)]
             what_save   = dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
-                 count      = btn=='!cnt' or  cllc_v!=CLLC_FNAME
-                ,place      = btn!='!cnt' and cllc_v==CLLC_MATCH
+                 count      = not (btn_m=='s/!cnt' or  cllc_v==CLLC_FNAME)
+#                count      = (btn=='!cnt' and scam!='s') or  cllc_v!=CLLC_FNAME
+#                count      = btn=='!cnt' or  cllc_v!=CLLC_FNAME
+                ,place      = btn_p!='!cnt' and cllc_v==CLLC_MATCH
 #               ,fragm      = btn!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
-                ,lines      = btn!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
+                ,lines      = btn_p!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
                 )
             shtp_v      = shtp_l[int(shtp_s)]
             how_rpt     = dict(
-                 totb   =    totb_l[int(totb_s)]
+                 totb   =    totb_l[int(totb_s)] if btn_m!='s/!fnd' else totb_l[0]  # NewTab if Shift+Find
+#                totb   =    totb_l[int(totb_s)]
                 ,sprd   =              sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
                 ,shtp   =    shtp_v if sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
                 ,cntx   =    '1'==cntx_s
                 ,algn   =    '1'==algn_s
-                ,join   =    '1'==join_s
+                ,join   =    '1'==join_s or btn_m=='c/!fnd' # Append if Ctrl+Find
+#               ,join   =    '1'==join_s
                 )
             totb_s  = str(min(1, int(totb_s)))
             ################################
@@ -1627,48 +1721,36 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         dept    = 1+prntdct['dept'] if prntdct else 0
         pass;                  #FNDLOG and log('dept={}',dept)
         # Find in file
-#       h_path  = None
         encd    = ''
-        mode    = 'r' #if repl_s is None else 'r+'
         for enco_n, enco_s in enumerate(enco_l):
-            pass;               LOG and log('mode, enco_s={}',(mode, enco_s))
+            pass;              #LOG and log('enco_s={}',(enco_s))
             if enco_s==ENCO_DETD:
                 enco_s  = detect_encoding(path, detector)
                 enco_l[enco_n] = enco_s
             try:
-#               with open(path, mode=mode, encoding=enco_s) as h_path:
-                if True:
-                    body    = open(path, mode='rb').read().decode(encoding=enco_s)
-                    if not cnt_b:
-                        # Only path finding
-                        count   = find_for_body(body, dept, rsp_l, rsp_i)
-#                       count   = find_for_body( h_path.read(), dept, rsp_l, rsp_i)
-#                       break#for enco_n
-                    else:
-                        lines   = body.splitlines(True)
-#                       lines   = h_path.readlines()
-                        count   = find_for_lines(lines, dept, rsp_l, rsp_i)
-                        pass;  #LOG and log('lines={}',(repr(lines)))
-                        if repl_s is not None and count:
-                            open(path, mode='wb').write(''.join(lines).encode(encoding=enco_s))
-#                           h_path.seek(0)
-#                           h_path.truncate()
-#                           h_path.write(''.join(lines))
-                        # Change text in file
-                    rsp_i['brow_files']     += 1
-                    if not count:
-                        break#for enco_n
-                    if prntdct:
-        #               prntdct['count']+=count
-        #               prntdct = prntdct['prnt']
-                        for i in range(25):  ##!!
-                            if not prntdct:  break#for i
-        #               while prntdct:
-                            prntdct['count']+=count
-                            prntdct  = prntdct['prnt']
-                        pass;  #FNDLOG and log('tree4rsp={}',pf(tree4rsp))
+                if not cnt_b:
+                    # Only path finding
+                    body    = open(path, mode='r', encoding=enco_s, newline='').read()
+                    count   = find_for_body(body, dept, rsp_l, rsp_i)
+                else:
+                    lines   = open(path, mode='r', encoding=enco_s, newline='').readlines()
+                    count   = find_for_lines(lines, dept, rsp_l, rsp_i)
+                    if repl_s is not None and count:
+                        open(path, mode='w', encoding=enco_s, newline='').write(''.join(lines))
+                    # Change text in file
+                rsp_i['brow_files']     += 1
+                if not count:
                     break#for enco_n
-                   #with
+                if prntdct:
+        #           prntdct['count']+=count
+        #           prntdct = prntdct['prnt']
+                    for i in range(25):  ##!!
+                        if not prntdct:  break#for i
+        #           while prntdct:
+                        prntdct['count']+=count
+                        prntdct  = prntdct['prnt']
+                    pass;  #FNDLOG and log('tree4rsp={}',pf(tree4rsp))
+                break#for enco_n
             except Exception as ex:
                 pass;           FNDLOG and log('ex={}',(ex))
                 if rpt_enc_fail and enco_n == len(enco_l)-1:
@@ -1930,5 +2012,14 @@ ToDo
 [ ][at-kv][14may16] Optim rpt filling
 [+][kv-kv][25may16] Save fold after Browse
 [+][kv-kv][30may16] Add tree type path/(r):line
-[ ][a1-kv][31may16] Use source EOL to save after replacements
+[+][a1-kv][31may16] Use source EOL to save after replacements
+[ ][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
+[+][kv-kv][01jun16] [Shift+]CurDir = CurFile      [Ctrl+]CurDir  = InTabs       [Ctrl+Shift+]CurDir = CurTab
+[+][kv-kv][01jun16] [Shift+]BroDir = BroFile 
+[ ][kv-kv][01jun16] [Ctrl+]Preset  = NextPreset   [Ctrl+Shift+]Preset = PrevPreset 
+[ ][kv-kv][01jun16] [Ctrl+]Ajust   = On/Off-Repl  [Ctrl+Shift+]Ajust  = On/Off-Excl
+[ ][kv-kv][01jun16] [Alt+]Adjust    = wider eds   [Alt+Shift+]Adjust  = wider bts   [Alt+Ctrl+]Adjust   = min ed, min bt
+[ ][kv-kv][01jun16] [Shift+]Find   = OnlyFileName
+[ ][kv-kv][01jun16] [Shift+]Replace= Without asking
+[ ][kv-kv][01jun16] btn = scam+btn
 '''
