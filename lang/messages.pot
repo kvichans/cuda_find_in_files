@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2016-05-15 17:24+0300\n"
+"POT-Creation-Date: 2016-06-01 17:49+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,7 +36,7 @@ msgid "Counts only"
 msgstr ""
 
 #: cd_fi_in_fi.py:65
-msgid "Filenames only"
+msgid "File names only"
 msgstr ""
 
 #: cd_fi_in_fi.py:66
@@ -56,78 +56,86 @@ msgid "path(r:c:l):line"
 msgstr ""
 
 #: cd_fi_in_fi.py:70
-msgid "dir/file(r):line"
+msgid "path/(r):line"
 msgstr ""
 
 #: cd_fi_in_fi.py:71
-msgid "dir/file(r:c:l):line"
+msgid "path/(r:c:l):line"
 msgstr ""
 
 #: cd_fi_in_fi.py:72
-msgid "dir/file/(r):line"
+msgid "dir/file(r):line"
 msgstr ""
 
 #: cd_fi_in_fi.py:73
+msgid "dir/file(r:c:l):line"
+msgstr ""
+
+#: cd_fi_in_fi.py:74
+msgid "dir/file/(r):line"
+msgstr ""
+
+#: cd_fi_in_fi.py:75
 msgid "dir/file/(r:c:l):line"
 msgstr ""
 
-#: cd_fi_in_fi.py:79
+#: cd_fi_in_fi.py:82
 msgid "<detected>"
 msgstr ""
 
-#: cd_fi_in_fi.py:171
+#: cd_fi_in_fi.py:178
 msgid "Restore: {}\t[{}{}{}].*aAw, [{}{}]In files, [{}{}]In folders, [{}{}{}{}]Adv. search, [{}{}{}{}{}{}]Adv. report"
 msgstr ""
 
-#: cd_fi_in_fi.py:180
+#: cd_fi_in_fi.py:187
 msgid "In folder={}\tFind in all opened documents"
 msgstr ""
 
-#: cd_fi_in_fi.py:181
+#: cd_fi_in_fi.py:188
 msgid "Delete preset\tSelect name..."
 msgstr ""
 
-#: cd_fi_in_fi.py:182
+#: cd_fi_in_fi.py:189
 msgid "Save as preset\tSelect options to save..."
 msgstr ""
 
-#: cd_fi_in_fi.py:202
+#: cd_fi_in_fi.py:212 cd_fi_in_fi.py:724
 msgid "Restored preset: "
 msgstr ""
 
-#: cd_fi_in_fi.py:212
+#: cd_fi_in_fi.py:222
 msgid "Deleted preset: "
 msgstr ""
 
-#: cd_fi_in_fi.py:218
+#: cd_fi_in_fi.py:228
 msgid "Save preset"
 msgstr ""
 
-#: cd_fi_in_fi.py:219
+#: cd_fi_in_fi.py:229
 msgid "&Name:"
 msgstr ""
 
-#: cd_fi_in_fi.py:221
+#: cd_fi_in_fi.py:231
 msgid "&What to save:"
 msgstr ""
 
-#: cd_fi_in_fi.py:223
+#: cd_fi_in_fi.py:233
 msgid "&Save"
 msgstr ""
 
-#: cd_fi_in_fi.py:224 cd_fi_in_fi.py:571
+#: cd_fi_in_fi.py:234 cd_fi_in_fi.py:609
 msgid "Close"
 msgstr ""
 
-#: cd_fi_in_fi.py:225
+#: cd_fi_in_fi.py:235
 msgid "#{}: {} in {}"
 msgstr ""
 
-#: cd_fi_in_fi.py:242
+#: cd_fi_in_fi.py:254
 msgid "Saved preset: "
 msgstr ""
 
-#: cd_fi_in_fi.py:249
+#: cd_fi_in_fi.py:261
 msgid ""
 "\n"
 "• Values in fields \"In file\" and \"Not in file\" can contain\n"
@@ -150,13 +158,13 @@ msgid ""
 "    ESC stops any stage. When picking and finding, ESC stops only this stage, so next stage begins.\n"
 msgstr ""
 
-#: cd_fi_in_fi.py:271
+#: cd_fi_in_fi.py:283
 msgid ""
 "\n"
 "Option \"Tree type\" - {shtp}\n"
 msgstr ""
 
-#: cd_fi_in_fi.py:274
+#: cd_fi_in_fi.py:286
 msgid ""
 "\n"
 "Extra options for \"user.json\" (needed restart after changing). \n"
@@ -211,299 +219,307 @@ msgid ""
 "    \"fif_read_head_size\":1024,\n"
 msgstr ""
 
-#: cd_fi_in_fi.py:340
+#: cd_fi_in_fi.py:352
 msgid "Help for \"Find in Files\""
 msgstr ""
 
-#: cd_fi_in_fi.py:342
+#: cd_fi_in_fi.py:354
 msgid "Reg.ex. on python.org"
 msgstr ""
 
-#: cd_fi_in_fi.py:343
+#: cd_fi_in_fi.py:355
 msgid "T&ips"
 msgstr ""
 
-#: cd_fi_in_fi.py:344
+#: cd_fi_in_fi.py:356
 msgid "&Tree"
 msgstr ""
 
-#: cd_fi_in_fi.py:345
+#: cd_fi_in_fi.py:357
 msgid "&Opts"
 msgstr ""
 
-#: cd_fi_in_fi.py:346
+#: cd_fi_in_fi.py:358
 msgid "&Close"
 msgstr ""
 
-#: cd_fi_in_fi.py:361
+#: cd_fi_in_fi.py:373
 msgid "Space-separated file masks.\rDouble-quote mask, which needs space-char.\rUse ? for any character and * for any fragment."
 msgstr ""
 
-#: cd_fi_in_fi.py:362
+#: cd_fi_in_fi.py:374
 msgid "Regular expression"
 msgstr ""
 
-#: cd_fi_in_fi.py:363
+#: cd_fi_in_fi.py:375
 msgid "Case sensitive"
 msgstr ""
 
-#: cd_fi_in_fi.py:364
+#: cd_fi_in_fi.py:376
 msgid "Option \"Whole words\". It is ignored when:\r    Regular expression (\".*\") is turned on,\r    \"Find\" contains not only letters, digits and \"_\"."
 msgstr ""
 
-#: cd_fi_in_fi.py:368
-msgid "Choose folder"
+#: cd_fi_in_fi.py:380
+msgid "Choose folder.\rShift+Click - Choose file to find in it."
 msgstr ""
 
-#: cd_fi_in_fi.py:369
-msgid "Use folder of current file"
+#: cd_fi_in_fi.py:383
+msgid "Use folder of current file.\rShift+Click - Prepare search in the current file.\rCtrl+Click  - Prepare search in all tabs.\rCtrl+Shift+Click  - Prepare search in the current tab."
 msgstr ""
 
-#: cd_fi_in_fi.py:370
+#: cd_fi_in_fi.py:388
 msgid "Show/Hide advanced options"
 msgstr ""
 
-#: cd_fi_in_fi.py:371
-msgid "Change dialog layout"
+#: cd_fi_in_fi.py:389
+msgid "Change dialog layout.\rCtrl+Click   - Set wider width for fields What/In files...\rShift+Click  - Set wider width for buttons Find/.../Close.\rCtrl+Shift+Click    - Set default widths for all fields."
 msgstr ""
 
-#: cd_fi_in_fi.py:372
+#: cd_fi_in_fi.py:394
 msgid "Search only inside N first found files"
 msgstr ""
 
-#: cd_fi_in_fi.py:373
+#: cd_fi_in_fi.py:395
 msgid "Format of the reported tree structure.\rCompact - report all found line with full file info:\r    path(r[:c:l]):line\r  Tree scheme\r    +Search for \"*\"\r      <full_path(row[:col:len])>: line with ALL marked fragments\rMiddle - report separated folders and fragments:\r    dir/file(r[:c:l]):line\r  Tree scheme\r    +Search for \"*\"\r      <root>: #count\r        <dir>: #count\r          <file.ext(row[:col:len])>: line with ONE marked fragment\rSparse - report separated folders and lines and fragments:\r    dir/file/(r[:c:l]):line\r  Tree scheme\r    +Search for \"*\"\r      <root>: #count\r        <dir>: #count\r          <file.ext>: #count\r            <(row[:col:len])>: line with ONE marked fragment\rFor \r  sorted files\rand\r  In folder={}\ronly Compact options are used."
 msgstr ""
 
-#: cd_fi_in_fi.py:400
+#: cd_fi_in_fi.py:422
 msgid "Show result line and both its nearest lines, above and below result"
 msgstr ""
 
-#: cd_fi_in_fi.py:401
+#: cd_fi_in_fi.py:423
 msgid "Align columns (filenames/numbers) by widest cell width"
 msgstr ""
 
-#: cd_fi_in_fi.py:402
-msgid "Count matches only.\rIt is like pressing Find with option Collect: \"Count only\"."
+#: cd_fi_in_fi.py:424
+msgid "Start search.\rShift+Click  - Put report to new tab.\r   It is like pressing Find with option \"Show in: {}\".\rCtrl+Click  - Append result to exist report.\r   It is like pressing Find with option \"[x]Append results\"."
 msgstr ""
 
-#: cd_fi_in_fi.py:403
-msgid "Save options for future.\rRestore saved options."
+#: cd_fi_in_fi.py:430
+msgid "Start search and replacement.\rShift+Click  - Run without question \"Do you want to replace...?\""
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:433
+msgid "Count matches only.\r   It is like pressing Find with option Collect: \"{}\".\rShift+Click  - Find file names.\r   It is like pressing Find with option Collect: \"{}\"."
+msgstr ""
+
+#: cd_fi_in_fi.py:438
+msgid "Save options for future. Restore saved options.\rShift+Click  - Show list in history order.\rCtrl+Click   - Apply last used preset."
+msgstr ""
+
+#: cd_fi_in_fi.py:442
 msgid "1 level"
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:442
 msgid "2 levels"
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:442
 msgid "3 levels"
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:442
 msgid "4 levels"
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:442
 msgid "5 levels"
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:442
 msgid "All"
 msgstr ""
 
-#: cd_fi_in_fi.py:404
+#: cd_fi_in_fi.py:442
 msgid "In folder only"
 msgstr ""
 
-#: cd_fi_in_fi.py:405
+#: cd_fi_in_fi.py:443
 msgid "Binary"
 msgstr ""
 
-#: cd_fi_in_fi.py:405
+#: cd_fi_in_fi.py:443
 msgid "Don't skip"
 msgstr ""
 
-#: cd_fi_in_fi.py:405
+#: cd_fi_in_fi.py:443
 msgid "Hidden"
 msgstr ""
 
-#: cd_fi_in_fi.py:405
+#: cd_fi_in_fi.py:443
 msgid "Hidden, Binary"
 msgstr ""
 
-#: cd_fi_in_fi.py:406
+#: cd_fi_in_fi.py:444
 msgid "By date, from newest"
 msgstr ""
 
-#: cd_fi_in_fi.py:406
+#: cd_fi_in_fi.py:444
 msgid "By date, from oldest"
 msgstr ""
 
-#: cd_fi_in_fi.py:406
+#: cd_fi_in_fi.py:444
 msgid "Don't sort"
 msgstr ""
 
-#: cd_fi_in_fi.py:409
+#: cd_fi_in_fi.py:447
 msgid "In which encodings try to read files.\rFirst suitable will be used.\r{} is slow.\r\rDefault encoding: {}"
 msgstr ""
 
-#: cd_fi_in_fi.py:500
+#: cd_fi_in_fi.py:538
 msgid "L&ess <<"
 msgstr ""
 
-#: cd_fi_in_fi.py:500
+#: cd_fi_in_fi.py:538
 msgid "Mor&e >>"
 msgstr ""
 
-#: cd_fi_in_fi.py:516
+#: cd_fi_in_fi.py:554
 msgid "Pre&sets..."
 msgstr ""
 
-#: cd_fi_in_fi.py:520
+#: cd_fi_in_fi.py:558
 msgid "&Find:"
 msgstr ""
 
-#: cd_fi_in_fi.py:524
+#: cd_fi_in_fi.py:562
 msgid "&Replace with:"
 msgstr ""
 
-#: cd_fi_in_fi.py:528
+#: cd_fi_in_fi.py:566
 msgid "&In files:"
 msgstr ""
 
-#: cd_fi_in_fi.py:531
+#: cd_fi_in_fi.py:569
 msgid "Not in files:"
 msgstr ""
 
-#: cd_fi_in_fi.py:534
+#: cd_fi_in_fi.py:572
 msgid "I&n folder:"
 msgstr ""
 
-#: cd_fi_in_fi.py:536
+#: cd_fi_in_fi.py:574
 msgid "&Browse..."
 msgstr ""
 
-#: cd_fi_in_fi.py:537
+#: cd_fi_in_fi.py:575
 msgid "In s&ubfolders:"
 msgstr ""
 
-#: cd_fi_in_fi.py:539
+#: cd_fi_in_fi.py:577
 msgid "&Current folder"
 msgstr ""
 
-#: cd_fi_in_fi.py:543
+#: cd_fi_in_fi.py:581
 msgid "== Adv. report options =="
 msgstr ""
 
-#: cd_fi_in_fi.py:544
+#: cd_fi_in_fi.py:582
 msgid "Co&llect:"
 msgstr ""
 
-#: cd_fi_in_fi.py:546
+#: cd_fi_in_fi.py:584
 msgid "Show in&:"
 msgstr ""
 
-#: cd_fi_in_fi.py:548
+#: cd_fi_in_fi.py:586
 msgid "Appen&d results"
 msgstr ""
 
-#: cd_fi_in_fi.py:549
+#: cd_fi_in_fi.py:587
 msgid "Tree type &/:"
 msgstr ""
 
-#: cd_fi_in_fi.py:551
+#: cd_fi_in_fi.py:589
 msgid "Align &|"
 msgstr ""
 
-#: cd_fi_in_fi.py:552
+#: cd_fi_in_fi.py:590
 msgid "Show conte&xt"
 msgstr ""
 
-#: cd_fi_in_fi.py:554
+#: cd_fi_in_fi.py:592
 msgid "== Adv. search options =="
 msgstr ""
 
-#: cd_fi_in_fi.py:555
+#: cd_fi_in_fi.py:593
 msgid "S&kip files:"
 msgstr ""
 
-#: cd_fi_in_fi.py:557
+#: cd_fi_in_fi.py:595
 msgid "S&ort file list:"
 msgstr ""
 
-#: cd_fi_in_fi.py:559
+#: cd_fi_in_fi.py:597
 msgid "Firsts (&0=all):"
 msgstr ""
 
-#: cd_fi_in_fi.py:561
+#: cd_fi_in_fi.py:599
 msgid "Encodings:"
 msgstr ""
 
-#: cd_fi_in_fi.py:564
+#: cd_fi_in_fi.py:602
 msgid "Find"
 msgstr ""
 
-#: cd_fi_in_fi.py:566
+#: cd_fi_in_fi.py:604
 msgid "Re&place"
 msgstr ""
 
-#: cd_fi_in_fi.py:568
+#: cd_fi_in_fi.py:606
 msgid "Coun&t"
 msgstr ""
 
-#: cd_fi_in_fi.py:569
+#: cd_fi_in_fi.py:607
 msgid "Ad&just..."
 msgstr ""
 
-#: cd_fi_in_fi.py:570
+#: cd_fi_in_fi.py:608
 msgid "&Help..."
 msgstr ""
 
-#: cd_fi_in_fi.py:600
+#: cd_fi_in_fi.py:638
 msgid "Find in Files"
 msgstr ""
 
-#: cd_fi_in_fi.py:683
+#: cd_fi_in_fi.py:760
 msgid "Adjust dialog"
 msgstr ""
 
-#: cd_fi_in_fi.py:684
+#: cd_fi_in_fi.py:761
 msgid "Width of edits Find/Replace (min 400)"
 msgstr ""
 
-#: cd_fi_in_fi.py:685
+#: cd_fi_in_fi.py:762
 msgid "Width of buttons Browse/Help (min 100)"
 msgstr ""
 
-#: cd_fi_in_fi.py:686
+#: cd_fi_in_fi.py:763
 msgid "Show \"Not in files\" field (0/1)"
 msgstr ""
 
-#: cd_fi_in_fi.py:687
+#: cd_fi_in_fi.py:764
 msgid "Show \"Replace with\"/\"Replace\" fields (0/1)"
 msgstr ""
 
-#: cd_fi_in_fi.py:710
+#: cd_fi_in_fi.py:807
 msgid "Do you want to replace in all {}?"
 msgstr ""
 
-#: cd_fi_in_fi.py:711
+#: cd_fi_in_fi.py:808
 msgid "found files"
 msgstr ""
 
-#: cd_fi_in_fi.py:711
+#: cd_fi_in_fi.py:808
 msgid "tabs"
 msgstr ""
 
-#: cd_fi_in_fi.py:718
+#: cd_fi_in_fi.py:815
 msgid "Fill the \"Find\" field"
 msgstr ""
 
-#: cd_fi_in_fi.py:725
+#: cd_fi_in_fi.py:822
 msgid ""
 "Set correct \"Find\" reg.ex.\n"
 "\n"
@@ -511,7 +527,7 @@ msgid ""
 "{}"
 msgstr ""
 
-#: cd_fi_in_fi.py:732
+#: cd_fi_in_fi.py:829
 msgid ""
 "Set correct \"Replace with\" reg.ex.\n"
 "\n"
@@ -519,113 +535,113 @@ msgid ""
 "{}"
 msgstr ""
 
-#: cd_fi_in_fi.py:737
+#: cd_fi_in_fi.py:834
 msgid "Set existing \"In folder\" value or use \"{}\" (see Presets)"
 msgstr ""
 
-#: cd_fi_in_fi.py:741
+#: cd_fi_in_fi.py:838
 msgid "Fill the \"In files\" field"
 msgstr ""
 
-#: cd_fi_in_fi.py:745
+#: cd_fi_in_fi.py:842
 msgid "Fix quotes in the \"In files\" field"
 msgstr ""
 
-#: cd_fi_in_fi.py:749
+#: cd_fi_in_fi.py:846
 msgid "Fix quotes in the \"Not in files\" field"
 msgstr ""
 
-#: cd_fi_in_fi.py:756
+#: cd_fi_in_fi.py:853
 msgid ""
 "Conflicting \"Sort file list\" and \"Tree type\" options.\n"
 "\n"
 "See Help--Tree."
 msgstr ""
 
-#: cd_fi_in_fi.py:763
+#: cd_fi_in_fi.py:860
 msgid ""
 "Conflicting \"{}\" and \"Tree type\" options.\n"
 "\n"
 "See Help--Tree."
 msgstr ""
 
-#: cd_fi_in_fi.py:816
+#: cd_fi_in_fi.py:917
 msgid "Search stopped"
 msgstr ""
 
-#: cd_fi_in_fi.py:822
+#: cd_fi_in_fi.py:923
 msgid "No matches found"
 msgstr ""
 
-#: cd_fi_in_fi.py:824
+#: cd_fi_in_fi.py:925
 msgid "Found {} match(es) in {} file(s)"
 msgstr ""
 
-#: cd_fi_in_fi.py:856
+#: cd_fi_in_fi.py:957
 msgid "Results"
 msgstr ""
 
-#: cd_fi_in_fi.py:986
+#: cd_fi_in_fi.py:1087
 msgid "{} for \"{}\" in \"{}\" ({} matches in {} files)"
 msgstr ""
 
-#: cd_fi_in_fi.py:993
+#: cd_fi_in_fi.py:1094
 msgid "{} \"{}\" to \"{}\" in \"{}\" ({} changes in {} files)"
 msgstr ""
 
-#: cd_fi_in_fi.py:1006
+#: cd_fi_in_fi.py:1108 cd_fi_in_fi.py:1160
 msgid "(ESC?) Reporting: {}%"
 msgstr ""
 
-#: cd_fi_in_fi.py:1008
+#: cd_fi_in_fi.py:1110 cd_fi_in_fi.py:1162
 msgid "(Reporting stopped {}%)"
 msgstr ""
 
-#: cd_fi_in_fi.py:1148
+#: cd_fi_in_fi.py:1270
 msgid "Command doesn't work with multi-carets"
 msgstr ""
 
-#: cd_fi_in_fi.py:1205
+#: cd_fi_in_fi.py:1327
 msgid "At the line {} no data for navigation"
 msgstr ""
 
-#: cd_fi_in_fi.py:1211 cd_fi_in_fi.py:1268 cd_fi_in_fi.py:1684
+#: cd_fi_in_fi.py:1333 cd_fi_in_fi.py:1390 cd_fi_in_fi.py:1799
 msgid "tab:"
 msgstr ""
 
-#: cd_fi_in_fi.py:1215
+#: cd_fi_in_fi.py:1337
 msgid "No tab for navigation"
 msgstr ""
 
-#: cd_fi_in_fi.py:1305
+#: cd_fi_in_fi.py:1427
 msgid "Line {} has bad data for navigation"
 msgstr ""
 
-#: cd_fi_in_fi.py:1313
+#: cd_fi_in_fi.py:1435
 msgid "Line {} has no data for navigation"
 msgstr ""
 
-#: cd_fi_in_fi.py:1573
+#: cd_fi_in_fi.py:1694
 msgid "(ESC?) Seaching: {}% (found {} match(es) in {} file(s))"
 msgstr ""
 
-#: cd_fi_in_fi.py:1579
+#: cd_fi_in_fi.py:1700
 msgid "(Finding stopped {}%)"
 msgstr ""
 
-#: cd_fi_in_fi.py:1642
+#: cd_fi_in_fi.py:1757
 msgid "Cannot read \"{}\" (encoding={}/{}): {}"
 msgstr ""
 
-#: cd_fi_in_fi.py:1729
+#: cd_fi_in_fi.py:1844
 msgid "(ESC?)(#{}) Picking files in: {}"
 msgstr ""
 
-#: cd_fi_in_fi.py:1733
+#: cd_fi_in_fi.py:1848
 msgid "(Picking stopped)"
 msgstr ""
 
-#: cd_fi_in_fi.py:1823
+#: cd_fi_in_fi.py:1939
 msgid "Stop?"
 msgstr ""
 
