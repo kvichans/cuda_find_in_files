@@ -389,7 +389,7 @@ def dlg_fif(what='', opts={}):
     cust_h  = _('Change dialog layout.'
                 '\rCtrl+Click   - Set wider width for fields What/In files...'
                 '\rShift+Click  - Set wider width for buttons Find/.../Close.'
-                '\rAlt+Click    - Set default widths for all fields.'
+                '\rCtrl+Shift+Click    - Set default widths for all fields.'
                 )
     frst_h  = _('Search only inside N first found files')
     shtp_h  = f(_(  'Format of the reported tree structure.'
@@ -424,7 +424,7 @@ def dlg_fif(what='', opts={}):
     find_h  = f(_('Start search.'
                 '\rShift+Click  - Put report to new tab.'
                 '\r   It is like pressing Find with option "Show in: {}".'
-                '\rAlt+Click  - Append result to exist report.'
+                '\rCtrl+Click  - Append result to exist report.'
                 '\r   It is like pressing Find with option "[x]Append results".'
                 ), TOTB_NEW_TAB)
     repl_h  = _('Start search and replacement.'
@@ -436,7 +436,7 @@ def dlg_fif(what='', opts={}):
                 '\r   It is like pressing Find with option Collect: "{}".'
                 ), CLLC_COUNT, CLLC_FNAME)
     pset_h  = _('Save options for future. Restore saved options.'
-                '\rAlt+Click  - Show list in history order.'
+                '\rShift+Click  - Show list in history order.'
                 '\rCtrl+Click   - Apply last used preset.'
                 )
     dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
@@ -2013,13 +2013,5 @@ ToDo
 [+][kv-kv][25may16] Save fold after Browse
 [+][kv-kv][30may16] Add tree type path/(r):line
 [+][a1-kv][31may16] Use source EOL to save after replacements
-[ ][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
-[+][kv-kv][01jun16] [Shift+]CurDir = CurFile      [Ctrl+]CurDir  = InTabs       [Ctrl+Shift+]CurDir = CurTab
-[+][kv-kv][01jun16] [Shift+]BroDir = BroFile 
-[ ][kv-kv][01jun16] [Ctrl+]Preset  = NextPreset   [Ctrl+Shift+]Preset = PrevPreset 
-[ ][kv-kv][01jun16] [Ctrl+]Ajust   = On/Off-Repl  [Ctrl+Shift+]Ajust  = On/Off-Excl
-[ ][kv-kv][01jun16] [Alt+]Adjust    = wider eds   [Alt+Shift+]Adjust  = wider bts   [Alt+Ctrl+]Adjust   = min ed, min bt
-[ ][kv-kv][01jun16] [Shift+]Find   = OnlyFileName
-[ ][kv-kv][01jun16] [Shift+]Replace= Without asking
-[ ][kv-kv][01jun16] btn = scam+btn
+[+][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
 '''
