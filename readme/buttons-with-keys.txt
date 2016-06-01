@@ -1,0 +1,37 @@
+FiF has many button reactions when user clicks buttons with Shift and/or Ctrl.
+User can place cursor over a button to see its tooltip:
+
+* Find
+Start search.
+Shift+Click - Put report to new tab. It is like pressing Find with option Show in: <new tab>.
+Ctrl+Click - Append result to existing report. It is like pressing Find with option [x]Append results.
+
+* Replace
+Start search and replacement.
+Shift+Click - Run without question "Do you want to replace...?"
+
+* Count
+Count matches only. It is like pressing Find with option Collect: Counts only.
+Shift+Click - Find file names. It is like pressing Find with option Collect: File names only.
+
+* Current folder
+Use folder of current file.
+Shift+Click - Prepare search in the current file.
+Ctrl+Click - Prepare search in all tabs.
+Ctrl+Shift+Click - Prepare search in the current tab.
+
+* Browse...
+Choose folder.
+Shift+Click - Choose file to find in it.
+
+* Adjust...
+Change dialog layout.
+Ctrl+Click - Set wider width for fields What/In files...
+Shift+Click - Set wider width for buttons Find/.../Close.
+Ctrl+Shift+Click - Set default widths for all fields.
+
+* Preset...
+Save options for future. Restore saved options.
+Shift+Click - Show list in history order.
+Ctrl+Click - Apply last used preset.
+
