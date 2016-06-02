@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.6 2016-06-01'
+    '1.0.7 2016-06-02'
 ToDo: (see end of file)
 '''
 
@@ -65,6 +65,7 @@ CLLC_COUNT      = _('Counts only')
 CLLC_FNAME      = _('File names only')
 TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
+totb_l          = [TOTB_NEW_TAB, TOTB_USED_TAB]
 SHTP_SHORT_R    = _('path(r):line')
 SHTP_SHORT_RCL  = _('path(r:c:l):line')
 SHTP_SHRTS_R    = _('path/(r):line')
@@ -79,8 +80,47 @@ shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
                   ,SHTP_SPARS_R, SHTP_SPARS_RCL
                   ,SHTP_SHRTS_R, SHTP_SHRTS_RCL
                   ]
+dept_l          = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
+skip_l          = [_("Don't skip"), _('Hidden'), _('Binary'), _('Hidden, Binary')]
+sort_l          = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
+DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 ENCO_DETD       = _('<detected>')
+loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
+enco_l          = ['{}, UTF-8, '+ENCO_DETD 
+                  ,'UTF-8, {}, '+ENCO_DETD 
+                  ,'{}, '       +ENCO_DETD 
+                  ,'UTF-8, '    +ENCO_DETD 
+                  ,'{}, UTF-8'             
+                  ,'UTF-8, {}'             
+                  ,'{}'                    
+                  ,'UTF-8'                 
+                  ,              ENCO_DETD
+                  ]     \
+                    if loc_enco!='UTF-8' else   \
+                  ['{}, '       +ENCO_DETD 
+                  ,'{}'                    
+                  ,              ENCO_DETD
+                  ]
+enco_l          = [f(enco, loc_enco) for enco in enco_l]
 
+def desc_fif_val(fifkey, val=None):
+    pass;                      #LOG and log('fifkey, val={}',(fifkey, val))
+    if val is None: return ''
+    if False:pass
+    elif fifkey in ('incl','excl','fold','frst'):   return val
+    elif fifkey in ('reex','case','word'
+                   ,'join','algn','cntx'):          return _('On') if val=='1' else _('Off')
+    val = int(val)
+    if False:pass
+    elif fifkey=='dept':    return dept_l[val] if type(val)==int and 0<=val<len(dept_l) else ''
+    elif fifkey=='skip':    return skip_l[val] if type(val)==int and 0<=val<len(skip_l) else ''
+    elif fifkey=='sort':    return sort_l[val] if type(val)==int and 0<=val<len(sort_l) else ''
+    elif fifkey=='enco':    return enco_l[val] if type(val)==int and 0<=val<len(enco_l) else ''
+    elif fifkey=='cllc':    return cllc_l[val] if type(val)==int and 0<=val<len(cllc_l) else ''
+    elif fifkey=='totb':    return totb_l[val] if type(val)==int and 0<=val<len(totb_l) else ''
+    elif fifkey=='shtp':    return shtp_l[val] if type(val)==int and 0<=val<len(shtp_l) else ''
+   #def desc_fif_val
+    
 lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
 lexers_l        = list(map(lambda s: s.upper(), lexers_l))
@@ -97,8 +137,11 @@ MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'botto
 MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
 MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
 MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
-DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 class Command:
+    def undo_by_report(self):
+        undo_by_report()
+       #def undo_by_report
+    
     def find_in_ed(self):
         filename= ed.get_filename()
         return dlg_fif(what='', opts=dict(
@@ -185,10 +228,12 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
                 ) 
                 for ps in pset_l] \
             + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
-              ,_('Delete preset\tSelect name...')
+              ,_('Config presets...\tChange, Move up/down, Delete')
+#             ,_('Delete preset\tSelect name...')
               ,_('Save as preset\tSelect options to save...')]
     ind_inop= len(pset_l)
-    ind_del = len(pset_l)+1
+    ind_conf= len(pset_l)+1
+#   ind_del = len(pset_l)+1
     ind_save= len(pset_l)+2
     ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
     if ps_ind is None:  return None
@@ -212,24 +257,89 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
         app.msg_status(_('Restored preset: ')+ps['name'])
         return ouvl_l
         
-    elif ps_ind==ind_del and pset_l:
-        # Delete
-        ind4del = app.dlg_menu(app.MENU_LIST, '\n'.join([ps['name'] for ps in pset_l]))
-        if ind4del is None:  return None
-        ps      = pset_l[ind4del]
-        del pset_l[ind4del]
-        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-        app.msg_status(_('Deleted preset: ')+ps['name'])
-        return None
+#   elif ps_ind==ind_del and pset_l:
+#       # Delete
+#       ind4del = app.dlg_menu(app.MENU_LIST, '\n'.join([ps['name'] for ps in pset_l]))
+#       if ind4del is None:  return None
+#       ps      = pset_l[ind4del]
+#       del pset_l[ind4del]
+#       open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+#       app.msg_status(_('Deleted preset: ')+ps['name'])
+#       return None
+#       
+    elif ps_ind==ind_conf and pset_l:
+        # Config
+        ps_ind      = 0
+        DLG_W       = 5*4+245+300
+        while_pss   = True
+        while while_pss:
+            ps_mns  = [ps['name'] for ps in pset_l]
+            ps      = pset_l[ps_ind]    ##!!
+            ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]
+            ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l]
+            pass;              #LOG and log('ps_its={}',(ps_its))
+            pass;              #LOG and log('ps_vls={}',(ps_vls))
+            cnts    =[dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')         ) # &p
+                     ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1') #
+                      # Content
+                     ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')            ) # &n
+                     ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                              ) # 
+                      # Acts
+                     ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')          ) # &u
+                     ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down')        ) # &d
+                     ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')            ) # &e
+                     ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')           ) # &t
+                      #
+                     ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:') ) # &w
+                     ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its               )
+                      #
+                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('&Save'),props='1'   ) # &s  default
+                     ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Close')             )
+                     ]
+            btn,vals,chds   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
+                             ,  dict(prss=ps_ind
+                                    ,name=ps['name']
+                                    ,what=(0,ps_vls)
+                                    )
+                             ,  focus_cid='prss')
+            pass;                  #LOG and log('vals={}',vals)
+            if btn is None or btn=='-': return None
+            ps['name']  = vals['name']
+            ps_ind      = vals['prss']
+            ps_vls      = vals['what'][1]
+            for i, k in enumerate(keys_l):
+                ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
+            if False:pass
+            elif btn=='mvup' and ps_ind>0 \
+            or   btn=='mvdn' and ps_ind<len(pset_l)-1:
+                mv_ind  = ps_ind + (-1 if btn=='mvup' else 1)
+                pset_l[mv_ind], \
+                pset_l[ps_ind]  = pset_l[ps_ind], \
+                                  pset_l[mv_ind]
+                ps_ind  = mv_ind
+
+            elif btn=='delt':
+                pset_l.pop(ps_ind)
+                ps_ind  = min(ps_ind, len(pset_l)-1)
+
+            elif btn=='clon':
+                ps  = pset_l[ps_ind]
+                psd = {k:v for k,v in ps.items()}
+                pset_l.insert(ps_ind, psd)
+                
+            elif btn=='!':
+                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+                break#while_pss
+           #while_pss
         
     elif ps_ind==ind_save:
         # Save
         items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
-        btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres
+        btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
              [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
              ,dict(           tp='lb'    ,t=GAP+55          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
-             ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items               )
+             ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items                )
              ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('&Save'),props='1'   ) # &s  default
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Close')             )
              ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
@@ -424,7 +534,7 @@ def dlg_fif(what='', opts={}):
     find_h  = f(_('Start search.'
                 '\rShift+Click  - Put report to new tab.'
                 '\r   It is like pressing Find with option "Show in: {}".'
-                '\rCtrl+Click  - Append result to exist report.'
+                '\rCtrl+Click  - Append result to existing report.'
                 '\r   It is like pressing Find with option "[x]Append results".'
                 ), TOTB_NEW_TAB)
     repl_h  = _('Start search and replacement.'
@@ -439,28 +549,8 @@ def dlg_fif(what='', opts={}):
                 '\rShift+Click  - Show list in history order.'
                 '\rCtrl+Click   - Apply last used preset.'
                 )
-    dept_l  = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
-    skip_l  = [_("Don't skip"), _('Hidden'), _('Binary'), _('Hidden, Binary')]
-    sort_l  = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
-
-    loc_enco= apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
+    
     enco_h  = f(_('In which encodings try to read files.\rFirst suitable will be used.\r{} is slow.\r\rDefault encoding: {}'), ENCO_DETD, loc_enco)
-    enco_l  = ['{}, UTF-8, '+ENCO_DETD 
-              ,'UTF-8, {}, '+ENCO_DETD 
-              ,'{}, '       +ENCO_DETD 
-              ,'UTF-8, '    +ENCO_DETD 
-              ,'{}, UTF-8'             
-              ,'UTF-8, {}'             
-              ,'{}'                    
-              ,'UTF-8'                 
-              ,              ENCO_DETD
-              ]     \
-                if loc_enco!='UTF-8' else   \
-              ['{}, '       +ENCO_DETD 
-              ,'{}'                    
-              ,              ENCO_DETD
-              ]
-    enco_l  = [f(enco, loc_enco) for enco in enco_l]
         
     DLG_W0, \
     DLG_H0  = (700, 330)
@@ -551,6 +641,9 @@ def dlg_fif(what='', opts={}):
         DLG_H   = (tbn_l+BTN_W+GAP, DLG_H0+gap3)
         #NOTE: fif-cnts
         cnts    = ([]                                                                                                              # gmqvyz
+                 +[dict(cid='ps1' ,tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
+                 +[dict(cid='ps2' ,tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
+                 +[dict(cid='ps3' ,tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
                  +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=105      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
@@ -699,11 +792,22 @@ def dlg_fif(what='', opts={}):
             dlg_help(word_h, shtp_h, cntx_h)
             continue#while_fif
             
-        if btn_m=='c/pres': # Ctrl++Preset - Apply last used preset
+        if btn_p in ('ps1', 'ps2', 'ps3') \
+        or btn_m=='c/pres': # Ctrl++Preset - Apply last used preset
             pset_l  = stores.setdefault('pset', [])
             if not pset_l:
                 continue#while_fif
-            ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0]
+            ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0] \
+                    if btn_m=='c/pres'                  else \
+                  pset_l[0] \
+                    if btn_p=='ps1'                     else \
+                  pset_l[1] \
+                    if btn_p=='ps2' and len(pset_l)>1   else \
+                  pset_l[2] \
+                    if btn_p=='ps3' and len(pset_l)>2   else \
+                  None
+            if not ps:
+                continue#while_fif
             reex01  = ps['reex'] if ps.get('_reex', '')=='x' else reex01
             case01  = ps['case'] if ps.get('_case', '')=='x' else case01
             word01  = ps['word'] if ps.get('_word', '')=='x' else word01
@@ -1946,6 +2050,24 @@ class ProgressAndBreak:
         return was_esc
    #class ProgressAndBreak
 
+def undo_by_report():
+    """ Use data from fif-report to undo replacements in files
+    """
+    lxr  = ed.get_prop(app.PROP_LEXER_FILE, '')
+    if lxr.upper() not in lexers_l:         return app.msg_status(  _('Undo must start from tab with Results of Replace'))
+    line0= ed.get_text_line(0)
+    if not line0.startswith(RPT_REPL_SIGN): return app.msg_status(f(_('Undo must start from tab with text "{}"'), RPT_REPL_SIGN))
+    if app.ID_YES != app.msg_box(
+                        'Do you want execute undo for all replacements:'
+                   +c13+line0
+                    , app.MB_YESNO):        return
+    in_tabs = IN_OPEN_FILES in line0
+    rpt_ed  = ed
+    path    = ''
+    for rpt_n in range(1, rpt_ed.get_line_count()):
+        rpt_s  = rpt_ed.get_text_line(rpt_n)
+   #def undo_by_report
+
 if __name__ == '__main__' :     # Tests
     Command().show_dlg()    #??
         
@@ -2014,4 +2136,5 @@ ToDo
 [+][kv-kv][30may16] Add tree type path/(r):line
 [+][a1-kv][31may16] Use source EOL to save after replacements
 [+][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
+[ ][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside?)
 '''
