@@ -24,14 +24,14 @@ Ctrl+Shift+Click - Prepare search in the current tab.
 Choose folder.
 Shift+Click - Choose file to find in it.
 
+* Preset...
+Save options for future. Restore saved options.
+Shift+Click - Show list in history order.
+Ctrl+Click - Apply last used preset.
+
 * Adjust...
 Change dialog layout.
 Ctrl+Click - Set wider width for fields What/In files...
 Shift+Click - Set wider width for buttons Find/.../Close.
 Ctrl+Shift+Click - Set default widths for all fields.
-
-* Preset...
-Save options for future. Restore saved options.
-Shift+Click - Show list in history order.
-Ctrl+Click - Apply last used preset.
 

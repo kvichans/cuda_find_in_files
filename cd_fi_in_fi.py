@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.0.7 2016-06-02'
+    '1.0.7 2016-06-03'
 ToDo: (see end of file)
 '''
 
@@ -273,37 +273,40 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
         DLG_W       = 5*4+245+300
         while_pss   = True
         while while_pss:
-            ps_mns  = [ps['name'] for ps in pset_l]
-            ps      = pset_l[ps_ind]    ##!!
-            ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]
-            ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l]
-            pass;              #LOG and log('ps_its={}',(ps_its))
-            pass;              #LOG and log('ps_vls={}',(ps_vls))
-            cnts    =[dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')         ) # &p
-                     ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1') #
+            ps      = pset_l[ps_ind]                                                                        if pset_l else {}
+            ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
+            ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+            ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+            cnts    =[dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
+                     ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1'
+                                                                                                        ,en=(len(pset_l)>0) ) #
                       # Content
-                     ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')            ) # &n
-                     ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                              ) # 
+                     ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')                        ) # &n
+                     ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                      ,en=(len(pset_l)>0) ) # 
                       # Acts
-                     ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')          ) # &u
-                     ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down')        ) # &d
-                     ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')            ) # &e
-                     ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')           ) # &t
+                     ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) ) # &u
+                     ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1) ) # &d
+                     ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0) ) # &e
+                     ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0) ) # &t
                       #
-                     ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:') ) # &w
-                     ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its               )
+                     ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
+                     ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
                       #
-                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('&Save'),props='1'   ) # &s  default
-                     ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Close')             )
+                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('&Save'),props='1'               ) # &s  default
+                     ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
                      ]
             btn,vals,chds   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
                              ,  dict(prss=ps_ind
-                                    ,name=ps['name']
-                                    ,what=(0,ps_vls)
+                                    ,name=ps.get('name', '')
+                                    ,what=(-1,ps_vls)
                                     )
                              ,  focus_cid='prss')
             pass;                  #LOG and log('vals={}',vals)
             if btn is None or btn=='-': return None
+            if btn=='!':
+                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+                break#while_pss
+            if not pset_l: continue#while_pss
             ps['name']  = vals['name']
             ps_ind      = vals['prss']
             ps_vls      = vals['what'][1]
@@ -326,10 +329,6 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
                 ps  = pset_l[ps_ind]
                 psd = {k:v for k,v in ps.items()}
                 pset_l.insert(ps_ind, psd)
-                
-            elif btn=='!':
-                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
-                break#while_pss
            #while_pss
         
     elif ps_ind==ind_save:
@@ -366,7 +365,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
     return      ouvl_l
    #def dlg_press
 
-def dlg_help(word_h, shtp_h, cntx_h):
+def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,cust_h):
     RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
     TIPS_BODY   = _(r'''
 • Values in fields "In file" and "Not in file" can contain
@@ -388,6 +387,32 @@ def dlg_help(word_h, shtp_h, cntx_h):
         reporting.
     ESC stops any stage. When picking and finding, ESC stops only this stage, so next stage begins.
 ''').strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES)
+    KEYS_BODY       = _(r'''
+• "Find" - {find}
+ 
+• "Replace" - {repl}
+ 
+• "Count" - {coun}
+ 
+• "Current folder" - {cfld}
+ 
+• "Browse..." - {brow}
+ 
+• "Preset..." - {pset}
+Alt+1 - restore first preset.
+Alt+2 - restore second preset.
+Alt+3 - restore third preset.
+ 
+• "Adjust..." - {cust}
+''').strip().format(
+     find=find_h.replace('\r', '\n')
+    ,repl=repl_h.replace('\r', '\n')
+    ,coun=coun_h.replace('\r', '\n')
+    ,cfld=cfld_h.replace('\r', '\n')
+    ,brow=brow_h.replace('\r', '\n')
+    ,pset=pset_h.replace('\r', '\n')
+    ,cust=cust_h.replace('\r', '\n')
+    )
 #• Reg.ex. tips:
 #   Format for found groups in Replace: \1
     TREE_BODY   = _(r'''
@@ -462,17 +487,19 @@ Default values:
         chds_hlp    = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
              [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
              ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
-             ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-380   ,w=80   ,cap=_('T&ips')                ,act='1'         )
-             ,dict(cid='tree',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-280   ,w=80   ,cap=_('&Tree')                ,act='1'         )
-             ,dict(cid='opts',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-180   ,w=80   ,cap=_('&Opts')                ,act='1'         )
+             ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                ,act='1'         )
+             ,dict(cid='keys',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                ,act='1'         )
+             ,dict(cid='tree',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                ,act='1'         )
+             ,dict(cid='opts',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                ,act='1'         )
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
              ], vals_hlp, focus_cid='htxt')
         pass;                  #LOG and log('vals_hlp={}',vals_hlp)
         if btn_hlp is None or btn_hlp=='-': break#while_hlp
         if False:pass
-        elif btn_hlp=='tips':   vals_hlp["htxt"] = TIPS_BODY; vals_hlp["tips"] = True; vals_hlp["tree"] = False;vals_hlp["opts"] = False
-        elif btn_hlp=='tree':   vals_hlp["htxt"] = TREE_BODY; vals_hlp["tips"] = False;vals_hlp["tree"] = True; vals_hlp["opts"] = False
-        elif btn_hlp=='opts':   vals_hlp["htxt"] = OPTS_BODY; vals_hlp["tips"] = False;vals_hlp["tree"] = False;vals_hlp["opts"] = True
+        elif btn_hlp=='tips':vals_hlp["htxt"]=TIPS_BODY; vals_hlp["tips"]=True; vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=False
+        elif btn_hlp=='keys':vals_hlp["htxt"]=KEYS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=True; vals_hlp["tree"]=False;vals_hlp["opts"]=False
+        elif btn_hlp=='tree':vals_hlp["htxt"]=TREE_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=True; vals_hlp["opts"]=False
+        elif btn_hlp=='opts':vals_hlp["htxt"]=OPTS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=True
        #while_hlp
    #def dlg_help
 
@@ -499,7 +526,7 @@ def dlg_fif(what='', opts={}):
     cust_h  = _('Change dialog layout.'
                 '\rCtrl+Click   - Set wider width for fields What/In files...'
                 '\rShift+Click  - Set wider width for buttons Find/.../Close.'
-                '\rCtrl+Shift+Click    - Set default widths for all fields.'
+                '\rCtrl+Shift+Click - Set default widths for all fields.'
                 )
     frst_h  = _('Search only inside N first found files')
     shtp_h  = f(_(  'Format of the reported tree structure.'
@@ -789,7 +816,7 @@ def dlg_fif(what='', opts={}):
             continue#while_fif
 
         if btn_p=='help':
-            dlg_help(word_h, shtp_h, cntx_h)
+            dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,cust_h)
             continue#while_fif
             
         if btn_p in ('ps1', 'ps2', 'ps3') \
@@ -1775,7 +1802,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         
     def get_prnt_path_dct(path, tree):
 #       while True:
-        for i in range(25):##!!
+        for i in range(25):##!! 
             if not path:        return None
             if path in tree:    return tree[path]
             path = os.path.dirname(path)
@@ -1848,7 +1875,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 if prntdct:
         #           prntdct['count']+=count
         #           prntdct = prntdct['prnt']
-                    for i in range(25):  ##!!
+                    for i in range(25):  ##!! 
                         if not prntdct:  break#for i
         #           while prntdct:
                         prntdct['count']+=count
