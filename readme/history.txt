@@ -1,3 +1,6 @@
+1.1.0 (2016-06-03)
+reworked: split code file
+
 1.0.7 (2016-06-02)
 added: config presets
 
