@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.0 2016-06-03'
+    '1.1.1 2016-06-06'
 ToDo: (see end of file)
 '''
 
@@ -449,8 +449,8 @@ def dlg_fif(what='', opts={}):
                 )
     more_h  = _('Show/Hide advanced options')
     cust_h  = _('Change dialog layout.'
-                '\rCtrl+Click   - Set wider width for fields What/In files...'
-                '\rShift+Click  - Set wider width for buttons Find/.../Close.'
+                '\rShift+Click   - Set wider width for fields What/In files...'
+                '\rCtrl+Click  - Set wider width for buttons Find/.../Close.'
                 '\rCtrl+Shift+Click - Set default widths for all fields.'
                 )
     frst_h  = _('Search only inside N first found files')
@@ -579,7 +579,7 @@ def dlg_fif(what='', opts={}):
         c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
         TXT_W   = stores.get('wd_txts', 400)
         BTN_W   = stores.get('wd_btns', 100)
-        lbl_l   = GAP+35*3+GAP+25
+        lbl_l   = GAP+38*3+GAP+25
         cmb_l   = lbl_l+100
         tl2_l   = lbl_l+220
         tbn_l   = cmb_l+TXT_W+GAP
@@ -593,10 +593,10 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='ps1' ,tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
                  +[dict(cid='ps2' ,tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
                  +[dict(cid='ps3' ,tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
-                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=105      ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
-                 +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+35*0 ,w=35       ,cap='&.*'                  ,hint=reex_h)] # &.
-                 +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+35*1 ,w=35       ,cap='&aA'                  ,hint=case_h)] # &a
-                 +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+35*2 ,w=35       ,cap='"&w"'                 ,hint=word_h)] # &w
+                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3     ,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
+                 +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'                  ,hint=reex_h)] # &.
+                 +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'                  ,hint=case_h)] # &a
+                 +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'                 ,hint=word_h)] # &w
                  +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Find:')                        )] # &f
                  +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=TXT_W    ,items=what_l                           )] # 
 
@@ -616,7 +616,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=BTN_W    ,cap=_('&Browse...')        ,hint=brow_h)] # &b
                  +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
-                 +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=35*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
+                 +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=tbn_l-105,w=100      ,cap=c_more                 ,hint=more_h)] # &e
 
                 +([] if wo_adva else  []                        
@@ -633,13 +633,13 @@ def dlg_fif(what='', opts={}):
                                                 
                  +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l    ,w=150      ,cap=_('== Adv. search options ==')     )] # 
                  +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
-                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190     ,l=tl2_l+100,w=180      ,items=skip_l                           )] # 
+                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190     ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                           )] # 
                  +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100      ,cap=_('S&ort file list:')              )] # &o
-                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217     ,l=tl2_l+100,w=180      ,items=sort_l                           )] # 
+                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217     ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                           )] # 
                  +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('Firsts (&0=all):')  ,hint=frst_h)] # &0
-                 +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,w=180                                              )] # 
+                 +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,r=tbn_l-GAP                                        )] # 
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings:')        ,hint=enco_h)] # 
-                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,w=180      ,items=enco_l                           )] # 
+                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
                 )                                                                                                               
                  +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=BTN_W    ,cap=_('Find'),props='1'    ,hint=find_h)] #    default
                 +([] if wo_repl else []                         
