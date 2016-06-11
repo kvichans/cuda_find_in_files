@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.0 2016-06-03'
+    '1.1.2 2016-06-11'
 ToDo: (see end of file)
 '''
 
@@ -920,19 +920,26 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     return rsp_l, rsp_i
    #def find_in_files
 
-def prep_filename_masks(mask:str)->list:
+def prep_filename_masks(mask:str)->(list,list):
+    """ Parse file/folder quotes_mask to two lists (file_pure_masks, folder_pure_masks).
+        Exaple.
+            quotes_mask:    '*.txt "a b*.txt" /m? "/x y"'
+            output:         (['*.txt', 'a b*.txt']
+                            ,['m?', 'x y'])
+    """
     mask    = mask.strip()
     if '"' in mask:
-        # Temporary replace all ' ' into "" to '/'
+        # Temporary replace all ' ' into "" to '·'
         re_binqu= re.compile(r'"([^"]+) ([^"]+)"')
         while re_binqu.search(mask):
-            mask= re_binqu.sub(r'"\1/\2"', mask) 
+            mask= re_binqu.sub(r'"\1·\2"', mask) 
         masks   = mask.split(' ')
-        masks   = [m.strip('"').replace('/', ' ') for m in masks if m]
+        masks   = [m.strip('"').replace('·', ' ') for m in masks if m]
     else:
         masks   = mask.split(' ')
-    masks   = [m for m in masks if m]
-    return masks
+    fi_masks= [m     for m in masks if m        and m[0]!='/']
+    fo_masks= [m[1:] for m in masks if len(m)>1 and m[0]=='/']
+    return (fi_masks, fo_masks)
    #def prep_filename_masks
     
 def collect_tabs(how_walk:dict)->list:
@@ -942,8 +949,10 @@ def collect_tabs(how_walk:dict)->list:
     """
     incl    = how_walk[    'file_incl'    ].strip()
     excl    = how_walk.get('file_excl', '').strip()
-    incls   = prep_filename_masks(incl)
-    excls   = prep_filename_masks(excl)
+    incls,  \
+    incls_fo= prep_filename_masks(incl)
+    excls,  \
+    excls_fo= prep_filename_masks(excl)
     rsp     = []
     for h_tab in app.ed_handles(): 
         try_ed  = app.Editor(h_tab)
@@ -987,10 +996,12 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     unwr    = how_walk.get('skip_unwr', False)
     frst    = how_walk.get('only_frst', 0)
     sort    = how_walk.get('sort_type', '')
-    incls   = prep_filename_masks(incl)
-    excls   = prep_filename_masks(excl)
-    pass;                      #LOG and log('incls={}',incls)
-    pass;                      #LOG and log('excls={}',excls)
+    incls,  \
+    incls_fo= prep_filename_masks(incl)
+    excls,  \
+    excls_fo= prep_filename_masks(excl)
+    pass;                      #LOG and log('incls={} incls_fo={}',incls, incls_fo)
+    pass;                      #LOG and log('excls={} excls_fo={}',excls, excls_fo)
     dir_n   = 0
     for dirpath, dirnames, filenames in os.walk(os.path.abspath(root)):
         pass;                  #LOG and log('dirpath, #filenames={}',(dirpath, len(filenames)))
@@ -1010,6 +1021,14 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
         if hidn:
             # Cut hidden dirs
             dir4cut = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
+            for dirname in dir4cut:
+                dirnames.remove(dirname)
+        if incls_fo:
+            dir4cut = [dirname for dirname in dirnames if not any(map(lambda cl:fnmatch(dirname, cl), incls_fo))]
+            for dirname in dir4cut:
+                dirnames.remove(dirname)
+        if excls_fo:
+            dir4cut = [dirname for dirname in dirnames if     any(map(lambda cl:fnmatch(dirname, cl), excls_fo))]
             for dirname in dir4cut:
                 dirnames.remove(dirname)
             
