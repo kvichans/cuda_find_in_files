@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.2 2016-06-11'
+    '1.1.3 2016-06-13'
 ToDo: (see end of file)
 '''
 
@@ -301,10 +301,10 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,c
  
 • Values in fields "In file" and "Not in file" can filter subfolder names if they start with "/".
     Example.
-        In file:     /a*  *.txt
-        Not in file: /ab*
-        In folder:   c:/root
-        In subfolder:All
+        In file:        /a*  *.txt
+        Not in file:    /ab*
+        In folder:      c:/root
+        In subfolders:  All
     Search will consider all *.txt files in folder c:/root
     and in all subfolders a* except ab*.
  
@@ -466,19 +466,21 @@ def dlg_fif(what='', opts={}):
     shtp_h  = f(_(  'Format of the reported tree structure.'
                 '\rCompact - report all found line with full file info:'
                 '\r    path(r[:c:l]):line'
-                '\r  Tree scheme'
+                '\r    path/(r[:c:l]):line'
+                '\r  Tree schemes'
                 '\r    +Search for "*"'
                 '\r      <full_path(row[:col:len])>: line with ALL marked fragments'
-                '\rMiddle - report separated folders and fragments:'
+                '\r    +Search for "*"'
+                '\r      <full_path>: #count'
+                '\r         <(row[:col:len])>: line with ALL marked fragments'
+                '\rSparse - report separated folders and fragments:'
                 '\r    dir/file(r[:c:l]):line'
-                '\r  Tree scheme'
+                '\r    dir/file/(r[:c:l]):line'
+                '\r  Tree schemes'
                 '\r    +Search for "*"'
                 '\r      <root>: #count'
                 '\r        <dir>: #count'
                 '\r          <file.ext(row[:col:len])>: line with ONE marked fragment'
-                '\rSparse - report separated folders and lines and fragments:'
-                '\r    dir/file/(r[:c:l]):line'
-                '\r  Tree scheme'
                 '\r    +Search for "*"'
                 '\r      <root>: #count'
                 '\r        <dir>: #count'
@@ -817,25 +819,33 @@ def dlg_fif(what='', opts={}):
             stores['wd_btns']   = 100
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if btn_m=='s/cust':   # [Shift+]Adjust  = wider eds
-            stores['wd_txts']   = 20 + stores['wd_txts']
+            stores['wd_txts']   = min(800, 25 + stores['wd_txts'])
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if btn_m=='c/cust':   # [Ctrl+]Adjust  = wider bts
-            stores['wd_btns']   =  5 + stores['wd_btns']
+            stores['wd_btns']   = min(200, 10 + stores['wd_btns'])
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if btn_m=='cust':
-            #NOTE: dlg-cust
-            custs   = app.dlg_input_ex(4, _('Adjust dialog')
-                , _('Width of edits Find/Replace (min 400)')        ,str(stores.get('wd_txts', 400))
-                , _('Width of buttons Browse/Help (min 100)')       ,str(stores.get('wd_btns', 100))
-                , _('Show "Not in files" field (0/1)')              ,str(0 if stores.get('wo_excl', True) else 1)
-                , _('Show "Replace with"/"Replace" fields (0/1)')   ,str(0 if stores.get('wo_repl', True) else 1)
-                )
-            if custs is not None:
-                stores['wd_txts']   = max(400, int(custs[0]))
-                stores['wd_btns']   = max(100, int(custs[1]))
-                stores['wo_excl']   = (custs[2]=='0')
-                stores['wo_repl']   = (custs[3]=='0')
-                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+            aid,vals,chds   = dlg_wrapper(_('Adjust dialog controls'), GAP+300+GAP,GAP+140+GAP,     #NOTE: dlg-cust
+                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=250  ,cap=_('Width of &edits "Find", "In files":')   ) # &e
+                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+250      ,w=50   ,props='400,800,25'                             ) # 
+                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=250  ,cap=_('Width of &buttons "Find", "Browse":')   ) # &b
+                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+250      ,w=50   ,props='100,200,10'                             ) # 
+                 ,dict(cid='shex',tp='ch'    ,t=GAP+60          ,l=GAP          ,w=150  ,cap=_('Show "&Not in files" field')            ) # &n
+                 ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=_('Show "&Replace with" and "Replace"')    ) # &r
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+300-170  ,w=80   ,cap=_('&Save'),props='1'                       ) # &s  default
+                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+300-80   ,w=80   ,cap=_('Cancel')                                )
+                 ],    dict(wdtx=    stores.get('wd_txts', 400)
+                           ,wdbt=    stores.get('wd_btns', 100)
+                           ,shex=not stores.get('wo_excl', True)
+                           ,shre=not stores.get('wo_repl', True)
+                           ), focus_cid='wdtx')
+            pass;                  #LOG and log('vals={}',vals)
+            if aid is None or aid=='-': continue#while_fif
+            stores['wd_txts']   = max(400, min(800, vals['wdtx']))
+            stores['wd_btns']   = max(100, min(200, vals['wdbt']))
+            stores['wo_excl']   = not               vals['shex']
+            stores['wo_repl']   = not               vals['shre']
+            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
 
         open(cfg_json, 'w').write(json.dumps(stores, indent=4))
@@ -1070,6 +1080,6 @@ ToDo
 [+][a1-kv][31may16] Use source EOL to save after replacements
 [+][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
 [+][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside? width=0!)
-[ ][kv-kv][11jun16] Add "/folder-mask" for incl/excl
+[+][kv-kv][11jun16] Add "/folder-mask" for incl/excl
 [ ][kv-kv][11jun16] Lazy/Yield for cllc--find--rept ?
 '''
