@@ -217,7 +217,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
                      ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
                      ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
                       #
-                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('&Save'),props='1'               ) # &s  default
+                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')    ,props='1'              ) # &s  default
                      ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
                      ]
             btn,vals,chds   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
@@ -264,8 +264,8 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
              ,dict(           tp='lb'    ,t=GAP+55          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
              ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items                )
-             ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('&Save'),props='1'   ) # &s  default
-             ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Close')             )
+             ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('OK')    ,props='1'  ) # &s  default
+             ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Cancel')            )
              ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
                        ,what=(0,['1']*len(keys_l))), focus_cid='name')
         pass;                  #LOG and log('vals={}',vals)
@@ -832,7 +832,7 @@ def dlg_fif(what='', opts={}):
                  ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+280      ,w=50   ,props='100,200,10'                                     ) # 
                  ,dict(cid='shex',tp='ch'    ,t=GAP+60          ,l=GAP          ,w=150  ,cap=_('Show "&Not in files"')                          ) # &n
                  ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=_('Show "&Replace with" and "Replace"')            ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+330-170  ,w=80   ,cap=_('&Save'),props='1'                               ) # &s  default
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+330-170  ,w=80   ,cap=_('OK')    ,props='1'                              ) # &s  default
                  ,dict(cid='-'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+330-80   ,w=80   ,cap=_('Cancel')                                        )
                  ],    dict(wdtx=    stores.get('wd_txts', 400)
                            ,wdbt=    stores.get('wd_btns', 100)
