@@ -825,15 +825,15 @@ def dlg_fif(what='', opts={}):
             stores['wd_btns']   = min(200, 10 + stores['wd_btns'])
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
         if btn_m=='cust':
-            aid,vals,chds   = dlg_wrapper(_('Adjust dialog controls'), GAP+300+GAP,GAP+140+GAP,     #NOTE: dlg-cust
-                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=250  ,cap=_('Width of &edits "Find", "In files":')   ) # &e
-                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+250      ,w=50   ,props='400,800,25'                             ) # 
-                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=250  ,cap=_('Width of &buttons "Find", "Browse":')   ) # &b
-                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+250      ,w=50   ,props='100,200,10'                             ) # 
-                 ,dict(cid='shex',tp='ch'    ,t=GAP+60          ,l=GAP          ,w=150  ,cap=_('Show "&Not in files" field')            ) # &n
-                 ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=_('Show "&Replace with" and "Replace"')    ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+300-170  ,w=80   ,cap=_('&Save'),props='1'                       ) # &s  default
-                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+300-80   ,w=80   ,cap=_('Cancel')                                )
+            aid,vals,chds   = dlg_wrapper(_('Adjust dialog controls'), GAP+330+GAP,GAP+140+GAP,     #NOTE: dlg-cust
+                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=280  ,cap=_('Width of main &editors ("Find", "In files"):')  ) # &e
+                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+280      ,w=50   ,props='400,800,25'                                     ) # 
+                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=280  ,cap=_('Width of main &buttons ("Find", "Browse"):')    ) # &b
+                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+280      ,w=50   ,props='100,200,10'                                     ) # 
+                 ,dict(cid='shex',tp='ch'    ,t=GAP+60          ,l=GAP          ,w=150  ,cap=_('Show "&Not in files"')                          ) # &n
+                 ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=_('Show "&Replace with" and "Replace"')            ) # &r
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+330-170  ,w=80   ,cap=_('&Save'),props='1'                               ) # &s  default
+                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+330-80   ,w=80   ,cap=_('Cancel')                                        )
                  ],    dict(wdtx=    stores.get('wd_txts', 400)
                            ,wdbt=    stores.get('wd_btns', 100)
                            ,shex=not stores.get('wo_excl', True)
