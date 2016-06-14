@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.2 2016-06-11'
+    '1.1.4 2016-06-14'
 ToDo: (see end of file)
 '''
 
@@ -35,8 +35,6 @@ RPT_FIND_SIGN   = _('+Search')
 RPT_REPL_SIGN   = _('+Replace')
 
 IN_OPEN_FILES   = _('<Open Files>')
-RPT_FIND_SIGN   = _('+Search')
-RPT_REPL_SIGN   = _('+Replace')
 CLLC_MATCH      = _('Usual matches')
 CLLC_COUNT      = _('Counts only')
 CLLC_FNAME      = _('File names only')
@@ -96,6 +94,7 @@ MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
 
 SPRTR       = -0xFFFFFFFF
 last_ed_num = 0
+last_rpt_tid= None
 def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, what_find:dict, what_save:dict, progressor=None):
     pass;                       LOG and log('(== |paths|={}',len(rpt_data))
     pass;                       RPTLOG and log('rpt_type={}',rpt_type)
@@ -103,7 +102,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
     pass;                      #RPTLOG and log('what_find={}',what_find)
     pass;                      #RPTLOG and log('what_save={}',what_save)
     
-    global last_ed_num
+    global last_ed_num, last_rpt_tid
     # Choose/Create tab for report
     rpt_ed  = None
     def create_new(title_ext='')->app.Editor:
@@ -146,6 +145,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
         rpt_ed      = cands[0] if cands else None
             
     rpt_ed  = create_new(title_ext) if rpt_ed is None else rpt_ed
+    last_rpt_tid= rpt_ed.get_prop(app.PROP_TAB_ID)
     if rpt_ed.get_filename():
         rpt_ed.set_prop(app.PROP_TAB_TITLE, os.path.basename(rpt_ed.get_filename())+title_ext)  #??
     last_ed_num += 1
@@ -271,23 +271,23 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
             has_itm = 'items' in path_d
             path    = path_d['file']
             isfl    = path_d.get('isfl')
-            pass;                   RPTLOG and log('path={}',path)
+            pass;               RPTLOG and log('path={}',path)
             if   shtp   in (SHTP_SHRTS_R, SHTP_SHRTS_RCL):
                 pass
             elif shtp   in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
                 path!=root:
                 if isfl:
                     path= os.path.basename(path)
-                    pass;           RPTLOG and log('(basename)path={}',path)
+                    pass;       RPTLOG and log('(basename)path={}',path)
                 elif 'prnt' in path_d and path_d['prnt'] is not None:
                     path= os.path.relpath(path, path_d['prnt']['file'])
-                    pass;           RPTLOG and log('(prnt-rel)path={}',path)
+                    pass;       RPTLOG and log('(prnt-rel)path={}',path)
                 else:
                     path= os.path.relpath(path, root)
-                    pass;           RPTLOG and log('(root-rel)path={}',path)
+                    pass;       RPTLOG and log('(root-rel)path={}',path)
             dept    = 1+path_d.get('dept', 0)
             c9dt    = c9*dept
-            pass;                   RPTLOG and log('onfn,has_cnt,isfl,has_itm,c9dt={}',(onfn,has_cnt,isfl,has_itm,repr(c9dt)))
+            pass;               RPTLOG and log('onfn,has_cnt,isfl,has_itm,c9dt={}',(onfn,has_cnt,isfl,has_itm,repr(c9dt)))
             if False:pass
             elif not has_cnt and onfn and not isfl: pass
             elif                 onfn and     isfl: append_line(c9dt+'<'+path+'>')
@@ -304,12 +304,12 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
                     append_line(c9dt+f('<{}>: #{}', os.path.basename(path), len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
-                    pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
+                    pass;       RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
                 if shtp in (SHTP_SHRTS_R, SHTP_SHRTS_RCL):
                     append_line(c9dt+f('<{}>: #{}', path, len(items)))
                     path= '' 
                     c9dt= c9*(1+dept)
-                    pass;           RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
+                    pass;       RPTLOG and log('SPARS path,c9dt={}',(path,repr(c9dt)))
                 for item_n, item in enumerate(items):
                     if progressor and (1000==item_n%1039):
                         pc  = int(100*path_n/len(rpt_data))
@@ -337,7 +337,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
     #               rw_wd   = 1+rw_wd   if repl_b else rw_wd
     #               src_rw  = abs(src_rw)
                     src_rw_ = '=' if repl_o else '!' if repl_b else ''
-                    pass;          #LOG and log('repl_b,repl_o,rw_wd,src_rw_={}',(repl_b,repl_o,rw_wd,src_rw_))
+                    pass;      #LOG and log('repl_b,repl_o,rw_wd,src_rw_={}',(repl_b,repl_o,rw_wd,src_rw_))
                     src_cl  = item.get('col', -1)
                     src_ln  = item.get('ln', -1)
                     src_rw_s= src_rw_+                                 str(1+src_rw)
@@ -399,6 +399,246 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 ##       rpt_ed.set_caret(0, row4crt)
     pass;                       LOG and log('==) stoped={}',(rpt_stop))
    #def report_to_tab
+
+############################################
+# Using report to nav
+def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
+    pass;                       NAVLOG and log('path,rw,cl,ln={}',(path,rw,cl,ln))
+    op_ed   = None
+    if path.startswith('tab:'):
+        tab_id  = int(path.split('/')[0].split(':')[1])
+        pass;                   NAVLOG and log('tab_id={}',(tab_id))
+        op_ed   = apx.get_tab_by_id(tab_id)
+        if not op_ed:   return  app.msg_status(f(_("No tab for navigation"), ))
+    elif not os.path.isfile(path):
+        pass;                   NAVLOG and log('not isfile',())
+        return
+    the_ed_id   = ed.get_prop(app.PROP_TAB_ID)
+    the_ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
+    pass;                       NAVLOG and log('the_ed_id={}',(the_ed_id))
+    # Already opened?
+    if not op_ed:
+        for h in app.ed_handles(): 
+            t_ed  = app.Editor(h)
+            if t_ed.get_filename() and os.path.samefile(path, t_ed.get_filename()):
+                op_ed   = t_ed
+                pass;           NAVLOG and log('found filename',())
+                break
+    if not op_ed:
+        # Open it
+        ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
+        grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
+        op_grp  = apx.icase(False,-1
+                        ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
+                        ,where[0:3]=='gr#'                                      , int(where[3])
+                        ,where=='same'                                          , -1
+                        ,where=='next'                                          , (ed_grp+1)%grps
+                        ,where=='prev'                                          , (ed_grp-1)%grps
+                        )
+        pass;                   NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
+        app.file_open(path, op_grp)
+        op_ed   = ed
+    op_ed.focus()
+    if False:pass
+    elif rw==-1:
+        pass
+    elif cl==-1 and how_act=='move':
+        op_ed.set_caret(0,      rw)
+    elif cl==-1:
+        l_ln= len(op_ed.get_text_line(rw))
+        op_ed.set_caret(0,   rw,   l_ln,  rw)   # inverted sel to show line head if window is narrow 
+    elif ln==-1:
+        op_ed.set_caret(cl,     rw)
+    else:
+        op_ed.set_caret(cl+ln,  rw,     cl, rw)
+    if rw!=-1:
+        top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', ed_cfg=op_ed)))
+        op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
+
+    if how_act=='move' or the_ed_grp == ed.get_prop(app.PROP_INDEX_GROUP):
+        op_ed.focus()
+    else:
+        the_ed  = apx.get_tab_by_id(the_ed_id)
+        the_ed.focus()
+   #def _open_and_nav
+
+reSP    = re.compile(  r'(?P<S>\t+)'        # Shift !
+                      r'<(?P<P>[^>]+)>')    # Path  !
+reSPR   = re.compile(  r'(?P<S>\t+)'        # Shift !
+                      r'<(?P<P>[^>]+)'      # Path  !
+                     r'\((?P<R> *=?\d+)'    # Row   !
+                       r'(?P<C>: *\d+)?'    # Col?
+                       r'(?P<L>: *\d+)?\)>')# Len?
+reSR    = re.compile(  r'(?P<S>\t+)'        # Shift !
+                    r'<\((?P<R> *=?\d+)'    # Row   !
+                       r'(?P<C>: *\d+)?'    # Col?
+                       r'(?P<L>: *\d+)?\)>')# Len?
+def _parse_line(line:str, what:str)->list:                   #NOTE: nav _parse_line
+    pass;                       NAVLOG and log('what, line={}',(what, line))
+    if what=='SP':
+        mtSP    = reSP.search(line)
+        if mtSP:
+            gdct= mtSP.groupdict()
+            pass;               NAVLOG and log('ok mtSP gdct={}', gdct)
+            return mtSP.group(0),   gdct['S'], gdct['P']
+        return [None]*3
+    mtSR   = reSR.search(line)
+    if mtSR:
+        gdct= mtSR.groupdict()
+        pass;                   NAVLOG and log('ok mtSR gdct={}', gdct)
+        rw  = gdct['R'].lstrip(' ').lstrip('=')
+        cl  = gdct['C']
+        ln  = gdct['L']
+        return mtSR.group(0),   gdct['S'], '' \
+            ,int(rw)-1,        int(cl[1:])-1 if cl else -1, int(ln[1:]) if ln else -1
+    mtSPR   = reSPR.search(line)
+    if mtSPR:   
+        gdct= mtSPR.groupdict()
+        pass;                   NAVLOG and log('ok mtSPR gdct={}', gdct)
+        rw  = gdct['R'].lstrip(' ').lstrip('=')
+        cl  = gdct['C']
+        ln  = gdct['L']
+        return mtSPR.group(0),  gdct['S'], gdct['P'].rstrip() \
+            ,int(rw)-1,        int(cl[1:])-1 if cl else -1, int(ln[1:]) if ln else -1
+    mtSP    = reSP.search(line)
+    if mtSP:
+        gdct= mtSP.groupdict()
+        pass;                   NAVLOG and log('ok mtSP gdct={}', gdct)
+        return mtSP.group(0),   gdct['S'], gdct['P'], -1, -1, -1
+    return [None]*6
+   #def _parse_line
+
+def _build_path(ted, path:str, row:int, shft:str)->str:
+    # Try to build path from prev lines
+    for t_row in range(row-1, -1, -1):                          #NOTE: nav build path
+        t_line  = ted.get_text_line(t_row)
+        pass;                   NAVLOG and log('t_row, t_line={}', (t_row, t_line))
+        if t_line.startswith('+'):                              break#for t_row         as top
+        if len(shft) <= len(t_line)-len(t_line.lstrip('\t')):   continue#for t_row      as same level
+        t_fll,  \
+        t_sft,  \
+        t_pth   = _parse_line(t_line, 'SP')
+        pass;                   NAVLOG and log('t_sft, t_pth={}', (t_sft, t_pth))
+        if len(t_sft) == len(shft): 
+            pass;               NAVLOG and log('skip: t_sft==shft', ())
+            continue#for t_row
+        if len(t_sft) >  len(shft):
+            pass;               NAVLOG and log('bad: t_sft>shft', ())
+            return app.msg_status(f(_("Line {} has bad data for navigation"), 1+t_row))
+        path    = os.path.join(t_pth, path) if path else t_pth
+        pass;                   NAVLOG and log('new path={}', (path))
+        if os.path.isfile(path):
+            break#for t_row
+        shft    = t_sft
+       #for t_row
+    return path
+   #def _build_path
+
+def _get_data4nav(ted, row:int):
+    line    = ted.get_text_line(row)
+    full,   \
+    shft,   \
+    path,   \
+    rw,cl,ln= _parse_line(line, 'all')
+    if not full:            return  [None]*4
+#   if not full:            return  app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
+    pass;                       NAVLOG and log('full={}', full)
+    pass;                       NAVLOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
+    pass;                       NAVLOG and log('path={}', (path))
+    if os.path.isfile(path) or path.startswith('tab:'):
+        return (path, rw, cl, ln)
+#       return _open_and_nav(where, how_act, path, rw, cl, ln)
+    path    = _build_path(ted, path, row, shft)
+    if os.path.isfile(path):
+        return (path, rw, cl, ln)
+#       return _open_and_nav(where, how_act, path, rw, cl, ln)
+   #def _get_data4nav
+
+def jump_to(drct:str, what:str):
+    global last_rpt_tid
+    pass;                       NAVLOG and log('drct,what,last_rpt_tid={}',(drct,what,last_rpt_tid))
+    if not last_rpt_tid:return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
+    rpt_ed  = apx.get_tab_by_id(last_rpt_tid)
+    if not rpt_ed:      return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
+    crts    = rpt_ed.get_carets()
+    if len(crts)>1:     return app.msg_status(_("Command doesn't work with multi-carets"))
+    last_row= crts[0][1]
+    all_rows= rpt_ed.get_line_count()
+    
+    act_grp =     ed.get_prop(app.PROP_INDEX_GROUP)
+    rpt_grp = rpt_ed.get_prop(app.PROP_INDEX_GROUP)
+    where   = 'gr#'+str(act_grp)
+    how_act = 'move'
+    
+    base_row= crts[0][1]
+    line    = rpt_ed.get_text_line(base_row)
+    if line.startswith(RPT_FIND_SIGN):
+        base_path   = '/waiting/'
+        base_rw     = 0
+    else:
+        path,rw,\
+        cl, ln  = _get_data4nav(rpt_ed, base_row)
+        if not path \
+        or not (os.path.isfile(path) or path.startswith('tab:')):
+            return app.msg_status(f(_('Line "{}":{} has no data for navigation'), rpt_ed.get_prop(app.PROP_TAB_TITLE, ''), 1+base_row))
+        base_path   = path
+        base_rw     = rw
+    pass;                       NAVLOG and log('base_path,base_rw={}',(base_path,base_rw))
+    
+    def set_rpt_active_row(row):
+        grp_tab = app.ed_group(rpt_grp)
+        rpt_vis = grp_tab.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
+        rpt_act =      ed.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
+        if  rpt_vis:
+            rpt_ed.focus()
+        rpt_ed.set_caret(0, row)
+        if  rpt_vis \
+        and not (rpt_ed.get_prop(app.PROP_LINE_TOP) <= row <= ed.get_prop(app.PROP_LINE_BOTTOM)):
+            if not rpt_act:
+                tid = ed.get_prop(app.PROP_TAB_ID)
+                rpt_ed.focus()
+            rpt_ed.set_prop(     app.PROP_LINE_TOP, str(max(0, row - max(5, apx.get_opt('find_indent_vert')))))
+            if not rpt_act:
+                apx.get_tab_by_id(tid).focus()
+       #def set_rpt_active_row
+    
+    row     = base_row
+    while True:
+        row = row + (1 if drct=='next' else -1)
+        if not 0<=row<all_rows:                 return app.msg_status(_('No data to jump'))
+        line    = rpt_ed.get_text_line(row)
+        if not line.lstrip(c9).startswith('<') \
+        or line.startswith(RPT_FIND_SIGN):      return app.msg_status(_('No data to jump'))
+        
+        path,rw,\
+        cl, ln  = _get_data4nav(rpt_ed, row)
+        pass;                   NAVLOG and log('path,rw={}',(path,rw))
+        if not path \
+        or not (os.path.isfile(path) or path.startswith('tab:')):
+            continue#while
+            
+        if  what=='rslt' \
+        and (-1==base_rw and -1==rw or -1!=base_rw and -1!=rw):
+            # Jump to nearest result
+            set_rpt_active_row(row)
+            return _open_and_nav(where, how_act, path, rw, cl, ln)
+        
+        if  what=='file' and base_path!=path \
+        and (-1==base_rw and -1==rw or -1!=base_rw and -1!=rw):
+            # Jump to result from next file
+            set_rpt_active_row(row)
+            return _open_and_nav(where, how_act, path, rw, cl, ln)
+        
+        if  what=='fold' \
+        and not base_path.startswith('tab:') \
+        and not      path.startswith('tab:') \
+        and os.path.dirname(base_path)!=os.path.dirname(path) \
+        and (-1==base_rw and -1==rw or -1!=base_rw and -1!=rw):
+            # Jump to result from next folder
+            set_rpt_active_row(row)
+            return _open_and_nav(where, how_act, path, rw, cl, ln)
+       #while
+   #def jump_to
        
 def nav_to_src(where:str, how_act='move'):
     """ Try to open file and navigate to row[+col+sel].
@@ -421,174 +661,18 @@ def nav_to_src(where:str, how_act='move'):
             ¬¬¬<(row:col)>: info
             ¬¬¬<(row:col:len)>: info
     """
+    global last_rpt_tid
     pass;                   NAVLOG and log('where, how_act={}',(where, how_act))
     crts    = ed.get_carets()
     if len(crts)>1:         return app.msg_status(_("Command doesn't work with multi-carets"))
+    last_rpt_tid= ed.get_prop(app.PROP_TAB_ID)
         
-    reSP    = re.compile(  r'(?P<S>\t+)'        # Shift !
-                          r'<(?P<P>[^>]+)>')    # Path  !
-    reSPR   = re.compile(  r'(?P<S>\t+)'        # Shift !
-                          r'<(?P<P>[^>]+)'      # Path  !
-#                        r'\((?P<R> *\d+)'      # Row   !
-                         r'\((?P<R> *=?\d+)'    # Row   !
-                           r'(?P<C>: *\d+)?'    # Col?
-                           r'(?P<L>: *\d+)?\)>')# Len?
-    reSR    = re.compile(  r'(?P<S>\t+)'        # Shift !
-#                       r'<\((?P<R> *\d+)'      # Row   !
-                        r'<\((?P<R> *=?\d+)'    # Row   !
-                           r'(?P<C>: *\d+)?'    # Col?
-                           r'(?P<L>: *\d+)?\)>')# Len?
-    def parse_line(line:str, what:str)->list:                   #NOTE: nav parse_line
-        pass;               NAVLOG and log('what, line={}',(what, line))
-        if what=='SP':
-            mtSP    = reSP.search(line)
-            if mtSP:
-                gdct= mtSP.groupdict()
-                pass;       NAVLOG and log('ok mtSP gdct={}', gdct)
-                return mtSP.group(0),   gdct['S'], gdct['P']
-            return [None]*3
-        mtSR   = reSR.search(line)
-        if mtSR:
-            gdct= mtSR.groupdict()
-            pass;           NAVLOG and log('ok mtSR gdct={}', gdct)
-            rw  = gdct['R'].lstrip(' ').lstrip('=')
-            cl  = gdct['C']
-            ln  = gdct['L']
-            return mtSR.group(0),   gdct['S'], '' \
-                ,int(rw)-1,        int(cl[1:])-1 if cl else -1, int(ln[1:]) if ln else -1
-#               ,int(gdct['R'])-1, int(cl[1:])-1 if cl else -1, int(ln[1:]) if ln else -1
-        mtSPR   = reSPR.search(line)
-        if mtSPR:   
-            gdct= mtSPR.groupdict()
-            pass;           NAVLOG and log('ok mtSPR gdct={}', gdct)
-            rw  = gdct['R'].lstrip(' ').lstrip('=')
-            cl  = gdct['C']
-            ln  = gdct['L']
-            return mtSPR.group(0),  gdct['S'], gdct['P'].rstrip() \
-                ,int(rw)-1,        int(cl[1:])-1 if cl else -1, int(ln[1:]) if ln else -1
-#               ,int(gdct['R'])-1, int(cl[1:])-1 if cl else -1, int(ln[1:]) if ln else -1
-        mtSP    = reSP.search(line)
-        if mtSP:
-            gdct= mtSP.groupdict()
-            pass;           NAVLOG and log('ok mtSP gdct={}', gdct)
-            return mtSP.group(0),   gdct['S'], gdct['P'], -1, -1, -1
-        return [None]*6
-       #def parse_line
     row     = crts[0][1]
-    line    = ed.get_text_line(row)
-    full,   \
-    shft,   \
-    path,   \
-    rw,cl,ln= parse_line(line, 'all')
-    if not full:            return  app.msg_status(f(_("At the line {} no data for navigation"), 1+row))
-    pass;                   NAVLOG and log('full={}', full)
-    pass;                   NAVLOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
-    def open_and_nav(path:str, rw=-1, cl=-1, ln=-1):
-        pass;               NAVLOG and log('path,rw,cl,ln={}',(path,rw,cl,ln))
-        op_ed   = None
-        if path.startswith(_('tab:')):
-            tab_id  = int(path.split('/')[0].split(':')[1])
-            pass;           NAVLOG and log('tab_id={}',(tab_id))
-            op_ed   = apx.get_tab_by_id(tab_id)
-            if not op_ed:   return  app.msg_status(f(_("No tab for navigation"), ))
-        elif not os.path.isfile(path):
-            pass;           NAVLOG and log('not isfile',())
-            return
-        the_ed_id   = ed.get_prop(app.PROP_TAB_ID)
-        the_ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
-        pass;               NAVLOG and log('the_ed_id={}',(the_ed_id))
-#       ed.set_prop(app.PROP_TAG, 'FiF=open_and_nav')
-        # Already opened?
-        if not op_ed:
-            for h in app.ed_handles(): 
-                t_ed  = app.Editor(h)
-                if t_ed.get_filename() and os.path.samefile(path, t_ed.get_filename()):
-                    op_ed   = t_ed
-                    pass;   NAVLOG and log('found filename',())
-                    break
-        if not op_ed:
-            # Open it
-            ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
-            grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
-            op_grp  = apx.icase(False,-1
-                            ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
-                            ,where=='same'                                          , -1
-                            ,where=='next'                                          , (ed_grp+1)%grps
-                            ,where=='prev'                                          , (ed_grp-1)%grps
-                            )
-            pass;           NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
-            app.file_open(path, op_grp)
-            op_ed   = ed
-        op_ed.focus()
-        if False:pass
-        elif rw==-1:
-            pass
-        elif cl==-1 and how_act=='move':
-            op_ed.set_caret(0,      rw)
-        elif cl==-1:
-            l_ln= len(op_ed.get_text_line(rw))
-            op_ed.set_caret(0,   rw,   l_ln,  rw)   # inverted sel to show line head if window is narrow 
-        elif ln==-1:
-            op_ed.set_caret(cl,     rw)
-        else:
-            op_ed.set_caret(cl+ln,  rw,     cl, rw)
-        if rw!=-1:
-            top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', ed_cfg=op_ed)))
-            op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
-
-        if how_act=='move' or the_ed_grp == ed.get_prop(app.PROP_INDEX_GROUP):
-            op_ed.focus()
-        else:
-            the_ed  = apx.get_tab_by_id(the_ed_id)
-            the_ed.focus()
-       #def open_and_nav
-    pass;                   NAVLOG and log('path={}', (path))
-    if os.path.isfile(path) or path.startswith(_('tab:')):
-        open_and_nav(path, rw, cl, ln)
-        return
-#   testings="""
-#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-#<c:\temp\try-ff\s1\t1-s1.txt>
-#	<(3)>: SMTH
-#	<(3:2)>: SMTH
-#	<(3:2:2)>: SMTH
-#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-#<c:\temp\try-ff\s1>
-#	<t1-s1.txt(5)>: SMTH
-#	<t1-s1.txt(5:4)>: SMTH
-#	<t1-s1.txt(5:4:2)>: SMTH
-#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-#<c:\temp\try-ff\s1\t1-s1.txt(3)>: SMTH
-#+Search for "smtH" in "c:\temp\try-ff" (10 matches in 7 files)
-#<c:\temp\try-ff\s1\t1-s1.txt>: #4
-#+Search for "smtH" in "c:\temp\try-ff" (7 matches in 7 files)
-#<c:\temp\try-ff\s1\t2-s1.txt>
-#   """
-    # Try to build path from prev lines
-    for t_row in range(row-1, -1, -1):                          #NOTE: nav build path
-        t_line  = ed.get_text_line(t_row)
-        pass;               NAVLOG and log('t_row, t_line={}', (t_row, t_line))
-        if t_line.startswith('+'):                              break#for t_row         as top
-        if len(shft) <= len(t_line)-len(t_line.lstrip('\t')):   continue#for t_row      as same level
-#       if row-step < 0:    return app.msg_status(f(_("At the line {} no data for navigation"), 1))
-        t_fll,  \
-        t_sft,  \
-        t_pth   = parse_line(t_line, 'SP')
-        pass;               NAVLOG and log('t_sft, t_pth={}', (t_sft, t_pth))
-        if len(t_sft) == len(shft): 
-            pass;           NAVLOG and log('skip: t_sft==shft', ())
-            continue#for t_row
-        if len(t_sft) >  len(shft):
-            pass;           NAVLOG and log('bad: t_sft>shft', ())
-            return app.msg_status(f(_("Line {} has bad data for navigation"), 1+t_row))
-        path    = os.path.join(t_pth, path) if path else t_pth
-        pass;               NAVLOG and log('new path={}', (path))
-        if os.path.isfile(path):
-            open_and_nav(path, rw, cl, ln)
-            return
-        shft    = t_sft
-       #for t_row
-    return app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
+    path,rw,\
+    cl, ln  = _get_data4nav(ed, row)
+    if os.path.isfile(path) or path.startswith('tab:'):
+        return _open_and_nav(where, how_act, path, rw, cl, ln)
+    app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
    #def nav_to_src
 
 #def fold_all_found_up(rpt_ed:app.Editor, what:str):
@@ -1139,8 +1223,8 @@ def undo_by_report():
         rpt_s  = rpt_ed.get_text_line(rpt_n)
    #def undo_by_report
 
-if __name__ == '__main__' :     # Tests
-    Command().show_dlg()    #??
+# if __name__ == '__main__' :     # Tests
+#     Command().show_dlg()    #??
         
 '''
 ToDo

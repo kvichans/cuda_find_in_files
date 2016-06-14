@@ -22,6 +22,12 @@ caption=&Find in Files\Find in &all tabs...
 method=find_in_tabs
 ;menu=0
 
+;[item4]
+;section=commands
+;caption=Find in Files\Undo replacements by report
+;method=undo_by_report
+;menu=0
+
 [item10]
 section=commands
 caption=&Find in Files\-
@@ -33,26 +39,56 @@ caption=&Find in Files\Navigate to source, to &same group
 method=nav_to_src_same
 ;menu=0
 
-[item121]
+[item12]
 section=commands
 caption=&Find in Files\Navigate to source, to &next group
 method=nav_to_src_next
 ;menu=0
 
-[item122]
+[item13]
 section=commands
 caption=&Find in Files\Navigate to source, to &prev group
 method=nav_to_src_prev
 ;menu=0
 
-[item131]
+[item21]
 section=commands
 caption=&Find in Files\Navigate to source, to next group, and &activate
 method=nav_to_src_next_act
 ;menu=0
 
-[item132]
+[item22]
 section=commands
 caption=&Find in Files\Navigate to source, to prev group, and a&ctivate
 method=nav_to_src_prev_act
 ;menu=0
+
+[item30]
+section=commands
+caption=&Find in Files\-
+method=_
+
+[item31]
+section=commands
+caption=&Find in Files\Jump to next result and source
+method=jump_to_next_rslt
+;menu=0
+
+[item32]
+section=commands
+caption=&Find in Files\Jump to prev result and source
+method=jump_to_prev_rslt
+;menu=0
+
+[item33]
+section=commands
+caption=&Find in Files\Jump to next file result and source
+method=jump_to_next_file
+;menu=0
+
+[item34]
+section=commands
+caption=&Find in Files\Jump to next folder result and source
+method=jump_to_prev_fold
+;menu=0
+

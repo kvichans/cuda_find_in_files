@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.3 2016-06-13'
+    '1.1.4 2016-06-14'
 ToDo: (see end of file)
 '''
 
@@ -76,8 +76,8 @@ def desc_fif_val(fifkey, val=None):
    #def desc_fif_val
     
 class Command:
-    def undo_by_report(self):
-        undo_by_report()
+#   def undo_by_report(self):
+#       undo_by_report()
        #def undo_by_report
     
     def find_in_ed(self):
@@ -102,6 +102,8 @@ class Command:
 
     def _nav_to_src(self, where:str, how_act='move'):
         return nav_to_src(where, how_act)
+    def _jump_to(self, drct:str, what:str):
+        return jump_to(drct, what)
    #class Command
 
 def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
@@ -832,7 +834,7 @@ def dlg_fif(what='', opts={}):
                  ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+280      ,w=70   ,props='100,200,10'                                     ) # 
                  ,dict(cid='shex',tp='ch'    ,t=GAP+60          ,l=GAP          ,w=150  ,cap=_('Show "&Not in files"')                          ) # &n
                  ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=_('Show "&Replace with" and "Replace"')            ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+350-170  ,w=80   ,cap=_('OK')    ,props='1'                              ) # &s  default
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+350-170  ,w=80   ,cap=_('OK')    ,props='1'                              ) #     default
                  ,dict(cid='-'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+350-80   ,w=80   ,cap=_('Cancel')                                        )
                  ],    dict(wdtx=    stores.get('wd_txts', 400)
                            ,wdbt=    stores.get('wd_btns', 100)
@@ -1060,7 +1062,7 @@ ToDo
 [+][kv-kv][26apr16] AsSubl: extra src lines as "context" in report
 [+][kv-kv][29apr16] extra inf in title: 10 must be opts
 [?][kv-kv][29apr16] aligning for MIDDL need in each dir 
-[ ][kv-kv][29apr16] find_in_ed must pass to dlg title + tab_id
+[ ][kv-kv][29apr16] ! find_in_ed must pass to dlg title + tab_id
 [+][kv-kv][29apr16] extract 'pres' to dlg_preset
 [-][kv-kv][04may16] BUG? Encoding ex breaks reading file ==> next encoding doubles stat data
 [+][a1-kv][10may16] Replace in files
@@ -1082,4 +1084,6 @@ ToDo
 [+][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside? width=0!)
 [+][kv-kv][11jun16] Add "/folder-mask" for incl/excl
 [ ][kv-kv][11jun16] Lazy/Yield for cllc--find--rept ?
+[ ][kv-kv][14jun16] Opt "save active tab on Close" ?
+[ ][kv-kv][14jun16] Cmds "Show next/prev result" ?
 '''
