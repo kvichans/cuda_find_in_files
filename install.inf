@@ -70,25 +70,25 @@ method=_
 
 [item31]
 section=commands
-caption=&Find in Files\Jump to next result and source
+caption=&Find in Files\Jump to next fragment
 method=jump_to_next_rslt
 ;menu=0
 
 [item32]
 section=commands
-caption=&Find in Files\Jump to prev result and source
+caption=&Find in Files\Jump to prev fragment
 method=jump_to_prev_rslt
 ;menu=0
 
 [item33]
 section=commands
-caption=&Find in Files\Jump to next file result and source
+caption=&Find in Files\Jump to next file fragment
 method=jump_to_next_file
 ;menu=0
 
 [item34]
 section=commands
-caption=&Find in Files\Jump to next folder result and source
+caption=&Find in Files\Jump to next folder fragment
 method=jump_to_prev_fold
 ;menu=0
 
