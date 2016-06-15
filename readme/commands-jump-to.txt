@@ -1,0 +1,7 @@
+﻿"Jump to ... fragment" commands.
+
+* Commands are available after user fills new report or calls any "Navigate..." command for old report file.
+* To call these commands, report-tab shouldn't be active or even visible.
+* Source file will always open in the current group.
+* "Jump to next file fragment" jumps to first fragment in the next source file.
+* "Jump to next folder fragment" jumps to first fragment in the first file in the next folder.

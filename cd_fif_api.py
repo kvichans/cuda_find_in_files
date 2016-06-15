@@ -403,6 +403,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 ############################################
 # Using report to nav
 def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
+    pass;                       NAVLOG and log('where, how_act={}',(where, how_act))
     pass;                       NAVLOG and log('path,rw,cl,ln={}',(path,rw,cl,ln))
     op_ed   = None
     if path.startswith('tab:'):
@@ -428,13 +429,25 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
         # Open it
         ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
         grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
-        op_grp  = apx.icase(False,-1
-                        ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
-                        ,where[0:3]=='gr#'                                      , int(where[3])
-                        ,where=='same'                                          , -1
-                        ,where=='next'                                          , (ed_grp+1)%grps
-                        ,where=='prev'                                          , (ed_grp-1)%grps
-                        )
+        op_grp  = -1                                    \
+                     if 1==apx.get_groups_count()   else\
+                  -1                                    \
+                     if where=='same'               else\
+                  (ed_grp+1)%grps                       \
+                     if where=='next'               else\
+                  (ed_grp-1)%grps                       \
+                     if where=='prev'               else\
+                  int(where[3])                         \
+                     if where[0:3]=='gr#'           else\
+                  -1
+#       op_grp  = apx.icase(False,-1
+#                       ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
+#                       ,where=='same'                                          , -1
+#                       ,where=='next'                                          , (ed_grp+1)%grps
+#                       ,where=='prev'                                          , (ed_grp-1)%grps
+#                       ,where[0:3]=='gr#'                                      , int(where[3])
+#                       ,True                                                   , -1
+#                       )
         pass;                   NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
         app.file_open(path, op_grp)
         op_ed   = ed
