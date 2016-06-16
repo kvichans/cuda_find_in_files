@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.4 2016-06-14'
+    '1.1.5 2016-06-16'
 ToDo: (see end of file)
 '''
 
@@ -53,13 +53,17 @@ ENCO_DETD       = _('<detected>')
 lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
 lexers_l        = list(map(lambda s: s.upper(), lexers_l))
-USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
 ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
 REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
 FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
 CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
+BLOCKSIZE       = apx.get_opt('fif_read_head_size'          , 1024)
+CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
+SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
+AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
+FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
 
 MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
 MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
@@ -150,7 +154,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
         rpt_ed.set_prop(app.PROP_TAB_TITLE, os.path.basename(rpt_ed.get_filename())+title_ext)  #??
     last_ed_num += 1
     rpt_ed.set_prop(app.PROP_TAG,       'FiF_'+str(last_ed_num))
-    rpt_ed.focus()
+    rpt_ed.focus() if FOCUS_TO_RPT else None
 
     # Prepare tab
     if not rpt_type['join']:
@@ -397,6 +401,8 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 #       rpt_ed.cmd(cmds.cCommand_FoldAll)
 ##       rpt_ed.cmd(cmds.cmd_FoldingUnfoldAtCurLine)
 ##       rpt_ed.set_caret(0, row4crt)
+    if AUTO_SAVE and os.path.isfile(rpt_ed.get_filename()):
+        rpt_ed.save()
     pass;                       LOG and log('==) stoped={}',(rpt_stop))
    #def report_to_tab
 
@@ -803,7 +809,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     spr_dirs= how_rpt['sprd']
 
     cntx    = how_rpt['cntx']
-    ext_lns = apx.get_opt('fif_context_width', 1) if cntx else 0
+    ext_lns = CONTEXT_WIDTH if cntx else 0
     pass;                      #LOG and log('repl_s,ext_lns={}',(repl_s,ext_lns))
 
     enco_l  = how_walk.get('enco', ['UTF-8'])
@@ -1089,7 +1095,7 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     depth   = how_walk.get('depth', -1)
     hidn    = how_walk.get('skip_hidn', True)
     binr    = how_walk.get('skip_binr', False)
-    size    = how_walk.get('skip_size', apx.get_opt('fif_skip_file_size_more_Kb', 0))
+    size    = how_walk.get('skip_size', SKIP_FILE_SIZE)
     unwr    = how_walk.get('skip_unwr', False)
     frst    = how_walk.get('only_frst', 0)
     sort    = how_walk.get('sort_type', '')
@@ -1168,7 +1174,6 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     return rsp, stoped
    #def collect_files
 
-BLOCKSIZE = apx.get_opt('fif_read_head_size', 1024)
 TEXTCHARS = bytearray({7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f})
 def is_birary_file(path:str, blocksize=BLOCKSIZE, def_ans=None)->bool:
     if not os.path.isfile(path):    return def_ans

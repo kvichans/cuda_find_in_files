@@ -1,3 +1,6 @@
+1.1.5 (2016-06-16)
+added: opts for user.json (see Help--Opts)
+
 1.1.4 (2016-06-14)
 added: cmds to jump to next/prev result
 
