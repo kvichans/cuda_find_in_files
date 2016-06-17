@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.5 2016-06-16'
+    '1.1.6 2016-06-17'
 ToDo: (see end of file)
 '''
 
@@ -106,6 +106,8 @@ class Command:
         return nav_to_src(where, how_act)
     def _jump_to(self, drct:str, what:str):
         return jump_to(drct, what)
+    def on_goto_def(self, ed_self):
+        return self._nav_to_src('same', 'move')
    #class Command
 
 def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):

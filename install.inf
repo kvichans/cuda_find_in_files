@@ -5,6 +5,10 @@ type=cudatext-plugin
 subdir=cuda_find_in_files
 homepage=https://github.com/kvichans/cuda_find_in_files
 
+[item400]
+section=events
+events=on_goto_def
+
 [item1]
 section=commands
 caption=&Find in Files\&Find in files...
