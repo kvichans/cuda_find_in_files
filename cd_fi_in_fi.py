@@ -107,7 +107,8 @@ class Command:
     def _jump_to(self, drct:str, what:str):
         return jump_to(drct, what)
     def on_goto_def(self, ed_self):
-        return self._nav_to_src('same', 'move')
+        if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
+            return self._nav_to_src('same', 'move')
    #class Command
 
 def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
