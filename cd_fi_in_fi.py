@@ -1027,9 +1027,9 @@ def dlg_fif(what='', opts={}):
 #                totb   =    totb_l[int(totb_s)]
                 ,sprd   =              sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
                 ,shtp   =    shtp_v if sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
-                ,cntx   =    '1'==cntx_s
+                ,cntx   =    '1'==cntx_s and btn_p!='!rep'
                 ,algn   =    '1'==algn_s
-                ,join   =    '1'==join_s or btn_m=='c/!fnd' # Append if Ctrl+Find
+                ,join   =    '1'==join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
 #               ,join   =    '1'==join_s
                 )
             totb_s  = str(min(1, int(totb_s)))
