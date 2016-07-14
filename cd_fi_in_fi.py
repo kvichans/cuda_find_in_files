@@ -381,7 +381,8 @@ Default values:
     // Show report if nothing found
     "fif_report_no_matches":false,
     
-    // "Option "Show context" appends N nearest lines to report. Note: 2*N+1 lines will be shown for each found line.
+    // Option "Show context" appends N nearest lines to reported lines.
+    // So, 2*N+1 lines will be reported for each found line.
     "fif_context_width":1,
     
     // Style which marks found fragment in report
