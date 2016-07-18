@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.5 2016-06-16'
+    '1.1.6 2016-07-18'
 ToDo: (see end of file)
 '''
 
@@ -689,7 +689,7 @@ def nav_to_src(where:str, how_act='move'):
     row     = crts[0][1]
     path,rw,\
     cl, ln  = _get_data4nav(ed, row)
-    if os.path.isfile(path) or path.startswith('tab:'):
+    if path and os.path.isfile(path) or path.startswith('tab:'):
         return _open_and_nav(where, how_act, path, rw, cl, ln)
     app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
    #def nav_to_src

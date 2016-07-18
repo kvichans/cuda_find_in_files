@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.6 2016-06-17'
+    '1.1.6 2016-07-18'
 ToDo: (see end of file)
 '''
 
@@ -108,7 +108,8 @@ class Command:
         return jump_to(drct, what)
     def on_goto_def(self, ed_self):
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
-            return self._nav_to_src('same', 'move')
+            self._nav_to_src('same', 'move')
+            return True
    #class Command
 
 def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
