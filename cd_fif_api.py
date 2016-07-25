@@ -162,7 +162,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
         rpt_ed.attr(app.MARKERS_DELETE_ALL)
 
     # Fill tab
-    rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
+#   rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
     def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed, style=MARK_FIND_STYLE):
         pass;                  #RPTLOG and log('rw={}',rw)
         to_ed.attr(app.MARKERS_ADD
@@ -385,9 +385,10 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
+#   pass;                       return
     # AT-hack to update folding
     pass;                       RPTLOG and log('?? set lxr',)
-    rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
+#   rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
     pass;                       RPTLOG and log('ok set lxr',)
     line0 = rpt_ed.get_text_line(0)
     rpt_ed.set_text_line(0, '')
