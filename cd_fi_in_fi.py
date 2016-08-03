@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.6 2016-07-18'
+    '1.1.7 2016-08-03'
 ToDo: (see end of file)
 '''
 
@@ -19,7 +19,8 @@ OrdDict = collections.OrderedDict
 #FROM_API_VERSION= '1.0.119'
 
 #pass;                           Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-1==-1)  # Do or dont logging.
+pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                          #LOG     = (-1==-1)  # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -571,17 +572,17 @@ def dlg_fif(what='', opts={}):
 
     def add_to_history(val:str, lst:list, max_len:int, unicase=True)->list:
         """ Add/Move val to list head. """
-        pass;                      #LOG and log('val, lst={}',(val, lst))
+        pass;                  #LOG and log('val, lst={}',(val, lst))
         lst_u = [ s.upper() for s in lst] if unicase else lst
         val_u = val.upper()               if unicase else val
         if val_u in lst_u:
             if 0 == lst_u.index(val_u):   return lst
             del lst[lst_u.index(val_u)]
         lst.insert(0, val)
-        pass;                      #LOG and log('lst={}',lst)
+        pass;                  #LOG and log('lst={}',lst)
         if len(lst)>max_len:
             del lst[max_len:]
-        pass;                      #LOG and log('lst={}',lst)
+        pass;                  #LOG and log('lst={}',lst)
         return lst
        #def add_to_history
     def get_live_fiftabs()->list:
@@ -630,9 +631,9 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='prs2',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
                  +[dict(cid='prs3',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
                  +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
-                 +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'                  ,hint=reex_h)] # &.
-                 +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'                  ,hint=case_h)] # &a
-                 +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'                 ,hint=word_h)] # &w
+                 +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act='1' ,hint=reex_h)] # &.
+                 +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act='1' ,hint=case_h)] # &a
+                 +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'        ,act='1' ,hint=word_h)] # &w
                  +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l    ,cap='*'+_('&Find:')                    )] # &f
                  +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=txt_w    ,items=what_l                           )] # 
                 
@@ -729,7 +730,11 @@ def dlg_fif(what='', opts={}):
         btn_p       = btn
         btn_m       = scam + '/' + btn if scam and scam!='a' else btn   # smth == a/smth
         pass;                  #LOG and log('btn_p, scam, btn_m={}',(btn_p, scam, btn_m))
-        focused     = chds[0] if 1==len(chds) else focused
+        focused     = 'what' \
+                        if 1==len(chds) and chds[0] in ('reex', 'case', 'word') else \
+                      chds[0] \
+                        if 1==len(chds) else \
+                      focused
         pass;                  #LOG and log('vals={}',pf(vals))
         reex01      = vals['reex']
         case01      = vals['case']
@@ -821,7 +826,7 @@ def dlg_fif(what='', opts={}):
                            ,shex=not stores.get('wo_excl', True)
                            ,shre=not stores.get('wo_repl', True)
                            ), focus_cid='wdtx')
-            pass;                  #LOG and log('vals={}',vals)
+            pass;              #LOG and log('vals={}',vals)
             if aid is None or aid=='-': continue#while_fif
             stores['wd_txts']   = max(DEF_WD_TXTS, min(2*DEF_WD_TXTS, vals['wdtx']))
             stores['wd_btns']   = max(DEF_WD_BTNS, min(2*DEF_WD_BTNS, vals['wdbt']))

@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.6 2016-07-18'
+    '1.1.7 2016-08-03'
 ToDo: (see end of file)
 '''
 
@@ -20,7 +20,7 @@ c9, c10, c13    = chr(9), chr(10), chr(13)
 #FROM_API_VERSION= '1.0.119'
 
 pass;                           Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-1==-1)  # Do or dont logging.
+pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                           FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
 pass;                           RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
 pass;                           NAVLOG  = (-4== 4) and LOG or apx.get_opt('fif_NAVLOG', False)
@@ -385,6 +385,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
+#   pass;                       return
     # AT-hack to update folding
     pass;                       RPTLOG and log('?? set lxr',)
     rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
@@ -399,6 +400,7 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 #       pass;                   RPTLOG and log('?? fold',)
 ##       fold_all_found_up(rpt_ed, RPT_FIND_SIGN)
 #       rpt_ed.cmd(cmds.cCommand_FoldAll)
+#       pass;                   RPTLOG and log('ok fold',)
 ##       rpt_ed.cmd(cmds.cmd_FoldingUnfoldAtCurLine)
 ##       rpt_ed.set_caret(0, row4crt)
     if AUTO_SAVE and os.path.isfile(rpt_ed.get_filename()):
@@ -824,13 +826,13 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 while line:
                     detector.feed(line)
                     if detector.done:
-                        pass;      #LOG and log('done. detector.result={}',(detector.result))
+                        pass;  #LOG and log('done. detector.result={}',(detector.result))
                         break
                     line = h_path.readline()
                     lines+= 1
                     bytes+= len(line)
             detector.close()
-            pass;                  #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
+            pass;              #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
                                    #            ,lines,    bytes,   detector.done,    detector.result)
             encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
         except Exception as ex:
@@ -1217,7 +1219,7 @@ class ProgressAndBreak:
         was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
         app.app_proc(app.PROC_SET_ESCAPE, '0')
         if was_esc and with_request:
-            if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO):
+            if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO+app.MB_ICONQUESTION):
                 return True
             was_esc = False
         return was_esc
@@ -1233,7 +1235,7 @@ def undo_by_report():
     if app.ID_YES != app.msg_box(
                         'Do you want execute undo for all replacements:'
                    +c13+line0
-                    , app.MB_YESNO):        return
+                    , app.MB_YESNO+app.MB_ICONQUESTION):        return
     in_tabs = IN_OPEN_FILES in line0
     rpt_ed  = ed
     path    = ''

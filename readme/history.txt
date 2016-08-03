@@ -1,3 +1,6 @@
+1.1.7 (2016-08-03)
+added: full configuring of logging
+
 1.1.6 (2016-06-17)
 added: goto-definition == nav
 
