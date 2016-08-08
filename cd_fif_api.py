@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.7 2016-08-03'
+    '1.1.8 2016-08-08'
 ToDo: (see end of file)
 '''
 
@@ -64,6 +64,7 @@ CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
 SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
 AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
 FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
+SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
 
 MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
 MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
@@ -95,11 +96,29 @@ MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
 MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
 MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
 
+REQ_KEY = (' '*100)+'_req_info_='
+def report_extract_request(red):
+    """ Extract first(!) request info from the report.
+        If no req-info return ('', None)
+        Return  (what, opts)
+    """
+    line_req    = red.get_text_line(0)      # First
+    if REQ_KEY not in line_req: return None
+    req_opts= line_req[line_req.index(REQ_KEY)+len(REQ_KEY):]
+    return req_opts
+   #def report_extract_request
 
 SPRTR       = -0xFFFFFFFF
 last_ed_num = 0
 last_rpt_tid= None
-def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, what_find:dict, what_save:dict, progressor=None):
+def report_to_tab(rpt_data:dict
+                , rpt_info:dict
+                , rpt_type:dict
+                , how_walk:dict
+                , what_find:dict
+                , what_save:dict
+                , progressor=None
+                , req_opts=None):
     pass;                       LOG and log('(== |paths|={}',len(rpt_data))
     pass;                       RPTLOG and log('rpt_type={}',rpt_type)
     pass;                      #RPTLOG and log('rpt_data=¶{}',pf(rpt_data))
@@ -244,21 +263,23 @@ def report_to_tab(rpt_data:dict, rpt_info:dict, rpt_type:dict, how_walk:dict, wh
 #   wds                         = calc_width4depth( rpt_data, algn, need_rcl, need_pth, only_fn)
 #   pass;                       RPTLOG and log('wds={}',(wds))
 
-    row4crt = append_line(f(_('{} for "{}" in "{}" ({} matches in {} files)')
-                            ,RPT_FIND_SIGN
-                            ,what_find['find']
-                            ,root
-                            ,rpt_info['frgms']
-                            ,rpt_info['files'])
-                                if not repl_b else
-                          f(_('{} "{}" to "{}" in "{}" ({} changes in {} files)')
-                            ,RPT_REPL_SIGN
-                            ,what_find['find']
-                            ,what_find['repl']
-                            ,root
-                            ,rpt_info['frgms']
-                            ,rpt_info['files'])
-                         )
+    line_1  =   f(_('{} for "{}" in "{}" ({} matches in {} files)')
+                ,RPT_FIND_SIGN
+                ,what_find['find']
+                ,root
+                ,rpt_info['frgms']
+                ,rpt_info['files']) \
+            if not repl_b else      \
+                f(_('{} "{}" to "{}" in "{}" ({} changes in {} files)')
+                ,RPT_REPL_SIGN
+                ,what_find['find']
+                ,what_find['repl']
+                ,root
+                ,rpt_info['frgms']
+                ,rpt_info['files'])
+    line_1 += ' ' + REQ_KEY + req_opts  if req_opts else ''
+                
+    row4crt = append_line(line_1)
     rpt_ed.lock()   # Pack undo to one cmd
     try:
         rpt_stop    = False

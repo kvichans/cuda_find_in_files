@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.7 2016-08-03'
+    '1.1.8 2016-08-08'
 ToDo: (see end of file)
 '''
 
@@ -99,6 +99,17 @@ class Command:
             ,cllc = str(cllc_l.index(CLLC_MATCH))
             ))
        #def find_in_ed
+
+    def repeat_find_by_rpt(self):
+        if ed.get_prop(app.PROP_LEXER_FILE).upper() not in lexers_l:
+            return app.msg_status(_('The command works only with reports of FindInFile plugin'))
+        req_opts  = report_extract_request(ed)
+        if not req_opts:
+            return app.msg_status(_('No info to Repeat Finding'))
+        req_opts= json.loads(req_opts)
+        what    = req_opts.pop('what', '')
+        return dlg_fif(what=what, opts=req_opts)
+       #def repeat_find_by_rpt
 
     def show_dlg(self, what='', opts={}):
         return dlg_fif(what, opts)
@@ -376,6 +387,10 @@ Default values:
     "fif_auto_save_if_file":false,
     // Activate tab with report after filling
     "fif_focus_to_rpt":true,
+    
+    // Save all request details ("Find", "In folder", ...) in first line of result file. 
+    // The info will be used in command "Repeat Finding by report"
+    "fif_save_request_to_rpt":False,
     
     // Len of substring (of field "Find") which appears in title of the search result
     "fif_len_target_in_title":10,
@@ -1064,12 +1079,25 @@ def dlg_fif(what='', opts={}):
                       f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
             progressor.set_progress(msg_rpt)
             if 0==frgms and not REPORT_FAIL:    continue#while_fif
+            req_opts= None
+            if SAVE_REQ_TO_RPT:
+                req_opts= {k:v for (k,v) in stores.items() if k[:3] not in ('wd_', 'wo_', 'pse')}
+                req_opts['what']=what_s
+                req_opts['repl']=repl_s
+                req_opts['incl']=incl_s
+                req_opts['excl']=excl_s
+                req_opts['fold']=fold_s
+                req_opts['dept']-=1
+                req_opts    = json.dumps(req_opts)
             report_to_tab(                      #NOTE: run-report
                 rpt_data
                ,rpt_info
                ,how_rpt
-               ,how_walk, what_find, what_save
-               ,progressor = progressor
+               ,how_walk
+               ,what_find
+               ,what_save
+               ,progressor  = progressor
+               ,req_opts    = req_opts
                )
             progressor.set_progress(msg_rpt)
             ################################

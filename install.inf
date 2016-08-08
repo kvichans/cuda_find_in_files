@@ -26,6 +26,12 @@ caption=&Find in Files\Find in &all tabs...
 method=find_in_tabs
 ;menu=0
 
+[item4]
+section=commands
+caption=&Find in Files\Repeat Finding by report...
+method=repeat_find_by_rpt
+menu=0
+
 ;[item4]
 ;section=commands
 ;caption=Find in Files\Undo replacements by report
