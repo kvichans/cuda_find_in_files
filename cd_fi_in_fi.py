@@ -389,8 +389,8 @@ Default values:
     "fif_focus_to_rpt":true,
     
     // Save all request details ("Find", "In folder", ...) in first line of result file. 
-    // The info will be used in command "Repeat Finding by report"
-    "fif_save_request_to_rpt":False,
+    // The info will be used in command "Repeat search for this report-tab"
+    "fif_save_request_to_rpt":false,
     
     // Len of substring (of field "Find") which appears in title of the search result
     "fif_len_target_in_title":10,

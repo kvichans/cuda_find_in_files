@@ -28,7 +28,7 @@ method=find_in_tabs
 
 [item4]
 section=commands
-caption=&Find in Files\Repeat Finding by report...
+caption=&Find in Files\Repeat search for this report-tab...
 method=repeat_find_by_rpt
 menu=0
 
