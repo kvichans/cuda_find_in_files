@@ -466,7 +466,9 @@ Default values:
 def dlg_fif(what='', opts={}):
     MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
     cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
-    stores  = json.loads(open(cfg_json).read(), object_pairs_hook=OrdDict)    if os.path.exists(cfg_json) else    OrdDict()
+    stores  = json.loads(open(cfg_json).read(), object_pairs_hook=OrdDict) \
+                if os.path.exists(cfg_json) and os.path.getsize(cfg_json) != 0 else \
+              OrdDict()
     
     mask_h  = _('Space-separated file or folder masks.'
                 '\rFolder mask starts with "/".'
