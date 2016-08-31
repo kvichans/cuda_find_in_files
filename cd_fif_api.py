@@ -48,7 +48,7 @@ SHTP_MIDDL_R    = _('dir/file(r):line')
 SHTP_MIDDL_RCL  = _('dir/file(r:c:l):line')
 SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
-ENCO_DETD       = _('<detected>')
+ENCO_DETD       = _('detect')
 
 lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
