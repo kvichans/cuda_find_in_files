@@ -18,7 +18,7 @@ class Command:
 
     def on_goto_def(self, ed_self):         return RLS.on_goto_def(ed_self)
     
-def show_dlg(self, what='', opts={}):
+def show_dlg(what='', opts={}):
     """ Show dlg "Find in Files" and set field values.
         Params              Dlg field           Type            Comment
             what            'Find'              str
