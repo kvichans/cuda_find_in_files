@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.9 2016-08-31'
+    '1.1.10 2016-11-24'
 ToDo: (see end of file)
 '''
 
@@ -491,8 +491,8 @@ def dlg_fif(what='', opts={}):
                 )
     more_h  = _('Show/Hide advanced options')
     cust_h  = _('Change dialog layout.'
+                '\rCtrl+Click  - Adjust vertical alignments'
                 '\rShift+Click   - Set wider width for fields What/In files...'
-                '\rCtrl+Click  - Set wider width for buttons Find/.../Close.'
                 '\rCtrl+Shift+Click - Set default widths for all fields.'
                 )
     frst_h  = _('Search only inside N first found files')
@@ -820,10 +820,13 @@ def dlg_fif(what='', opts={}):
             stores['wd_txts']   = min(800, 25 + stores['wd_txts'])
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
-        if btn_m=='c/cust':   # [Ctrl+]Adjust  = wider bts
-            stores['wd_btns']   = min(200, 10 + stores['wd_btns'])
-            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        if btn_m=='c/cust':   # [Ctrl+]Adjust  = dlg_valign_consts
+            dlg_valign_consts()
             continue#while_fif
+#       if btn_m=='c/cust':   # [Ctrl+]Adjust  = wider bts
+#           stores['wd_btns']   = min(200, 10 + stores['wd_btns'])
+#           open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+#           continue#while_fif
         if btn_m=='cust':
             wdtx_c  = f(_('Width of main &editors ("{}", "{}"):'), caps['what'], caps['incl'])
             wdbt_c  = f(_('Width of main &buttons ("{}", "{}"):'), caps['!fnd'], caps['brow'])

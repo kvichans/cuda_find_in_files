@@ -1,3 +1,6 @@
+1.1.10 (2016-11-24)
+added: inside dlg to adjust v-aligns
+
 1.1.9 (2016-08-31)
 added: API function to show dlg from any plugin
 fixed: 0-sized config file
