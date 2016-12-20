@@ -968,7 +968,7 @@ def dlg_fif(what='', opts={}):
                     _('all tabs')           if fold_s==IN_OPEN_FILES else 
                     _('all found files')
                  )
-                ,app.MB_YESNO+app.MB_ICONQUESTION):
+                ,app.MB_OKCANCEL+app.MB_ICONQUESTION):
                 continue#while_fif
             root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
             root        = os.path.expanduser(root)
