@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.10 2016-11-24'
+    '1.1.11 2016-12-20'
 ToDo: (see end of file)
 '''
 
@@ -240,7 +240,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
                      ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')    ,props='1'              ) # &s  default
                      ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
                      ]
-            btn,vals,chds   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
+            btn,vals,*_t   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
                              ,  dict(prss=ps_ind
                                     ,name=ps.get('name', '')
                                     ,what=(-1,ps_vls)
@@ -279,7 +279,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
     elif ps_ind==ind_save:
         # Save
         items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
-        btn,vals,chds   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
+        btn,vals,*_t   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
              [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
              ,dict(           tp='lb'    ,t=GAP+55          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
@@ -444,7 +444,7 @@ Default values:
     while while_hlp:
         btn_hlp,    \
         vals_hlp,   \
-        chds_hlp    = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
+        *_t         = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
              [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
              ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
              ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                ,act='1'         )
@@ -741,7 +741,7 @@ def dlg_fif(what='', opts={}):
                              ,enco=enco_s
                             ))
         pass;                  #LOG and log('vals={}',pf(vals))
-        btn,vals,chds=dlg_wrapper(_('Find in Files'), dlg_w, dlg_h, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
+        btn,vals,fid,chds=dlg_wrapper(_('Find in Files'), dlg_w, dlg_h, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
         scam        = app.app_proc(app.PROC_GET_KEYSTATE, '') if app.app_api_version()>='1.0.143' else ''
         btn_p       = btn
@@ -832,7 +832,7 @@ def dlg_fif(what='', opts={}):
             wdbt_c  = f(_('Width of main &buttons ("{}", "{}"):'), caps['!fnd'], caps['brow'])
             shex_c  = f(_('Show "&{}"')                          , caps['excl'])
             shre_c  = f(_('Show "&{}" and "{}"')                 , caps['repl'], caps['!rep'])
-            aid,vals,chds   = dlg_wrapper(_('Adjust dialog controls'), GAP+350+GAP,GAP+140+GAP,     #NOTE: dlg-cust
+            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+350+GAP,GAP+140+GAP,     #NOTE: dlg-cust
                  [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=280  ,cap=wdtx_c                                     ) # &e
                  ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+280      ,w=70   ,props=f('{},{},25',DEF_WD_TXTS,2*DEF_WD_TXTS)  ) # 
                  ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=280  ,cap=wdbt_c                                     ) # &b
@@ -968,57 +968,57 @@ def dlg_fif(what='', opts={}):
                     _('all tabs')           if fold_s==IN_OPEN_FILES else 
                     _('all found files')
                  )
-                ,app.MB_YESNO):
+                ,app.MB_YESNO+app.MB_ICONQUESTION):
                 continue#while_fif
             root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
             root        = os.path.expanduser(root)
             root        = os.path.expandvars(root)
             if not what_s:
-                app.msg_box(f(_('Fill the "{}" field'), caps['what']), app.MB_OK) 
+                app.msg_box(f(_('Fill the "{}" field'), caps['what']), app.MB_OK+app.MB_ICONWARNING)
                 focused     = 'what'
                 continue#while_fif
             if reex01=='1':
                 try:
                     re.compile(what_s)
                 except Exception as ex:
-                    app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['what'], ex), app.MB_OK) 
+                    app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['what'], ex), app.MB_OK+app.MB_ICONWARNING) 
                     focused = 'what'
                     continue#while_fif
                 if btn_p=='!rep':
                     try:
                         re.sub(what_s, repl_s, '')
                     except Exception as ex:
-                        app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['repl'], ex), app.MB_OK) 
+                        app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['repl'], ex), app.MB_OK+app.MB_ICONWARNING) 
                         focused = 'repl'
                         continue#while_fif
             if fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
-                app.msg_box(f(_('Set existing value in "{}"  or use "{}" (see {})'), caps['fold'], IN_OPEN_FILES, caps['pres']), app.MB_OK) 
+                app.msg_box(f(_('Set existing value in "{}"  or use "{}" (see {})'), caps['fold'], IN_OPEN_FILES, caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
                 focused     = 'fold'
                 continue#while_fif
             if not incl_s:
-                app.msg_box(f(_('Fill the "{}" field'), caps['incl']), app.MB_OK) 
+                app.msg_box(f(_('Fill the "{}" field'), caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
                 focused     = 'incl'
                 continue#while_fif
             if 0 != incl_s.count('"')%2:
-                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['incl']), app.MB_OK) 
+                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
                 focused     = 'incl'
                 continue#while_fif
             if 0 != excl_s.count('"')%2:
-                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['excl']), app.MB_OK) 
+                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
                 focused     = 'excl'
                 continue#while_fif
             if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
                                       ,SHTP_SPARS_R, SHTP_SPARS_RCL
                                       ) and \
                sort_s!='0':
-                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'), caps['sort'], caps['shtp']), app.MB_OK) 
+                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'), caps['sort'], caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
                 focused     = 'shtp'
                 continue#while_fif
             if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
                                       ,SHTP_SPARS_R, SHTP_SPARS_RCL
                                       ) and \
                fold_s==IN_OPEN_FILES:
-                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'),IN_OPEN_FILES, caps['shtp']), app.MB_OK) 
+                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'),IN_OPEN_FILES, caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
                 focused     = 'shtp'
                 continue#while_fif
             how_walk    =dict(                                  #NOTE: fif params

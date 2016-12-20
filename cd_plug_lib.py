@@ -337,7 +337,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         Params
             title, w, h     Title, Width, Height 
             cnts            List of static control properties
-                                [{cid:'*', tp:'*', t:1,l:1,w:1,r:1,b;1,h:1, cap:'*', hint:'*', en:'0', props:'*', items:[*], valign_to:'cid'}]
+                                [{cid:'*', tp:'*', t:1,l:1,w:1,r:1,b;1,h:1,tid:'cid', cap:'*', hint:'*', en:'0', props:'*', items:[*], act='0'}]
                                 cid         (opt)(str) C(ontrol)id. Need only for buttons and conrols with value (and for tid)
                                 tp               (str) Control types from wiki or short names
                                 t           (opt)(int) Top
@@ -356,11 +356,12 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                                                                 body    [[r0c0,r0c1,],[r1c0,r1c1,],[r2c0,r2c1,],]
             in_vals         Dict of start values for some controls 
                                 {'cid':val}
-            focus           (opt) Control cid for  start focus
+            focus_cid       (opt) Control cid for start focus
         Return
             btn_cid         Clicked/changed control cid
             {'cid':val}     Dict of new values for the same (as in_vals) controls
                                 Format of values is same too.
+            focus_cid       Focused control cid
             [cid]           List of controls with changed values
         Short names for types
             lb      label
@@ -388,8 +389,8 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                      ,dict(cid='-',tp='bt',t=45   ,l=73,w=70,cap='Cancel')]
                 vals={'v':def_val}
                 while True:
-                    btn,vals=dlg_wrapper('Example',146,75,cnts,vals,'v')
-                    if btn is None or btn=='-': return def_val
+                    aid,vals,fid,chds=dlg_wrapper('Example',146,75,cnts,vals,'v')
+                    if aid is None or btn=='-': return def_val
                     if not re.match(r'\d+$', vals['v']): continue
                     return vals['v']
     """
@@ -492,11 +493,19 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
     pass;                      #log('ok ctrls_l={}',pformat(ctrls_l, width=120))
 
     ans     = app.dlg_custom(title, w, h, '\n'.join(ctrls_l), cid2i.get(focus_cid, -1))
-    if ans is None: return None, None, None   # btn_cid, {cid:v}, [cid]
+    if ans is None: return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
 
     btn_i,  \
     vals_ls = ans[0], ans[1].splitlines()
-    aid     = cnts[btn_i]['cid']
+
+    focus_cid   = ''
+    if vals_ls[-1].startswith('focused='):
+        # From API 1.0.156 dlg_custom also returns index of active control
+        focus_n_s   = vals_ls.pop()
+        focus_i     = int(focus_n_s.split('=')[1])
+        focus_cid   = cnts[focus_i].get('cid', '')
+
+    act_cid     = cnts[btn_i]['cid']
     # Parse output values
     an_vals = {cid:vals_ls[cid2i[cid]] for cid in in_vals}
     for cid in an_vals:
@@ -530,7 +539,17 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
             an_val = type(in_val)(an_val)
         an_vals[cid]    = an_val
        #for cid
-    return  aid, an_vals, [cid for cid in in_vals if in_vals[cid]!=an_vals[cid]]
+    chds    = [cid for cid in in_vals if in_vals[cid]!=an_vals[cid]]
+    if focus_cid:
+        # If out focus points to button then will point to a unique changed control
+        focus_tp= cnts[cid2i[focus_cid]]['tp']
+        focus_tp= REDUCTS.get(focus_tp, focus_tp)
+        if focus_tp in ('button'):
+            focus_cid   = '' if len(chds)!=1 else chds[0]
+    return  act_cid \
+        ,   an_vals \
+        ,   focus_cid \
+        ,   chds
    #def dlg_wrapper
 
 def dlg_valign_consts():
@@ -563,7 +582,7 @@ def dlg_valign_consts():
               )
     focused = '-'
     while True:
-        aid, vals, chds = dlg_wrapper(_('Adjust vertical alignments')   ,DLG_W, DLG_H, 
+        aid, vals, fid, chds = dlg_wrapper(_('Adjust vertical alignments')   ,DLG_W, DLG_H, 
             [dict(cid='lb1'     ,tp='lb'    ,t= 10              ,l=  5  ,w=100  ,cap='==============='                          )
             ,dict(cid='ch1'     ,tp='ch'    ,t= 10+fits['_sp1'] ,l=115  ,w=100  ,cap='=======?'             ,hint=fits['_sp1']  )
             ,dict(cid='up1'     ,tp='bt'    ,t= 10-3            ,l=230  ,w=50   ,cap=UP                                         )
@@ -645,7 +664,7 @@ def dlg_valign_consts():
             rpt+= c13+'checkbutton:'+str(fits['_sp6'])
             rpt+= c13+'linklabel:'  +str(fits['_sp7'])
             rpt+= c13+'spinedit:'   +str(fits['_sp8'])
-            aid_r, vals_r, chds_r = dlg_wrapper(_('Report'), 230,310,
+            aid_r, *_t = dlg_wrapper(_('Report'), 230,310,
                  [dict(cid='rprt',tp='me'    ,t=5   ,l=5 ,h=200 ,w=220)
                  ,dict(           tp='lb'    ,t=215 ,l=5        ,w=220  ,cap=_('Send the report to the address'))
                  ,dict(cid='mail',tp='ed'    ,t=235 ,l=5        ,w=220)
@@ -685,6 +704,7 @@ def get_hotkeys_desc(cmd_id, ext_id=None, keys_js=None, def_ans=''):
    #def get_hotkeys_desc
 
 if __name__ == '__main__' :     # Tests
+    pass
     def test_ask_number(ask, def_val):
         cnts=[dict(        tp='lb',tid='v',l=3 ,w=70,cap=ask)
              ,dict(cid='v',tp='ed',t=3    ,l=73,w=70)
@@ -692,7 +712,7 @@ if __name__ == '__main__' :     # Tests
              ,dict(cid='-',tp='bt',t=45   ,l=73,w=70,cap='Cancel')]
         vals={'v':def_val}
         while True:
-            btn,vals=dlg_wrapper('Example',146,75,cnts,vals,'v')
+            btn,vals,fid,chds=dlg_wrapper('Example',146,75,cnts,vals,'v')
             if btn is None or btn=='-': return def_val
             if not re.match(r'\d+$', vals['v']): continue
             return vals['v']
