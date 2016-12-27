@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.11 2016-12-20'
+    '1.1.12 2016-12-27'
 ToDo: (see end of file)
 '''
 
@@ -77,12 +77,14 @@ def desc_fif_val(fifkey, val=None):
     elif fifkey=='totb':    return totb_l[val] if 0<=val<len(totb_l) else ''
     elif fifkey=='shtp':    return shtp_l[val] if 0<=val<len(shtp_l) else ''
    #def desc_fif_val
-    
+
+
 class Command:
 #   def undo_by_report(self):
 #       undo_by_report()
        #def undo_by_report
-    
+
+
     def find_in_ed(self):
         filename= ed.get_filename()
         return dlg_fif(what='', opts=dict(
@@ -914,28 +916,32 @@ def dlg_fif(what='', opts={}):
                         cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s)  = ans
                 
         if False:pass
-        elif btn_m=='brow':
-            path    = app.dlg_dir(fold_s)
+        elif btn_m=='brow':     # BroDir
+            path    = app.dlg_dir(os.path.expanduser(fold_s))
             if not path: continue#while_fif
             fold_s  = path
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
             focused = 'fold'
+        elif btn_m=='s/brow':   # [Shift+]BroDir = BroFile
+            fn      = app.dlg_file(True, '', os.path.expanduser(fold_s), '')
+            if not fn or not os.path.isfile(fn):    continue#while_fif
+            incl_s  = os.path.basename(fn)
+            fold_s  = os.path.dirname(fn)
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
         elif btn_m=='cfld' and ed.get_filename():
             fold_s  = os.path.dirname(ed.get_filename())
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
         elif btn_m=='s/cfld':   # [Shift+]CurDir = CurFile
             if not os.path.isfile(     ed.get_filename()):   continue#while_fif
             incl_s  = os.path.basename(ed.get_filename())
             fold_s  = os.path.dirname( ed.get_filename())
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
         elif btn_m=='c/cfld':   # [Ctrl+]CurDir  = InTabs
             incl_s  = '*'
             fold_s  = IN_OPEN_FILES
         elif btn_m=='sc/cfld':  # [Ctrl+Shift+]CurDir = CurTab
             incl_s  = ed.get_prop(app.PROP_TAB_TITLE)   ##!! need tab-id?
             fold_s  = IN_OPEN_FILES
-        elif btn_m=='s/brow':   # [Shift+]BroDir = BroFile
-            fn      = app.dlg_file(True, '', '', '')
-            if not fn or not os.path.isfile(fn):    continue#while_fif
-            incl_s  = os.path.basename(fn)
-            fold_s  = os.path.dirname(fn)
 
         # Save data after cmd
         stores['reex']  = reex01

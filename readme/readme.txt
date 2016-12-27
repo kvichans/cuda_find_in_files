@@ -12,4 +12,4 @@ Notes:
 - Some opts must be set in user.json, see info after pressing the Help button.
 - Files are handled line by line, so can't find/replace multiline matches, with line-end chars.
 
-Author: A. Kvichanskiy (kvichans at forum/github)
+Author: A.Kvichanskiy (kvichans at forum/github)

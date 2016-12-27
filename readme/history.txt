@@ -1,3 +1,6 @@
+1.1.12 (2016-12-27)
+fixed: wait ~ in folder
+
 1.1.11 (2016-12-20)
 fixed: icons into msgs
 
