@@ -558,7 +558,7 @@ def dlg_fif(what='', opts={}):
                 '\rDefault encoding: {}'), ENCO_DETD, loc_enco)
     
     DLG_W0, \
-    DLG_H0  = (700, 330)
+    DLG_H0  = (700, 350)
     DEF_WD_TXTS = 400
     DEF_WD_BTNS = 100
 
@@ -643,7 +643,7 @@ def dlg_fif(what='', opts={}):
         gap2    = (GAP- 28 if wo_excl else GAP)+gap1 -GAP
         gap3    = (GAP-132 if wo_adva else GAP)+gap2 -GAP
         dlg_w,\
-        dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(28 if wo_adva else 0))
+        dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(30 if wo_adva else 0))
         #NOTE: fif-cnts
         cnts    = ([]                                                                                                              # gmqvyz
                  +[dict(cid='prs1',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
@@ -658,44 +658,44 @@ def dlg_fif(what='', opts={}):
                 
                 +([] if wo_repl else []                         
                  +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('&Replace with:')                )] # &r
-                 +[dict(cid='repl',tp='cb'      ,t=GAP+28       ,l=cmb_l    ,w=txt_w    ,items=repl_l                           )] # 
+                 +[dict(cid='repl',tp='cb'      ,t=GAP+ 30      ,l=cmb_l    ,w=txt_w    ,items=repl_l                           )] # 
                 )                                               
                                                 
                  +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l    ,cap='*'+_('&In files:')    ,hint=mask_h)] # &i
-                 +[dict(cid='incl',tp='cb'      ,t=gap1+56      ,l=cmb_l    ,w=txt_w    ,items=incl_l                           )] # 
+                 +[dict(cid='incl',tp='cb'      ,t=gap1+ 60     ,l=cmb_l    ,w=txt_w    ,items=incl_l                           )] # 
                 +([] if wo_excl else []                         
                  +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l    ,cap=_('Not in files:')     ,hint=mask_h)] # 
-                 +[dict(cid='excl',tp='cb'      ,t=gap1+84      ,l=cmb_l    ,w=txt_w    ,items=excl_l                           )] # 
+                 +[dict(cid='excl',tp='cb'      ,t=gap1+ 90     ,l=cmb_l    ,w=txt_w    ,items=excl_l                           )] # 
                 )                                               
                  +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap='*'+_('I&n folder:')               )] # &n
-                 +[dict(cid='fold',tp='cb'      ,t=gap2+112     ,l=cmb_l    ,w=txt_w    ,items=fold_l                           )] # 
+                 +[dict(cid='fold',tp='cb'      ,t=gap2+120     ,l=cmb_l    ,w=txt_w    ,items=fold_l                           )] # 
                  +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse...')        ,hint=brow_h)] # &b
                  +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
-                 +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
+                 +[dict(cid='dept',tp='cb-ro'   ,t=gap2+150     ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h)] # &e
                 
                 +([] if wo_adva else  []                        
-                 +[dict(           tp='lb'      ,t=gap2+170     ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')           )] # 
-                 +[dict(           tp='lb'      ,tid='cllc'     ,l=GAP      ,w=100      ,cap=_('Co&llect:')                     )] # &l
-                 +[dict(cid='cllc',tp='cb-ro'   ,t=gap2+190     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
-                 +[dict(           tp='lb'      ,tid='totb'     ,l=GAP      ,w=100      ,cap=_('Show in&:')                     )] # &:
-                 +[dict(cid='totb',tp='cb-ro'   ,t=gap2+217     ,l=GAP+80   ,r=cmb_l    ,items=totb_l                           )] # 
+                 +[dict(           tp='lb'      ,t=gap2+180     ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')           )] # 
+                 +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,w=100      ,cap=_('Co&llect:')                     )] # &l
+                 +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
+                 +[dict(           tp='lb'      ,tid='sort'     ,l=GAP      ,w=100      ,cap=_('Show in&:')                     )] # &:
+                 +[dict(cid='totb',tp='cb-ro'   ,tid='sort'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l                           )] # 
                  +[dict(cid='join',tp='ch'      ,tid='frst'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
-                 +[dict(           tp='lb'      ,tid='shtp'     ,l=GAP      ,w=100      ,cap=_('Tree type &/:')     ,hint=shtp_h)] # &/
-                 +[dict(cid='shtp',tp='cb-ro'   ,t=gap2+271     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
+                 +[dict(           tp='lb'      ,tid='enco'     ,l=GAP      ,w=100      ,cap=_('Tree type &/:')     ,hint=shtp_h)] # &/
+                 +[dict(cid='shtp',tp='cb-ro'   ,tid='enco'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
                  +[dict(cid='algn',tp='ch'      ,tid='help'     ,l=GAP+80   ,w=100      ,cap=_('Align &|')          ,hint=algn_h)] # &|
                  +[dict(cid='cntx',tp='ch'      ,tid='help'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')          ,hint=cntx_h)] # &x
                                                 
-                 +[dict(           tp='lb'      ,t=gap2+170     ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')           )] # 
+                 +[dict(           tp='lb'      ,t=gap2+180     ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')           )] # 
                  +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100      ,cap=_('S&kip files:')                  )] # &k
-                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190     ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                           )] # 
+                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+200     ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                           )] # 
                  +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100      ,cap=_('S&ort file list:')              )] # &o
-                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217     ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                           )] # 
+                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+230     ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                           )] # 
                  +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100      ,cap=_('Firsts (&0=all):')  ,hint=frst_h)] # &0
-                 +[dict(cid='frst',tp='ed'      ,t=gap2+244     ,l=tl2_l+100,r=tbn_l-GAP                                        )] # 
+                 +[dict(cid='frst',tp='ed'      ,t=gap2+260     ,l=tl2_l+100,r=tbn_l-GAP                                        )] # 
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100      ,cap=_('Encodings &\\:')    ,hint=enco_h)] # \
-                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271     ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
+                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+290     ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
                 )                                                                                                               
                  +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=btn_w    ,cap=_('Find'),props='1'    ,hint=find_h)] #    default
                 +([] if wo_repl else []                         
