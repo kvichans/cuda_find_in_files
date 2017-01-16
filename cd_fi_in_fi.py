@@ -825,14 +825,14 @@ def dlg_fif(what='', opts={}):
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
         if btn_m=='s/cust':   # [Shift+]Adjust  = wider eds
-            stores['wd_txts']   = min(800, 25 + stores['wd_txts'])
+            stores['wd_txts']   = min(800, 25 + stores.get('wd_txts', DEF_WD_TXTS))
             open(cfg_json, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
         if btn_m=='c/cust':   # [Ctrl+]Adjust  = dlg_valign_consts
             dlg_valign_consts()
             continue#while_fif
 #       if btn_m=='c/cust':   # [Ctrl+]Adjust  = wider bts
-#           stores['wd_btns']   = min(200, 10 + stores['wd_btns'])
+#           stores['wd_btns']   = min(200, 10 + stores.get('wd_btns', DEF_WD_BTNS))
 #           open(cfg_json, 'w').write(json.dumps(stores, indent=4))
 #           continue#while_fif
         if btn_m=='cust':
