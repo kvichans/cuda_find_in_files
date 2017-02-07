@@ -2,11 +2,11 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.8 2016-08-08'
+    '1.1.13 2017-02-07'
 ToDo: (see end of file)
 '''
 
-import  re, os, sys, locale, json, collections, traceback
+import  re, os, sys, locale, json, collections, traceback, time
 from    fnmatch         import fnmatch
 import  cudatext            as app
 from    cudatext        import ed
@@ -128,11 +128,11 @@ def report_to_tab(rpt_data:dict
     global last_ed_num, last_rpt_tid
     # Choose/Create tab for report
     rpt_ed  = None
-    def create_new(title_ext='')->app.Editor:
+    def create_new(_title_ext='')->app.Editor:
         app.file_open('')
         new_ed  = ed
         new_ed.set_prop(app.PROP_ENC,       'UTF-8')
-        new_ed.set_prop(app.PROP_TAB_TITLE, _('Results')+title_ext)  #??
+        new_ed.set_prop(app.PROP_TAB_TITLE, _('Results')+_title_ext)  #??
         return new_ed
         
     title_ext   = f(' ({})', what_find['find'][:LEN_TRG_IN_TITLE])
@@ -180,8 +180,14 @@ def report_to_tab(rpt_data:dict
         rpt_ed.set_text_all('')
         rpt_ed.attr(app.MARKERS_DELETE_ALL)
 
+    # Fold prev res
+    if rpt_type['join'] and FOLD_PREV_RES: #?and rpt_ed.get_prop(app.PROP_GUTTER_FOLD)
+        pass;                   RPTLOG and log('?? fold',)
+        fold_all_roots(rpt_ed, RPT_REPL_SIGN, RPT_FIND_SIGN)
+        pass;                   RPTLOG and log('ok fold',)
+        
     # Fill tab
-    rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
+#   rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
     def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed, style=MARK_FIND_STYLE):
         pass;                  #RPTLOG and log('rw={}',rw)
         to_ed.attr(app.MARKERS_ADD
@@ -200,54 +206,54 @@ def report_to_tab(rpt_data:dict
             to_ed.set_text_line(-1, line)
         return to_ed.get_line_count()-2
        #def append_line
-    def calc_width(rpt_data, algn, need_rcl, need_pth, only_fn):
+    def calc_width(_rpt_data, _algn, _need_rcl, _need_pth, _only_fn):
         # Find max(len(*)) for path, row, col, ln
-        fl_wd, rw_wd, cl_wd, ln_wd  = 0, 0, 0, 0
-        if not algn:
-            return fl_wd, rw_wd, cl_wd, ln_wd
+        _fl_wd, _rw_wd, _cl_wd, _ln_wd  = 0, 0, 0, 0
+        if not _algn:
+            return _fl_wd, _rw_wd, _cl_wd, _ln_wd
         max_rw, max_cl, max_ln      = 0, 0, 0
-        for path_d in rpt_data:
-            path        = path_d['file']         if need_pth                else ''
-            path        = os.path.basename(path) if need_pth and only_fn    else path
-            fl_wd       = max(fl_wd , len(path))
-            for item in path_d.get('items', ''):
-                max_rw  = max(max_rw, item.get('row', 0))
-                if not need_rcl:    continue#for item
-                max_cl  = max(max_cl, item.get('col', 0))
-                max_ln  = max(max_ln, item.get('ln',  0))
+        for _path_d in _rpt_data:
+            _path       = _path_d['file']         if _need_pth                  else ''
+            _path       = os.path.basename(_path) if _need_pth and _only_fn     else _path
+            _fl_wd      = max(_fl_wd , len(_path))
+            for _item in _path_d.get('items', ''):
+                max_rw  = max(max_rw, _item.get('row', 0))
+                if not _need_rcl:    continue#for item
+                max_cl  = max(max_cl, _item.get('col', 0))
+                max_ln  = max(max_ln, _item.get('ln',  0))
                #for item
            #for path_d
-        rw_wd   = len(str(max_rw))
-        cl_wd   = len(str(max_cl))
-        ln_wd   = len(str(max_ln))
-        return fl_wd, rw_wd, cl_wd, ln_wd
+        _rw_wd  = len(str(max_rw))
+        _cl_wd  = len(str(max_cl))
+        _ln_wd  = len(str(max_ln))
+        return _fl_wd, _rw_wd, _cl_wd, _ln_wd
        #def calc_width
-    def calc_width4depth(rpt_data, algn, need_rcl, need_pth, only_fn):
-        # Find max(len(*)) for path, row, col, ln
-        wds     = {}
-#       fl_wd, rw_wd, cl_wd, ln_wd  = 0, 0, 0, 0
-        if not algn:
-            return wds # fl_wd, rw_wd, cl_wd, ln_wd
-#       max_rw, max_cl, max_ln      = 0, 0, 0
-        for path_d in rpt_data:
-            dept        = 1+path_d.get('dept', 0)
-            wds_d       = wds.setdefault(dept, {})
-            path        = path_d['file']         if need_pth                else ''
-            path        = os.path.basename(path) if need_pth and only_fn    else path
-            wds_d['fl'] =         max(wds_d.get('fl', 0), len(path))
-            for item in path_d.get('items', ''):
-                wds_d['max_rw'] = max(wds_d.get('max_rw', 0), item.get('row', 0))
-                if not need_rcl:    continue#for item
-                wds_d['max_cl'] = max(wds_d.get('max_cl', 0), item.get('col', 0))
-                wds_d['max_ln'] = max(wds_d.get('max_ln', 0), item.get('ln',  0))
-               #for item
-           #for path_d
-        for wds_d in wds.values():
-            wds_d['rw']    = len(str(wds_d.get('max_rw', 0)))
-            wds_d['cl']    = len(str(wds_d.get('max_cl', 0)))
-            wds_d['ln']    = len(str(wds_d.get('max_ln', 0)))
-        return wds
-       #def calc_width4depth
+#   def calc_width4depth(rpt_data, algn, need_rcl, need_pth, only_fn):
+#       # Find max(len(*)) for path, row, col, ln
+#       wds     = {}
+##       fl_wd, rw_wd, cl_wd, ln_wd  = 0, 0, 0, 0
+#       if not algn:
+#           return wds # fl_wd, rw_wd, cl_wd, ln_wd
+##       max_rw, max_cl, max_ln      = 0, 0, 0
+#       for path_d in rpt_data:
+#           dept        = 1+path_d.get('dept', 0)
+#           wds_d       = wds.setdefault(dept, {})
+#           path        = path_d['file']         if need_pth                else ''
+#           path        = os.path.basename(path) if need_pth and only_fn    else path
+#           wds_d['fl'] =         max(wds_d.get('fl', 0), len(path))
+#           for item in path_d.get('items', ''):
+#               wds_d['max_rw'] = max(wds_d.get('max_rw', 0), item.get('row', 0))
+#               if not need_rcl:    continue#for item
+#               wds_d['max_cl'] = max(wds_d.get('max_cl', 0), item.get('col', 0))
+#               wds_d['max_ln'] = max(wds_d.get('max_ln', 0), item.get('ln',  0))
+#              #for item
+#          #for path_d
+#       for wds_d in wds.values():
+#           wds_d['rw']    = len(str(wds_d.get('max_rw', 0)))
+#           wds_d['cl']    = len(str(wds_d.get('max_cl', 0)))
+#           wds_d['ln']    = len(str(wds_d.get('max_ln', 0)))
+#       return wds
+#      #def calc_width4depth
     onfn    = not what_save['count']
     shtp    = rpt_type['shtp']
     algn    = rpt_type['algn']
@@ -280,15 +286,15 @@ def report_to_tab(rpt_data:dict
     line_1 += ' ' + REQ_KEY + req_opts  if req_opts else ''
                 
     row4crt = append_line(line_1)
-    rpt_ed.lock()   # Pack undo to one cmd
+#   rpt_ed.lock()   #?? Pack undo to one cmd
+    rpt_stop    = False
     try:
-        rpt_stop    = False
         for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
             if progressor and (0==path_n%37):# or 0==rpt_ed.get_line_count()%137):
                 pc  = int(100*path_n/len(rpt_data))
-                progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
+                progressor.set_progress( f(_('[ESC?] Reporting: {}%'), pc))
                 if progressor.need_break():
-                    progressor.prefix += f(_('(Reporting stopped {}%)'), pc)
+                    progressor.prefix += f(_('(Reporting stopped {}%) '), pc)
                     append_line(         f('\t<{}>', progressor.prefix))
                     rpt_stop= True
                     break#for path
@@ -338,9 +344,9 @@ def report_to_tab(rpt_data:dict
                 for item_n, item in enumerate(items):
                     if progressor and (1000==item_n%1039):
                         pc  = int(100*path_n/len(rpt_data))
-                        progressor.set_progress( f(_('(ESC?) Reporting: {}%'), pc))
+                        progressor.set_progress( f(_('[ESC?] Reporting: {}%'), pc))
                         if progressor.need_break():
-                            progressor.prefix += f(_('(Reporting stopped {}%)'), pc)
+                            progressor.prefix += f(_('(Reporting stopped {}%) '), pc)
                             append_line(         f('\t<{}>', progressor.prefix))
                             rpt_stop= True
                             break#for item
@@ -396,34 +402,30 @@ def report_to_tab(rpt_data:dict
                #elif has_itm
             if rpt_stop: break#for path
            #for path_n
-    except Exception as ex:
+    except Exception:# as ex:
 #       log(f(_('Error:{}'),ex)) 
         log(traceback.format_exc()) 
     finally:
-        rpt_ed.unlock()   # Pack undo to one cmd
+        pass
+#       rpt_ed.unlock()   #?? Pack undo to one cmd
     pass;                       # Append work data to report
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.set_text_line(-1, '')
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
-#   pass;                       return
-    # AT-hack to update folding
-    pass;                       RPTLOG and log('?? set lxr',)
     rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
-    pass;                       RPTLOG and log('ok set lxr',)
-    line0 = rpt_ed.get_text_line(0)
-    rpt_ed.set_text_line(0, '')
-    rpt_ed.set_text_line(0, line0)
+#   # AT-hack to update folding
+#   line0 = rpt_ed.get_text_line(0)
+#   rpt_ed.set_text_line(0, '')
+#   rpt_ed.set_text_line(0, line0)
+#   app.app_idle()
+    if app.app_api_version()>='1.0.162':
+        pass;                   RPTLOG and log('rpt_ed.lexer_scan(row4crt) row4crt={}',row4crt)
+        rpt_ed.lexer_scan(row4crt)
         
     pass;                      #RPTLOG and log('row4crt={}',row4crt)
     rpt_ed.set_caret(0, row4crt)
-#   if rpt_type['join'] and FOLD_PREV_RES:
-#       pass;                   RPTLOG and log('?? fold',)
-##       fold_all_found_up(rpt_ed, RPT_FIND_SIGN)
-#       rpt_ed.cmd(cmds.cCommand_FoldAll)
-#       pass;                   RPTLOG and log('ok fold',)
-##       rpt_ed.cmd(cmds.cmd_FoldingUnfoldAtCurLine)
-##       rpt_ed.set_caret(0, row4crt)
+
     if AUTO_SAVE and os.path.isfile(rpt_ed.get_filename()):
         rpt_ed.save()
     pass;                       LOG and log('==) stoped={}',(rpt_stop))
@@ -515,7 +517,7 @@ reSR    = re.compile(  r'(?P<S>\t+)'        # Shift !
                     r'<\((?P<R> *=?\d+)'    # Row   !
                        r'(?P<C>: *\d+)?'    # Col?
                        r'(?P<L>: *\d+)?\)>')# Len?
-def _parse_line(line:str, what:str)->list:                   #NOTE: nav _parse_line
+def _parse_line(line:str, what:str)->tuple:                  #NOTE: nav _parse_line
     pass;                       NAVLOG and log('what, line={}',(what, line))
     if what=='SP':
         mtSP    = reSP.search(line)
@@ -523,7 +525,7 @@ def _parse_line(line:str, what:str)->list:                   #NOTE: nav _parse_l
             gdct= mtSP.groupdict()
             pass;               NAVLOG and log('ok mtSP gdct={}', gdct)
             return mtSP.group(0),   gdct['S'], gdct['P']
-        return [None]*3
+        return (None,)*3
     mtSR   = reSR.search(line)
     if mtSR:
         gdct= mtSR.groupdict()
@@ -547,7 +549,7 @@ def _parse_line(line:str, what:str)->list:                   #NOTE: nav _parse_l
         gdct= mtSP.groupdict()
         pass;                   NAVLOG and log('ok mtSP gdct={}', gdct)
         return mtSP.group(0),   gdct['S'], gdct['P'], -1, -1, -1
-    return [None]*6
+    return (None,)*6
    #def _parse_line
 
 def _build_path(ted, path:str, row:int, shft:str)->str:
@@ -604,7 +606,7 @@ def jump_to(drct:str, what:str):
     if not rpt_ed:      return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
     crts    = rpt_ed.get_carets()
     if len(crts)>1:     return app.msg_status(_("Command doesn't work with multi-carets"))
-    last_row= crts[0][1]
+#   last_row= crts[0][1]
     all_rows= rpt_ed.get_line_count()
     
     act_grp =     ed.get_prop(app.PROP_INDEX_GROUP)
@@ -627,26 +629,27 @@ def jump_to(drct:str, what:str):
         base_rw     = rw
     pass;                       NAVLOG and log('base_path,base_rw={}',(base_path,base_rw))
     
-    def set_rpt_active_row(row):
+    def set_rpt_active_row(_row):
         grp_tab = app.ed_group(rpt_grp)
         rpt_vis = grp_tab.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
         rpt_act =      ed.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
         if  rpt_vis:
             rpt_ed.focus()
-        rpt_ed.set_caret(0, row)
+        rpt_ed.set_caret(0, _row)
+        tid     = None
         if  rpt_vis \
-        and not (rpt_ed.get_prop(app.PROP_LINE_TOP) <= row <= ed.get_prop(app.PROP_LINE_BOTTOM)):
+        and not (rpt_ed.get_prop(app.PROP_LINE_TOP) <= _row <= ed.get_prop(app.PROP_LINE_BOTTOM)):
             if not rpt_act:
                 tid = ed.get_prop(app.PROP_TAB_ID)
                 rpt_ed.focus()
-            rpt_ed.set_prop(     app.PROP_LINE_TOP, str(max(0, row - max(5, apx.get_opt('find_indent_vert')))))
+            rpt_ed.set_prop(     app.PROP_LINE_TOP, str(max(0, _row - max(5, apx.get_opt('find_indent_vert')))))
             if not rpt_act:
                 apx.get_tab_by_id(tid).focus()
        #def set_rpt_active_row
     
     row     = base_row
     while True:
-        row = row + (1 if drct=='next' else -1)
+        row    += 1 if drct=='next' else -1
         if not 0<=row<all_rows:                 return app.msg_status(_('No data to jump'))
         line    = rpt_ed.get_text_line(row)
         if not line.lstrip(c9).startswith('<') \
@@ -717,20 +720,44 @@ def nav_to_src(where:str, how_act='move'):
     app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
    #def nav_to_src
 
-#def fold_all_found_up(rpt_ed:app.Editor, what:str):
-#   user_opt= app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
-#   # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrapp
-##   rpt_ed.set_caret(0, 0)
-#   rpt_ed.cmd(    cmds.cmd_FinderAction, chr(1).join(['findprev', what, '', 'cf']))
-#   pass;                       LOG and log('row,sel={}',(rpt_ed.get_carets()[0][1], rpt_ed.get_text_sel()))
-##   while rpt_ed.get_text_sel():
-#   for i in range(2):  ##!!
-#       pass;                   LOG and log('row,sel={}',(rpt_ed.get_carets()[0][1], rpt_ed.get_text_sel()))
-#       rpt_ed.set_caret(1, rpt_ed.get_carets()[0][1])
-#       rpt_ed.cmd(cmds.cmd_FoldingFoldAtCurLine)
-#       rpt_ed.cmd(cmds.cmd_FinderAction, chr(1).join(['findprev', what, '', 'cf']))
-#   app.app_proc(app.PROC_SET_FIND_OPTIONS, user_opt)
-#  #def fold_all_found_up
+def fold_all_roots(rpt_ed:app.Editor, what1:str, what2:str):
+#   pass;                       RPTLOG and log('?? fold ver="{}"',app.app_api_version())
+    if app.app_api_version()<'1.0.162': return
+    
+    # Waiting
+    pass;                      #RPTLOG and log('?? fold',)
+    fold_rngs = rpt_ed.folding(app.FOLDING_GET_LIST)
+    if not fold_rngs: 
+        for loop in range(10):
+            time.sleep(0.1)
+            app.app_idle()
+            if rpt_ed.folding(app.FOLDING_GET_LIST):
+                pass;          #RPTLOG and log('wait ok loop={}',loop)
+                break
+        else:
+            pass;              #RPTLOG and log('wait fail',)
+            return
+    pass;                      #RPTLOG and log('fold_rngs={}',fold_rngs)
+    if not fold_rngs: 
+        pass;                  #RPTLOG and log('fail - no rngs',)
+        return
+    for rng_num, rng_info in enumerate(fold_rngs[:]):
+        pass;                  #RPTLOG and log('?? rng_num={}',rng_num)
+        rng_bgn, rng_end, rng_off, rng_stapled, rng_folded  = rng_info
+        if rng_bgn==rng_end:    # simple rng
+            pass;              #RPTLOG and log('simple rng rng_num={}',rng_num)
+            continue
+        if rng_folded:          # already
+            pass;              #RPTLOG and log('already rng_num={}',rng_num)
+            continue
+        rng_1st_line= rpt_ed.get_text_line(rng_bgn).strip()
+        if not rng_1st_line.startswith(what1) and not rng_1st_line.startswith(what2):
+            pass;              #RPTLOG and log('not startswith rng_num={}',rng_num)
+            continue
+        pass;                  #RPTLOG and log('?? FOLDING_FOLD rng_num={}',rng_num)
+        rpt_ed.folding(app.FOLDING_FOLD, rng_num)
+        pass;                  #RPTLOG and log('ok FOLDING_FOLD rng_num={}',rng_num)
+   #def fold_all_roots
 
 ##############################################################################
 def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, progressor=None)->(list, dict):
@@ -836,66 +863,66 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     pass;                      #LOG and log('repl_s,ext_lns={}',(repl_s,ext_lns))
 
     enco_l  = how_walk.get('enco', ['UTF-8'])
-    def detect_encoding(path, detector):
-        detector.reset()
-        pass;                  #LOG and log('path={}',(path))
+    def detect_encoding(_path, _detector):
+        _detector.reset()
+        pass;                  #LOG and log('_path={}',(_path))
         try:
-            with open(path, 'rb') as h_path:
-                line = h_path.readline()
-                lines= 1
-                bytes= len(line)
+            with open(_path, 'rb') as h_path:
+                line    = h_path.readline()
+                _lines  = 1
+                _bytes  = len(line)
                 while line:
-                    detector.feed(line)
-                    if detector.done:
-                        pass;  #LOG and log('done. detector.result={}',(detector.result))
+                    _detector.feed(line)
+                    if _detector.done:
+                        pass;  #LOG and log('done. _detector.result={}',(_detector.result))
                         break
-                    line = h_path.readline()
-                    lines+= 1
-                    bytes+= len(line)
-            detector.close()
-            pass;              #LOG and log('lines={}, bytes={} detector.done={}, detector.result={}'
-                                   #            ,lines,    bytes,   detector.done,    detector.result)
-            encoding    = detector.result['encoding'] if detector.done else locale.getpreferredencoding()
-        except Exception as ex:
+                    line    = h_path.readline()
+                    _lines += 1
+                    _bytes += len(line)
+            _detector.close()
+            pass;              #LOG and log('_lines={}, _bytes={} _detector.done={}, _detector.result={}'
+                                   #        ,_lines,    _bytes,   _detector.done,    _detector.result)
+            encoding    = _detector.result['encoding'] if _detector.done else locale.getpreferredencoding()
+        except Exception:# as ex:
             pass;              #LOG and log('ex={}',(ex))
             return locale.getpreferredencoding()
-        pass;                  #LOG and log('lines,encoding={}',(lines,encoding))
+        pass;                  #LOG and log('_lines,encoding={}',(_lines,encoding))
         return encoding
        #def detect_encoding
     detector= UniversalDetector() if ENCO_DETD in enco_l else None
     rpt_enc_fail= apx.get_opt('fif_log_encoding_fail', False)
 
-    def find_for_body(   body:str, dept:int, rsp_l:list, rsp_i:list):
-        if pttn_r.search(body):
-            rsp_l           += [dict(dept=dept, file=path, isfl=True)]
-            rsp_i['files']  += 1
-            rsp_i['frgms']  += 1
+    def find_for_body(   _body:str, _dept:int, _rsp_l:list, _rsp_i:dict):
+        if pttn_r.search(_body):
+            _rsp_l          += [dict(dept=_dept, file=path, isfl=True)]
+            _rsp_i['files'] += 1
+            _rsp_i['frgms'] += 1
             return 1
         return 0
-    def find_for_lines(lines:list, dept:int, rsp_l:list, rsp_i:list)->int:
-        pass;                  #LOG and log('|lines|, dept={}',(len(lines), dept))
-        count   = 0
+    def find_for_lines(_lines:list, _dept:int, _rsp_l:list, _rsp_i:dict)->int:
+        pass;                  #LOG and log('|_lines|, _dept={}',(len(_lines), _dept))
+        _count   = 0
         items   = []
-        for ln,line_src in enumerate(lines):
+        for ln,line_src in enumerate(_lines):
             line    = line_src.rstrip(c10).rstrip(c13)
             mtchs   = list(pttn_r.finditer(line))
             pass;              #LOG and log('len(mtchs), line={}',(len(mtchs), line))
             if not plc_b:
                 # Only counting
-                count  += len(mtchs)
+                _count  += len(mtchs)
             else:
                 for mtch in mtchs:                              #NOTE: fif, line
-                    count  += 1
+                    _count  += 1
                     for ext_ln in range(max(0, ln-ext_lns), ln):
                         item    =       dict(row=ext_ln)
-                        if lin_b:  item.update(dict(line=lines[ext_ln]))
+                        if lin_b:  item.update(dict(line=_lines[ext_ln]))
                         items  += [item]
                     item        =       dict(row=ln, col=mtch.start(), ln=mtch.end()-mtch.start())
                     if lin_b:      item.update(dict(line=line))
                     items      += [item]
-                    for ext_ln in range(ln+1, min(len(lines), ln+ext_lns+1)):
+                    for ext_ln in range(ln+1, min(len(_lines), ln+ext_lns+1)):
                         item    =       dict(row=ext_ln)
-                        if lin_b:  item.update(dict(line=lines[ext_ln]))
+                        if lin_b:  item.update(dict(line=_lines[ext_ln]))
                         items  += [item]
                     if ext_lns>0:
                         # Separator
@@ -909,27 +936,27 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                                        ,col=                                          mtch0.start()
                                        ,ln =len(line_new)-(len(line_src)-mtch1.end())-mtch0.start()
                                        ,line=line_new, res=1 if rn==1 else 2)]
-                    lines[ln]   = line_new
+                    _lines[ln]  = line_new
                     pass;      #LOG and log('line_new={}',(repr(line_new)))
            #for line
-        if not count:
+        if not _count:
             # No matches
-            return count #continue#for path
+            return _count #continue#for path
         if not plc_b:
             # Only counting
-            rsp_l  += [dict( dept=dept
+            _rsp_l  += [dict( dept=_dept
                             ,file=path
                             ,isfl=True
-                            ,count=count)]
+                            ,count=_count)]
         else:
-            rsp_l  += [dict( dept=dept
+            _rsp_l  += [dict( dept=_dept
                             ,file=path
                             ,isfl=True
-                            ,count=count
+                            ,count=_count
                             ,items=items)]
-        rsp_i['files']  += 1
-        rsp_i['frgms']  += count
-        return count
+        _rsp_i['files'] += 1
+        _rsp_i['frgms'] += _count
+        return _count
        #def find_for_lines
 
     if root==IN_OPEN_FILES:
@@ -951,12 +978,12 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
            #for path
         return rsp_l, rsp_i
         
-    def get_prnt_path_dct(path, tree):
+    def get_prnt_path_dct(_path, tree):
 #       while True:
         for i in range(25):##!! 
-            if not path:        return None
-            if path in tree:    return tree[path]
-            path = os.path.dirname(path)
+            if not _path:       return None
+            if _path in tree:   return tree[_path]
+            _path   = os.path.dirname(_path)
         return None
     tree4rsp= {}                # {path:rsp_l[?]} 
                                 # (1) store dir-items, 
@@ -973,13 +1000,13 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         pass;                   FNDLOG and log('path_n, path={}',(path_n, path))
         if progressor and 0==path_n%17:
             pc  = int(100*path_n/len(files))
-            progressor.set_progress( f(_('(ESC?) Seaching: {}% (found {} match(es) in {} file(s))')
+            progressor.set_progress( f(_('[ESC?] Seaching: {}% [found {} match(es) in {} file(s)]')
                                     , pc
                                     , rsp_i['frgms'], rsp_i['files']))
             if progressor.need_break():
                 if ESC_FULL_STOP:   return [], {}
                 rsp_i['find_stopped']   = True
-                progressor.prefix += f(_('(Finding stopped {}%)'), pc)
+                progressor.prefix += f(_('(Seaching stopped {}%) '), pc)
                 break#for path
         
         prntdct = None
@@ -1003,7 +1030,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         dept    = 1+prntdct['dept'] if prntdct else 0
         pass;                  #FNDLOG and log('dept={}',dept)
         # Find in file
-        encd    = ''
+#       encd    = ''
         for enco_n, enco_s in enumerate(enco_l):
             pass;              #LOG and log('enco_s={}',(enco_s))
             if enco_s==ENCO_DETD:
@@ -1068,7 +1095,7 @@ def prep_filename_masks(mask:str)->(list,list):
     return (fi_masks, fo_masks)
    #def prep_filename_masks
     
-def collect_tabs(how_walk:dict)->list:
+def collect_tabs(how_walk:dict)->tuple:
     """ how_walk keys:
             'file_incl'    !str
             'file_excl'     str('')
@@ -1093,7 +1120,7 @@ def collect_tabs(how_walk:dict)->list:
     return rsp, False
    #def collect_tabs
 
-def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
+def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     """ how_walk keys:
             'root'         !str
             'depth'         int(-1)    -1=all, 0=only root
@@ -1132,13 +1159,13 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     for dirpath, dirnames, filenames in os.walk(os.path.abspath(root)):
         pass;                  #LOG and log('dirpath, #filenames={}',(dirpath, len(filenames)))
         pass;                  #LOG and log('dirpath, dirnames, filenames={}',(dirpath, dirnames, filenames))
-        dir_n   += dir_n
+        dir_n   += 1
         if progressor and 0==dir_n%13:
-            progressor.set_progress(f(_('(ESC?)(#{}) Picking files in: {}'), len(rsp), dirpath))
+            progressor.set_progress(f(_('[ESC?][Found {} file(s) in {} dir(s)] Picking files in: {}'), len(rsp), dir_n ,dirpath))
             if progressor.need_break():
                 if ESC_FULL_STOP:   return [], True
                 stoped  = True
-                progressor.prefix += _('(Picking stopped)')
+                progressor.prefix += _('(Picking stopped) ')
                 break#for dirpath
         # Cut links
         dir4cut     = [dirname for dirname in dirnames if os.path.islink(os.path.join(dirpath, dirname))]
@@ -1191,6 +1218,11 @@ def collect_files(how_walk:dict, progressor=None)->list:        #NOTE: cllc
     if sort:
         tm_pth  = [(os.path.getmtime(path),path) for path in rsp]
         rsp     = [tp[1] for tp in sorted(tm_pth, reverse=(sort=='date,desc'))]
+        pass;                  #rsp_srt = sorted(tm_pth, reverse=(sort=='date,desc'))
+        pass;                  #log('rsp_srt={}',(rsp_srt))
+        pass;                  #log('zip(*...)[1]={}',(list(list(zip(*rsp_srt))[1])))
+        pass;                  #log('rsp         ={}',(rsp))
+        pass;                  #log('rsp==zip(*...)[1] {}',(rsp==list(list(zip(*rsp_srt))[1])))
         if len(rsp)>=frst>0:
             rsp = rsp[:frst]
     pass;                       LOG and log('|rsp|, stoped={}',(len(rsp), stoped))
@@ -1218,7 +1250,7 @@ def is_hidden_file(path:str)->bool:
     if os.name == 'nt':
         # For Windows use file attribute.
         attrs   = ctypes.windll.kernel32.GetFileAttributesW(path)
-        return attrs & FILE_ATTRIBUTE_HIDDEN
+        return bool(attrs & FILE_ATTRIBUTE_HIDDEN)
 
     # For *nix use a '.' prefix.
     return os.path.basename(path).startswith('.')
@@ -1246,23 +1278,23 @@ class ProgressAndBreak:
         return was_esc
    #class ProgressAndBreak
 
-def undo_by_report():
-    """ Use data from fif-report to undo replacements in files
-    """
-    lxr  = ed.get_prop(app.PROP_LEXER_FILE, '')
-    if lxr.upper() not in lexers_l:         return app.msg_status(  _('Undo must start from tab with Results of Replace'))
-    line0= ed.get_text_line(0)
-    if not line0.startswith(RPT_REPL_SIGN): return app.msg_status(f(_('Undo must start from tab with text "{}"'), RPT_REPL_SIGN))
-    if app.ID_YES != app.msg_box(
-                        'Do you want execute undo for all replacements:'
-                   +c13+line0
-                    , app.MB_YESNO+app.MB_ICONQUESTION):        return
-    in_tabs = IN_OPEN_FILES in line0
-    rpt_ed  = ed
-    path    = ''
-    for rpt_n in range(1, rpt_ed.get_line_count()):
-        rpt_s  = rpt_ed.get_text_line(rpt_n)
-   #def undo_by_report
+#def undo_by_report():
+#   """ Use data from fif-report to undo replacements in files
+#   """
+#   lxr  = ed.get_prop(app.PROP_LEXER_FILE, '')
+#   if lxr.upper() not in lexers_l:         return app.msg_status(  _('Undo must start from tab with Results of Replace'))
+#   line0= ed.get_text_line(0)
+#   if not line0.startswith(RPT_REPL_SIGN): return app.msg_status(f(_('Undo must start from tab with text "{}"'), RPT_REPL_SIGN))
+#   if app.ID_YES != app.msg_box(
+#                       'Do you want execute undo for all replacements:'
+#                  +c13+line0
+#                   , app.MB_YESNO+app.MB_ICONQUESTION):        return
+#   in_tabs = IN_OPEN_FILES in line0
+#   rpt_ed  = ed
+#   path    = ''
+#   for rpt_n in range(1, rpt_ed.get_line_count()):
+#       rpt_s  = rpt_ed.get_text_line(rpt_n)
+#  #def undo_by_report
 
 # if __name__ == '__main__' :     # Tests
 #     Command().show_dlg()    #??
@@ -1333,4 +1365,5 @@ ToDo
 [+][a1-kv][31may16] Use source EOL to save after replacements
 [+][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
 [+][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside? width=0!)
+[ ][kv-kv][20dec16] Ленивый обход
 '''

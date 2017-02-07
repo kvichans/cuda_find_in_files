@@ -1,3 +1,6 @@
+1.1.13 (2017-02-07)
+fixed: fold prev results (if "append" and "fif_fold_prev_res")
+
 1.1.12 (2016-12-27)
 fixed: wait ~ in folder
 

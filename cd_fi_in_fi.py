@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.12 2016-12-27'
+    '1.1.13 2017-02-07'
 ToDo: (see end of file)
 '''
 
@@ -15,10 +15,8 @@ from    .cd_plug_lib    import *
 from    .cd_fif_api     import *
 
 OrdDict = collections.OrderedDict
-#c9, c10, c13    = chr(9), chr(10), chr(13) 
-#FROM_API_VERSION= '1.0.119'
 
-#pass;                           Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
+pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                          #LOG     = (-1==-1)  # Do or dont logging.
 pass;                           from pprint import pformat
@@ -27,6 +25,9 @@ pass;                           ##!! waits correction
 
 _   = get_translation(__file__) # I18N
 
+VERSION     = re.split('Version:', __doc__)[1].split("'")[1]
+VERSION_V,  \
+VERSION_D   = VERSION.split(' ')
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
@@ -749,7 +750,7 @@ def dlg_fif(what='', opts={}):
                              ,enco=enco_s
                             ))
         pass;                  #LOG and log('vals={}',pf(vals))
-        btn,vals,fid,chds=dlg_wrapper(_('Find in Files'), dlg_w, dlg_h, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
+        btn,vals,fid,chds=dlg_wrapper(f(_('Find in Files ({})'), VERSION_V), dlg_w, dlg_h, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
         scam        = app.app_proc(app.PROC_GET_KEYSTATE, '') if app.app_api_version()>='1.0.143' else ''
         btn_p       = btn
