@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.0 2016-11-24'
+    '1.2.2 2017-02-10'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -12,8 +12,15 @@ ToDo: (see end of file)
 
 import  sys, os, gettext, logging, inspect
 from    time        import perf_counter
-import  cudatext        as app
-import  cudax_lib       as apx
+
+try:
+    import  cudatext            as app
+    from    cudatext        import ed
+    import  cudax_lib           as apx
+except:
+    import  sw                  as app
+    from    sw              import ed
+    from . import cudax_lib     as apx
 
 pass;                           # Logging
 pass;                           from pprint import pformat
@@ -188,39 +195,6 @@ class Tr :
         #             ,           Tr.homise_fmt.format(h,m,s) )
         # Tr.format_tm
     # Tr
-
-def get_translation(plug_file):
-    ''' Part of i18n.
-        Full i18n-cycle:
-        1. All GUI-string in code are used in form 
-            _('')
-        2. These string are extracted from code to 
-            lang/messages.pot
-           with run
-            python.exe <pypython-root>\Tools\i18n\pygettext.py -p lang <plugin>.py
-        3. Poedit (or same program) create 
-            <module>\lang\ru_RU\LC_MESSAGES\<module>.po
-           from (cmd "Update from POT") 
-            lang/messages.pot
-           It allows to translate all "strings"
-           It creates (cmd "Save")
-            <module>\lang\ru_RU\LC_MESSAGES\<module>.mo
-        4. get_translation uses the file to realize
-            _('')
-    '''
-    plug_dir= os.path.dirname(plug_file)
-    plug_mod= os.path.basename(plug_dir)
-    lng     = app.app_proc(app.PROC_GET_LANG, '')
-    lng_mo  = plug_dir+'/lang/{}/LC_MESSAGES/{}.mo'.format(lng, plug_mod)
-    if os.path.isfile(lng_mo):
-        t   = gettext.translation(plug_mod, plug_dir+'/lang', languages=[lng])
-        _   = t.gettext
-        t.install()
-    else:
-        _   =  lambda x: x
-    return _
-
-_   = get_translation(__file__) # I18N
 
 def get_desktop_environment():
     #From http://stackoverflow.com/questions/2035657/what-is-my-current-desktop-environment
@@ -492,6 +466,9 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
        #for cnt
     pass;                      #log('ok ctrls_l={}',pformat(ctrls_l, width=120))
 
+    pass;                      #ctrls_fn=r'c:\temp\dlg_custom_ctrls.txt'
+    pass;                      #open(ctrls_fn, 'w', encoding='UTF-8').write('\n'.join(ctrls_l).replace('\r',''))
+    pass;                      #log(f(r'app.dlg_custom("{t}",{w},{h},open(r"{fn}",encoding="UTF-8").read(), {f})',t=title, w=w, h=h, fn=ctrls_fn, f=cid2i.get(focus_cid, -1)))
     ans     = app.dlg_custom(title, w, h, '\n'.join(ctrls_l), cid2i.get(focus_cid, -1))
     if ans is None: return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
 
@@ -702,6 +679,189 @@ def get_hotkeys_desc(cmd_id, ext_id=None, keys_js=None, def_ans=''):
                        ]).strip('/')
     return desc
    #def get_hotkeys_desc
+
+class CdSw:
+    """ Proxy to use plugins both in CudaText and SynWrite"""
+    
+    ENC_UTF8    = str(app.EDENC_UTF8_NOBOM) if 'sw'==app.__name__ else 'UTF-8'
+
+    @staticmethod
+
+    def ed_group(grp):
+        if 'sw'==app.__name__:
+            return ed                   ##!!
+        else:
+            return app.ed_group(grp)
+
+    @staticmethod
+    def app_idle():
+        if 'sw'==app.__name__:
+            pass
+        else:
+            return app.app_idle()
+
+    @staticmethod
+    def file_open(filename, group=-1):
+        if 'sw'==app.__name__:
+            return app.file_open(filename, group=group)
+        else:
+            return app.file_open(filename, group)
+
+    @staticmethod
+    def get_groups_count():
+        if 'sw'==app.__name__:
+            dct = {
+                app.GROUPING_ONE     : 1,
+                app.GROUPING_2VERT   : 2,
+                app.GROUPING_2HORZ   : 2,
+                app.GROUPING_3VERT   : 3,
+                app.GROUPING_3HORZ   : 3,
+                app.GROUPING_1P2VERT : 3,
+                app.GROUPING_1P2HORZ : 3,
+                app.GROUPING_4VERT   : 4,
+                app.GROUPING_4HORZ   : 4,
+                app.GROUPING_4GRID   : 4,
+                app.GROUPING_6GRID   : 6
+            }
+            gr_mode = app.get_app_prop(app.PROP_GROUP_MODE)
+            return dct.get(gr_mode, 1)
+        else:
+            dct = {
+                app.GROUPS_ONE      : 1,
+                app.GROUPS_2VERT    : 2,
+                app.GROUPS_2HORZ    : 2,
+                app.GROUPS_3VERT    : 3,
+                app.GROUPS_3HORZ    : 3,
+                app.GROUPS_3PLUS    : 3,
+                app.GROUPS_1P2VERT  : 3,
+                app.GROUPS_1P2HORZ  : 3,
+                app.GROUPS_4VERT    : 4,
+                app.GROUPS_4HORZ    : 4,
+                app.GROUPS_4GRID    : 4,
+                app.GROUPS_6GRID    : 6
+            }
+            gr_mode = app.app_proc(app.PROC_GET_GROUPING, '')
+            return dct.get(gr_mode, 1)
+
+    @staticmethod
+    def get_carets(_ed):
+        if 'sw'==app.__name__:
+            x,y = _ed.get_caret_xy()
+            return [(x,y,-1,-1)]        ##!!
+        else:
+            return _ed.get_carets()
+
+    MARKERS_ADD             = 1 if 'sw'==app.__name__ else app.MARKERS_ADD
+    MARKERS_DELETE_ALL      = 2 if 'sw'==app.__name__ else app.MARKERS_DELETE_ALL
+    @staticmethod
+    def attr(_ed, id, **kwargs):
+        if 'sw'==app.__name__:
+            if id==CdSw.MARKERS_DELETE_ALL:
+                return _ed.set_attr(app.ATTRIB_CLEAR_ALL, 0)
+            x   = kwargs['x']
+            y   = kwargs['y']+1 ##!!
+            ln  = kwargs['len']
+            _ed.set_sel(ed.xy_pos(x, y), ln)
+            _ed.set_attr(app.ATTRIB_SET_UNDERLINE, 0)
+            _ed.set_sel(ed.xy_pos(x, y), 0)
+            return  ##!!
+        else:
+            return _ed.attr(id, **kwargs)             
+
+    PROC_GET_FIND_OPTIONS   = 22 if 'sw'==app.__name__ else app.PROC_GET_FIND_OPTIONS
+    PROC_GET_LANG           = 40 if 'sw'==app.__name__ else app.PROC_GET_LANG
+    @staticmethod
+    def app_proc(pid, defv):
+        if 'sw'!=app.__name__:
+            return app.app_proc(pid, defv)
+        if False:pass
+        elif pid==CdSw.PROC_GET_FIND_OPTIONS:
+            return ''
+        elif pid==CdSw.PROC_GET_LANG:
+            return 'en'
+        return ''
+
+    @staticmethod
+    def set_caret(_ed, posx, posy, endx=-1, endy=-1):
+        if 'sw'==app.__name__:
+           #_ed.set_caret_xy(x, y)
+            if endx==-1:    # no sel
+                return _ed.set_caret_xy(posx, posy)
+            else:           # with sel
+                return _ed.set_caret_xy(posx, posy) ##!!
+        else:
+           #set_caret(posx, posy, endx=-1, endy=-1)
+            return _ed.set_caret(posx, posy, endx, endy)
+
+    @staticmethod
+    def dlg_dir(init_dir):
+        if 'sw'==app.__name__:
+            return app.dlg_folder('', init_dir)
+        else:
+            return app.dlg_dir(init_dir)
+    
+    MENU_LIST     = 0 if 'sw'==app.__name__ else app.MENU_LIST
+    MENU_LIST_ALT = 1 if 'sw'==app.__name__ else app.MENU_LIST_ALT
+    @staticmethod
+    def dlg_menu(mid, text):
+        if 'sw'==app.__name__:
+            return app.dlg_menu(app.MENU_SIMPLE if mid==CdSw.MENU_LIST else app.MENU_DOUBLE, '', text)
+        else:
+            return app.dlg_menu(mid, text)
+    
+    @staticmethod
+    def msg_status(msg, process_messages=False):
+        if 'sw'==app.__name__:
+            return app.msg_status(msg)
+        else:
+            return app.msg_status(msg, process_messages)
+    
+    @staticmethod
+    def msg_status_alt(msg, secs):
+        if 'sw'==app.__name__:
+            return app.msg_status(msg)
+        else:
+            return app.msg_status_alt(msg, secs)
+    
+    @staticmethod
+    def get_setting_dir():
+        return  app.app_ini_dir()       if 'sw'==app.__name__ else \
+                app.app_path(app.APP_DIR_SETTINGS)
+   #class CudSyn
+
+def get_translation(plug_file):
+    ''' Part of i18n.
+        Full i18n-cycle:
+        1. All GUI-string in code are used in form 
+            _('')
+        2. These string are extracted from code to 
+            lang/messages.pot
+           with run
+            python.exe <pypython-root>\Tools\i18n\pygettext.py -p lang <plugin>.py
+        3. Poedit (or same program) create 
+            <module>\lang\ru_RU\LC_MESSAGES\<module>.po
+           from (cmd "Update from POT") 
+            lang/messages.pot
+           It allows to translate all "strings"
+           It creates (cmd "Save")
+            <module>\lang\ru_RU\LC_MESSAGES\<module>.mo
+        4. get_translation uses the file to realize
+            _('')
+    '''
+    plug_dir= os.path.dirname(plug_file)
+    plug_mod= os.path.basename(plug_dir)
+    lng     = CdSw.app_proc(CdSw.PROC_GET_LANG, '')
+#   lng     = app.app_proc(app.PROC_GET_LANG, '')
+    lng_mo  = plug_dir+'/lang/{}/LC_MESSAGES/{}.mo'.format(lng, plug_mod)
+    if os.path.isfile(lng_mo):
+        t   = gettext.translation(plug_mod, plug_dir+'/lang', languages=[lng])
+        _   = t.gettext
+        t.install()
+    else:
+        _   =  lambda x: x
+    return _
+
+_   = get_translation(__file__) # I18N
 
 if __name__ == '__main__' :     # Tests
     pass

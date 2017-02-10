@@ -2,17 +2,25 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.13 2017-02-07'
+    '1.2.2 2017-02-10'
 ToDo: (see end of file)
 '''
 
 import  re, os, sys, locale, json, collections #, traceback
-import  cudatext            as app
-from    cudatext        import ed
-import  cudatext_cmd        as cmds
-import  cudax_lib           as apx
-from    .cd_plug_lib    import *
-from    .cd_fif_api     import *
+
+try:
+    import  cudatext            as app
+    from    cudatext        import ed
+    import  cudax_lib           as apx
+    MIN_API_VER = '1.0.167'
+except:
+    import  sw                  as app
+    from    sw              import ed
+    from . import cudax_lib     as apx
+    MIN_API_VER = '1.0.162'
+
+from    .cd_plug_lib        import *
+from    .cd_fif_api         import *
 
 OrdDict = collections.OrderedDict
 
@@ -28,9 +36,12 @@ _   = get_translation(__file__) # I18N
 VERSION     = re.split('Version:', __doc__)[1].split("'")[1]
 VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
+
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
+if 'sw'==app.__name__:
+    USE_EDFIND_OPS  = False
 
 GAP     = 5
 
@@ -87,6 +98,7 @@ class Command:
 
 
     def find_in_ed(self):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         filename= ed.get_filename()
         return dlg_fif(what='', opts=dict(
              incl = os.path.basename(filename) if filename else ed.get_prop(app.PROP_TAB_TITLE)
@@ -96,6 +108,7 @@ class Command:
        #def find_in_ed
 
     def find_in_tabs(self):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         return dlg_fif(what='', opts=dict(
              incl = '*'
             ,fold = IN_OPEN_FILES
@@ -104,6 +117,7 @@ class Command:
        #def find_in_ed
 
     def repeat_find_by_rpt(self):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         if ed.get_prop(app.PROP_LEXER_FILE).upper() not in lexers_l:
             return app.msg_status(_('The command works only with reports of FindInFile plugin'))
         req_opts  = report_extract_request(ed)
@@ -115,13 +129,17 @@ class Command:
        #def repeat_find_by_rpt
 
     def show_dlg(self, what='', opts={}):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         return dlg_fif(what, opts)
 
     def _nav_to_src(self, where:str, how_act='move'):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         return nav_to_src(where, how_act)
     def _jump_to(self, drct:str, what:str):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         return jump_to(drct, what)
     def on_goto_def(self, ed_self):
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
             self._nav_to_src('same', 'move')
             return True
@@ -189,12 +207,13 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
                 ) 
                 for ps in pset_l] \
             + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
-              ,_('Config presets...\tChange, Move up/down, Delete')
-              ,_('Save as preset\tSelect options to save...')]
+              ,_('Config presets…\tChange, Move up/down, Delete')
+              ,_('Save as preset\tSelect options to save…')]
     ind_inop= len(pset_l)
     ind_conf= len(pset_l)+1
     ind_save= len(pset_l)+2
-    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
+    ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
+#   ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
     if ps_ind is None:  return None
     if False:pass
     elif ps_ind==ind_inop:
@@ -316,6 +335,18 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
 def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,cust_h):
     RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
     TIPS_BODY   = _(r'''
+• ".*" - Option "Regula Expresion" allows to use in field "Find" special symbols:
+    .   any character
+    \d  digit character (0..9)
+    \w  word-like character (digits, letters, "_")
+    See full documentation by link at bottom.
+ 
+• "aA" - Option "Case sensative"
+ 
+• "w" - {word}
+ 
+—————————————————————————————————————————————— 
+ 
 • Values in fields "In file" and "Not in file" can contain
     ?       for any single char,
     *       for any substring (may be empty),
@@ -331,11 +362,11 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,c
     Search will consider all *.txt files in folder c:/root
     and in all subfolders a* except ab*.
  
-• Set special value "{tags}" for field "In folder" to search in all opened documents.
+• Set special value "{tags}" for field "In folder" to search in opened documents.
     Preset "In folder={tags}" helps to do this.
     To search in unsaved tabs, use mask "*" in field "In files".
  
-• "w" - {word}
+—————————————————————————————————————————————— 
  
 • Long-term searches can be interrupted by ESC.
     Search has three stages: 
@@ -353,11 +384,11 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,c
  
 • "Current folder" - {cfld}
  
-• "Browse..." - {brow}
+• "Browse…" - {brow}
  
-• "Preset..." - {pset}
+• "Preset…" - {pset}
  
-• "Adjust..." - {cust}
+• "Adjust…" - {cust}
 ''').strip().format(
      find=find_h.replace('\r', '\n')
     ,repl=repl_h.replace('\r', '\n')
@@ -391,7 +422,7 @@ Default values:
     // Activate tab with report after filling
     "fif_focus_to_rpt":true,
     
-    // Save all request details ("Find", "In folder", ...) in first line of result file. 
+    // Save all request details ("Find", "In folder", …) in first line of result file. 
     // The info will be used in command "Repeat search for this report-tab"
     "fif_save_request_to_rpt":false,
     
@@ -436,10 +467,11 @@ Default values:
 #   // Before append result fold all previous ones
 #   "fif_fold_prev_res":false,
 #   
-    DW, DH      = 600, 600
+    DW, DH      = 800, 700
 #   vals_hlp    = dict(htxt=TIPS_BODY)
     vals_hlp    = dict(htxt=TIPS_BODY
                       ,tips=True
+                      ,keys=False
                       ,tree=False
                       ,opts=False
                       )
@@ -448,14 +480,20 @@ Default values:
         btn_hlp,    \
         vals_hlp,   \
         *_t         = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
-             [dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,0,1'                                  ) #  ro,mono,border
-             ,dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)
-             ,dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                ,act='1'         )
-             ,dict(cid='keys',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                ,act='1'         )
-             ,dict(cid='tree',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                ,act='1'         )
-             ,dict(cid='opts',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                ,act='1'         )
-             ,dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )
-             ], vals_hlp, focus_cid='htxt')
+            ([]
+            +[dict(cid='htxt',tp='me'    ,t=GAP  ,h=DH-28,l=GAP          ,w=DW   ,props='1,1,1'                                  )] #  ro,mono,border
+           +([] if not vals_hlp['tips'] else []
+            +[dict(           tp='ln-lb' ,tid='-'        ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)]
+           )
+           +([] if not vals_hlp['opts'] else []
+            +[dict(cid='open',tp='bt'    ,tid='-'        ,l=GAP          ,w=150  ,cap=_('O&pen user.json')                       )]
+           )
+            +[dict(cid='tips',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                ,act='1'         )]
+            +[dict(cid='keys',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                ,act='1'         )]
+            +[dict(cid='tree',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                ,act='1'         )]
+            +[dict(cid='opts',tp='ch-bt' ,t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                ,act='1'         )]
+            +[dict(cid='-'   ,tp='bt'    ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )]
+            ), vals_hlp, focus_cid='htxt')
         pass;                  #LOG and log('vals_hlp={}',vals_hlp)
         if btn_hlp is None or btn_hlp=='-': break#while_hlp
         if False:pass
@@ -463,12 +501,16 @@ Default values:
         elif btn_hlp=='keys':vals_hlp["htxt"]=KEYS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=True; vals_hlp["tree"]=False;vals_hlp["opts"]=False
         elif btn_hlp=='tree':vals_hlp["htxt"]=TREE_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=True; vals_hlp["opts"]=False
         elif btn_hlp=='opts':vals_hlp["htxt"]=OPTS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=True
+        elif btn_hlp=='open':
+            usr_json    = CdSw.file_open(CdSw.get_setting_dir()+os.sep+'user.json')
+            
        #while_hlp
    #def dlg_help
 
 def dlg_fif(what='', opts={}):
     MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
-    cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
+    cfg_json= CdSw.get_setting_dir()+os.sep+'cuda_find_in_files.json'
+#   cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
     stores  = json.loads(open(cfg_json).read(), object_pairs_hook=OrdDict) \
                 if os.path.exists(cfg_json) and os.path.getsize(cfg_json) != 0 else \
               OrdDict()
@@ -495,7 +537,7 @@ def dlg_fif(what='', opts={}):
     more_h  = _('Show/Hide advanced options')
     cust_h  = _('Change dialog layout.'
                 '\rCtrl+Click  - Adjust vertical alignments'
-                '\rShift+Click   - Set wider width for fields What/In files...'
+                '\rShift+Click   - Set wider width for fields What/In files…'
                 '\rCtrl+Shift+Click - Set default widths for all fields.'
                 )
     frst_h  = _('Search only inside N first found files')
@@ -537,7 +579,7 @@ def dlg_fif(what='', opts={}):
                 '\r   It is like pressing Find with option "[x]Append results".'
                 ), TOTB_NEW_TAB)
     repl_h  = _('Start search and replacement.'
-                '\rShift+Click  - Run without question "Do you want to replace...?"'
+                '\rShift+Click  - Run without question "Do you want to replace…?"'
                 )
     coun_h  = f(_('Count matches only.'
                 '\r   It is like pressing Find with option Collect: "{}".'
@@ -572,7 +614,8 @@ def dlg_fif(what='', opts={}):
     case01  = opts.get('case', stores.get('case', '0'))
     word01  = opts.get('word', stores.get('word', '0'))
     if USE_EDFIND_OPS:
-        ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
+        ed_opt  = CdSw.app_proc(CdSw.PROC_GET_FIND_OPTIONS, '')
+#       ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
         # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
         reex01  = '1' if 'r' in ed_opt else '0'
         case01  = '1' if 'c' in ed_opt else '0'
@@ -652,7 +695,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='prs1',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
                  +[dict(cid='prs2',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
                  +[dict(cid='prs3',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
-                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets...')       ,hint=pset_h)] # &s
+                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets…')       ,hint=pset_h)] # &s
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act='1' ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act='1' ,hint=case_h)] # &a
                  +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'        ,act='1' ,hint=word_h)] # &w
@@ -672,7 +715,7 @@ def dlg_fif(what='', opts={}):
                 )                                               
                  +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap='*'+_('I&n folder:')               )] # &n
                  +[dict(cid='fold',tp='cb'      ,t=gap2+112+EG4 ,l=cmb_l    ,w=txt_w    ,items=fold_l                           )] # 
-                 +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse...')        ,hint=brow_h)] # &b
+                 +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')        ,hint=brow_h)] # &b
                  +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140+EG5 ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
@@ -706,8 +749,8 @@ def dlg_fif(what='', opts={}):
                 )                                               
                 +([]                        
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Coun&t')        ,hint=coun_h)] # &t
-                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just...')    ,hint=cust_h)] # &j
-                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help...')                  )] # &h
+                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just…')    ,hint=cust_h)] # &j
+                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help')                  )] # &h
                  +[dict(cid='-'   ,tp='bt'      ,tid='help'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
                 if not wo_adva else []
                  +[dict(cid='-'   ,tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
@@ -924,7 +967,8 @@ def dlg_fif(what='', opts={}):
                 
         if False:pass
         elif btn_m=='brow':     # BroDir
-            path    = app.dlg_dir(os.path.expanduser(fold_s))
+            path    = CdSw.dlg_dir(os.path.expanduser(fold_s))
+#           path    = app.dlg_dir(os.path.expanduser(fold_s))
             if not path: continue#while_fif
             fold_s  = path
             fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
@@ -943,12 +987,15 @@ def dlg_fif(what='', opts={}):
             incl_s  = os.path.basename(ed.get_filename())
             fold_s  = os.path.dirname( ed.get_filename())
             fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
+            dept_n  = 1
+            excl_s  = ''
         elif btn_m=='c/cfld':   # [Ctrl+]CurDir  = InTabs
             incl_s  = '*'
             fold_s  = IN_OPEN_FILES
         elif btn_m=='sc/cfld':  # [Ctrl+Shift+]CurDir = CurTab
             incl_s  = ed.get_prop(app.PROP_TAB_TITLE)   ##!! need tab-id?
             fold_s  = IN_OPEN_FILES
+            excl_s  = ''
 
         # Save data after cmd
         stores['reex']  = reex01
@@ -1038,7 +1085,7 @@ def dlg_fif(what='', opts={}):
                  root       =root
                 ,file_incl  =incl_s
                 ,file_excl  =excl_s
-                ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', ...]
+                ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', …]
                 ,skip_hidn  =skip_s in ('1', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
                 ,skip_binr  =skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
                 ,sort_type  =apx.icase( sort_s=='0','' 
@@ -1196,4 +1243,14 @@ ToDo
 [ ][kv-kv][11jun16] Lazy/Yield for cllc--find--rept ?
 [ ][kv-kv][14jun16] Opt "save active tab on Close" ?
 [ ][kv-kv][14jun16] Cmds "Show next/prev result" ?
+[+][kv-kv][09feb17] Set dept="folder only" when cmd "Search in cur file"
+[+][kv-kv][09feb17] Clear excl when cmd "Search in cur file"
+[+][kv-kv][09feb17] Clear excl when cmd "Search in cur tab"
+[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur file
+[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur tab
+[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in all tab
+[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur dir
+[+][kv-kv][09feb17] Help: show button "open user.json" when Opt, ref "RE" when Tips
+[ ][kv-kv][09feb17] Replace "..." to "…"
+[ ][kv-kv][09feb17] After stoping show (2942 matches in 166 (stop at NN%) files)
 '''

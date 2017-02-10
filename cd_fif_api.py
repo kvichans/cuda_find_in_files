@@ -2,22 +2,26 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.1.13 2017-02-07'
+    '1.2.2 2017-02-10'
 ToDo: (see end of file)
 '''
 
 import  re, os, sys, locale, json, collections, traceback, time
 from    fnmatch         import fnmatch
-import  cudatext            as app
-from    cudatext        import ed
-import  cudatext_cmd        as cmds
-import  cudax_lib           as apx
-from    .cd_plug_lib    import *
+
+try:
+    import  cudatext            as app
+    from    cudatext        import ed
+    import  cudax_lib           as apx
+except:
+    import  sw                  as app
+    from    sw              import ed
+    from . import cudax_lib     as apx
+
+from    .cd_plug_lib        import *
 from    .chardet.universaldetector import UniversalDetector
 
 OrdDict = collections.OrderedDict
-c9, c10, c13    = chr(9), chr(10), chr(13) 
-#FROM_API_VERSION= '1.0.119'
 
 pass;                           Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
@@ -65,6 +69,8 @@ SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
 AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
 FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
 SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
+if 'sw'==app.__name__:
+    FOLD_PREV_RES   = False
 
 MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
 MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
@@ -131,7 +137,8 @@ def report_to_tab(rpt_data:dict
     def create_new(_title_ext='')->app.Editor:
         app.file_open('')
         new_ed  = ed
-        new_ed.set_prop(app.PROP_ENC,       'UTF-8')
+        new_ed.set_prop(app.PROP_ENC,       CdSw.ENC_UTF8)
+#       new_ed.set_prop(app.PROP_ENC,       'UTF-8')
         new_ed.set_prop(app.PROP_TAB_TITLE, _('Results')+_title_ext)  #??
         return new_ed
         
@@ -178,7 +185,8 @@ def report_to_tab(rpt_data:dict
     # Prepare tab
     if not rpt_type['join']:
         rpt_ed.set_text_all('')
-        rpt_ed.attr(app.MARKERS_DELETE_ALL)
+        CdSw.attr(rpt_ed, CdSw.MARKERS_DELETE_ALL)
+#       rpt_ed.attr(       app.MARKERS_DELETE_ALL)
 
     # Fold prev res
     if rpt_type['join'] and FOLD_PREV_RES: #?and rpt_ed.get_prop(app.PROP_GUTTER_FOLD)
@@ -190,7 +198,8 @@ def report_to_tab(rpt_data:dict
 #   rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
     def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed, style=MARK_FIND_STYLE):
         pass;                  #RPTLOG and log('rw={}',rw)
-        to_ed.attr(app.MARKERS_ADD
+        CdSw.attr(to_ed, CdSw.MARKERS_ADD
+#       to_ed.attr(       app.MARKERS_ADD
                 , x=cl, y=rw, len=ln
                 , **style
                 )
@@ -424,7 +433,8 @@ def report_to_tab(rpt_data:dict
         rpt_ed.lexer_scan(row4crt)
         
     pass;                      #RPTLOG and log('row4crt={}',row4crt)
-    rpt_ed.set_caret(0, row4crt)
+    CdSw.set_caret(rpt_ed, 0, row4crt)
+#   rpt_ed.set_caret(      0, row4crt)
 
     if AUTO_SAVE and os.path.isfile(rpt_ed.get_filename()):
         rpt_ed.save()
@@ -459,9 +469,10 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
     if not op_ed:
         # Open it
         ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
-        grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
+        grps    = CdSw.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
+#       grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
         op_grp  = -1                                    \
-                     if 1==apx.get_groups_count()   else\
+                     if 1==grps                     else\
                   -1                                    \
                      if where=='same'               else\
                   (ed_grp+1)%grps                       \
@@ -480,23 +491,28 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
 #                       ,True                                                   , -1
 #                       )
         pass;                   NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
-        app.file_open(path, op_grp)
+        CdSw.file_open(path, op_grp)
+#       app.file_open(path, op_grp)
         op_ed   = ed
     op_ed.focus()
     if False:pass
     elif rw==-1:
         pass
     elif cl==-1 and how_act=='move':
-        op_ed.set_caret(0,      rw)
+        CdSw.set_caret(op_ed,   0, rw)
+#       op_ed.set_caret(        0, rw)
     elif cl==-1:
         l_ln= len(op_ed.get_text_line(rw))
-        op_ed.set_caret(0,   rw,   l_ln,  rw)   # inverted sel to show line head if window is narrow 
+        CdSw.set_caret(op_ed,   0, rw,   l_ln,  rw)   # inverted sel to show line head if window is narrow 
+#       op_ed.set_caret(        0, rw,   l_ln,  rw)       # inverted sel to show line head if window is narrow 
     elif ln==-1:
-        op_ed.set_caret(cl,     rw)
+        CdSw.set_caret(op_ed,   cl, rw)
+#       op_ed.set_caret(        cl, rw)
     else:
-        op_ed.set_caret(cl+ln,  rw,     cl, rw)
+        CdSw.set_caret(op_ed,   cl+ln,  rw,     cl, rw)
+#       op_ed.set_caret(        cl+ln,  rw,     cl, rw)
     if rw!=-1:
-        top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', ed_cfg=op_ed)))
+        top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', -5, ed_cfg=op_ed)))
         op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
 
     if how_act=='move' or the_ed_grp == ed.get_prop(app.PROP_INDEX_GROUP):
@@ -604,7 +620,8 @@ def jump_to(drct:str, what:str):
     if not last_rpt_tid:return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
     rpt_ed  = apx.get_tab_by_id(last_rpt_tid)
     if not rpt_ed:      return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
-    crts    = rpt_ed.get_carets()
+    crts    = CdSw.get_carets(rpt_ed)
+#   crts    = rpt_ed.get_carets()
     if len(crts)>1:     return app.msg_status(_("Command doesn't work with multi-carets"))
 #   last_row= crts[0][1]
     all_rows= rpt_ed.get_line_count()
@@ -630,19 +647,21 @@ def jump_to(drct:str, what:str):
     pass;                       NAVLOG and log('base_path,base_rw={}',(base_path,base_rw))
     
     def set_rpt_active_row(_row):
-        grp_tab = app.ed_group(rpt_grp)
+        grp_tab = CdSw.ed_group(rpt_grp)
+#       grp_tab = app.ed_group(rpt_grp)
         rpt_vis = grp_tab.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
         rpt_act =      ed.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
         if  rpt_vis:
             rpt_ed.focus()
-        rpt_ed.set_caret(0, _row)
+        CdSw.set_caret(rpt_ed,  0, _row)
+#       rpt_ed.set_caret(       0, _row)
         tid     = None
         if  rpt_vis \
         and not (rpt_ed.get_prop(app.PROP_LINE_TOP) <= _row <= ed.get_prop(app.PROP_LINE_BOTTOM)):
             if not rpt_act:
                 tid = ed.get_prop(app.PROP_TAB_ID)
                 rpt_ed.focus()
-            rpt_ed.set_prop(     app.PROP_LINE_TOP, str(max(0, _row - max(5, apx.get_opt('find_indent_vert')))))
+            rpt_ed.set_prop(     app.PROP_LINE_TOP, str(max(0, _row - max(5, apx.get_opt('find_indent_vert', -5)))))
             if not rpt_act:
                 apx.get_tab_by_id(tid).focus()
        #def set_rpt_active_row
@@ -708,7 +727,8 @@ def nav_to_src(where:str, how_act='move'):
     """
     global last_rpt_tid
     pass;                   NAVLOG and log('where, how_act={}',(where, how_act))
-    crts    = ed.get_carets()
+    crts    = CdSw.get_carets(ed)
+#   crts    = ed.get_carets()
     if len(crts)>1:         return app.msg_status(_("Command doesn't work with multi-carets"))
     last_rpt_tid= ed.get_prop(app.PROP_TAB_ID)
         
@@ -972,9 +992,11 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             if repl_s is not None and count:
                 # Change text in ted
                 pass;          #LOG and log('lines={}',(lines))
-                crts= ted.get_carets()
+                crts= CdSw.get_carets(ted)
+#               crts= ted.get_carets()
                 ted.set_text_all(c13.join(lines))
-                ted.set_caret(*crts[0])
+                CdSw.set_caret(ted, *crts[0])
+#               ted.set_caret(      *crts[0])
            #for path
         return rsp_l, rsp_i
         
@@ -1266,7 +1288,8 @@ class ProgressAndBreak:
         app.app_proc(app.PROC_SET_ESCAPE, '0')
 
     def set_progress(self, msg:str):
-        app.msg_status(self.prefix+msg, process_messages=True)
+        CdSw.msg_status(self.prefix+msg, process_messages=True)
+#       app.msg_status(self.prefix+msg, process_messages=True)
 
     def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
         was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
