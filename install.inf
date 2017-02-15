@@ -4,10 +4,11 @@ desc=Gives dialog to search for multiple files containing some string/regex, lik
 type=cudatext-plugin
 subdir=cuda_find_in_files
 homepage=https://github.com/kvichans/cuda_find_in_files
+api=1.0.162
 
 [item400]
 section=events
-events=on_goto_def
+events=on_goto_def,on_click_dbl
 
 [item1]
 section=commands
@@ -69,8 +70,14 @@ method=nav_to_src_next_act
 
 [item22]
 section=commands
-caption=&Find in Files\Navigate to source, to prev group, and a&ctivate
+caption=&Find in Files\Navigate to source, to prev group, and act&ivate
 method=nav_to_src_prev_act
+;menu=0
+
+[item29]
+section=commands
+caption=&Find in Files\Configurate navigation with &double-click...
+method=dlg_nav_by_dclick
 ;menu=0
 
 [item30]

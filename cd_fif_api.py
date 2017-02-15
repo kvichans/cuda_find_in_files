@@ -444,6 +444,7 @@ def report_to_tab(rpt_data:dict
 ############################################
 # Using report to nav
 def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
+    """ Return True if nav successed. """
     pass;                       NAVLOG and log('where, how_act={}',(where, how_act))
     pass;                       NAVLOG and log('path,rw,cl,ln={}',(path,rw,cl,ln))
     op_ed   = None
@@ -495,6 +496,7 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
 #       app.file_open(path, op_grp)
         op_ed   = ed
     op_ed.focus()
+    pass;                       NAVLOG and log('ok op_ed.focus()',())
     if False:pass
     elif rw==-1:
         pass
@@ -520,6 +522,7 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
     else:
         the_ed  = apx.get_tab_by_id(the_ed_id)
         the_ed.focus()
+    return True
    #def _open_and_nav
 
 reSP    = re.compile(  r'(?P<S>\t+)'        # Shift !
@@ -706,6 +709,7 @@ def jump_to(drct:str, what:str):
        
 def nav_to_src(where:str, how_act='move'):
     """ Try to open file and navigate to row[+col+sel].
+        Return True if nav successed.
         FiF-res structure variants
             +text about finding
             ¬<abs-path>

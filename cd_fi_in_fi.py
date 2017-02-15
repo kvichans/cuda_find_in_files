@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.2 2017-02-10'
+    '1.2.3 2017-02-15'
 ToDo: (see end of file)
 '''
 
@@ -26,7 +26,6 @@ OrdDict = collections.OrderedDict
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
-pass;                          #LOG     = (-1==-1)  # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -36,6 +35,10 @@ _   = get_translation(__file__) # I18N
 VERSION     = re.split('Version:', __doc__)[1].split("'")[1]
 VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
+
+MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
+CFG_JSON= CdSw.get_setting_dir()+os.sep+'cuda_find_in_files.json'
+#CFG_JSON= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
 
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
@@ -143,9 +146,109 @@ class Command:
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
             self._nav_to_src('same', 'move')
             return True
+    def on_click_dbl(self, ed_self, scam):
+        dcls    = Command.get_dcls()
+        dcl     = dcls.get(scam, '')
+        pass;                   LOG and log('scam, dcl={}',(scam, dcl))
+        if not dcl:
+            return
+        if ed_self.get_prop(app.PROP_LEXER_FILE).upper() not in lexers_l:
+            return
+        return not self._nav_to_src(*dcl.split(','))
+       #def on_click_dbl
+    
+    dcls    = None
+    dcls_def= {'':'same,stay'}
+    @staticmethod
+    def get_dcls():
+        if Command.dcls is None:
+            stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
+                        if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+                      OrdDict()
+            Command.dcls    = stores.get('dcls', Command.dcls_def)
+        return Command.dcls
+       #def get_dcls
+    
+    def dlg_nav_by_dclick(self):
+        pass;                   LOG and log('ok',())
+        dcls    = Command.get_dcls()
+        acts_l  = ["<no action>"
+                  ,'Navigate to same group'
+                  ,'Navigate to next group'
+                  ,'Navigate to prev group'
+                  ,'Navigate to next group, activate'
+                  ,'Navigate to prev group, activate'
+                  ]
+        sgns_l  = [''
+                  ,'same,stay'
+                  ,'next,stay'
+                  ,'prev,stay'
+                  ,'next,move'
+                  ,'prev,move'
+                  ]
+        aid,vals,*_t   = dlg_wrapper(_('Configure navigation by double-click'), 560,280,     #NOTE: dlg-dclick
+             [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=270  ,cap='Double-click:'                    ) #
+             ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=270  ,cap='Double-click with Shift:'         ) #
+             ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=270  ,cap='Double-click with Ctrl:'          ) #
+             ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=270  ,cap='Double-click with Shift+Ctrl:'    ) #
+             ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=270  ,cap='Double-click with Alt:'           ) #
+             ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=270  ,cap='Double-click with Shift+Alt:'     ) #
+             ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=270  ,cap='Double-click with Alt+Ctrl:'      ) #
+             ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=270  ,cap='Double-click with Shift+Ctrl+Alt:') #
+             ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            [dict(           tp='lb'    ,tid='nnn' ,l=210      ,w=270  ,cap='DoubleClick:'                     ) #
+#            ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='snn' ,l=176      ,w=270  ,cap='Shift+DoubleClick:'          ) #
+#            ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='ncn' ,l=183      ,w=270  ,cap='Ctrl+DoubleClick:'           ) #
+#            ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='scn' ,l=150      ,w=270  ,cap='Shift+Ctrl+DoubleClick:'     ) #
+#            ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='nna' ,l=186      ,w=270  ,cap='Alt+DoubleClick:'            ) #
+#            ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='sna' ,l=153      ,w=270  ,cap='Shift+Alt+DoubleClick:'      ) #
+#            ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='nca' ,l=160      ,w=270  ,cap='Alt+Ctrl+DoubleClick:'       ) #
+#            ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+#            ,dict(           tp='lb'    ,tid='sca' ,l=136      ,w=270  ,cap='Shift+Ctrl+AltDoubleClick:' ) #
+#            ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+280    ,w=270  ,items=acts_l                           ) #
+             ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+385    ,w=80   ,cap=_('OK')    ,props='1'              ) #     default
+             ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+470    ,w=80   ,cap=_('Cancel')                        )              
+             ],    dict(nnn=sgns_l.index(dcls.get('',   ''))
+                       ,snn=sgns_l.index(dcls.get('s',  ''))
+                       ,ncn=sgns_l.index(dcls.get('c',  ''))
+                       ,scn=sgns_l.index(dcls.get('sc', ''))
+                       ,nna=sgns_l.index(dcls.get('a',  ''))
+                       ,sna=sgns_l.index(dcls.get('sa', ''))
+                       ,nca=sgns_l.index(dcls.get('ca', ''))
+                       ,sca=sgns_l.index(dcls.get('sca',''))
+                       ), focus_cid='nnn')
+        pass;              #LOG and log('vals={}',vals)
+        if aid is None or aid=='-': return
+        for nnn in ('nnn', 'snn', 'ncn', 'scn', 'nna', 'sna', 'nca', 'sca'):
+            sca = nnn.replace('n', '')
+            if 0==vals[nnn]:
+                dcls.pop(sca, None)
+            else:
+                dcls[sca]   = sgns_l[vals[nnn]]
+        Command.dcls    = dcls
+        stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
+                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+                  OrdDict()
+        stores['dcls']  = dcls
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+       #def dlg_nav_by_dclick
+
    #class Command
 
-def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
+def dlg_press(stores, hist_order, invl_l, desc_l):
     pset_l  = stores.setdefault('pset', [])
     stores.setdefault('pset_nnus', 0)
     keys_l  = ['reex','case','word'
@@ -226,7 +329,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
         ps      = pset_l[ps_ind]
         stores['pset_nnus'] += 1
         ps['nnus'] = stores['pset_nnus']
-        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
         for i, k in enumerate(keys_l):
             if ps.get('_'+k, '')=='x':
                 ouvl_l[i]   = ps.get(k, ouvl_l[i])
@@ -271,7 +374,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
             pass;                  #LOG and log('vals={}',vals)
             if btn is None or btn=='-': return None
             if btn=='!':
-                open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+                open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
                 break#while_pss
             if not pset_l: continue#while_pss
             ps['name']  = vals['name']
@@ -326,7 +429,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
                 ps['_'+k] = '-'
         pass;                  #LOG and log('ps={}',(ps))
         pset_l += [ps]
-        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
         app.msg_status(_('Options is saved to preset: ')+ps['name'])
         return None
     return      ouvl_l
@@ -335,7 +438,7 @@ def dlg_press(stores, cfg_json, hist_order, invl_l, desc_l):
 def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,cust_h):
     RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
     TIPS_BODY   = _(r'''
-• ".*" - Option "Regula Expresion" allows to use in field "Find" special symbols:
+• ".*" - Option "Regular Expression" allows to use in field "Find" special symbols:
     .   any character
     \d  digit character (0..9)
     \w  word-like character (digits, letters, "_")
@@ -508,11 +611,8 @@ Default values:
    #def dlg_help
 
 def dlg_fif(what='', opts={}):
-    MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
-    cfg_json= CdSw.get_setting_dir()+os.sep+'cuda_find_in_files.json'
-#   cfg_json= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
-    stores  = json.loads(open(cfg_json).read(), object_pairs_hook=OrdDict) \
-                if os.path.exists(cfg_json) and os.path.getsize(cfg_json) != 0 else \
+    stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
+                if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
               OrdDict()
     
     mask_h  = _('Space-separated file or folder masks.'
@@ -521,7 +621,7 @@ def dlg_fif(what='', opts={}):
                 '\rUse ? for any character and * for any fragment.'
                 '\rNote: "*" matchs all names, "*.*" doesnt match all.')
     reex_h  = _('Regular expression')
-    case_h  = _('Case sensitive')
+    case_h  = _('Case sensative')
     word_h  = _('Option "Whole words". It is ignored when:'
                 '\r    Regular expression (".*") is turned on,'
                 '\r    "Find" contains not only letters, digits and "_".'
@@ -795,7 +895,7 @@ def dlg_fif(what='', opts={}):
         pass;                  #LOG and log('vals={}',pf(vals))
         btn,vals,fid,chds=dlg_wrapper(f(_('Find in Files ({})'), VERSION_V), dlg_w, dlg_h, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
-        scam        = app.app_proc(app.PROC_GET_KEYSTATE, '') if app.app_api_version()>='1.0.143' else ''
+        scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
         btn_p       = btn
         btn_m       = scam + '/' + btn if scam and scam!='a' else btn   # smth == a/smth
         pass;                  #LOG and log('btn_p, scam, btn_m={}',(btn_p, scam, btn_m))
@@ -812,6 +912,8 @@ def dlg_fif(what='', opts={}):
         incl_s      = vals['incl']
         if not wo_excl:     
             excl_s  = vals['excl']
+        else:
+            excl_s  = ''
         fold_s      = vals['fold']
         dept_n      = vals['dept']
         if not wo_repl:     
@@ -851,7 +953,7 @@ def dlg_fif(what='', opts={}):
         stores['enco']  = enco_s
         stores.pop('toed',None)     # rudiment
         stores.pop('reed',None)     # rudiment
-        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
         
         # Cmds without data: help, custom
         if btn_p=='help':
@@ -860,24 +962,24 @@ def dlg_fif(what='', opts={}):
         
         if btn_p=='more':
             stores['wo_adva']       = not stores.get('wo_adva', True)
-            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
 
         if btn_m=='sc/cust':   # [Ctrl+Shift+]Adjust    = def widths
             stores['wd_txts']   = DEF_WD_TXTS
             stores['wd_btns']   = DEF_WD_BTNS
-            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
         if btn_m=='s/cust':   # [Shift+]Adjust  = wider eds
             stores['wd_txts']   = min(800, 25 + stores.get('wd_txts', DEF_WD_TXTS))
-            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
         if btn_m=='c/cust':   # [Ctrl+]Adjust  = dlg_valign_consts
             dlg_valign_consts()
             continue#while_fif
 #       if btn_m=='c/cust':   # [Ctrl+]Adjust  = wider bts
 #           stores['wd_btns']   = min(200, 10 + stores.get('wd_btns', DEF_WD_BTNS))
-#           open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+#           open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
 #           continue#while_fif
         if btn_m=='cust':
             wdtx_c  = f(_('Width of main &editors ("{}", "{}"):'), caps['what'], caps['incl'])
@@ -904,7 +1006,7 @@ def dlg_fif(what='', opts={}):
             stores['wd_btns']   = max(DEF_WD_BTNS, min(2*DEF_WD_BTNS, vals['wdbt']))
             stores['wo_excl']   = not               vals['shex']
             stores['wo_repl']   = not               vals['shre']
-            open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
             continue#while_fif
         
         # Cmds with data
@@ -945,7 +1047,7 @@ def dlg_fif(what='', opts={}):
 
         if btn_m=='pres' \
         or btn_m=='s/pres': # Shift+Preset - Show list in history order
-            ans = dlg_press(stores, cfg_json, btn_m=='s/pres',
+            ans = dlg_press(stores, btn_m=='s/pres',
                        (reex01,case01,word01,
                         incl_s,excl_s,
                         fold_s,dept_n,
@@ -1017,7 +1119,7 @@ def dlg_fif(what='', opts={}):
         stores['sort']  = sort_s
         stores['frst']  = frst_s
         stores['enco']  = enco_s
-        open(cfg_json, 'w').write(json.dumps(stores, indent=4))
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
         
         # Cmds to act
         if btn_p in ('!cnt', '!fnd', '!rep'):
@@ -1225,9 +1327,9 @@ ToDo
 [+][a1-kv][10may16] Replace in files
 [+][at-kv][10may16] Checks for preset
 [+][kv-kv][11may16] Try to save last active control
-[ ][kv-kv][13may16] Set empty Exclude if hidden
+[+][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
-[ ][kv-kv][13may16] UnDo for ReplaceInFiles by report
+[?][kv-kv][13may16] UnDo for ReplaceInFiles by report
 [ ][kv-kv][13may16] Auto-Click-More before focus hidden field
 [+][kv-kv][13may16] Ask "Want repl in OPEN TABS"
 [+][kv-kv][13may16] Use os.access(path, os.W_OK)
@@ -1241,8 +1343,8 @@ ToDo
 [+][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside? width=0!)
 [+][kv-kv][11jun16] Add "/folder-mask" for incl/excl
 [ ][kv-kv][11jun16] Lazy/Yield for cllc--find--rept ?
-[ ][kv-kv][14jun16] Opt "save active tab on Close" ?
-[ ][kv-kv][14jun16] Cmds "Show next/prev result" ?
+[-][kv-kv][14jun16] Opt "save active tab on Close" ?
+[+][kv-kv][14jun16] Cmds "Show next/prev result" ?
 [+][kv-kv][09feb17] Set dept="folder only" when cmd "Search in cur file"
 [+][kv-kv][09feb17] Clear excl when cmd "Search in cur file"
 [+][kv-kv][09feb17] Clear excl when cmd "Search in cur tab"
@@ -1251,6 +1353,8 @@ ToDo
 [ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in all tab
 [ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur dir
 [+][kv-kv][09feb17] Help: show button "open user.json" when Opt, ref "RE" when Tips
-[ ][kv-kv][09feb17] Replace "..." to "…"
+[+][kv-kv][09feb17] Replace "..." to "…"
 [ ][kv-kv][09feb17] After stoping show (2942 matches in 166 (stop at NN%) files)
+[ ][at-kv][00feb17] DblClick to nav
+[ ][kv-kv][15feb17] More scam-Find command: Close dlg, Nav to first result
 '''

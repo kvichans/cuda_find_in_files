@@ -686,7 +686,6 @@ class CdSw:
     ENC_UTF8    = str(app.EDENC_UTF8_NOBOM) if 'sw'==app.__name__ else 'UTF-8'
 
     @staticmethod
-
     def ed_group(grp):
         if 'sw'==app.__name__:
             return ed                   ##!!
@@ -788,7 +787,10 @@ class CdSw:
             if endx==-1:    # no sel
                 return _ed.set_caret_xy(posx, posy)
             else:           # with sel
-                return _ed.set_caret_xy(posx, posy) ##!!
+                pos = _ed.xy_pos(posx, posy)
+                end = _ed.xy_pos(endx, endy)
+                return _ed.set_sel(pos, end-pos)
+#               return _ed.set_caret_xy(posx, posy) ##!!
         else:
            #set_caret(posx, posy, endx=-1, endy=-1)
             return _ed.set_caret(posx, posy, endx, endy)
