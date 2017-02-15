@@ -986,15 +986,15 @@ def dlg_fif(what='', opts={}):
             wdbt_c  = f(_('Width of main &buttons ("{}", "{}"):'), caps['!fnd'], caps['brow'])
             shex_c  = f(_('Show "&{}"')                          , caps['excl'])
             shre_c  = f(_('Show "&{}" and "{}"')                 , caps['repl'], caps['!rep'])
-            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+350+GAP,GAP+140+GAP,     #NOTE: dlg-cust
-                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=280  ,cap=wdtx_c                                     ) # &e
-                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+280      ,w=70   ,props=f('{},{},25',DEF_WD_TXTS,2*DEF_WD_TXTS)  ) # 
-                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=280  ,cap=wdbt_c                                     ) # &b
-                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+280      ,w=70   ,props=f('{},{},10',DEF_WD_BTNS,2*DEF_WD_BTNS)  ) # 
-                 ,dict(cid='shex',tp='ch'    ,t=GAP+60          ,l=GAP          ,w=150  ,cap=shex_c                                     ) # &n
-                 ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=shre_c                                     ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+350-170  ,w=80   ,cap=_('OK')    ,props='1'                      ) #     default
-                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+140-28      ,l=GAP+350-80   ,w=80   ,cap=_('Cancel')                                )
+            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+370+GAP,GAP+145+GAP,     #NOTE: dlg-cust
+                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=300  ,cap=wdtx_c                                     ) # &e
+                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+300      ,w=70   ,props=f('{},{},25',DEF_WD_TXTS,2*DEF_WD_TXTS)  ) # 
+                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=300  ,cap=wdbt_c                                     ) # &b
+                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+300      ,w=70   ,props=f('{},{},10',DEF_WD_BTNS,2*DEF_WD_BTNS)  ) # 
+                 ,dict(cid='shex',tp='ch'    ,t=GAP+65          ,l=GAP          ,w=150  ,cap=shex_c                                     ) # &n
+                 ,dict(cid='shre',tp='ch'    ,t=GAP+95          ,l=GAP          ,w=150  ,cap=shre_c                                     ) # &r
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-170  ,w=80   ,cap=_('OK')    ,props='1'                      ) #     default
+                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-80   ,w=80   ,cap=_('Cancel')                                )
                  ],    dict(wdtx=    stores.get('wd_txts', DEF_WD_TXTS)
                            ,wdbt=    stores.get('wd_btns', DEF_WD_BTNS)
                            ,shex=not stores.get('wo_excl', True)
