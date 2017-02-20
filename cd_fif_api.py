@@ -603,18 +603,23 @@ def _get_data4nav(ted, row:int):
     shft,   \
     path,   \
     rw,cl,ln= _parse_line(line, 'all')
-    if not full:            return  [None]*4
-#   if not full:            return  app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
     pass;                       NAVLOG and log('full={}', full)
     pass;                       NAVLOG and log('shft, path, rw, cl, ln={}', (shft, path, rw, cl, ln))
     pass;                       NAVLOG and log('path={}', (path))
+    if not full:
+        pass;                   NAVLOG and log('return (path, rw, cl, ln)={}', ([None]*4))
+        return  [None]*4
+#   if not full:            return  app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
     if os.path.isfile(path) or path.startswith('tab:'):
+        pass;                   NAVLOG and log('return (path, rw, cl, ln)={}', (path, rw, cl, ln))
         return (path, rw, cl, ln)
 #       return _open_and_nav(where, how_act, path, rw, cl, ln)
     path    = _build_path(ted, path, row, shft)
-    if os.path.isfile(path):
+    if True: # os.path.isfile(path):
+        pass;                   NAVLOG and log('return (path, rw, cl, ln)={}', (path, rw, cl, ln))
         return (path, rw, cl, ln)
 #       return _open_and_nav(where, how_act, path, rw, cl, ln)
+#   return  [None]*4
    #def _get_data4nav
 
 def jump_to(drct:str, what:str):
@@ -737,8 +742,11 @@ def nav_to_src(where:str, how_act='move'):
     last_rpt_tid= ed.get_prop(app.PROP_TAB_ID)
         
     row     = crts[0][1]
-    path,rw,\
-    cl, ln  = _get_data4nav(ed, row)
+    pass;                   _t = _get_data4nav(ed, row)
+    pass;                   NAVLOG and log('_get_data4nav(ed, row)={}',(_t))
+    pass;                   path,rw,cl,ln  = _t
+#   path,rw,\
+#   cl, ln  = _get_data4nav(ed, row)
     if path and os.path.isfile(path) or path.startswith('tab:'):
         return _open_and_nav(where, how_act, path, rw, cl, ln)
     app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
