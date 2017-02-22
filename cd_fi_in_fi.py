@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.3 2017-02-15'
+    '1.2.5 2017-02-22'
 ToDo: (see end of file)
 '''
 
@@ -82,6 +82,7 @@ def desc_fif_val(fifkey, val=None):
     elif fifkey in ('incl','excl','fold','frst'):   return val
     elif fifkey in ('reex','case','word'
                    ,'join','algn','cntx'):          return _('On') if val=='1' else _('Off')
+    elif fifkey=='totb':    return totb_l[int(val)] if val in ('0', '1') else val
     val = int(val)
     if False:pass
     elif fifkey=='dept':    return dept_l[val] if 0<=val<len(dept_l) else ''
@@ -89,7 +90,7 @@ def desc_fif_val(fifkey, val=None):
     elif fifkey=='sort':    return sort_l[val] if 0<=val<len(sort_l) else ''
     elif fifkey=='enco':    return enco_l[val] if 0<=val<len(enco_l) else ''
     elif fifkey=='cllc':    return cllc_l[val] if 0<=val<len(cllc_l) else ''
-    elif fifkey=='totb':    return totb_l[val] if 0<=val<len(totb_l) else ''
+#   elif fifkey=='totb':    return totb_l[val] if 0<=val<len(totb_l) else ''
     elif fifkey=='shtp':    return shtp_l[val] if 0<=val<len(shtp_l) else ''
    #def desc_fif_val
 
@@ -243,9 +244,10 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
               ,'fold','dept'
               ,'skip','sort','frst','enco'
               ,'cllc','totb','join','shtp','algn','cntx']
-    totb_i  = keys_l.index('totb')
-    invl_l  = [v for v in invl_l]
-    invl_l[totb_i]  = str(min(1, int(invl_l[totb_i])))
+#   totb_i  = keys_l.index('totb')
+    invl_l  = invl_l[:]#   invl_l  = [v for v in invl_l]
+#   invl_l[totb_i]  = '1' if invl_l[totb_i]=='0' else invl_l[totb_i]
+#   invl_l[totb_i]  = str(min(1, int(invl_l[totb_i])))
     ouvl_l  = [v for v in invl_l]
     caps_l  = ['.*','aA','"w"'
               ,'In files','Not in files'
@@ -320,7 +322,8 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
         for i, k in enumerate(keys_l):
             if ps.get('_'+k, '')=='x':
                 ouvl_l[i]   = ps.get(k, ouvl_l[i])
-        ouvl_l[totb_i]  = str(min(1, int(ouvl_l[totb_i])))
+#       ouvl_l[totb_i]  = '1' if ouvl_l[totb_i]=='0' else ouvl_l[totb_i]
+#       ouvl_l[totb_i]  = str(min(1, int(ouvl_l[totb_i])))
         app.msg_status(_('Options is restored from preset: ')+ps['name'])
         return ouvl_l
         
@@ -683,7 +686,7 @@ def dlg_fif(what='', opts={}):
     
     enco_h  = f(_('In which encodings try to read files.'
                 '\rFirst suitable will be used.'
-                '\r{} is slow.'
+                '\r"{}" is slow.'
                 '\r '
                 '\rDefault encoding: {}'), ENCO_DETD, loc_enco)
     
@@ -713,7 +716,8 @@ def dlg_fif(what='', opts={}):
     dept_n  = opts.get('dept', stores.get('dept',  0)-1)+1
     cllc_s  = opts.get('cllc', stores.get('cllc', '0'))
     join_s  = opts.get('join', stores.get('join', '0'))
-    totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = str(min(1, int(totb_s)))
+    totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = '1' if totb_s=='0' else totb_s
+#   totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = str(min(1, int(totb_s)))
     shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
     cntx_s  = opts.get('cntx', stores.get('cntx', '0'))
     algn_s  = opts.get('algn', stores.get('algn', '0'))
@@ -737,17 +741,20 @@ def dlg_fif(what='', opts={}):
         pass;                  #LOG and log('lst={}',lst)
         return lst
        #def add_to_history
-    def get_live_fiftabs()->list:
+    def get_live_fiftabs(_fxs)->list:
         rsp = []
         for h in app.ed_handles():
             try_ed  = app.Editor(h)
+            try_fn  = try_ed.get_filename()
+            if try_fn in _fxs:
+                continue
             tag     = try_ed.get_prop(app.PROP_TAG)
             lxr     = try_ed.get_prop(app.PROP_LEXER_FILE)
             if False:pass
             elif lxr.upper() in lexers_l:
-                rsp+= [try_ed.get_prop(app.PROP_TAB_TITLE)]
+                rsp+= ['tab:'+try_ed.get_prop(app.PROP_TAB_TITLE)]
             elif tag.startswith('FiF'):
-                rsp+= [try_ed.get_prop(app.PROP_TAB_TITLE)]
+                rsp+= ['tab:'+try_ed.get_prop(app.PROP_TAB_TITLE)]
         return rsp
        #def get_live_fiftabs
     
@@ -759,7 +766,9 @@ def dlg_fif(what='', opts={}):
         excl_l  = [s for s in stores.get('excl', []) if s ]
         fold_l  = [s for s in stores.get('fold', []) if s ]
         repl_l  = [s for s in stores.get('repl', []) if s ]
-        totb_l  = [TOTB_NEW_TAB, TOTB_USED_TAB] + get_live_fiftabs()
+        fxs     = stores.get('tofx', [])
+        tofx_l  = [f('file:{1}'+' '*100+'{0}', *os.path.split(fx)) for fx in fxs if os.path.isfile(fx) ]    # ' '*100 to hide folder in list-/combo-boxes
+        totb_l  = [TOTB_NEW_TAB, TOTB_USED_TAB] + [_('[Clear fixed files]'), _('[Add fixed file]')] + tofx_l + get_live_fiftabs(fxs)
         
         wo_excl = stores.get('wo_excl', True)
         wo_repl = stores.get('wo_repl', True)
@@ -782,7 +791,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='prs1',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
                  +[dict(cid='prs2',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
                  +[dict(cid='prs3',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
-                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets…')       ,hint=pset_h)] # &s
+                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets…')         ,hint=pset_h)] # &s
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act='1' ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act='1' ,hint=case_h)] # &a
                  +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'        ,act='1' ,hint=word_h)] # &w
@@ -802,7 +811,7 @@ def dlg_fif(what='', opts={}):
                 )                                               
                  +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l    ,cap='*'+_('I&n folder:')               )] # &n
                  +[dict(cid='fold',tp='cb'      ,t=gap2+112+EG4 ,l=cmb_l    ,w=txt_w    ,items=fold_l                           )] # 
-                 +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')        ,hint=brow_h)] # &b
+                 +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')          ,hint=brow_h)] # &b
                  +[dict(           tp='lb'      ,tid='dept'     ,l=cmb_l    ,w=100      ,cap=_('In s&ubfolders:')               )] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140+EG5 ,l=tl2_l    ,w=140      ,items=dept_l                           )] # 
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
@@ -813,7 +822,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,w=100      ,cap=_('Co&llect:')                     )] # &l
                  +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
                  +[dict(           tp='lb'      ,tid='sort'     ,l=GAP      ,w=100      ,cap=_('Show in&:')                     )] # &:
-                 +[dict(cid='totb',tp='cb-ro'   ,tid='sort'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l                           )] # 
+                 +[dict(cid='totb',tp='cb-ro'   ,tid='sort'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l       ,act='1'            )] # 
                  +[dict(cid='join',tp='ch'      ,tid='frst'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
                  +[dict(           tp='lb'      ,tid='enco'     ,l=GAP      ,w=100      ,cap=_('Tree type &/:')     ,hint=shtp_h)] # &/
                  +[dict(cid='shtp',tp='cb-ro'   ,tid='enco'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
@@ -836,8 +845,8 @@ def dlg_fif(what='', opts={}):
                 )                                               
                 +([]                        
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Coun&t')        ,hint=coun_h)] # &t
-                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just…')    ,hint=cust_h)] # &j
-                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help')                  )] # &h
+                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just…')      ,hint=cust_h)] # &j
+                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help')                     )] # &h
                  +[dict(cid='-'   ,tp='bt'      ,tid='help'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
                 if not wo_adva else []
                  +[dict(cid='-'   ,tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
@@ -930,7 +939,8 @@ def dlg_fif(what='', opts={}):
         stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
         stores['cllc']  = cllc_s
         stores['join']  = join_s
-        stores['totb']  = str(min(1, int(totb_s)))
+        stores['totb']  = '1' if totb_s=='0' else totb_s
+#       stores['totb']  = str(min(1, int(totb_s)))
         stores['shtp']  = shtp_s
         stores['cntx']  = cntx_s
         stores['algn']  = algn_s
@@ -1034,17 +1044,23 @@ def dlg_fif(what='', opts={}):
 
         if btn_m=='pres' \
         or btn_m=='s/pres': # Shift+Preset - Show list in history order
-            ans = dlg_press(stores, btn_m=='s/pres',
+            onof    = {'0':'Off', '1':'On'}
+            totb_i  = int(totb_s)
+            totb_i  = totb_i if 0<totb_i<4+len(stores.get('tofx', [])) else 1   # "tab:" skiped
+            totb_v  = totb_l[totb_i]
+            ans     = dlg_press(stores, btn_m=='s/pres',
                        (reex01,case01,word01,
                         incl_s,excl_s,
                         fold_s,dept_n,
                         skip_s,sort_s,frst_s,enco_s,
-                        cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s),
-                       ('On' if reex01=='1' else 'Off','On' if case01=='1' else 'Off','On' if word01=='1' else 'Off',
+                        cllc_s,totb_v,join_s,shtp_s,algn_s,cntx_s),
+                       (onof[reex01],onof[case01],onof[word01],
+#                      ('On' if reex01=='1' else 'Off','On' if case01=='1' else 'Off','On' if word01=='1' else 'Off',
                         '"'+incl_s+'"','"'+excl_s+'"',
                         '"'+fold_s+'"',dept_l[dept_n],
                         skip_l[int(skip_s)],sort_l[int(sort_s)],frst_s,enco_l[int(enco_s)],
-                        cllc_l[int(cllc_s)],totb_l[int(totb_s)],'On' if join_s=='1' else 'Off',shtp_l[int(shtp_s)],'On' if algn_s=='1' else 'Off','On' if cntx_s=='1' else 'Off')
+                        cllc_l[int(cllc_s)],totb_v,onof[join_s],shtp_l[int(shtp_s)],onof[algn_s],onof[cntx_s])
+#                       cllc_l[int(cllc_s)],totb_l[int(totb_s)],'On' if join_s=='1' else 'Off',shtp_l[int(shtp_s)],'On' if algn_s=='1' else 'Off','On' if cntx_s=='1' else 'Off')
                         )
             if ans is None:
                 continue#while_fif
@@ -1052,7 +1068,11 @@ def dlg_fif(what='', opts={}):
                         incl_s,excl_s,
                         fold_s,dept_n,
                         skip_s,sort_s,frst_s,enco_s,
-                        cllc_s,totb_s,join_s,shtp_s,algn_s,cntx_s)  = ans
+                        cllc_s,totb_v,join_s,shtp_s,algn_s,cntx_s)  = ans
+            totb_s  = str(totb_l.index(totb_v))     if totb_v in totb_l         else \
+                      totb_v                        if totb_v in ('0', '1')     else \
+                      '1'
+#           totb_s  = totb_s if int(totb_s)<4+len(stores.get('tofx', [])) else '1'
                 
         if False:pass
         elif btn_m=='brow':     # BroDir
@@ -1085,6 +1105,25 @@ def dlg_fif(what='', opts={}):
             incl_s  = ed.get_prop(app.PROP_TAB_TITLE)   ##!! need tab-id?
             fold_s  = IN_OPEN_FILES
             excl_s  = ''
+            
+        elif btn_p=='totb':
+            totb_it = totb_l[int(totb_s)]
+            pass;               log('totb_s,totb_it={}',(totb_s,totb_it))
+            if False:pass
+            elif totb_it==_('[Clear fixed files]'):
+                stores['tofx']  = []
+                totb_s  = '1'                                   # == TOTB_USED_TAB
+            elif totb_it==_('[Add fixed file]'):
+                fx      = app.dlg_file(True, '', os.path.expanduser(fold_s), '')
+                if not fx or not os.path.isfile(fx):    continue#while_fif
+                fxs     = stores.get('tofx', [])
+                if fx in fxs:
+                    totb_s  = str(4+fxs.index(fx))
+                else:
+                    stores['tofx'] = fxs + [fx]
+                    totb_s  = str(4+len(stores['tofx'])-1)      # skip: new,prev,clear,add,files-1
+                pass;           log('totb_s={}',(totb_s))
+
 
         # Save data after cmd
         stores['reex']  = reex01
@@ -1098,7 +1137,8 @@ def dlg_fif(what='', opts={}):
         stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
         stores['cllc']  = cllc_s
         stores['join']  = join_s
-        stores['totb']  = str(min(1, int(totb_s)))
+        stores['totb']  = '1' if totb_s=='0' else totb_s
+#       stores['totb']  = str(min(1, int(totb_s)))
         stores['shtp']  = shtp_s
         stores['cntx']  = cntx_s
         stores['algn']  = algn_s
@@ -1201,8 +1241,17 @@ def dlg_fif(what='', opts={}):
                 ,lines      = btn_p!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
                 )
             shtp_v      = shtp_l[int(shtp_s)]
+            totb_i      = int(totb_s)
+            totb_it     = totb_l[totb_i]
+            fxs         = stores.get('tofx', [])
+            totb_v      = TOTB_NEW_TAB              if btn_m=='s/!fnd' or totb_it==TOTB_NEW_TAB     else \
+                          totb_it                   if totb_it.startswith('tab:')                   else \
+                          'file:'+fxs[totb_i-4]     if totb_it.startswith('file:')                  else \
+                          TOTB_USED_TAB
+            pass;               LOG and log('totb_s,totb_it,totb_v={}',(totb_s,totb_it,totb_v))
             how_rpt     = dict(
-                 totb   =    totb_l[int(totb_s)] if btn_m!='s/!fnd' else totb_l[0]  # NewTab if Shift+Find
+                 totb   =    totb_v
+#                totb   =    totb_l[int(totb_s)] if btn_m!='s/!fnd' else totb_l[0]  # NewTab if Shift+Find
 #                totb   =    totb_l[int(totb_s)]
                 ,sprd   =              sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
                 ,shtp   =    shtp_v if sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
@@ -1211,7 +1260,8 @@ def dlg_fif(what='', opts={}):
                 ,join   =    '1'==join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
 #               ,join   =    '1'==join_s
                 )
-            totb_s  = str(min(1, int(totb_s)))
+            totb_s  = '1' if totb_s=='0' else totb_s
+#           totb_s  = str(min(1, int(totb_s)))
             ################################
             progressor = ProgressAndBreak()
             rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
@@ -1344,4 +1394,5 @@ ToDo
 [ ][kv-kv][09feb17] After stoping show (2942 matches in 166 (stop at NN%) files)
 [+][at-kv][00feb17] DblClick to nav
 [ ][kv-kv][15feb17] More scam-Find command: Close dlg, Nav to first result
+[ ][kv-kv][22feb17] Opt to "Show in" fixed fif-file(s)
 '''

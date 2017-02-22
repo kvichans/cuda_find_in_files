@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.2 2017-02-10'
+    '1.2.5 2017-02-22'
 ToDo: (see end of file)
 '''
 
@@ -145,11 +145,11 @@ def report_to_tab(rpt_data:dict
     title_ext   = f(' ({})', what_find['find'][:LEN_TRG_IN_TITLE])
     if False:pass
     elif rpt_type['totb']==TOTB_NEW_TAB:
-        pass;                  #RPTLOG and log('!new',)
+        pass;                   RPTLOG and log('!new',)
         rpt_ed  = create_new(title_ext)
     elif rpt_type['totb']==TOTB_USED_TAB: #if reed_tab: #or join_to_end:
-        pass;                  #RPTLOG and log('!find used',)
         # Try to use prev or old
+        pass;                   RPTLOG and log('!used',)
         olds    = []
         for h in app.ed_handles(): 
             try_ed  = app.Editor(h)
@@ -167,12 +167,23 @@ def report_to_tab(rpt_data:dict
         if rpt_ed is None and olds:
             rpt_ed  = apx.get_tab_by_id(max(olds)[1])  # last used ed
             pass;              #RPTLOG and log('get from olds',)
-    else:
-        # Try to use pointed
-        the_title   = rpt_type['totb']
+    elif rpt_type['totb'].startswith('tab:'): #if reed_tab: #or join_to_end:
+        # Try to use pointed tab
+        the_title   = rpt_type['totb'][len('tab:'):]
+        pass;                   RPTLOG and log('!pointed the_title={}',(the_title))
         cands       = [app.Editor(h) for h in app.ed_handles() 
                         if app.Editor(h).get_prop(app.PROP_TAB_TITLE)==the_title]
         rpt_ed      = cands[0] if cands else None
+    elif rpt_type['totb'].startswith('file:'): 
+        # Try to use pointed file
+        the_file    = rpt_type['totb'][len('file:'):]
+        pass;                   RPTLOG and log('!pointed the_file={}',(the_file))
+        cands       = [app.Editor(h) for h in app.ed_handles() 
+                        if app.Editor(h).get_filename()==the_file]
+        rpt_ed      = cands[0] if cands else None
+    else:
+        pass;                   RPTLOG and log('!else',())
+        pass
             
     rpt_ed  = create_new(title_ext) if rpt_ed is None else rpt_ed
     last_rpt_tid= rpt_ed.get_prop(app.PROP_TAB_ID)
