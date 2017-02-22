@@ -12,7 +12,7 @@ try:
     import  cudatext            as app
     from    cudatext        import ed
     import  cudax_lib           as apx
-    MIN_API_VER = '1.0.167'
+    MIN_API_VER = '1.0.168'
 except:
     import  sw                  as app
     from    sw              import ed
@@ -142,6 +142,7 @@ class Command:
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         return jump_to(drct, what)
     def on_goto_def(self, ed_self):
+        pass;                   LOG and log('',())
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
             self._nav_to_src('same', 'move')
@@ -172,6 +173,8 @@ class Command:
     def dlg_nav_by_dclick(self):
         pass;                   LOG and log('ok',())
         dcls    = Command.get_dcls()
+        godef   = apx.get_opt('mouse_goto_definition', 'a')
+        hint    = _('See "mouse_goto_definition" in default.json and user.json')
         acts_l  = ["<no action>"
                   ,'Navigate to same group'
                   ,'Navigate to next group'
@@ -186,41 +189,25 @@ class Command:
                   ,'next,move'
                   ,'prev,move'
                   ]
-        aid,vals,*_t   = dlg_wrapper(_('Configure navigation by double-click'), 560,280,     #NOTE: dlg-dclick
-             [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=270  ,cap='Double-click:'                    ) #
-             ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=270  ,cap='Double-click with Shift:'         ) #
-             ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=270  ,cap='Double-click with Ctrl:'          ) #
-             ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=270  ,cap='Double-click with Shift+Ctrl:'    ) #
-             ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=270  ,cap='Double-click with Alt:'           ) #
-             ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=270  ,cap='Double-click with Shift+Alt:'     ) #
-             ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=270  ,cap='Double-click with Alt+Ctrl:'      ) #
-             ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=270  ,cap='Double-click with Shift+Ctrl+Alt:') #
-             ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            [dict(           tp='lb'    ,tid='nnn' ,l=210      ,w=270  ,cap='DoubleClick:'                     ) #
-#            ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='snn' ,l=176      ,w=270  ,cap='Shift+DoubleClick:'          ) #
-#            ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='ncn' ,l=183      ,w=270  ,cap='Ctrl+DoubleClick:'           ) #
-#            ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='scn' ,l=150      ,w=270  ,cap='Shift+Ctrl+DoubleClick:'     ) #
-#            ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='nna' ,l=186      ,w=270  ,cap='Alt+DoubleClick:'            ) #
-#            ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='sna' ,l=153      ,w=270  ,cap='Shift+Alt+DoubleClick:'      ) #
-#            ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='nca' ,l=160      ,w=270  ,cap='Alt+Ctrl+DoubleClick:'       ) #
-#            ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-#            ,dict(           tp='lb'    ,tid='sca' ,l=136      ,w=270  ,cap='Shift+Ctrl+AltDoubleClick:' ) #
-#            ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+280    ,w=270  ,items=acts_l                           ) #
-             ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+385    ,w=80   ,cap=_('OK')    ,props='1'              ) #     default
-             ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+470    ,w=80   ,cap=_('Cancel')                        )              
+        aid,vals,*_t   = dlg_wrapper(_('Configure found result navigation by double-click'), 505,280,     #NOTE: dlg-dclick
+             [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=220  ,cap=               '[double-click]:'   ,props='1'                              ) #     align=right
+             ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+220+5  ,w=270  ,items=acts_l                                                                   ) #
+             ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=220  ,cap=         'Shift+[double-click]:'   ,props='1'                              ) #     align=right
+             ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+220+5  ,w=270  ,items=acts_l                                                                   ) #
+             ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=220  ,cap=          'Ctrl+[double-click]:'   ,props='1'                              ) #     align=right
+             ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+220+5  ,w=270  ,items=acts_l                                                                   ) #
+             ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=220  ,cap=    'Shift+Ctrl+[double-click]:'   ,props='1'                              ) #     align=right
+             ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+220+5  ,w=270  ,items=acts_l                                                                   ) #
+             ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=220  ,cap=           'Alt+[double-click]:'   ,props='1'  ,en=godef!='a'  ,hint=hint  ) #     align=right
+             ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+220+5  ,w=270  ,items=acts_l                                       ,en=godef!='a'  ,hint=hint  ) #
+             ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=220  ,cap=     'Shift+Alt+[double-click]:'   ,props='1'  ,en=godef!='sa' ,hint=hint  ) #     align=right
+             ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+220+5  ,w=270  ,items=acts_l                                       ,en=godef!='sa' ,hint=hint  ) #
+             ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=220  ,cap=      'Alt+Ctrl+[double-click]:'   ,props='1'  ,en=godef!='ca' ,hint=hint  ) #     align=right
+             ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+220+5  ,w=270  ,items=acts_l                                       ,en=godef!='ca' ,hint=hint  ) #
+             ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=220  ,cap='Shift+Ctrl+Alt+[double-click]:'   ,props='1'  ,en=godef!='sca',hint=hint  ) #     align=right
+             ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+220+5  ,w=270  ,items=acts_l                                       ,en=godef!='sca',hint=hint  ) #
+             ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+330    ,w=80   ,cap=_('OK')                            ,props='1'                              ) #     default
+             ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+415    ,w=80   ,cap=_('Cancel')                                                                )              
              ],    dict(nnn=sgns_l.index(dcls.get('',   ''))
                        ,snn=sgns_l.index(dcls.get('s',  ''))
                        ,ncn=sgns_l.index(dcls.get('c',  ''))
@@ -1355,6 +1342,6 @@ ToDo
 [+][kv-kv][09feb17] Help: show button "open user.json" when Opt, ref "RE" when Tips
 [+][kv-kv][09feb17] Replace "..." to "…"
 [ ][kv-kv][09feb17] After stoping show (2942 matches in 166 (stop at NN%) files)
-[ ][at-kv][00feb17] DblClick to nav
+[+][at-kv][00feb17] DblClick to nav
 [ ][kv-kv][15feb17] More scam-Find command: Close dlg, Nav to first result
 '''

@@ -106,6 +106,6 @@ method=jump_to_next_file
 [item34]
 section=commands
 caption=&Find in Files\Jump to next folder fragment
-method=jump_to_prev_fold
+method=jump_to_next_fold
 ;menu=0
 

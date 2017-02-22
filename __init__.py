@@ -15,7 +15,7 @@ class Command:
     def jump_to_next_rslt(self):            return RLS._jump_to('next', 'rslt')
     def jump_to_prev_rslt(self):            return RLS._jump_to('prev', 'rslt')
     def jump_to_next_file(self):            return RLS._jump_to('next', 'file')
-    def jump_to_prev_fold(self):            return RLS._jump_to('next', 'fold')
+    def jump_to_next_fold(self):            return RLS._jump_to('next', 'fold')
 
     def on_goto_def(self, ed_self):         return RLS.on_goto_def(ed_self)
     def on_click_dbl(self, ed_self, state): return RLS.on_click_dbl(ed_self, state)
