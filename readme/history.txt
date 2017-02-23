@@ -1,3 +1,7 @@
+1.2.6 (2017-02-23)
+fixed: r-align labels
+added: image of hints in help dlg
+
 1.2.5 (2017-02-22)
 added: report to fixed files
 

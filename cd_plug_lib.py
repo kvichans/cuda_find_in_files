@@ -45,6 +45,7 @@ REDUCTS = {'lb'     :'label'
         ,  'lvw'    :'listview'
         ,  'ch-lvw' :'checklistview'
         ,  'tabs'   :'tabs'
+        ,  'im'     :'image'
         }
 
 def f(s, *args, **kwargs):return s.format(*args, **kwargs)
@@ -395,11 +396,15 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
             continue#for cnt
             
         lst     = ['type='+tp]
+        # Preprocessor
+        if tp=='label' and cnt['cap'][0]=='>' and 'props' not in cnt:
+            #   cap='>smth' --> cap='smth', props='1' (r-align)
+            cnt['cap']  = cnt['cap'][1:]
+            cnt['props']= '1'
         # Simple props
         for k in ['cap', 'hint', 'props']:
             if k in cnt:
                 lst += [k+'='+str(cnt[k])]
-        # Props with preparation
         # Position:
         #   t[op] or tid, l[eft] required
         #   w[idth]  >>> r[ight ]=l+w
