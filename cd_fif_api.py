@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.5 2017-02-22'
+    '1.2.7 2017-03-01'
 ToDo: (see end of file)
 '''
 
@@ -178,9 +178,14 @@ def report_to_tab(rpt_data:dict
         # Try to use pointed file
         the_file    = rpt_type['totb'][len('file:'):]
         pass;                   RPTLOG and log('!pointed the_file={}',(the_file))
-        cands       = [app.Editor(h) for h in app.ed_handles() 
+        if os.path.isfile(the_file):
+            cands   = [app.Editor(h) for h in app.ed_handles() 
                         if app.Editor(h).get_filename()==the_file]
-        rpt_ed      = cands[0] if cands else None
+            if cands:
+                rpt_ed  = cands[0]
+            else:
+                app.file_open(the_file)
+                rpt_ed  = ed  
     else:
         pass;                   RPTLOG and log('!else',())
         pass

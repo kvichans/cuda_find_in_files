@@ -29,10 +29,11 @@ GAP         = 5
 c13,c10,c9  = chr(13),chr(10),chr(9)
 REDUCTS = {'lb'     :'label'
         ,  'ln-lb'  :'linklabel'
-        ,  'ed'     :'edit'
-        ,  'sp-ed'  :'spinedit'
-        ,  'me'     :'memo'
-        ,  'bt'     :'button'
+        ,  'ed'     :'edit'             # ro_mono_brd
+        ,  'ed_pw'  :'edit_pwd'
+        ,  'sp-ed'  :'spinedit'         # min_max_inc
+        ,  'me'     :'memo'             # ro_mono_brd
+        ,  'bt'     :'button'           # def_bt
         ,  'rd'     :'radio'
         ,  'ch'     :'check'
         ,  'ch-bt'  :'checkbutton'
@@ -45,6 +46,7 @@ REDUCTS = {'lb'     :'label'
         ,  'lvw'    :'listview'
         ,  'ch-lvw' :'checklistview'
         ,  'tabs'   :'tabs'
+        ,  'clr'    :'colorpanel'
         ,  'im'     :'image'
         }
 
@@ -396,11 +398,31 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
             continue#for cnt
             
         lst     = ['type='+tp]
+
         # Preprocessor
-        if tp=='label' and cnt['cap'][0]=='>' and 'props' not in cnt:
+        if 'props' in cnt:
+            pass
+        elif tp=='label' and cnt['cap'][0]=='>':
             #   cap='>smth' --> cap='smth', props='1' (r-align)
             cnt['cap']  = cnt['cap'][1:]
             cnt['props']= '1'
+        elif tp=='label' and cnt.get('ralign'):
+            cnt['props']= cnt.get('ralign')
+        elif tp=='button' and cnt.get('def_bt') in ('1', True):
+            cnt['props']= '1'
+        elif tp=='spinedit' and cnt.get('min_max_inc'):
+            cnt['props']= cnt.get('min_max_inc')
+        elif tp=='linklabel' and cnt.get('url'):
+            cnt['props']= cnt.get('url')
+        elif tp=='listview' and cnt.get('grid'):
+            cnt['props']= cnt.get('grid')
+        elif tp=='tabs' and cnt.get('at_botttom'):
+            cnt['props']= cnt.get('at_botttom')
+        elif tp=='colorpanel' and cnt.get('brdW_fillC_fontC_brdC'):
+            cnt['props']= cnt.get('brdW_fillC_fontC_brdC')
+        elif tp in ('edit', 'memo') and cnt.get('ro_mono_brd'):
+            cnt['props']= cnt.get('ro_mono_brd')
+
         # Simple props
         for k in ['cap', 'hint', 'props']:
             if k in cnt:

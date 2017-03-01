@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.6 2017-02-23'
+    '1.2.7 2017-03-01'
 ToDo: (see end of file)
 '''
 
@@ -191,24 +191,24 @@ class Command:
                   ,'prev,move'
                   ]
         aid,vals,*_t   = dlg_wrapper(_('Configure found result navigation by double-click'), 505,280,     #NOTE: dlg-dclick
-             [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=220  ,cap=              '>[double-click]:'                               ) #     align=right
+             [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=220  ,cap=              '>[double-click]:'                               ) #
              ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=220  ,cap=        '>Shift+[double-click]:'                               ) #     align=right
+             ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=220  ,cap=        '>Shift+[double-click]:'                               ) #
              ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=220  ,cap=         '>Ctrl+[double-click]:'                               ) #     align=right
+             ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=220  ,cap=         '>Ctrl+[double-click]:'                               ) #
              ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=220  ,cap=   '>Shift+Ctrl+[double-click]:'                               ) #     align=right
+             ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=220  ,cap=   '>Shift+Ctrl+[double-click]:'                               ) #
              ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=220  ,cap=          '>Alt+[double-click]:'   ,en=godef!='a'  ,hint=hint  ) #     align=right
+             ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=220  ,cap=          '>Alt+[double-click]:'   ,en=godef!='a'  ,hint=hint  ) #
              ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='a'  ,hint=hint  ) #
-             ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=220  ,cap=    '>Shift+Alt+[double-click]:'   ,en=godef!='sa' ,hint=hint  ) #     align=right
+             ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=220  ,cap=    '>Shift+Alt+[double-click]:'   ,en=godef!='sa' ,hint=hint  ) #
              ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='sa' ,hint=hint  ) #
-             ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=220  ,cap=     '>Alt+Ctrl+[double-click]:'   ,en=godef!='ca' ,hint=hint  ) #     align=right
+             ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=220  ,cap=     '>Alt+Ctrl+[double-click]:'   ,en=godef!='ca' ,hint=hint  ) #
              ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='ca' ,hint=hint  ) #
-             ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=220  ,cap='>Shift+Ctrl+Alt+[double-click]:'  ,en=godef!='sca',hint=hint  ) #     align=right
+             ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=220  ,cap='>Shift+Ctrl+Alt+[double-click]:'  ,en=godef!='sca',hint=hint  ) #
              ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='sca',hint=hint  ) #
-             ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+330    ,w=80   ,cap=_('OK')                            ,props='1'                              ) #     default
-             ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+415    ,w=80   ,cap=_('Cancel')                                                                )              
+             ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+330    ,w=80   ,cap=_('OK')                            ,def_bt=True                ) #
+             ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+415    ,w=80   ,cap=_('Cancel')                                                    )              
              ],    dict(nnn=sgns_l.index(dcls.get('',   ''))
                        ,snn=sgns_l.index(dcls.get('s',  ''))
                        ,ncn=sgns_l.index(dcls.get('c',  ''))
@@ -305,7 +305,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
     ind_conf= len(pset_l)+1
     ind_save= len(pset_l)+2
     ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
-#   ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
+#   ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))
     if ps_ind is None:  return None
     if False:pass
     elif ps_ind==ind_inop:
@@ -352,7 +352,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                      ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
                      ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
                       #
-                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')    ,props='1'              ) # &s  default
+                     ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True        ) # &
                      ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
                      ]
             btn,vals,*_t   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
@@ -399,7 +399,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
              ,dict(           tp='lb'    ,t=GAP+55          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
              ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items                )
-             ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('OK')    ,props='1'  ) # &s  default
+             ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('OK')    ,def_bt=True) # &
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Cancel')            )
              ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
                        ,what=(0,['1']*len(keys_l))), focus_cid='name')
@@ -571,6 +571,7 @@ Default values:
                       ,tree=False
                       ,opts=False
                       )
+    hints_png   = os.path.dirname(__file__)+os.sep+r'images/fif-hints_770x400.PNG'
     while_hlp   = True
     while while_hlp:
         btn_hlp,    \
@@ -578,14 +579,14 @@ Default values:
         *_t         = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
             ([]
 #           +[dict(cid='htxt',tp='me'    ,t=GAP ,h=DH-28,l=GAP          ,w=DW   ,props='1,1,1'                                  )] #  ro,mono,border
-           +([dict(cid='htxt',tp='me'    ,t=GAP ,h=DH-28,l=GAP          ,w=DW   ,props='1,1,1'                                  )] #  ro,mono,border
+           +([dict(cid='htxt',tp='me'    ,t=GAP ,h=DH-28,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'                )] # 
            if not vals_hlp['keys'] else []
-            +[dict(           tp='im'    ,t=GAP         ,h=400          ,l=GAP+15   ,w=770  ,items=os.path.dirname(__file__)+os.sep+r'images/fif-hints_770x400.PNG')]
-            +[dict(cid='htxt',tp='me'    ,t=GAP+400+GAP ,h=DH-28-400-GAP,l=GAP      ,w=DW   ,props='1,1,1'                                  )] #  ro,mono,border
+            +[dict(           tp='im'    ,t=GAP         ,h=400          ,l=GAP+15   ,w=770  ,items=hints_png                    )]
+            +[dict(cid='htxt',tp='me'    ,t=GAP+400+GAP ,h=DH-28-400-GAP,l=GAP      ,w=DW   ,ro_mono_brd='1,1,1'                )] # 
            )
 
            +([] if not vals_hlp['tips'] else []
-            +[dict(           tp='ln-lb' ,tid='-'       ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),props=RE_DOC_REF)]
+            +[dict(           tp='ln-lb' ,tid='-'       ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),url=RE_DOC_REF  )]
            )
 
            +([] if not vals_hlp['opts'] else []
@@ -852,7 +853,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100-5    ,cap=_('>Encodings &\\:')   ,hint=enco_h)] # \
                  +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271+EG9 ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
                 )                                                                                                               
-                 +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=btn_w    ,cap=_('Find'),props='1'    ,hint=find_h)] #    default
+                 +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=btn_w    ,cap=_('Find'),def_bt=True  ,hint=find_h)] # 
                 +([] if wo_repl else []                         
                  +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=btn_w    ,cap=_('Re&place')          ,hint=repl_h)] # &p
                 )                                               
@@ -1012,7 +1013,7 @@ def dlg_fif(what='', opts={}):
                  ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+300      ,w=70   ,props=f('{},{},10',DEF_WD_BTNS,2*DEF_WD_BTNS)  ) # 
                  ,dict(cid='shex',tp='ch'    ,t=GAP+65          ,l=GAP          ,w=150  ,cap=shex_c                                     ) # &n
                  ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=shre_c                                     ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-170  ,w=80   ,cap=_('OK')    ,props='1'                      ) #     default
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-170  ,w=80   ,cap=_('OK')    ,def_bt=True                    ) # 
                  ,dict(cid='-'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-80   ,w=80   ,cap=_('Cancel')                                )
                  ],    dict(wdtx=    stores.get('wd_txts', DEF_WD_TXTS)
                            ,wdbt=    stores.get('wd_btns', DEF_WD_BTNS)
