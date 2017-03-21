@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.7 2017-03-01'
+    '1.2.8 2017-03-21'
 ToDo: (see end of file)
 '''
 
@@ -809,48 +809,48 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act='1' ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act='1' ,hint=case_h)] # &a
                  +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'        ,act='1' ,hint=word_h)] # &w
-                 +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>*'+_('&Find:')                   )] # &f
+                 +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*&Find:')                   )] # &f
                  +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=txt_w    ,items=what_l                           )] # 
                 
                 +([] if wo_repl else []                         
-                 +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l-5  ,cap=_('>&Replace with:')               )] # &r
+                 +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('&Replace with:')            )] # &r
                  +[dict(cid='repl',tp='cb'      ,t=GAP+  28+EG1 ,l=cmb_l    ,w=txt_w    ,items=repl_l                           )] # 
                 )                                               
                                                 
-                 +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>*'+_('&In files:')   ,hint=mask_h)] # &i
+                 +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*&In files:')   ,hint=mask_h)] # &i
                  +[dict(cid='incl',tp='cb'      ,t=gap1+ 56+EG2 ,l=cmb_l    ,w=txt_w    ,items=incl_l                           )] # 
                 +([] if wo_excl else []                         
-                 +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l-5  ,cap=_('>Not in files:')    ,hint=mask_h)] # 
+                 +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('Not in files:') ,hint=mask_h)] # 
                  +[dict(cid='excl',tp='cb'      ,t=gap1+ 84+EG3 ,l=cmb_l    ,w=txt_w    ,items=excl_l                           )] # 
                 )                                               
-                 +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>*'+_('I&n folder:')              )] # &n
+                 +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*I&n folder:')              )] # &n
                  +[dict(cid='fold',tp='cb'      ,t=gap2+112+EG4 ,l=cmb_l    ,w=txt_w    ,items=fold_l                           )] # 
                  +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')          ,hint=brow_h)] # &b
-                 +[dict(           tp='lb'      ,tid='dept'     ,l=lbl_l    ,w=100  -5  ,cap=_('>In s&ubfolders:')              )] # &u
+                 +[dict(           tp='lb'      ,tid='dept'     ,l=lbl_l    ,w=100  -5  ,cap='>'+_('In s&ubfolders:')           )] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140+EG5 ,l=cmb_l    ,w=135      ,items=dept_l                           )] # 
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h)] # &e
                 
                 +([] if wo_adva else  []                        
                  +[dict(           tp='lb'      ,t=gap2+170+EG5 ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')           )] # 
-                 +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap=_('>Co&llect:')                    )] # &l
+                 +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Co&llect:')                 )] # &l
                  +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
-                 +[dict(           tp='lb'      ,tid='sort'     ,l=GAP      ,r=80       ,cap=_('>Show in&:')                    )] # &:
+                 +[dict(           tp='lb'      ,tid='sort'     ,l=GAP      ,r=80       ,cap='>'+_('Show in&:')                 )] # &:
                  +[dict(cid='totb',tp='cb-ro'   ,tid='sort'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l       ,act='1'            )] # 
                  +[dict(cid='join',tp='ch'      ,tid='frst'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
-                 +[dict(           tp='lb'      ,tid='enco'     ,l=GAP      ,r=80       ,cap=_('>Tree type &/:')    ,hint=shtp_h)] # &/
+                 +[dict(           tp='lb'      ,tid='enco'     ,l=GAP      ,r=80       ,cap='>'+_('Tree type &/:') ,hint=shtp_h)] # &/
                  +[dict(cid='shtp',tp='cb-ro'   ,tid='enco'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
                  +[dict(cid='algn',tp='ch'      ,tid='help'     ,l=GAP+80   ,w=100      ,cap=_('Align &|')          ,hint=algn_h)] # &|
                  +[dict(cid='cntx',tp='ch'      ,tid='help'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')          ,hint=cntx_h)] # &x
                                                 
                  +[dict(           tp='lb'      ,t=gap2+170+EG5 ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')           )] # 
-                 +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100-5    ,cap=_('>S&kip files:')                 )] # &k
+                 +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&kip files:')              )] # &k
                  +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190+EG6 ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                           )] # 
-                 +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100-5    ,cap=_('>S&ort file list:')             )] # &o
+                 +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&ort file list:')          )] # &o
                  +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217+EG7 ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                           )] # 
-                 +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100-5    ,cap=_('>Firsts (&0=all):') ,hint=frst_h)] # &0
+                 +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('Firsts (&0=all):'),hint=frst_h)] # &0
                  +[dict(cid='frst',tp='ed'      ,t=gap2+244+EG8 ,l=tl2_l+100,r=tbn_l-GAP                                        )] # 
-                 +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100-5    ,cap=_('>Encodings &\\:')   ,hint=enco_h)] # \
+                 +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('Encodings &\\:'),hint=enco_h)] # \
                  +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271+EG9 ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
                 )                                                                                                               
                  +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=btn_w    ,cap=_('Find'),def_bt=True  ,hint=find_h)] # 
@@ -953,7 +953,7 @@ def dlg_fif(what='', opts={}):
         stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
         stores['cllc']  = cllc_s
         stores['join']  = join_s
-        totb_s_pre      = stores['totb']
+        totb_s_pre      = stores.get('totb', '1')
         stores['totb']  = '1' if totb_s=='0' else totb_s
 #       stores['totb']  = str(min(1, int(totb_s)))
         stores['shtp']  = shtp_s
