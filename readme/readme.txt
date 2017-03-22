@@ -5,9 +5,9 @@ Plugin "Find in Files" for CudaText. Gives dialog to search/replace in multiple 
 - Lots of options (much more than in SynWrite).
 - Results are shown in editor tab (bottom pane of CudaText not used).
 - Can navigate to found lines from result-tab: 
-   - using double-click
-   - using commands in Plugins menu
-   - using "Go to definition" CudaText command
+    - using double-click
+    - using commands in Plugins menu
+    - using "Go to definition" CudaText command
 
 Notes:
 
