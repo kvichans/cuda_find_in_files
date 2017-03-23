@@ -1,9 +1,9 @@
 1.2.9 (2017-03-23)
-added: before/after setting for report contex
+added: before/after setting for count of context lines in report
 
 1.2.6 (2017-02-23)
-fixed: r-align labels
-added: image of hints in help dlg
+fixed: right-aligned labels in dlg
+added: picture of hints in help dlg
 
 1.2.5 (2017-02-22)
 added: report to fixed files
