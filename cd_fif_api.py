@@ -65,8 +65,6 @@ CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
 BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
 CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
-CONTEXT_WIDTH_U = apx.get_opt('fif_context_width_before'    , CONTEXT_WIDTH)
-CONTEXT_WIDTH_D = apx.get_opt('fif_context_width_after'     , CONTEXT_WIDTH)
 SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
 AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
 FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
@@ -909,6 +907,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     spr_dirs= how_rpt['sprd']
 
     cntx    = how_rpt['cntx']
+    CONTEXT_WIDTH_U = apx.get_opt('fif_context_width_before'    , CONTEXT_WIDTH)
+    CONTEXT_WIDTH_D = apx.get_opt('fif_context_width_after'     , CONTEXT_WIDTH)
     extU_lns= CONTEXT_WIDTH_U if cntx else 0
     extD_lns= CONTEXT_WIDTH_D if cntx else 0
     pass;                      #LOG and log('repl_s,extU_lns,extD_lns={}',(repl_s,extU_lns,extD_lns))

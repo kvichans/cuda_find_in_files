@@ -25,7 +25,7 @@ from    .cd_fif_api         import *
 OrdDict = collections.OrderedDict
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-1==-1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -1174,8 +1174,10 @@ def dlg_fif(what='', opts={}):
                 )
             pass;               LOG and log('cntx ans={}',(ans))
             sBf,sAf = ans   if ans is not None else     ('0', '0')
+            pass;               LOG and log('cntx sBf,sAf={}',(sBf,sAf))
             nBf = int(sBf) if sBf.isdigit() else 0
-            nAf = int(sBf) if sAf.isdigit() else 0
+            nAf = int(sAf) if sAf.isdigit() else 0
+            pass;               LOG and log('cntx nBf,nAf={}',(nBf,nAf))
             if nBf+nAf > 0:
                 apx.set_opt('fif_context_width_before', nBf)
                 apx.set_opt('fif_context_width_after' , nAf)
