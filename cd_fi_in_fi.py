@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.8 2017-03-21'
+    '1.2.9 2017-03-23'
 ToDo: (see end of file)
 '''
 
@@ -25,7 +25,7 @@ from    .cd_fif_api         import *
 OrdDict = collections.OrderedDict
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                           LOG     = (-1==-1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -483,6 +483,8 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,m
  
 • "More/Less…" - {more}
  
+• "Context" - {cntx}
+ 
 • "Adjust…" - {cust}
 ''').strip().format(
      find=find_h.replace('\r', '\n')
@@ -492,6 +494,7 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,m
     ,brow=brow_h.replace('\r', '\n')
     ,pset=pset_h.replace('\r', '\n')
     ,more=more_h.replace('\r', '\n')
+    ,cntx=cntx_h.replace('\r', '\n')
     ,cust=cust_h.replace('\r', '\n')
     )
 #• Reg.ex. tips:
@@ -531,6 +534,10 @@ Default values:
     // Option "Show context" appends N nearest lines to reported lines.
     // So, 2*N+1 lines will be reported for each found line.
     "fif_context_width":1,
+    // Or N lines before and M lines after for each found line.
+    // N o M can be set to 0
+    "fif_context_width_before":1,
+    "fif_context_width_after":1,
     
     // Style which marks found fragment in report
     // Full form:
@@ -558,7 +565,7 @@ Default values:
     "fif_skip_file_size_more_Kb":0,
     
     // Size of buffer (at file start) to detect binary files
-    "fif_read_head_size":1024,
+    "fif_read_head_size(bytes)":1024,
 ''').strip().replace('{def_enco}', DEF_LOC_ENCO)
 #   // Before append result fold all previous ones
 #   "fif_fold_prev_res":false,
@@ -674,7 +681,8 @@ def dlg_fif(what='', opts={}):
                 '\r  In folder={}'
                 '\ronly Compact options are used.'
                ),IN_OPEN_FILES)
-    cntx_h  = _('Show result line and both its nearest lines, above and below result')
+    cntx_h  = _('Show result line and both its nearest lines, above and below result'
+                '\rCtrl+Click  - Set count of above and below lines.')
     algn_h  = _("Align columns (filenames/numbers) by widest cell width")
     find_h  = f(_('Start search.'
                 '\rShift+Click  - Put report to new tab.'
@@ -841,7 +849,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,tid='enco'     ,l=GAP      ,r=80       ,cap='>'+_('Tree type &/:') ,hint=shtp_h)] # &/
                  +[dict(cid='shtp',tp='cb-ro'   ,tid='enco'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
                  +[dict(cid='algn',tp='ch'      ,tid='help'     ,l=GAP+80   ,w=100      ,cap=_('Align &|')          ,hint=algn_h)] # &|
-                 +[dict(cid='cntx',tp='ch'      ,tid='help'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')          ,hint=cntx_h)] # &x
+                 +[dict(cid='cntx',tp='ch'      ,tid='help'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')  ,act='1',hint=cntx_h)] # &x
                                                 
                  +[dict(           tp='lb'      ,t=gap2+170+EG5 ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')           )] # 
                  +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&kip files:')              )] # &k
@@ -1157,6 +1165,21 @@ def dlg_fif(what='', opts={}):
                         totb_s  = str(4+len(stores['tofx'])-1)      # skip: new,prev,clear,add,files-1
                 pass;          #LOG and log('totb_s={}',(totb_s))
 
+        elif btn_m=='c/cntx' and cntx_s=='1':
+            sBf = str(apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1)))
+            sAf = str(apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1)))
+            ans   = app.dlg_input_ex(2, _('Report context settings')
+                , _('Report with lines before') , sBf
+                , _('Report with lines after')  , sAf
+                )
+            pass;               LOG and log('cntx ans={}',(ans))
+            sBf,sAf = ans   if ans is not None else     ('0', '0')
+            nBf = int(sBf) if sBf.isdigit() else 0
+            nAf = int(sBf) if sAf.isdigit() else 0
+            if nBf+nAf > 0:
+                apx.set_opt('fif_context_width_before', nBf)
+                apx.set_opt('fif_context_width_after' , nAf)
+
         # Save data after cmd
         stores['reex']  = reex01
         stores['case']  = case01
@@ -1431,4 +1454,6 @@ ToDo
 [+][kv-kv][23feb17] "In subf" v-align with "In fold"
 [-][kv-kv][23feb17] Show min width in Cust
 [ ][kv-kv][23feb17] Show "Show in"+"Append"+"Tree type" in titul for compact mode
+[+][at-kv][22mat17] "fif_read_head_size(bytes)"
+[+][kv-kv][23mat17] "fif_context_width_before", "fif_context_width_after"
 '''
