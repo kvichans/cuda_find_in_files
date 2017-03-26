@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.9 2017-03-23'
+    '1.2.10 2017-03-26'
 ToDo: (see end of file)
 '''
 
@@ -570,7 +570,7 @@ Default values:
 #   // Before append result fold all previous ones
 #   "fif_fold_prev_res":false,
 #   
-    DW, DH      = 800, 700
+    DW, DH      = 800, 600
 #   vals_hlp    = dict(htxt=TIPS_BODY)
     vals_hlp    = dict(htxt=TIPS_BODY
                       ,tips=True
@@ -882,7 +882,7 @@ def dlg_fif(what='', opts={}):
                     ,'repl':_('&Replace with:')
                     ,'!rep':_('Re&place')
                     })
-        caps    = {k:v.strip(' :*|\\/').replace('&', '') for (k,v) in caps.items()}
+        caps    = {k:v.strip(' :*|\\/>*').replace('&', '') for (k,v) in caps.items()}
         pass;                  #LOG and log('caps=¶{}',pf(caps))
         pass;                  #LOG and log('cnts=¶{}',pf(cnts))
         pass;                  #LOG and log('gap12={} cnts=¶{}',(gap1,gap2),pf([dict(cid=d['cid'], t=d['t']) for d in cnts if 'cid' in d and 't' in d]))
@@ -1181,6 +1181,7 @@ def dlg_fif(what='', opts={}):
             if nBf+nAf > 0:
                 apx.set_opt('fif_context_width_before', nBf)
                 apx.set_opt('fif_context_width_after' , nAf)
+            focused = 'what'
 
         # Save data after cmd
         stores['reex']  = reex01
