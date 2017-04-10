@@ -74,10 +74,21 @@ caption=&Find in Files\Navigate to source, to prev group, and act&ivate
 method=nav_to_src_prev_act
 ;menu=0
 
-[item29]
+[item23]
+section=commands
+caption=&Find in Files\-
+method=_
+
+[item24]
 section=commands
 caption=&Find in Files\Configurate navigation with &double-click...
 method=dlg_nav_by_dclick
+;menu=0
+
+[item25]
+section=commands
+caption=&Find in Files\&View and edit options...
+method=dlg_fif_opts
 ;menu=0
 
 [item30]
@@ -108,10 +119,4 @@ section=commands
 caption=&Find in Files\Jump to next folder fragment
 method=jump_to_next_fold
 ;menu=0
-
-[item300]
-section=commands
-caption=&Find in Files\&View and edit options...
-method=dlg_fif_opts
-menu=0
 

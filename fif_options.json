@@ -26,8 +26,8 @@
                     "If False - only current stage."],
         "def_val": false,
         "key": "fif_esc_full_stop",
-        "chapter":"Finding",
-        "tags":["findind", "stop"]
+        "chapter":"Searching",
+        "tags":["searching", "stop"]
     },
 
     {   "comment": ["Appends N nearest lines to report (if [x]\"Show context\").",
@@ -88,7 +88,7 @@
         "chapter":"Report",
         "tags":["report", "comfort"]
     },
-    {   "comment": ["Save all request details (\"Find\", \"In folder\", …) in first line of result file.",
+    {   "comment": ["Save all request details (\"Find\", \"In folder\", â€¦) in first line of result file.",
                     "The info will be used in command \"Repeat search for this report-tab\"."],
         "def_val": false,
         "key": "fif_save_request_to_rpt",
@@ -99,20 +99,20 @@
     {   "comment": "Size of buffer (at file start) to detect binary files",
         "def_val": 1024,
         "key": "fif_read_head_size(bytes)",
-        "chapter":"Finding",
-        "tags":["finding", "enternal"]
+        "chapter":"Searching",
+        "tags":["searching", "internal"]
     },
     {   "comment": "Skip too big files (0 - don't skip)",
         "def_val": 0,
         "key": "fif_skip_file_size_more_Kb",
-        "chapter":"Finding",
-        "tags":["finding", "scope"]
+        "chapter":"Searching",
+        "tags":["searching", "scope"]
     },
     {   "comment": "Default encoding to read files",
         "def_val": "cp1251",
         "key": "fif_locale_encoding",
-        "chapter":"Finding",
-        "tags":["finding", "internal", "encoding"]
+        "chapter":"Searching",
+        "tags":["searching", "internal", "encoding"]
     },
 
     {   "comment": ["Style which marks found fragment in report",
@@ -149,7 +149,7 @@
         "chapter":"Logging",
         "tags":["log", "internal"]
     },
-    {   "comment": "Log finding part",
+    {   "comment": "Log searching part",
         "def_val": false,
         "key": "fif_FNDLOG",
         "chapter":"Logging",
