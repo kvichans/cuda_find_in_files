@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.10 2017-03-26'
+    '1.2.11 2017-04-10'
 ToDo: (see end of file)
 '''
 
@@ -508,7 +508,7 @@ Default values:
     // Use selection-text from current file when dialog opens
     "fif_use_selection_on_start":false,
     
-    // Copy options ".*", "aA", "w" from CudaText dialog to plugin's dialog
+    // Copy options [.*], [aA], ["w"] from CudaText dialog to plugin's dialog
     "fif_use_edfind_opt_on_start":false,
     
     // ESC stops all stages 
@@ -525,7 +525,7 @@ Default values:
     // The info will be used in command "Repeat search for this report-tab"
     "fif_save_request_to_rpt":false,
     
-    // Len of substring (of field "Find") which appears in title of the search result
+    // Length of substring (of field "Find") which appears in title of the search result
     "fif_len_target_in_title":10,
     
     // Show report if nothing found
@@ -535,7 +535,7 @@ Default values:
     // So, 2*N+1 lines will be reported for each found line.
     "fif_context_width":1,
     // Or N lines before and M lines after for each found line.
-    // N o M can be set to 0
+    // N or M can be set to 0
     "fif_context_width_before":1,
     "fif_context_width_after":1,
     
@@ -1209,7 +1209,7 @@ def dlg_fif(what='', opts={}):
         # Cmds to act
         if btn_p in ('!cnt', '!fnd', '!rep'):
             if  btn_m=='!rep' \
-            and app.ID_YES != app.msg_box(
+            and app.ID_OK != app.msg_box(
                  f(_('Do you want to replace in {}?'), 
                     _('current tab')        if fold_s==IN_OPEN_FILES and not ('*' in incl_s or '?' in incl_s) else 
                     _('all tabs')           if fold_s==IN_OPEN_FILES else 
@@ -1443,20 +1443,22 @@ ToDo
 [+][kv-kv][09feb17] Set dept="folder only" when cmd "Search in cur file"
 [+][kv-kv][09feb17] Clear excl when cmd "Search in cur file"
 [+][kv-kv][09feb17] Clear excl when cmd "Search in cur tab"
-[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur file
-[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur tab
-[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in all tab
-[ ][kv-kv][09feb17] New menu cmd (wo dlg): Find sel in cur dir
+[ ][kv-kv][09feb17] ? New menu cmd (wo dlg): Find sel in cur file
+[ ][kv-kv][09feb17] ? New menu cmd (wo dlg): Find sel in cur tab
+[ ][kv-kv][09feb17] ? New menu cmd (wo dlg): Find sel in all tab
+[ ][kv-kv][09feb17] ? New menu cmd (wo dlg): Find sel in cur dir
 [+][kv-kv][09feb17] Help: show button "open user.json" when Opt, ref "RE" when Tips
 [+][kv-kv][09feb17] Replace "..." to "…"
 [ ][kv-kv][09feb17] After stoping show (2942 matches in 166 (stop at NN%) files)
 [+][at-kv][00feb17] DblClick to nav
 [ ][kv-kv][15feb17] More scam-Find command: Close dlg, Nav to first result
 [+][kv-kv][22feb17] Opt to "Show in" fixed fif-file(s)
-[ ][kv-kv][23feb17] scam+Less/More to hide/show excl or repl
+[+][kv-kv][23feb17] scam+Less/More to hide/show excl or repl
 [+][kv-kv][23feb17] "In subf" v-align with "In fold"
 [-][kv-kv][23feb17] Show min width in Cust
-[ ][kv-kv][23feb17] Show "Show in"+"Append"+"Tree type" in titul for compact mode
+[ ][kv-kv][23feb17] Show "Show in"+"Append"+"Tree type" in title for compact mode
 [+][at-kv][22mat17] "fif_read_head_size(bytes)"
 [+][kv-kv][23mat17] "fif_context_width_before", "fif_context_width_after"
+[ ][kv-kv][30mat17] Sort and Tree conflict is too hard. Use "Stop? Without sort?"
+[ ][kv-kv][30mat17] !! Need Properties dlg to show/edit opts from/to user.json
 '''
