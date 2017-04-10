@@ -1,3 +1,6 @@
+1.2.11 (2017-04-10)
+added: dlg to view/set options in user.json (by plugin)
+
 1.2.10 (2017-04-10)
 fixed: replacement doesnot start
 

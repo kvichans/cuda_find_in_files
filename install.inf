@@ -109,3 +109,9 @@ caption=&Find in Files\Jump to next folder fragment
 method=jump_to_next_fold
 ;menu=0
 
+[item300]
+section=commands
+caption=&Find in Files\&View and edit options...
+method=dlg_fif_opts
+menu=0
+

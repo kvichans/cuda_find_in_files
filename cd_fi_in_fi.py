@@ -236,6 +236,13 @@ class Command:
 
    #class Command
 
+def dlg_fif_opts():
+    FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
+    fif_opts    = json.loads(open(FIF_OPTS).read())
+    from cuda_options_editor import dlg_opt_editor
+    dlg_opt_editor('FiF options', fif_opts, subset='fif.')
+   #def dlg_fif_opts
+
 def dlg_press(stores, hist_order, invl_l, desc_l):
     pset_l  = stores.setdefault('pset', [])
     stores.setdefault('pset_nnus', 0)
@@ -597,13 +604,14 @@ Default values:
            )
 
            +([] if not vals_hlp['opts'] else []
-            +[dict(cid='open',tp='bt'    ,tid='-'       ,l=GAP          ,w=150  ,cap=_('O&pen user.json')                       )]
+            +[dict(cid='open',tp='bt'    ,tid='-'       ,l=GAP          ,w=150  ,cap=_('O&pen user.json')                       )] # &p
+            +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP+150+5    ,w=130  ,cap=_('&Edit props…')                          )] # &e
            )
-            +[dict(cid='tips',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                 ,act='1'        )]
-            +[dict(cid='keys',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                 ,act='1'        )]
-            +[dict(cid='tree',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                 ,act='1'        )]
-            +[dict(cid='opts',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                 ,act='1'        )]
-            +[dict(cid='-'   ,tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )]
+            +[dict(cid='tips',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                 ,act='1'        )] # &i
+            +[dict(cid='keys',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                 ,act='1'        )] # &k
+            +[dict(cid='tree',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                 ,act='1'        )] # &t
+            +[dict(cid='opts',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                 ,act='1'        )] # &o
+            +[dict(cid='-'   ,tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )] # &c
             ), vals_hlp, focus_cid='htxt')
         pass;                  #LOG and log('vals_hlp={}',vals_hlp)
         if btn_hlp is None or btn_hlp=='-': break#while_hlp
@@ -614,6 +622,8 @@ Default values:
         elif btn_hlp=='opts':vals_hlp["htxt"]=OPTS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=True
         elif btn_hlp=='open':
             usr_json    = CdSw.file_open(CdSw.get_setting_dir()+os.sep+'user.json')
+        elif btn_hlp=='prps':
+            dlg_fif_opts()
        #while_hlp
    #def dlg_help
 

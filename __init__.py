@@ -19,6 +19,8 @@ class Command:
 
     def on_goto_def(self, ed_self):         return RLS.on_goto_def(ed_self)
     def on_click_dbl(self, ed_self, state): return RLS.on_click_dbl(ed_self, state)
+
+    def dlg_fif_opts(self):                 return RLS.dlg_fif_opts()
     
 def show_dlg(what='', opts={}):
     """ Show dlg "Find in Files" and set field values.
