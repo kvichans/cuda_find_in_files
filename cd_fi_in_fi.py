@@ -234,6 +234,8 @@ class Command:
         open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
        #def dlg_nav_by_dclick
 
+    def dlg_fif_opts(self):
+        return dlg_fif_opts()
    #class Command
 
 def dlg_fif_opts():
