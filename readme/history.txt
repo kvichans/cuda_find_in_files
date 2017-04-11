@@ -1,3 +1,7 @@
+1.2.12 (2017-04-11)
+removed: collect 
+added: hidden opts show into title
+
 1.2.11 (2017-04-10)
 added: dlg to view/set options in user.json (by plugin)
 

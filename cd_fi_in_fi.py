@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.11 2017-04-10'
+    '1.2.12 2017-04-11'
 ToDo: (see end of file)
 '''
 
@@ -606,8 +606,9 @@ Default values:
            )
 
            +([] if not vals_hlp['opts'] else []
-            +[dict(cid='open',tp='bt'    ,tid='-'       ,l=GAP          ,w=150  ,cap=_('O&pen user.json')                       )] # &p
-            +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP+150+5    ,w=130  ,cap=_('&Edit props…')                          )] # &e
+#           +[dict(cid='open',tp='bt'    ,tid='-'       ,l=GAP          ,w=150  ,cap=_('O&pen user.json')                       )] # &p
+#           +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP+150+5    ,w=130  ,cap=_('&Edit options…')                        )] # &e
+            +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP          ,w=130  ,cap=_('&Edit options…')                        )] # &e
            )
             +[dict(cid='tips',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                 ,act='1'        )] # &i
             +[dict(cid='keys',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                 ,act='1'        )] # &k
@@ -727,7 +728,7 @@ def dlg_fif(what='', opts={}):
     W32     = 'win'==get_desktop_environment()
     EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if W32 else [5*i for i in range(11)]
     DLG_W0, \
-    DLG_H0  = (700, 330 + EG1 + EG10)
+    DLG_H0  = (700, 335 + EG1 + EG10)
     DEF_WD_TXTS = 300
     DEF_WD_BTNS = 100
 
@@ -852,26 +853,28 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h)] # &e
                 
                 +([] if wo_adva else  []                        
-                 +[dict(           tp='lb'      ,t=gap2+170+EG5 ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')           )] # 
-                 +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Co&llect:')                 )] # &l
-                 +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
-                 +[dict(           tp='lb'      ,tid='sort'     ,l=GAP      ,r=80       ,cap='>'+_('Show in&:')                 )] # &:
-                 +[dict(cid='totb',tp='cb-ro'   ,tid='sort'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l       ,act='1'            )] # 
-                 +[dict(cid='join',tp='ch'      ,tid='frst'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
-                 +[dict(           tp='lb'      ,tid='enco'     ,l=GAP      ,r=80       ,cap='>'+_('Tree type &/:') ,hint=shtp_h)] # &/
-                 +[dict(cid='shtp',tp='cb-ro'   ,tid='enco'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
-                 +[dict(cid='algn',tp='ch'      ,tid='help'     ,l=GAP+80   ,w=100      ,cap=_('Align &|')          ,hint=algn_h)] # &|
-                 +[dict(cid='cntx',tp='ch'      ,tid='help'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')  ,act='1',hint=cntx_h)] # &x
+                 +[dict(           tp='--'      ,t=gap2+163+EG5                                                                 )] # 
+                 +[dict(           tp='lb'      ,t=gap2+175+EG5 ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')           )] # 
+#                +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Co&llect:')                 )] # &l
+#                +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
+                 +[dict(cid='cllc',tp='cb-ro'   ,t=0            ,l=0        ,w=0        ,items=cllc_l                           )] # 
+                 +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Show in&:')                 )] # &:
+                 +[dict(cid='totb',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l       ,act='1'            )] # 
+                 +[dict(cid='join',tp='ch'      ,tid='sort'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
+                 +[dict(           tp='lb'      ,tid='frst'     ,l=GAP      ,r=80       ,cap='>'+_('Tree type &/:') ,hint=shtp_h)] # &/
+                 +[dict(cid='shtp',tp='cb-ro'   ,tid='frst'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                           )] # 
+                 +[dict(cid='algn',tp='ch'      ,tid='enco'     ,l=GAP+80   ,w=100      ,cap=_('Align &|')          ,hint=algn_h)] # &|
+                 +[dict(cid='cntx',tp='ch'      ,tid='enco'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')  ,act='1',hint=cntx_h)] # &x
                                                 
-                 +[dict(           tp='lb'      ,t=gap2+170+EG5 ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')           )] # 
+                 +[dict(           tp='lb'      ,t=gap2+175+EG5 ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')           )] # 
                  +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&kip files:')              )] # &k
-                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+190+EG6 ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                           )] # 
+                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+195+EG6 ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                           )] # 
                  +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&ort file list:')          )] # &o
-                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+217+EG7 ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                           )] # 
+                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+222+EG7 ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                           )] # 
                  +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('Firsts (&0=all):'),hint=frst_h)] # &0
-                 +[dict(cid='frst',tp='ed'      ,t=gap2+244+EG8 ,l=tl2_l+100,r=tbn_l-GAP                                        )] # 
+                 +[dict(cid='frst',tp='ed'      ,t=gap2+249+EG8 ,l=tl2_l+100,r=tbn_l-GAP                                        )] # 
                  +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('Encodings &\\:'),hint=enco_h)] # \
-                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+271+EG9 ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
+                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+276+EG9 ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                           )] # 
                 )                                                                                                               
                  +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=btn_w    ,cap=_('Find'),def_bt=True  ,hint=find_h)] # 
                 +([] if wo_repl else []                         
@@ -880,7 +883,8 @@ def dlg_fif(what='', opts={}):
                 +([]                        
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Coun&t')        ,hint=coun_h)] # &t
                  +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just…')      ,hint=cust_h)] # &j
-                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help')                     )] # &h
+                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=GAP      ,w=38*3*ad01    ,cap=_('&Help')                     )] # &h
+#                +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help')                     )] # &h
                  +[dict(cid='-'   ,tp='bt'      ,tid='help'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
                 if not wo_adva else []
                  +[dict(cid='-'   ,tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
@@ -923,7 +927,17 @@ def dlg_fif(what='', opts={}):
                              ,enco=enco_s
                             ))
         pass;                  #LOG and log('vals={}',pf(vals))
-        btn,vals,fid,chds=dlg_wrapper(f(_('Find in Files ({})'), VERSION_V), dlg_w, dlg_h, cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
+        btn,vals,fid,chds   = dlg_wrapper(f(_('Find in Files ({}) {}'), VERSION_V
+                                           ,'' if not wo_adva else  ' [' + (''
+                                                            +   (_(shtp_l[int(shtp_s)]+', ')                        )
+                                                            +   (_('Append, ')                if join_s=='1' else '')
+                                                            +   (_('Context, ')               if cntx_s=='1' else '')
+                                                            +   (_('Sorted, ')                if sort_s!='0' else '')
+                                                            +   (_('First ')+frst_s+', '      if frst_s!='0' else '')
+                                                            ).rstrip(', ') + ']'
+                                           )
+                            , dlg_w, dlg_h, cnts, vals
+                            , focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
         scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
         btn_p       = btn
@@ -1472,5 +1486,5 @@ ToDo
 [+][at-kv][22mat17] "fif_read_head_size(bytes)"
 [+][kv-kv][23mat17] "fif_context_width_before", "fif_context_width_after"
 [ ][kv-kv][30mat17] Sort and Tree conflict is too hard. Use "Stop? Without sort?"
-[ ][kv-kv][30mat17] !! Need Properties dlg to show/edit opts from/to user.json
+[+][kv-kv][30mat17] !! Need Properties dlg to show/edit opts from/to user.json
 '''

@@ -81,7 +81,7 @@ method=_
 
 [item24]
 section=commands
-caption=&Find in Files\Configurate navigation with &double-click...
+caption=&Find in Files\Configure navigation with &double-click...
 method=dlg_nav_by_dclick
 ;menu=0
 
