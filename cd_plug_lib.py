@@ -309,6 +309,8 @@ def fit_top_by_env(what_tp, base_tp='label'):
     return fit_top_by_env__cash.setdefault((what_tp, base_tp), fit)
    #def fit_top_by_env
 
+def rgb_to_int(r,g,b):
+    return r             | (g         <<8)    | (b         <<16)
 def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
     """ Wrapper for dlg_custom. 
         Params
@@ -392,7 +394,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
             r   = cnt.get('r', l+cnt.get('w', w))   # def: to   DlgRight
             lst = ['type=label']
             lst+= ['cap='+'—'*1000]
-            lst+= ['en=0']
+            lst+= ['font=default,9,'+str(rgb_to_int(185,185,185))]
             lst+= ['pos={l},{t},{r},0'.format(l=l,t=t,r=r)]
             ctrls_l+= [chr(1).join(lst)]
             continue#for cnt
