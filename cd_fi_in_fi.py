@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.13 2017-04-12'
+    '1.2.14 2017-04-12'
 ToDo: (see end of file)
 '''
 
@@ -671,7 +671,12 @@ def dlg_fif(what='', opts={}):
                 '\rShift+Click   - Set wider width for fields What/In files…'
                 '\rCtrl+Shift+Click - Set default widths for all fields.'
                 )
-    frst_h  = _('Search only inside N first found files')
+                '\rStop after M fragments will be found.'
+                '\rSearch only inside F first proper files.'
+                '\r    Note: If Sort is on then steps are'
+                '\r     - Collect all proper files'
+                '\r     - Sort the list'
+                )
     shtp_h  = f(_(  'Format of the reported tree structure.'
                 '\rCompact - report all found line with full file info:'
                 '\r    path(r[:c:l]):line'
@@ -1316,7 +1321,8 @@ def dlg_fif(what='', opts={}):
                 ,sort_type  =apx.icase( sort_s=='0','' 
                                        ,sort_s=='1','date,desc' 
                                        ,sort_s=='2','date,asc' ,'')
-                ,only_frst  =int(frst_s)
+                ,only_frst  =int((frst_s+',0').split(',')[1])
+#               ,only_frst  =int(frst_s)
                 ,skip_unwr  =btn_p=='!rep'
                 ,enco       =enco_l[int(enco_s)].split(', ')
                 )
@@ -1327,6 +1333,7 @@ def dlg_fif(what='', opts={}):
                 ,reex       =reex01=='1'
                 ,case       =case01=='1'
                 ,word       =word01=='1'
+                ,only_frst  =int((frst_s+',0').split(',')[0])
                 )
             cllc_v      = cllc_l[int(cllc_s)]
             what_save   = dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
@@ -1499,4 +1506,5 @@ ToDo
 [+][kv-kv][23mat17] "fif_context_width_before", "fif_context_width_after"
 [ ][kv-kv][30mat17] Sort and Tree conflict is too hard. Use "Stop? Without sort?"
 [+][kv-kv][30mat17] !! Need Properties dlg to show/edit opts from/to user.json
+[ ][kv-kv][12apr17] os.walk is wide or depth? How to switch mode?
 '''

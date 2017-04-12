@@ -1,3 +1,6 @@
+1.2.14 (2017-04-12)
+added: stop after M fragments are found
+
 1.2.13 (2017-04-12)
 added: hotkeys alt+y and alt+l to set depth
 
