@@ -1,3 +1,6 @@
+1.2.13 (2017-04-12)
+added: hotkeys alt+y and alt+l to set depth
+
 1.2.12 (2017-04-11)
 removed: collect 
 added: hidden opts show into title

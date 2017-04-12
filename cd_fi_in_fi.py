@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.12 2017-04-11'
+    '1.2.13 2017-04-12'
 ToDo: (see end of file)
 '''
 
@@ -434,7 +434,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
     return      ouvl_l
    #def dlg_press
 
-def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,more_h,cust_h):
+def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,pset_h,more_h,cust_h):
     RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
     TIPS_BODY   = _(r'''
 • ".*" - Option "Regular Expression" allows to use in field "Find" special symbols:
@@ -488,6 +488,8 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,m
  
 • "Browse…" - {brow}
  
+• "In subfolders" - {dept}
+ 
 • "Preset…" - {pset}
  
 • "More/Less…" - {more}
@@ -501,6 +503,7 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,m
     ,coun=coun_h.replace('\r', '\n')
     ,cfld=cfld_h.replace('\r', '\n')
     ,brow=brow_h.replace('\r', '\n')
+    ,dept=dept_h.replace('\r', '\n')
     ,pset=pset_h.replace('\r', '\n')
     ,more=more_h.replace('\r', '\n')
     ,cntx=cntx_h.replace('\r', '\n')
@@ -648,6 +651,10 @@ def dlg_fif(what='', opts={}):
                 )
     brow_h  = _('Choose folder.'
                 '\rShift+Click - Choose file to find in it.'
+                )
+    dept_h  = _('Which subfolders will be used to search.'
+                '\rAlt+L - Apply "All".'
+                '\rAlt+Y - Apply "In folder only".'
                 )
     cfld_h  = _('Use folder of current file.'
                 '\rShift+Click - Prepare search in the current file.'
@@ -822,7 +829,7 @@ def dlg_fif(what='', opts={}):
         dlg_w,\
         dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(30+EG4 if wo_adva else 0))
         #NOTE: fif-cnts
-        cnts    = ([]                                                                                                              # gmqvyz
+        cnts    = ([]                                                                                                              # gmqvz
                  +[dict(cid='prs1',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
                  +[dict(cid='prs2',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
                  +[dict(cid='prs3',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
@@ -830,7 +837,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act='1' ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act='1' ,hint=case_h)] # &a
                  +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'        ,act='1' ,hint=word_h)] # &w
-                 +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*&Find:')                   )] # &f
+                 +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*&Find what:')              )] # &f
                  +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=txt_w    ,items=what_l                           )] # 
                 
                 +([] if wo_repl else []                         
@@ -847,8 +854,10 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*I&n folder:')              )] # &n
                  +[dict(cid='fold',tp='cb'      ,t=gap2+112+EG4 ,l=cmb_l    ,w=txt_w    ,items=fold_l                           )] # 
                  +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')          ,hint=brow_h)] # &b
-                 +[dict(           tp='lb'      ,tid='dept'     ,l=lbl_l    ,w=100  -5  ,cap='>'+_('In s&ubfolders:')           )] # &u
+                 +[dict(           tp='lb'      ,tid='dept'     ,l=lbl_l    ,w=100  -5  ,cap='>'+_('In s&ubfolders:'),hint=dept_h)] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140+EG5 ,l=cmb_l    ,w=135      ,items=dept_l                           )] # 
+                 +[dict(cid='depa',tp='bt'      ,tid='dept'     ,l=0        ,w=0        ,cap=_('&l')                            )] # &l
+                 +[dict(cid='depo',tp='bt'      ,tid='dept'     ,l=0        ,w=0        ,cap=_('&y')                            )] # &y
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h)] # &e
                 
@@ -1003,7 +1012,7 @@ def dlg_fif(what='', opts={}):
         
         # Cmds without data: help, custom
         if btn_p=='help':
-            dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,pset_h,more_h,cust_h)
+            dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,pset_h,more_h,cust_h)
             continue#while_fif
         
 #       if btn_p=='more':
@@ -1064,6 +1073,9 @@ def dlg_fif(what='', opts={}):
             continue#while_fif
         
         # Cmds with data
+        if btn_p in ('depa', 'depo'):
+            dept_n  = 0 if btn_p=='depa' else 1
+        
         if btn_p in ('prs1', 'prs2', 'prs3') \
         or btn_m=='c/pres': # Ctrl++Preset - Apply last used preset
             pset_l  = stores.setdefault('pset', [])
@@ -1451,7 +1463,7 @@ ToDo
 [+][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
 [?][kv-kv][13may16] UnDo for ReplaceInFiles by report
-[ ][kv-kv][13may16] Auto-Click-More before focus hidden field
+[-][kv-kv][13may16] Auto-Click-More before focus hidden field
 [+][kv-kv][13may16] Ask "Want repl in OPEN TABS"
 [+][kv-kv][13may16] Use os.access(path, os.W_OK)
 [+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
@@ -1463,7 +1475,7 @@ ToDo
 [+][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
 [+][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside? width=0!)
 [+][kv-kv][11jun16] Add "/folder-mask" for incl/excl
-[ ][kv-kv][11jun16] Lazy/Yield for cllc--find--rept ?
+[ ][kv-kv][11jun16] ? Lazy/Yield for cllc--find--rept ?
 [-][kv-kv][14jun16] Opt "save active tab on Close" ?
 [+][kv-kv][14jun16] Cmds "Show next/prev result" ?
 [+][kv-kv][09feb17] Set dept="folder only" when cmd "Search in cur file"
@@ -1482,7 +1494,7 @@ ToDo
 [+][kv-kv][23feb17] scam+Less/More to hide/show excl or repl
 [+][kv-kv][23feb17] "In subf" v-align with "In fold"
 [-][kv-kv][23feb17] Show min width in Cust
-[ ][kv-kv][23feb17] Show "Show in"+"Append"+"Tree type" in title for compact mode
+[+][kv-kv][23feb17] Show "Show in"+"Append"+"Tree type" in title for compact mode
 [+][at-kv][22mat17] "fif_read_head_size(bytes)"
 [+][kv-kv][23mat17] "fif_context_width_before", "fif_context_width_after"
 [ ][kv-kv][30mat17] Sort and Tree conflict is too hard. Use "Stop? Without sort?"
