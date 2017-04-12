@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.9 2017-03-23'
+    '1.2.14 2017-04-12'
 ToDo: (see end of file)
 '''
 
@@ -887,6 +887,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     rsp_i['cllc_files']     = len(files)
     rsp_i['cllc_stopped']   = cllc_stp
     
+    frst    = what_find.get('only_frst', 0)
     pttn_s  = what_find['find']
     repl_s  = what_find['repl']
     mult_b  = what_find['mult']
@@ -983,6 +984,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 #                   if ext_lns>0:
                         # Separator
                         items  += [dict(row=SPRTR, line='')]
+                    if 0<frst<=(rsp_i['frgms']+_count): break#for mtch
+                   #for mtch
                 if repl_s is not None and mtchs:
                     mtch0       = mtchs[0] 
                     mtch1       = mtchs[-1] 
@@ -994,6 +997,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                                        ,line=line_new, res=1 if rn==1 else 2)]
                     _lines[ln]  = line_new
                     pass;      #LOG and log('line_new={}',(repr(line_new)))
+            if 0<frst<=(rsp_i['frgms']+_count): break#for line
            #for line
         if not _count:
             # No matches
@@ -1033,6 +1037,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 ted.set_text_all(c13.join(lines))
                 CdSw.set_caret(ted, *crts[0])
 #               ted.set_caret(      *crts[0])
+            if 0<frst<=rsp_i['frgms']: break#for path
            #for path
         return rsp_l, rsp_i
         
@@ -1106,8 +1111,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                         open(path, mode='w', encoding=enco_s, newline='').write(''.join(lines))
                     # Change text in file
                 rsp_i['brow_files']     += 1
-                if not count:
-                    break#for enco_n
+                if 0<frst<=rsp_i['frgms']:   break#for enco_n
+                if not count:               break#for enco_n
                 if prntdct:
         #           prntdct['count']+=count
         #           prntdct = prntdct['prnt']
@@ -1123,6 +1128,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                 if rpt_enc_fail and enco_n == len(enco_l)-1:
                     print(f(_('Cannot read "{}" (encoding={}/{}): {}'), path, enco_s, enco_l, ex))
            #for encd_n
+        if 0<frst<=rsp_i['frgms']:   break#for path
        #for path
     pass;                      #t=None
     pass;                      #FNDLOG and log('rsp_l=¶{}',pf(rsp_l))
@@ -1263,10 +1269,10 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
             if hidn and is_hidden_file(path):                               continue#for filename
             if binr and is_birary_file(path):                               continue#for filename
             rsp    += [path]
-            if  not sort and len(rsp)>=frst>0:
+            if  not sort and 0<frst<=len(rsp):
                 break#for filename
            #for filename
-        if      not sort and len(rsp)>=frst>0:
+        if      not sort and 0<frst<=len(rsp):
             pass;               LOG and log('break by >frst',())
             break#for dirpath
         if depth==0:
@@ -1275,13 +1281,14 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
        #for dirpath
     if sort:
         tm_pth  = [(os.path.getmtime(path),path) for path in rsp]
+        pass;                  #log('tm_pth={}',(tm_pth))
         rsp     = [tp[1] for tp in sorted(tm_pth, reverse=(sort=='date,desc'))]
         pass;                  #rsp_srt = sorted(tm_pth, reverse=(sort=='date,desc'))
         pass;                  #log('rsp_srt={}',(rsp_srt))
         pass;                  #log('zip(*...)[1]={}',(list(list(zip(*rsp_srt))[1])))
         pass;                  #log('rsp         ={}',(rsp))
         pass;                  #log('rsp==zip(*...)[1] {}',(rsp==list(list(zip(*rsp_srt))[1])))
-        if len(rsp)>=frst>0:
+        if 0<frst<len(rsp):
             rsp = rsp[:frst]
     pass;                       LOG and log('|rsp|, stoped={}',(len(rsp), stoped))
     return rsp, stoped

@@ -671,11 +671,13 @@ def dlg_fif(what='', opts={}):
                 '\rShift+Click   - Set wider width for fields What/In files…'
                 '\rCtrl+Shift+Click - Set default widths for all fields.'
                 )
+    frst_h  = _('M[, F]'
                 '\rStop after M fragments will be found.'
                 '\rSearch only inside F first proper files.'
                 '\r    Note: If Sort is on then steps are'
                 '\r     - Collect all proper files'
                 '\r     - Sort the list'
+                '\r     - Use first F files to search'
                 )
     shtp_h  = f(_(  'Format of the reported tree structure.'
                 '\rCompact - report all found line with full file info:'
