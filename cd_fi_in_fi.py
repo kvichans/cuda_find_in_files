@@ -837,9 +837,9 @@ def dlg_fif(what='', opts={}):
         dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(30+EG4 if wo_adva else 0))
         #NOTE: fif-cnts
         cnts    = ([]                                                                                                              # gmqvz
-                 +[dict(cid='prs1',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&1')                            )] # &1
-                 +[dict(cid='prs2',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&2')                            )] # &2
-                 +[dict(cid='prs3',tp='bt'      ,tid='incl'     ,l=0        ,w=0        ,cap=_('&3')                            )] # &3
+                 +[dict(cid='prs1',tp='bt'      ,tid='incl'     ,l=-10      ,w=0        ,cap=_('&1')                            )] # &1
+                 +[dict(cid='prs2',tp='bt'      ,tid='incl'     ,l=-10      ,w=0        ,cap=_('&2')                            )] # &2
+                 +[dict(cid='prs3',tp='bt'      ,tid='incl'     ,l=-10      ,w=0        ,cap=_('&3')                            )] # &3
                  +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets…')         ,hint=pset_h)] # &s
                  +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act='1' ,hint=reex_h)] # &.
                  +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act='1' ,hint=case_h)] # &a
@@ -863,8 +863,8 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')          ,hint=brow_h)] # &b
                  +[dict(           tp='lb'      ,tid='dept'     ,l=lbl_l    ,w=100  -5  ,cap='>'+_('In s&ubfolders:'),hint=dept_h)] # &u
                  +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140+EG5 ,l=cmb_l    ,w=135      ,items=dept_l                           )] # 
-                 +[dict(cid='depa',tp='bt'      ,tid='dept'     ,l=0        ,w=0        ,cap=_('&l')                            )] # &l
-                 +[dict(cid='depo',tp='bt'      ,tid='dept'     ,l=0        ,w=0        ,cap=_('&y')                            )] # &y
+                 +[dict(cid='depa',tp='bt'      ,tid='dept'     ,l=-10      ,w=0        ,cap=_('&l')                            )] # &l
+                 +[dict(cid='depo',tp='bt'      ,tid='dept'     ,l=-10      ,w=0        ,cap=_('&y')                            )] # &y
                  +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h)] # &c
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h)] # &e
                 
@@ -873,7 +873,7 @@ def dlg_fif(what='', opts={}):
                  +[dict(           tp='lb'      ,t=gap2+175+EG5 ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')           )] # 
 #                +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Co&llect:')                 )] # &l
 #                +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                           )] # 
-                 +[dict(cid='cllc',tp='cb-ro'   ,t=0            ,l=0        ,w=0        ,items=cllc_l                           )] # 
+                 +[dict(cid='cllc',tp='cb-ro'   ,t=0            ,l=-10      ,w=0        ,items=cllc_l                           )] # 
                  +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Show in&:')                 )] # &:
                  +[dict(cid='totb',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l       ,act='1'            )] # 
                  +[dict(cid='join',tp='ch'      ,tid='sort'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')               )] # &d
