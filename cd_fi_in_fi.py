@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.14 2017-04-12'
+    '1.2.15 2017-04-24'
 ToDo: (see end of file)
 '''
 
@@ -943,7 +943,7 @@ def dlg_fif(what='', opts={}):
                              ,enco=enco_s
                             ))
         pass;                  #LOG and log('vals={}',pf(vals))
-        btn,vals,fid,chds   = dlg_wrapper(f(_('Find in Files ({}) {}'), VERSION_V
+        dlg_cap     = f(_('Find in Files ({}) {}'), VERSION_V
                                            ,'' if not wo_adva else  ' [' + (''
                                                             +   (_(shtp_l[int(shtp_s)]+', ')                        )
                                                             +   (_('Append, ')                if join_s=='1' else '')
@@ -952,8 +952,8 @@ def dlg_fif(what='', opts={}):
                                                             +   (_('First ')+frst_s+', '      if frst_s!='0' else '')
                                                             ).rstrip(', ') + ']'
                                            )
-                            , dlg_w, dlg_h, cnts, vals
-                            , focus_cid=focused)     #NOTE: dlg-fif
+#       btn,vals,fid,chds   = dlg_agent(  dlg_cap, (dlg_w, dlg_h), cnts, vals, focus_cid=focused)
+        btn,vals,fid,chds   = dlg_wrapper(dlg_cap, dlg_w, dlg_h,   cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
         if btn is None or btn=='-': return None
         scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
         btn_p       = btn
@@ -1056,15 +1056,15 @@ def dlg_fif(what='', opts={}):
             wdbt_c  = f(_('Width of main &buttons ("{}", "{}"):'), caps['!fnd'], caps['brow'])
             shex_c  = f(_('Show "&{}"')                          , caps['excl'])
             shre_c  = f(_('Show "&{}" and "{}"')                 , caps['repl'], caps['!rep'])
-            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+370+GAP,GAP+145+GAP,     #NOTE: dlg-cust
-                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=300  ,cap=wdtx_c                                     ) # &e
-                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+300      ,w=70   ,props=f('{},{},25',DEF_WD_TXTS,2*DEF_WD_TXTS)  ) # 
-                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=300  ,cap=wdbt_c                                     ) # &b
-                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+300      ,w=70   ,props=f('{},{},10',DEF_WD_BTNS,2*DEF_WD_BTNS)  ) # 
+            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+390+GAP,GAP+145+GAP,     #NOTE: dlg-cust
+                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=320  ,cap=wdtx_c                                     ) # &e
+                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+320      ,w=70   ,props=f('{},{},25',DEF_WD_TXTS,2*DEF_WD_TXTS)  ) # 
+                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=320  ,cap=wdbt_c                                     ) # &b
+                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+320      ,w=70   ,props=f('{},{},10',DEF_WD_BTNS,2*DEF_WD_BTNS)  ) # 
                  ,dict(cid='shex',tp='ch'    ,t=GAP+65          ,l=GAP          ,w=150  ,cap=shex_c                                     ) # &n
                  ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=shre_c                                     ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-170  ,w=80   ,cap=_('OK')    ,def_bt=True                    ) # 
-                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+370-80   ,w=80   ,cap=_('Cancel')                                )
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+390-170  ,w=80   ,cap=_('OK')    ,def_bt=True                    ) # 
+                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+390-80   ,w=80   ,cap=_('Cancel')                                )
                  ],    dict(wdtx=    stores.get('wd_txts', DEF_WD_TXTS)
                            ,wdbt=    stores.get('wd_btns', DEF_WD_BTNS)
                            ,shex=not stores.get('wo_excl', True)
@@ -1428,7 +1428,7 @@ ToDo
 [+][kv-kv][25feb16] 'include/exclude masks'
 [+][kv-kv][25feb16] 'depth' for recursion
 [+][kv-kv][25feb16] 'preset'
-[ ][kv-kv][0?apr16] 'Firsts' for walk or for results?
+[+][kv-kv][0?apr16] 'Firsts' for walk or for results?
 [+][kv-kv][06apr16] testing re-expr correction on btn=='!...'
 [+][kv-kv][06apr16] exclude file by size
 [+][kv-kv][07apr16] how to show progress?
@@ -1509,4 +1509,5 @@ ToDo
 [ ][kv-kv][30mat17] Sort and Tree conflict is too hard. Use "Stop? Without sort?"
 [+][kv-kv][30mat17] !! Need Properties dlg to show/edit opts from/to user.json
 [ ][kv-kv][12apr17] os.walk is wide or depth? How to switch mode?
+[ ][kv-kv][17apr17] ? Use local menu to show presets (after dlg_proc)
 '''
