@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.15 2017-04-24'
+    '1.3.01 2017-04-28'
 ToDo: (see end of file)
 '''
 
@@ -99,7 +99,6 @@ class Command:
 #   def undo_by_report(self):
 #       undo_by_report()
        #def undo_by_report
-
 
     def find_in_ed(self):
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
@@ -340,13 +339,20 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
         # Config
         ps_ind      = 0
         DLG_W       = 5*4+245+300
-        while_pss   = True
-        while while_pss:
+        ps          = pset_l[ps_ind]                                                                        if pset_l else {}
+        ps_mns      = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
+        ps_its      = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+        ps_vls      = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+
+        def get_cnts(): 
+            nonlocal pset_l,ps_ind,keys_l
             ps      = pset_l[ps_ind]                                                                        if pset_l else {}
             ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
+            pass;               LOG and log('ps_mns={}',(ps_mns))
             ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
             ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
-            cnts    =[dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
+            return \
+                     [dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
                      ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1'
                                                                                                         ,en=(len(pset_l)>0) ) #
                       # Content
@@ -364,18 +370,17 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                      ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True        ) # &
                      ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
                      ]
-            btn,vals,*_t   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
-                             ,  dict(prss=ps_ind
-                                    ,name=ps.get('name', '')
-                                    ,what=(-1,ps_vls)
-                                    )
-                             ,  focus_cid='prss')
-            pass;                  #LOG and log('vals={}',vals)
-            if btn is None or btn=='-': return None
+           #def get_cnts
+
+        def dlg_loop(btn, vals, fid, chds):
+            pass;               LOG and log('btn, vals={}',(btn, vals))
+            nonlocal ps,ps_mns,ps_its,ps_vls
+            if btn is None or btn=='-': return [None]*5
             if btn=='!':
                 open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-                break#while_pss
-            if not pset_l: continue#while_pss
+                return [None]*5 #break#while_pss
+            if not pset_l: #continue#while_pss
+                return      _('Config presets'), (DLG_W,490), get_cnts(), vals, fid
             ps['name']  = vals['name']
             ps_ind      = vals['prss']
             ps_vls      = vals['what'][1]
@@ -398,7 +403,84 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                 ps  = pset_l[ps_ind]
                 psd = {k:v for k,v in ps.items()}
                 pset_l.insert(ps_ind, psd)
-           #while_pss
+
+            ps      = pset_l[ps_ind]                                                                        if pset_l else {}
+            ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
+            ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+            ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+            return  (       _('Config presets'), (DLG_W,490), get_cnts()
+                             ,  dict(prss=ps_ind
+                                    ,name=ps.get('name', '')
+                                    ,what=(-1,ps_vls)
+                                    )
+                             ,  'prss')
+           #def dlg_loop
+
+        dlg_agent(dlg_loop, _('Config presets'), (DLG_W,490), get_cnts()                    #NOTE: dlg-pres-cfg
+                             ,  dict(prss=ps_ind
+                                    ,name=ps.get('name', '')
+                                    ,what=(-1,ps_vls)
+                                    )
+                             ,  'prss')
+#       while_pss   = True
+#       while while_pss:
+#           ps      = pset_l[ps_ind]                                                                        if pset_l else {}
+#           ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
+#           ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+#           ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+#           cnts    =[dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
+#                    ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1'
+#                                                                                                       ,en=(len(pset_l)>0) ) #
+#                     # Content
+#                    ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')                        ) # &n
+#                    ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                      ,en=(len(pset_l)>0) ) # 
+#                     # Acts
+#                    ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) ) # &u
+#                    ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1) ) # &d
+#                    ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0) ) # &e
+#                    ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0) ) # &t
+#                     #
+#                    ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
+#                    ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
+#                     #
+#                    ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True        ) # &
+#                    ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
+#                    ]
+#           btn,vals,*_t   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
+#                            ,  dict(prss=ps_ind
+#                                   ,name=ps.get('name', '')
+#                                   ,what=(-1,ps_vls)
+#                                   )
+#                            ,  focus_cid='prss')
+#           pass;                  #LOG and log('vals={}',vals)
+#           if btn is None or btn=='-': return None
+#           if btn=='!':
+#               open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+#               break#while_pss
+#           if not pset_l: continue#while_pss
+#           ps['name']  = vals['name']
+#           ps_ind      = vals['prss']
+#           ps_vls      = vals['what'][1]
+#           for i, k in enumerate(keys_l):
+#               ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
+#           if False:pass
+#           elif btn=='mvup' and ps_ind>0 \
+#           or   btn=='mvdn' and ps_ind<len(pset_l)-1:
+#               mv_ind  = ps_ind + (-1 if btn=='mvup' else 1)
+#               pset_l[mv_ind], \
+#               pset_l[ps_ind]  = pset_l[ps_ind], \
+#                                 pset_l[mv_ind]
+#               ps_ind  = mv_ind
+#
+#           elif btn=='delt':
+#               pset_l.pop(ps_ind)
+#               ps_ind  = min(ps_ind, len(pset_l)-1)
+#
+#           elif btn=='clon':
+#               ps  = pset_l[ps_ind]
+#               psd = {k:v for k,v in ps.items()}
+#               pset_l.insert(ps_ind, psd)
+#          #while_pss
         
     elif ps_ind==ind_save:
         # Save
@@ -579,61 +661,951 @@ Default values:
     // Size of buffer (at file start) to detect binary files
     "fif_read_head_size(bytes)":1024,
 ''').strip().replace('{def_enco}', DEF_LOC_ENCO)
-#   // Before append result fold all previous ones
-#   "fif_fold_prev_res":false,
-#   
+
     DW, DH      = 800, 600
-#   vals_hlp    = dict(htxt=TIPS_BODY)
+    hints_png   = os.path.dirname(__file__)+os.sep+r'images/fif-hints_770x400.PNG'
+    def get_cnts(vals_hlp):
+        w_keys  = vals_hlp['keys']
+        w_tips  = vals_hlp['tips']
+        w_opts  = vals_hlp['opts']
+        me_t    = GAP   +( 400+GAP if w_keys else 0)
+        me_h    = DH-28 +(-400-GAP if w_keys else 0)
+        cnts    = \
+            ([]
+#          +([dict(cid='htxt',tp='me'    ,t=GAP         ,h=DH-28        ,l=GAP      ,w=DW   ,ro_mono_brd='1,1,1'                )] # 
+#          if not vals_hlp['keys'] else []
+            +[dict(           tp='im'    ,t=GAP ,h=400  ,l=GAP+15       ,w=770  ,items=hints_png                                ,vis=w_keys )]
+#           +[dict(cid='htxt',tp='me'    ,t=GAP+400+GAP ,h=DH-28-400-GAP,l=GAP      ,w=DW   ,ro_mono_brd='1,1,1'                )] # 
+#          )
+            +[dict(cid='htxt',tp='me'    ,t=me_t ,h=me_h,l=GAP          ,w=DW   ,ro_mono_brd='1,1,1'                                        )] # 
+
+#          +([] if not vals_hlp['tips'] else []
+            +[dict(           tp='ln-lb' ,tid='-'       ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),url=RE_DOC_REF  ,vis=w_tips )]
+#          )
+
+#          +([] if not vals_hlp['opts'] else []
+            +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP          ,w=130  ,cap=_('&Edit options…')                        ,vis=w_opts )] # &e
+#          )
+            +[dict(cid='tips',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                 ,act='1'                    )] # &i
+            +[dict(cid='keys',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                 ,act='1'                    )] # &k
+            +[dict(cid='tree',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                 ,act='1'                    )] # &t
+            +[dict(cid='opts',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                 ,act='1'                    )] # &o
+            +[dict(cid='-'   ,tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                            )] # &c
+            )
+        return cnts
+       #def get_cnts
+    def dlg_loop(btn_hlp, vals_hlp, fid, chds):
+        if btn_hlp is None or btn_hlp=='-': return [None]*5#break#while_hlp
+        if False:pass
+        elif btn_hlp=='tips':vals_hlp["htxt"]=TIPS_BODY; vals_hlp["tips"]=True; vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=False
+        elif btn_hlp=='keys':vals_hlp["htxt"]=KEYS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=True; vals_hlp["tree"]=False;vals_hlp["opts"]=False
+        elif btn_hlp=='tree':vals_hlp["htxt"]=TREE_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=True; vals_hlp["opts"]=False
+        elif btn_hlp=='opts':vals_hlp["htxt"]=OPTS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=True
+        elif btn_hlp=='prps':
+            dlg_fif_opts()
+        return          _('Help for "Find in Files"'), (GAP+DW+GAP,GAP+DH+GAP), get_cnts(vals_hlp), vals_hlp, 'htxt'
+       #def dlg_loop
     vals_hlp    = dict(htxt=TIPS_BODY
                       ,tips=True
                       ,keys=False
                       ,tree=False
                       ,opts=False
                       )
-    hints_png   = os.path.dirname(__file__)+os.sep+r'images/fif-hints_770x400.PNG'
-    while_hlp   = True
-    while while_hlp:
-        btn_hlp,    \
-        vals_hlp,   \
-        *_t         = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
-            ([]
-#           +[dict(cid='htxt',tp='me'    ,t=GAP ,h=DH-28,l=GAP          ,w=DW   ,props='1,1,1'                                  )] #  ro,mono,border
-           +([dict(cid='htxt',tp='me'    ,t=GAP ,h=DH-28,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'                )] # 
-           if not vals_hlp['keys'] else []
-            +[dict(           tp='im'    ,t=GAP         ,h=400          ,l=GAP+15   ,w=770  ,items=hints_png                    )]
-            +[dict(cid='htxt',tp='me'    ,t=GAP+400+GAP ,h=DH-28-400-GAP,l=GAP      ,w=DW   ,ro_mono_brd='1,1,1'                )] # 
-           )
-
-           +([] if not vals_hlp['tips'] else []
-            +[dict(           tp='ln-lb' ,tid='-'       ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),url=RE_DOC_REF  )]
-           )
-
-           +([] if not vals_hlp['opts'] else []
-#           +[dict(cid='open',tp='bt'    ,tid='-'       ,l=GAP          ,w=150  ,cap=_('O&pen user.json')                       )] # &p
-#           +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP+150+5    ,w=130  ,cap=_('&Edit options…')                        )] # &e
-            +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP          ,w=130  ,cap=_('&Edit options…')                        )] # &e
-           )
-            +[dict(cid='tips',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                 ,act='1'        )] # &i
-            +[dict(cid='keys',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                 ,act='1'        )] # &k
-            +[dict(cid='tree',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                 ,act='1'        )] # &t
-            +[dict(cid='opts',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                 ,act='1'        )] # &o
-            +[dict(cid='-'   ,tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )] # &c
-            ), vals_hlp, focus_cid='htxt')
-        pass;                  #LOG and log('vals_hlp={}',vals_hlp)
-        if btn_hlp is None or btn_hlp=='-': break#while_hlp
-        if False:pass
-        elif btn_hlp=='tips':vals_hlp["htxt"]=TIPS_BODY; vals_hlp["tips"]=True; vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=False
-        elif btn_hlp=='keys':vals_hlp["htxt"]=KEYS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=True; vals_hlp["tree"]=False;vals_hlp["opts"]=False
-        elif btn_hlp=='tree':vals_hlp["htxt"]=TREE_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=True; vals_hlp["opts"]=False
-        elif btn_hlp=='opts':vals_hlp["htxt"]=OPTS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=True
-        elif btn_hlp=='open':
-            usr_json    = CdSw.file_open(CdSw.get_setting_dir()+os.sep+'user.json')
-        elif btn_hlp=='prps':
-            dlg_fif_opts()
-       #while_hlp
+    dlg_agent(dlg_loop, _('Help for "Find in Files"'), (GAP+DW+GAP,GAP+DH+GAP), get_cnts(vals_hlp), vals_hlp, 'htxt')
+#   vals_hlp    = dict(htxt=TIPS_BODY
+#                     ,tips=True
+#                     ,keys=False
+#                     ,tree=False
+#                     ,opts=False
+#                     )
+#   hints_png   = os.path.dirname(__file__)+os.sep+r'images/fif-hints_770x400.PNG'
+#   while_hlp   = True
+#   while while_hlp:
+#       btn_hlp,    \
+#       vals_hlp,   \
+#       *_t         = dlg_wrapper(_('Help for "Find in Files"'), GAP+DW+GAP,GAP+DH+GAP,     #NOTE: dlg-hlp
+#           ([]
+#          +([dict(cid='htxt',tp='me'    ,t=GAP ,h=DH-28,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'                )] # 
+#          if not vals_hlp['keys'] else []
+#           +[dict(           tp='im'    ,t=GAP         ,h=400          ,l=GAP+15   ,w=770  ,items=hints_png                    )]
+#           +[dict(cid='htxt',tp='me'    ,t=GAP+400+GAP ,h=DH-28-400-GAP,l=GAP      ,w=DW   ,ro_mono_brd='1,1,1'                )] # 
+#          )
+#
+#          +([] if not vals_hlp['tips'] else []
+#           +[dict(           tp='ln-lb' ,tid='-'       ,l=GAP          ,w=180  ,cap=_('Reg.ex. on python.org'),url=RE_DOC_REF  )]
+#          )
+#
+#          +([] if not vals_hlp['opts'] else []
+#           +[dict(cid='prps',tp='bt'    ,tid='-'       ,l=GAP          ,w=130  ,cap=_('&Edit options…')                        )] # &e
+#          )
+#           +[dict(cid='tips',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-425   ,w=80   ,cap=_('T&ips')                 ,act='1'        )] # &i
+#           +[dict(cid='keys',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-340   ,w=80   ,cap=_('&Keys')                 ,act='1'        )] # &k
+#           +[dict(cid='tree',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-255   ,w=80   ,cap=_('&Tree')                 ,act='1'        )] # &t
+#           +[dict(cid='opts',tp='ch-bt',t=GAP+DH-23    ,l=GAP+DW-170   ,w=80   ,cap=_('&Opts')                 ,act='1'        )] # &o
+#           +[dict(cid='-'   ,tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,cap=_('&Close')                                )] # &c
+#           ), vals_hlp, focus_cid='htxt')
+#       pass;                  #LOG and log('vals_hlp={}',vals_hlp)
+#       if btn_hlp is None or btn_hlp=='-': break#while_hlp
+#       if False:pass
+#       elif btn_hlp=='tips':vals_hlp["htxt"]=TIPS_BODY; vals_hlp["tips"]=True; vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=False
+#       elif btn_hlp=='keys':vals_hlp["htxt"]=KEYS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=True; vals_hlp["tree"]=False;vals_hlp["opts"]=False
+#       elif btn_hlp=='tree':vals_hlp["htxt"]=TREE_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=True; vals_hlp["opts"]=False
+#       elif btn_hlp=='opts':vals_hlp["htxt"]=OPTS_BODY; vals_hlp["tips"]=False;vals_hlp["keys"]=False;vals_hlp["tree"]=False;vals_hlp["opts"]=True
+#       elif btn_hlp=='open':
+#           usr_json    = CdSw.file_open(CdSw.get_setting_dir()+os.sep+'user.json')
+#       elif btn_hlp=='prps':
+#           dlg_fif_opts()
+#      #while_hlp
    #def dlg_help
 
 def dlg_fif(what='', opts={}):
+#   return dlg_fif_wr(what, opts)
+    return dlg_fif_ag(what, opts)
+def dlg_fif_ag(what='', opts={}):
+    # Start COMMON STATIC data
+    mask_h  = _('Space-separated file or folder masks.'
+                '\rFolder mask starts with "/".'
+                '\rDouble-quote mask, which needs space-char.'
+                '\rUse ? for any character and * for any fragment.'
+                '\rNote: "*" matchs all names, "*.*" doesnt match all.')
+    reex_h  = _('Regular expression')
+    case_h  = _('Case sensative')
+    word_h  = _('Option "Whole words". It is ignored when:'
+                '\r    Regular expression (".*") is turned on,'
+                '\r    "Find" contains not only letters, digits and "_".'
+                )
+    brow_h  = _('Choose folder.'
+                '\rShift+Click - Choose file to find in it.'
+                )
+    dept_h  = _('Which subfolders will be used to search.'
+                '\rAlt+L - Apply "All".'
+                '\rAlt+Y - Apply "In folder only".'
+                )
+    cfld_h  = _('Use folder of current file.'
+                '\rShift+Click - Prepare search in the current file.'
+                '\rCtrl+Click  - Prepare search in all tabs.'
+                '\rCtrl+Shift+Click  - Prepare search in the current tab.'
+                )
+    more_h  = _('Show/Hide advanced options'
+                '\rCtrl+Click  - Show/Hide "Not in files".'
+                '\rShift+Click - Show/Hide "Replace".'
+                '\rCtrl+Shift+Click - Show/Hide "Not in files" and "Replace".'
+                )
+    cust_h  = _('Change dialog layout.'
+                '\rCtrl+Click  - Adjust vertical alignments'
+                '\rShift+Click   - Set wider width for fields What/In files…'
+                '\rCtrl+Shift+Click - Set default widths for all fields.'
+                )
+    frst_h  = _('M[, F]'
+                '\rStop after M fragments will be found.'
+                '\rSearch only inside F first proper files.'
+                '\r    Note: If Sort is on then steps are'
+                '\r     - Collect all proper files'
+                '\r     - Sort the list'
+                '\r     - Use first F files to search'
+                )
+    shtp_h  = f(_(  'Format of the reported tree structure.'
+                '\rCompact - report all found line with full file info:'
+                '\r    path(r[:c:l]):line'
+                '\r    path/(r[:c:l]):line'
+                '\r  Tree schemes'
+                '\r    +Search for "*"'
+                '\r      <full_path(row[:col:len])>: line with ALL marked fragments'
+                '\r    +Search for "*"'
+                '\r      <full_path>: #count'
+                '\r         <(row[:col:len])>: line with ALL marked fragments'
+                '\rSparse - report separated folders and fragments:'
+                '\r    dir/file(r[:c:l]):line'
+                '\r    dir/file/(r[:c:l]):line'
+                '\r  Tree schemes'
+                '\r    +Search for "*"'
+                '\r      <root>: #count'
+                '\r        <dir>: #count'
+                '\r          <file.ext(row[:col:len])>: line with ONE marked fragment'
+                '\r    +Search for "*"'
+                '\r      <root>: #count'
+                '\r        <dir>: #count'
+                '\r          <file.ext>: #count'
+                '\r            <(row[:col:len])>: line with ONE marked fragment'
+                '\rFor '
+                '\r  sorted files'
+                '\rand'
+                '\r  In folder={}'
+                '\ronly Compact options are used.'
+               ),IN_OPEN_FILES)
+    cntx_h  = _('Show result line and both its nearest lines, above and below result'
+                '\rCtrl+Click  - Set count of above and below lines.')
+    algn_h  = _("Align columns (filenames/numbers) by widest cell width")
+    find_h  = f(_('Start search.'
+                '\rShift+Click  - Put report to new tab.'
+                '\r   It is like pressing Find with option "Show in: {}".'
+                '\rCtrl+Click  - Append result to existing report.'
+                '\r   It is like pressing Find with option "[x]Append results".'
+                ), TOTB_NEW_TAB)
+    repl_h  = _('Start search and replacement.'
+                '\rShift+Click  - Run without question "Do you want to replace…?"'
+                )
+    coun_h  = f(_('Count matches only.'
+                '\r   It is like pressing Find with option Collect: "{}".'
+                '\rShift+Click  - Find file names.'
+                '\r   It is like pressing Find with option Collect: "{}".'
+                ), CLLC_COUNT, CLLC_FNAME)
+    pset_h  = _('Save options for future. Restore saved options.'
+                '\rShift+Click  - Show preset list in applying history order.'
+                '\rCtrl+Click   - Apply last used preset.'
+                '\rAlt+1 - Apply first preset.'
+                '\rAlt+2 - Apply second preset.'
+                '\rAlt+3 - Apply third preset.'
+                )
+    
+    enco_h  = f(_('In which encodings try to read files.'
+                '\rFirst suitable will be used.'
+                '\r"{}" is slow.'
+                '\r '
+                '\rDefault encoding: {}'), ENCO_DETD, loc_enco)
+    
+    W32     = 'win'==get_desktop_environment()
+    EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if W32 else [5*i for i in range(11)]
+    DLG_W0, \
+    DLG_H0  = (700, 335 + EG1 + EG10)
+    DEF_WD_TXTS = 300
+    DEF_WD_BTNS = 100
+    # Finish COMMON STATIC data
+
+    def add_to_history(val:str, lst:list, max_len:int, unicase=True)->list:
+        """ Add/Move val to list head. """
+        pass;                  #LOG and log('val, lst={}',(val, lst))
+        lst_u = [ s.upper() for s in lst] if unicase else lst
+        val_u = val.upper()               if unicase else val
+        if val_u in lst_u:
+            if 0 == lst_u.index(val_u):   return lst
+            del lst[lst_u.index(val_u)]
+        lst.insert(0, val)
+        pass;                  #LOG and log('lst={}',lst)
+        if len(lst)>max_len:
+            del lst[max_len:]
+        pass;                  #LOG and log('lst={}',lst)
+        return lst
+       #def add_to_history
+
+    def get_live_fiftabs(_fxs)->list:
+        rsp = []
+        for h in app.ed_handles():
+            try_ed  = app.Editor(h)
+            try_fn  = try_ed.get_filename()
+            if try_fn in _fxs:
+                continue
+            tag     = try_ed.get_prop(app.PROP_TAG)
+            lxr     = try_ed.get_prop(app.PROP_LEXER_FILE)
+            if False:pass
+            elif lxr.upper() in lexers_l:
+                rsp+= ['tab:'+try_ed.get_prop(app.PROP_TAB_TITLE)]
+            elif tag.startswith('FiF'):
+                rsp+= ['tab:'+try_ed.get_prop(app.PROP_TAB_TITLE)]
+        return rsp
+       #def get_live_fiftabs
+    
+    # Start COMMON DINAMIC data
+    stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
+                if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+              OrdDict()
+    
+    what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
+    what_s  = what_s.splitlines()[0] if what_s else ''
+    repl_s  = opts.get('repl', '')
+    reex01  = opts.get('reex', stores.get('reex', '0'))
+    case01  = opts.get('case', stores.get('case', '0'))
+    word01  = opts.get('word', stores.get('word', '0'))
+    if USE_EDFIND_OPS:
+        ed_opt  = CdSw.app_proc(CdSw.PROC_GET_FIND_OPTIONS, '')
+        # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
+        reex01  = '1' if 'r' in ed_opt else '0'
+        case01  = '1' if 'c' in ed_opt else '0'
+        word01  = '1' if 'w' in ed_opt else '0'
+    incl_s  = opts.get('incl', stores.get('incl',  [''])[0])
+    excl_s  = opts.get('excl', stores.get('excl',  [''])[0])
+    fold_s  = opts.get('fold', stores.get('fold',  [''])[0])
+    dept_n  = opts.get('dept', stores.get('dept',  0)-1)+1
+    cllc_s  = opts.get('cllc', stores.get('cllc', '0'))
+    join_s  = opts.get('join', stores.get('join', '0'))
+    totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = '1' if totb_s=='0' else totb_s
+    shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
+    cntx_s  = opts.get('cntx', stores.get('cntx', '0'))
+    algn_s  = opts.get('algn', stores.get('algn', '0'))
+    skip_s  = opts.get('skip', stores.get('skip', '0'))
+    sort_s  = opts.get('sort', stores.get('sort', '0'))
+    frst_s  = opts.get('frst', stores.get('frst', '0'))
+    enco_s  = opts.get('enco', stores.get('enco', '0'))
+
+    caps    = None
+
+    what_l  = None
+    incl_l  = None
+    excl_l  = None
+    fold_l  = None
+    repl_l  = None
+    fxs     = None
+    tofx_l  = None
+    totb_l  = None
+    wo_excl = None
+    wo_repl = None
+    wo_adva = None
+    ad01    = None
+    c_more  = None
+    txt_w   = None
+    btn_w   = None
+    lbl_l   = None
+    cmb_l   = None
+    tl2_l   = None
+    tbn_l   = None
+    gap1    = None
+    gap2    = None
+    gap3    = None
+    dlg_w   = None
+    dlg_h   = None
+
+    focused = 'what'
+    # Finish COMMON DINAMIC data
+
+    def pre_cnts():
+        nonlocal what_l,incl_l,excl_l,fold_l,repl_l,fxs,tofx_l,totb_l
+        nonlocal wo_excl,wo_repl,wo_adva
+        nonlocal ad01,c_more,txt_w,btn_w,lbl_l,cmb_l,tl2_l,tbn_l,gap1,gap2,gap3,dlg_w,dlg_h
+
+        what_l  = [s for s in stores.get('what', []) if s ]
+        incl_l  = [s for s in stores.get('incl', []) if s ]
+        excl_l  = [s for s in stores.get('excl', []) if s ]
+        fold_l  = [s for s in stores.get('fold', []) if s ]
+        repl_l  = [s for s in stores.get('repl', []) if s ]
+        fxs     = stores.get('tofx', [])
+        tofx_l  = [f('file:{1}'+' '*100+'{0}', *os.path.split(fx)) for fx in fxs if os.path.isfile(fx) ]    # ' '*100 to hide folder in list-/combo-boxes
+        totb_l  = [TOTB_NEW_TAB, TOTB_USED_TAB] + [_('[Clear fixed files]'), _('[Add fixed file]')] + tofx_l + get_live_fiftabs(fxs)
+        
+        wo_excl = stores.get('wo_excl', True)
+        wo_repl = stores.get('wo_repl', True)
+        wo_adva = stores.get('wo_adva', True)
+        ad01    = 0 if wo_adva else 1
+        c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
+        txt_w   = stores.get('wd_txts', DEF_WD_TXTS)
+        btn_w   = stores.get('wd_btns', DEF_WD_BTNS)
+        lbl_l   = GAP+38*3+GAP+25
+        cmb_l   = lbl_l+100
+        tl2_l   = lbl_l+220-85
+        tbn_l   = cmb_l+txt_w+GAP
+        gap1    = (GAP- 28 if wo_repl else GAP)
+        gap2    = (GAP- 28 if wo_excl else GAP)+gap1 -GAP
+        gap3    = (GAP-132 if wo_adva else GAP)+gap2 -GAP
+        dlg_w,\
+        dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(30+EG4 if wo_adva else 0))
+        pass;                  #LOG and log('gap1={}',(gap1))
+        pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
+       #def pre_cnts
+
+    def get_fif_cap():  return f(_('Find in Files ({}) {}'), VERSION_V
+                                           ,'' if not wo_adva else  ' [' + (''
+                                                            +   (_(shtp_l[int(shtp_s)]+', ')                        )
+                                                            +   (_('Append, ')                if join_s=='1' else '')
+                                                            +   (_('Context, ')               if cntx_s=='1' else '')
+                                                            +   (_('Sorted, ')                if sort_s!='0' else '')
+                                                            +   (_('First ')+frst_s+', '      if frst_s!='0' else '')
+                                                            ).rstrip(', ') + ']'
+                                           )
+    def get_fif_cnts():
+#       pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
+#       pre_cnts()
+#       pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
+        pass;                  #LOG and log('gap1={}',(gap1))
+        nonlocal caps
+        w_excl  = not wo_excl
+        w_repl  = not wo_repl
+        w_adva  = not wo_adva
+        cls_tid = 'dept' if wo_adva else 'help'
+        T       = True
+        cnts    = ([]                                                                                                              # gmqvz
+                 +[dict(cid='prs1',tp='bt'      ,t=0            ,l=1000     ,w=0        ,cap=_('&1')                                                )] # &1
+                 +[dict(cid='prs2',tp='bt'      ,t=0            ,l=1000     ,w=0        ,cap=_('&2')                                                )] # &2
+                 +[dict(cid='prs3',tp='bt'      ,t=0            ,l=1000     ,w=0        ,cap=_('&3')                                                )] # &3
+                 +[dict(cid='pres',tp='bt'      ,tid='incl'     ,l=GAP      ,w=38*3*ad01,cap=_('Pre&sets…')         ,hint=pset_h                    )] # &s
+                 +[dict(cid='reex',tp='ch-bt'   ,tid='what'     ,l=GAP+38*0 ,w=38       ,cap='&.*'         ,act=T   ,hint=reex_h                    )] # &.
+                 +[dict(cid='case',tp='ch-bt'   ,tid='what'     ,l=GAP+38*1 ,w=38       ,cap='&aA'         ,act=T   ,hint=case_h                    )] # &a
+                 +[dict(cid='word',tp='ch-bt'   ,tid='what'     ,l=GAP+38*2 ,w=38       ,cap='"&w"'        ,act=T   ,hint=word_h                    )] # &w
+                 +[dict(           tp='lb'      ,tid='what'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*&Find what:')                                  )] # &f
+                 +[dict(cid='what',tp='cb'      ,t=GAP          ,l=cmb_l    ,w=txt_w    ,items=what_l                                               )] # 
+                                                                                                                                    
+#               +([] if wo_repl else []                                                                                             
+                 +[dict(           tp='lb'      ,tid='repl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('&Replace with:')                ,vis=w_repl     )] # &r
+                 +[dict(cid='repl',tp='cb'      ,t=GAP+  28+EG1 ,l=cmb_l    ,w=txt_w    ,items=repl_l                               ,vis=w_repl     )] # 
+#               )                                                                                                                   
+                                                                                                                                    
+                 +[dict(           tp='lb'      ,tid='incl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*&In files:')   ,hint=mask_h                    )] # &i
+                 +[dict(cid='incl',tp='cb'      ,t=gap1+ 56+EG2 ,l=cmb_l    ,w=txt_w    ,items=incl_l                                               )] # 
+#               +([] if wo_excl else []                                                                                             
+                 +[dict(           tp='lb'      ,tid='excl'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('Not in files:') ,hint=mask_h    ,vis=w_excl     )] # 
+                 +[dict(cid='excl',tp='cb'      ,t=gap1+ 84+EG3 ,l=cmb_l    ,w=txt_w    ,items=excl_l                               ,vis=w_excl     )] # 
+#               )                                                                                                                   
+                 +[dict(           tp='lb'      ,tid='fold'     ,l=lbl_l    ,r=cmb_l-5  ,cap='>'+_('*I&n folder:')                                  )] # &n
+                 +[dict(cid='fold',tp='cb'      ,t=gap2+112+EG4 ,l=cmb_l    ,w=txt_w    ,items=fold_l                                               )] # 
+                 +[dict(cid='brow',tp='bt'      ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,cap=_('&Browse…')          ,hint=brow_h                    )] # &b
+                 +[dict(           tp='lb'      ,tid='dept'     ,l=lbl_l    ,w=100  -5  ,cap='>'+_('In s&ubfolders:'),hint=dept_h                   )] # &u
+                 +[dict(cid='dept',tp='cb-ro'   ,t=gap2+140+EG5 ,l=cmb_l    ,w=135      ,items=dept_l                                               )] # 
+                 +[dict(cid='depa',tp='bt'      ,tid='dept'     ,l=1000     ,w=0        ,cap=_('&l')                                                )] # &l
+                 +[dict(cid='depo',tp='bt'      ,tid='dept'     ,l=1000     ,w=0        ,cap=_('&y')                                                )] # &y
+                 +[dict(cid='cfld',tp='bt'      ,tid='fold'     ,l=GAP      ,w=38*3     ,cap=_('&Current folder')   ,hint=cfld_h                    )] # &c
+                 +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h                    )] # &e
+                                                                                                                                    
+#               +([] if wo_adva else  []                                                                                            
+                 +[dict(           tp='--'      ,t=gap2+163+EG5                                                                     ,vis=w_adva     )] # 
+                 +[dict(           tp='lb'      ,t=gap2+175+EG5 ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')               ,vis=w_adva     )] # 
+#                +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Co&llect:')                     ,vis=w_adva     )] # &l
+#                +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                               ,vis=w_adva     )] # 
+                 +[dict(cid='cllc',tp='cb-ro'   ,t=0            ,l=1000     ,w=0        ,items=cllc_l                               ,vis=w_adva     )] # 
+                 +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Show in&:')                     ,vis=w_adva     )] # &:
+                 +[dict(cid='totb',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=totb_l       ,act=T                  ,vis=w_adva     )] # 
+                 +[dict(cid='join',tp='ch'      ,tid='sort'     ,l=GAP+80   ,w=150      ,cap=_('Appen&d results')                   ,vis=w_adva     )] # &d
+                 +[dict(           tp='lb'      ,tid='frst'     ,l=GAP      ,r=80       ,cap='>'+_('Tree type &/:') ,hint=shtp_h    ,vis=w_adva     )] # &/
+                 +[dict(cid='shtp',tp='cb-ro'   ,tid='frst'     ,l=GAP+80   ,r=cmb_l    ,items=shtp_l                               ,vis=w_adva     )] # 
+                 +[dict(cid='algn',tp='ch'      ,tid='enco'     ,l=GAP+80   ,w=100      ,cap=_('Align &|')          ,hint=algn_h    ,vis=w_adva     )] # &|
+                 +[dict(cid='cntx',tp='ch'      ,tid='enco'     ,l=GAP+170  ,w=150      ,cap=_('Conte&xt')  ,act='1',hint=cntx_h    ,vis=w_adva     )] # &x
+                                                                                                                                    
+                 +[dict(           tp='lb'      ,t=gap2+175+EG5 ,l=tl2_l+100,r=tbn_l-GAP,cap=_('Adv. search options')               ,vis=w_adva     )] # 
+                 +[dict(           tp='lb'      ,tid='skip'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&kip files:')                  ,vis=w_adva     )] # &k
+                 +[dict(cid='skip',tp='cb-ro'   ,t=gap2+195+EG6 ,l=tl2_l+100,r=tbn_l-GAP,items=skip_l                               ,vis=w_adva     )] # 
+                 +[dict(           tp='lb'      ,tid='sort'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('S&ort file list:')              ,vis=w_adva     )] # &o
+                 +[dict(cid='sort',tp='cb-ro'   ,t=gap2+222+EG7 ,l=tl2_l+100,r=tbn_l-GAP,items=sort_l                               ,vis=w_adva     )] # 
+                 +[dict(           tp='lb'      ,tid='frst'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('Firsts (&0=all):'),hint=frst_h  ,vis=w_adva     )] # &0
+                 +[dict(cid='frst',tp='ed'      ,t=gap2+249+EG8 ,l=tl2_l+100,r=tbn_l-GAP                                            ,vis=w_adva     )] # 
+                 +[dict(           tp='lb'      ,tid='enco'     ,l=tl2_l    ,w=100-5    ,cap='>'+_('Encodings &\\:'),hint=enco_h    ,vis=w_adva     )] # \
+                 +[dict(cid='enco',tp='cb-ro'   ,t=gap2+276+EG9 ,l=tl2_l+100,r=tbn_l-GAP,items=enco_l                               ,vis=w_adva     )] # 
+#               )                                                                                                                   
+                 +[dict(cid='!fnd',tp='bt'      ,tid='what'     ,l=tbn_l    ,w=btn_w    ,cap=_('Find'),def_bt=True  ,hint=find_h                    )] # 
+#               +([] if wo_repl else []                                                                                             
+                 +[dict(cid='!rep',tp='bt'      ,tid='repl'     ,l=tbn_l    ,w=btn_w    ,cap=_('Re&place')          ,hint=repl_h    ,vis=w_repl     )] # &p
+#               )                                                                                                                   
+#               +([]                                                                                                                
+                 +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Coun&t')        ,hint=coun_h    ,vis=w_adva     )] # &t
+                 +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just…')      ,hint=cust_h    ,vis=w_adva     )] # &j
+                 +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=GAP      ,w=38*3*ad01    ,cap=_('&Help')                         ,vis=w_adva     )] # &h
+
+                 +[dict(cid='-'   ,tp='bt'      ,tid=cls_tid    ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                                         )] # 
+#                +[dict(cid='-'   ,tp='bt'      ,tid='help'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                         ,vis=w_adva     )] # 
+#               if not wo_adva else []                                                                                              
+#                +[dict(cid='-'   ,tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                         ,vis=w_adva     )] # 
+#               )                                                                                                               
+                )
+        caps    =   {cnt['cid']:cnt['cap']          for cnt         in cnts
+                    if cnt['tp'] in ('bt', 'ch')            and 'cap' in cnt}
+        caps.update({cnt['cid']:cnts[icnt-1]['cap'] for (icnt,cnt)  in enumerate(cnts)
+                    if cnt['tp'] in ('cb', 'cb-ro', 'ed')   and 'cap' in cnts[icnt-1]})
+        caps.update({'excl':_('Not in files:')
+                    ,'repl':_('&Replace with:')
+                    ,'!rep':_('Re&place')
+                    })
+        caps    = {k:v.strip(' :*|\\/>*').replace('&', '') for (k,v) in caps.items()}
+        return cnts
+       #def get_cnts
+    def get_fif_vals():
+        vals    =       dict( reex=reex01
+                             ,case=case01
+                             ,word=word01
+                             ,what=what_s
+                             ,incl=incl_s
+                             ,fold=fold_s
+                             ,dept=dept_n
+                            )
+        if not wo_excl:
+            vals.update(dict( excl=excl_s))
+        if not wo_repl:
+            vals.update(dict( repl=repl_s))
+        if not wo_adva:
+            vals.update(dict( cllc=cllc_s
+                             ,join=join_s
+                             ,totb=totb_s
+                             ,shtp=shtp_s
+                             ,cntx=cntx_s
+                             ,algn=algn_s
+                             ,skip=skip_s
+                             ,sort=sort_s
+                             ,frst=frst_s
+                             ,enco=enco_s
+                            ))
+        pass;                  #LOG and log('vals={}',pf(vals))
+        return vals
+       #def get_fif_vals
+    
+    def fif_pars_for_agent():
+        pre_cnts()      ##!! set dlg_w, dlg_h
+        return get_fif_cap(), (dlg_w, dlg_h), get_fif_cnts(), get_fif_vals(), focused
+    
+    def fif_dlg_loop(btn,vals,fid,chds):
+        nonlocal stores
+        nonlocal what_s,repl_s,reex01,case01,word01,incl_s,excl_s,fold_s,dept_n,cllc_s,join_s,totb_s,shtp_s,cntx_s,algn_s,skip_s,sort_s,frst_s,enco_s,focused
+        nonlocal focused
+        
+        if btn is None or btn=='-': return [None]*5
+        scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
+        btn_p       = btn
+        btn_m       = scam + '/' + btn if scam and scam!='a' else btn   # smth == a/smth
+        pass;                  #LOG and log('btn_p, scam, btn_m={}',(btn_p, scam, btn_m))
+        focused     = 'what' \
+                        if 1==len(chds) and chds[0] in ('reex', 'case', 'word') else \
+                      chds[0] \
+                        if 1==len(chds) else \
+                      focused
+        pass;                  #LOG and log('vals={}',pf(vals))
+        reex01      = vals['reex']
+        case01      = vals['case']
+        word01      = vals['word']
+        what_s      = vals['what']
+        incl_s      = vals['incl']
+        if not wo_excl:     
+            excl_s  = vals['excl']
+        else:
+            excl_s  = ''
+        fold_s      = vals['fold']
+        dept_n      = vals['dept']
+        if not wo_repl:     
+            repl_s  = vals['repl']
+        if not wo_adva:     
+            cllc_s  = vals['cllc']
+            join_s  = vals['join']
+            totb_s  = vals['totb']
+            shtp_s  = vals['shtp']
+            cntx_s  = vals['cntx']
+            algn_s  = vals['algn']
+            skip_s  = vals['skip']
+            sort_s  = vals['sort']
+            frst_s  = vals['frst']
+            enco_s  = vals['enco']
+        pass;                  #LOG and log('what_s,repl_s,incl_s,fold_s={}',(what_s,repl_s,incl_s,fold_s))
+        
+        # Save user data
+        stores['reex']  = reex01
+        stores['case']  = case01
+        stores['word']  = word01
+        stores['what']  = add_to_history(what_s, stores.get('what', []), MAX_HIST, unicase=False)
+        stores['incl']  = add_to_history(incl_s, stores.get('incl', []), MAX_HIST, unicase=(os.name=='nt'))
+        stores['excl']  = add_to_history(excl_s, stores.get('excl', []), MAX_HIST, unicase=(os.name=='nt'))
+        stores['fold']  = add_to_history(fold_s, stores.get('fold', []), MAX_HIST, unicase=(os.name=='nt'))
+        stores['dept']  = dept_n
+        stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
+        stores['cllc']  = cllc_s
+        stores['join']  = join_s
+        totb_s_pre      = stores.get('totb', '1')
+        stores['totb']  = '1' if totb_s=='0' else totb_s
+#       stores['totb']  = str(min(1, int(totb_s)))
+        stores['shtp']  = shtp_s
+        stores['cntx']  = cntx_s
+        stores['algn']  = algn_s
+        stores['skip']  = skip_s
+        stores['sort']  = sort_s
+        stores['frst']  = frst_s
+        stores['enco']  = enco_s
+        stores.pop('toed',None)     # rudiment
+        stores.pop('reed',None)     # rudiment
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+        
+        # Cmds without data: help, custom
+        if btn_p=='help':
+            dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,pset_h,more_h,cust_h)
+            return fif_pars_for_agent()   #continue#while_fif
+        
+#       if btn_p=='more':
+        if btn_m=='more':
+            stores['wo_adva']       = not stores.get('wo_adva', True)
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+            return fif_pars_for_agent()   #continue#while_fif
+        if btn_m=='c/more':     # [Ctrl+]More       = show/hide excl
+            stores['wo_excl']   = not stores['wo_excl']
+        if btn_m=='s/more':     # [Shift+]More      = show/hide repl
+            stores['wo_repl']   = not stores['wo_repl']
+        if btn_m=='sc/more':    # [Ctrl+Shift+]More = show/hide excl+repl
+            stores['wo_excl']   = not stores['wo_excl']
+            stores['wo_repl']   = not stores['wo_repl']
+
+        if btn_m=='sc/cust':    # [Ctrl+Shift+]Adjust    = def widths
+            stores['wd_txts']   = DEF_WD_TXTS
+            stores['wd_btns']   = DEF_WD_BTNS
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+            return fif_pars_for_agent()   #continue#while_fif
+        if btn_m=='s/cust':     # [Shift+]Adjust  = wider eds
+            stores['wd_txts']   = min(800, 25 + stores.get('wd_txts', DEF_WD_TXTS))
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+            return fif_pars_for_agent()   #continue#while_fif
+        if btn_m=='c/cust':     # [Ctrl+]Adjust  = dlg_valign_consts
+            dlg_valign_consts()
+            return fif_pars_for_agent()   #continue#while_fif
+#       if btn_m=='c/cust':     # [Ctrl+]Adjust  = wider bts
+#           stores['wd_btns']   = min(200, 10 + stores.get('wd_btns', DEF_WD_BTNS))
+#           open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+#           return fif_pars_for_agent()   #continue#while_fif
+        if btn_m=='cust':
+            wdtx_c  = f(_('Width of main &editors ("{}", "{}"):'), caps['what'], caps['incl'])
+            wdbt_c  = f(_('Width of main &buttons ("{}", "{}"):'), caps['!fnd'], caps['brow'])
+            shex_c  = f(_('Show "&{}"')                          , caps['excl'])
+            shre_c  = f(_('Show "&{}" and "{}"')                 , caps['repl'], caps['!rep'])
+            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+390+GAP,GAP+145+GAP,     #NOTE: dlg-cust
+                 [dict(           tp='lb'    ,tid='wdtx'        ,l=GAP          ,w=320  ,cap=wdtx_c                                     ) # &e
+                 ,dict(cid='wdtx',tp='sp-ed' ,t=GAP             ,l=GAP+320      ,w=70   ,props=f('{},{},25',DEF_WD_TXTS,2*DEF_WD_TXTS)  ) # 
+                 ,dict(           tp='lb'    ,tid='wdbt'        ,l=GAP          ,w=320  ,cap=wdbt_c                                     ) # &b
+                 ,dict(cid='wdbt',tp='sp-ed' ,t=GAP+30          ,l=GAP+320      ,w=70   ,props=f('{},{},10',DEF_WD_BTNS,2*DEF_WD_BTNS)  ) # 
+                 ,dict(cid='shex',tp='ch'    ,t=GAP+65          ,l=GAP          ,w=150  ,cap=shex_c                                     ) # &n
+                 ,dict(cid='shre',tp='ch'    ,t=GAP+90          ,l=GAP          ,w=150  ,cap=shre_c                                     ) # &r
+                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+390-170  ,w=80   ,cap=_('OK')    ,def_bt=True                    ) # 
+                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+145-28      ,l=GAP+390-80   ,w=80   ,cap=_('Cancel')                                )
+                 ],    dict(wdtx=    stores.get('wd_txts', DEF_WD_TXTS)
+                           ,wdbt=    stores.get('wd_btns', DEF_WD_BTNS)
+                           ,shex=not stores.get('wo_excl', True)
+                           ,shre=not stores.get('wo_repl', True)
+                           ), focus_cid='wdtx')
+            pass;              #LOG and log('vals={}',vals)
+            if aid is None or aid=='-': return fif_pars_for_agent()   #continue#while_fif
+            stores['wd_txts']   = max(DEF_WD_TXTS, min(2*DEF_WD_TXTS, vals['wdtx']))
+            stores['wd_btns']   = max(DEF_WD_BTNS, min(2*DEF_WD_BTNS, vals['wdbt']))
+            stores['wo_excl']   = not               vals['shex']
+            stores['wo_repl']   = not               vals['shre']
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+            return fif_pars_for_agent()   #continue#while_fif
+        
+        # Cmds with data
+        if btn_p in ('depa', 'depo'):
+            dept_n  = 0 if btn_p=='depa' else 1
+        
+        if btn_p in ('prs1', 'prs2', 'prs3') \
+        or btn_m=='c/pres': # Ctrl++Preset - Apply last used preset
+            pset_l  = stores.setdefault('pset', [])
+            if not pset_l:
+                return fif_pars_for_agent()   #continue#while_fif
+            ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0] \
+                    if btn_m=='c/pres'                  else \
+                  pset_l[0] \
+                    if btn_p=='prs1'                    else \
+                  pset_l[1] \
+                    if btn_p=='prs2' and len(pset_l)>1  else \
+                  pset_l[2] \
+                    if btn_p=='prs3' and len(pset_l)>2  else \
+                  None
+            if not ps:
+                return fif_pars_for_agent()   #continue#while_fif
+            reex01  = ps['reex'] if ps.get('_reex', '')=='x' else reex01
+            case01  = ps['case'] if ps.get('_case', '')=='x' else case01
+            word01  = ps['word'] if ps.get('_word', '')=='x' else word01
+            incl_s  = ps['incl'] if ps.get('_incl', '')=='x' else incl_s
+            excl_s  = ps['excl'] if ps.get('_excl', '')=='x' else excl_s
+            fold_s  = ps['fold'] if ps.get('_fold', '')=='x' else fold_s
+            dept_n  = ps['dept'] if ps.get('_dept', '')=='x' else dept_n
+            skip_s  = ps['skip'] if ps.get('_skip', '')=='x' else skip_s
+            sort_s  = ps['sort'] if ps.get('_sort', '')=='x' else sort_s
+            frst_s  = ps['frst'] if ps.get('_frst', '')=='x' else frst_s
+            enco_s  = ps['enco'] if ps.get('_enco', '')=='x' else enco_s
+            cllc_s  = ps['cllc'] if ps.get('_cllc', '')=='x' else cllc_s
+            totb_s  = ps['totb'] if ps.get('_totb', '')=='x' else totb_s
+            join_s  = ps['join'] if ps.get('_join', '')=='x' else join_s
+            shtp_s  = ps['shtp'] if ps.get('_shtp', '')=='x' else shtp_s
+            algn_s  = ps['algn'] if ps.get('_algn', '')=='x' else algn_s
+            cntx_s  = ps['cntx'] if ps.get('_cntx', '')=='x' else cntx_s
+            app.msg_status(_('Options is restored from preset: ')+ps['name'])
+
+        if btn_m=='pres' \
+        or btn_m=='s/pres': # Shift+Preset - Show list in history order
+            onof    = {'0':'Off', '1':'On'}
+            totb_i  = int(totb_s)
+            totb_i  = totb_i if 0<totb_i<4+len(stores.get('tofx', [])) else 1   # "tab:" skiped
+            totb_v  = totb_l[totb_i]
+            ans     = dlg_press(stores, btn_m=='s/pres',
+                       (reex01,case01,word01,
+                        incl_s,excl_s,
+                        fold_s,dept_n,
+                        skip_s,sort_s,frst_s,enco_s,
+                        cllc_s,totb_v,join_s,shtp_s,algn_s,cntx_s),
+                       (onof[reex01],onof[case01],onof[word01],
+#                      ('On' if reex01=='1' else 'Off','On' if case01=='1' else 'Off','On' if word01=='1' else 'Off',
+                        '"'+incl_s+'"','"'+excl_s+'"',
+                        '"'+fold_s+'"',dept_l[dept_n],
+                        skip_l[int(skip_s)],sort_l[int(sort_s)],frst_s,enco_l[int(enco_s)],
+                        cllc_l[int(cllc_s)],totb_v,onof[join_s],shtp_l[int(shtp_s)],onof[algn_s],onof[cntx_s])
+#                       cllc_l[int(cllc_s)],totb_l[int(totb_s)],'On' if join_s=='1' else 'Off',shtp_l[int(shtp_s)],'On' if algn_s=='1' else 'Off','On' if cntx_s=='1' else 'Off')
+                        )
+            if ans is None:
+                return fif_pars_for_agent()   #continue#while_fif
+            (           reex01,case01,word01,
+                        incl_s,excl_s,
+                        fold_s,dept_n,
+                        skip_s,sort_s,frst_s,enco_s,
+                        cllc_s,totb_v,join_s,shtp_s,algn_s,cntx_s)  = ans
+            totb_s  = str(totb_l.index(totb_v))     if totb_v in totb_l         else \
+                      totb_v                        if totb_v in ('0', '1')     else \
+                      '1'
+#           totb_s  = totb_s if int(totb_s)<4+len(stores.get('tofx', [])) else '1'
+                
+        if False:pass
+        elif btn_m=='brow':     # BroDir
+            path    = CdSw.dlg_dir(os.path.expanduser(fold_s))
+#           path    = app.dlg_dir(os.path.expanduser(fold_s))
+            if not path: return fif_pars_for_agent()   #continue#while_fif
+            fold_s  = path
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
+            focused = 'fold'
+        elif btn_m=='s/brow':   # [Shift+]BroDir = BroFile
+            fn      = app.dlg_file(True, '', os.path.expanduser(fold_s), '')
+            if not fn or not os.path.isfile(fn):    return fif_pars_for_agent()   #continue#while_fif
+            incl_s  = os.path.basename(fn)
+            fold_s  = os.path.dirname(fn)
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
+        elif btn_m=='cfld' and ed.get_filename():
+            fold_s  = os.path.dirname(ed.get_filename())
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
+        elif btn_m=='s/cfld':   # [Shift+]CurDir = CurFile
+            if not os.path.isfile(     ed.get_filename()):   return fif_pars_for_agent()   #continue#while_fif
+            incl_s  = os.path.basename(ed.get_filename())
+            fold_s  = os.path.dirname( ed.get_filename())
+            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
+            dept_n  = 1
+            excl_s  = ''
+        elif btn_m=='c/cfld':   # [Ctrl+]CurDir  = InTabs
+            incl_s  = '*'
+            fold_s  = IN_OPEN_FILES
+        elif btn_m=='sc/cfld':  # [Ctrl+Shift+]CurDir = CurTab
+            incl_s  = ed.get_prop(app.PROP_TAB_TITLE)   ##!! need tab-id?
+            fold_s  = IN_OPEN_FILES
+            excl_s  = ''
+            
+        elif btn_p=='totb':
+            totb_it = totb_l[int(totb_s)]
+            pass;              #LOG and log('totb_s,totb_it={}',(totb_s,totb_it))
+            fxs     = stores.get('tofx', [])
+            if False:pass
+            elif totb_it==_('[Clear fixed files]') and fxs:
+                if app.ID_YES == app.msg_box(
+                                  f(_('Clear all fixed files ({}) for "Show in?"'), len(fxs))
+                                , app.MB_OKCANCEL+app.MB_ICONQUESTION):
+                    stores['tofx']  = []
+                    totb_s  = '1'                                   # == TOTB_USED_TAB
+                else:
+                    totb_s  = totb_s_pre
+                   #continue#while_fif
+            elif totb_it==_('[Add fixed file]'):
+                fx      = app.dlg_file(True, '', os.path.expanduser(fold_s), '')
+                if not fx or not os.path.isfile(fx):
+                    totb_s  = totb_s_pre
+                   #continue#while_fif
+                else:
+                    fxs     = stores.get('tofx', [])
+                    if fx in fxs:
+                        totb_s  = str(4+fxs.index(fx))
+                    else:
+                        stores['tofx'] = fxs + [fx]
+                        totb_s  = str(4+len(stores['tofx'])-1)      # skip: new,prev,clear,add,files-1
+                pass;          #LOG and log('totb_s={}',(totb_s))
+
+        elif btn_m=='c/cntx' and cntx_s=='1':
+            sBf = str(apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1)))
+            sAf = str(apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1)))
+            ans   = app.dlg_input_ex(2, _('Report context settings')
+                , _('Report with lines before') , sBf
+                , _('Report with lines after')  , sAf
+                )
+            pass;               LOG and log('cntx ans={}',(ans))
+            sBf,sAf = ans   if ans is not None else     ('0', '0')
+            pass;               LOG and log('cntx sBf,sAf={}',(sBf,sAf))
+            nBf = int(sBf) if sBf.isdigit() else 0
+            nAf = int(sAf) if sAf.isdigit() else 0
+            pass;               LOG and log('cntx nBf,nAf={}',(nBf,nAf))
+            if nBf+nAf > 0:
+                apx.set_opt('fif_context_width_before', nBf)
+                apx.set_opt('fif_context_width_after' , nAf)
+            focused = 'what'
+
+        # Save data after cmd
+        stores['reex']  = reex01
+        stores['case']  = case01
+        stores['word']  = word01
+        stores['what']  = add_to_history(what_s, stores.get('what', []), MAX_HIST, unicase=False)
+        stores['incl']  = add_to_history(incl_s, stores.get('incl', []), MAX_HIST, unicase=(os.name=='nt'))
+        stores['excl']  = add_to_history(excl_s, stores.get('excl', []), MAX_HIST, unicase=(os.name=='nt'))
+        stores['fold']  = add_to_history(fold_s, stores.get('fold', []), MAX_HIST, unicase=(os.name=='nt'))
+        stores['dept']  = dept_n
+        stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
+        stores['cllc']  = cllc_s
+        stores['join']  = join_s
+        stores['totb']  = '1' if totb_s=='0' else totb_s
+#       stores['totb']  = str(min(1, int(totb_s)))
+        stores['shtp']  = shtp_s
+        stores['cntx']  = cntx_s
+        stores['algn']  = algn_s
+        stores['skip']  = skip_s
+        stores['sort']  = sort_s
+        stores['frst']  = frst_s
+        stores['enco']  = enco_s
+        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+        
+        # Cmds to act
+        if btn_p in ('!cnt', '!fnd', '!rep'):
+            if  btn_m=='!rep' \
+            and app.ID_OK != app.msg_box(
+                 f(_('Do you want to replace in {}?'), 
+                    _('current tab')        if fold_s==IN_OPEN_FILES and not ('*' in incl_s or '?' in incl_s) else 
+                    _('all tabs')           if fold_s==IN_OPEN_FILES else 
+                    _('all found files')
+                 )
+                ,app.MB_OKCANCEL+app.MB_ICONQUESTION):
+                return fif_pars_for_agent()   #continue#while_fif
+            root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
+            root        = os.path.expanduser(root)
+            root        = os.path.expandvars(root)
+            if not what_s:
+                app.msg_box(f(_('Fill the "{}" field'), caps['what']), app.MB_OK+app.MB_ICONWARNING)
+                focused     = 'what'
+                return fif_pars_for_agent()   #continue#while_fif
+            if reex01=='1':
+                try:
+                    re.compile(what_s)
+                except Exception as ex:
+                    app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['what'], ex), app.MB_OK+app.MB_ICONWARNING) 
+                    focused = 'what'
+                    return fif_pars_for_agent()   #continue#while_fif
+                if btn_p=='!rep':
+                    try:
+                        re.sub(what_s, repl_s, '')
+                    except Exception as ex:
+                        app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['repl'], ex), app.MB_OK+app.MB_ICONWARNING) 
+                        focused = 'repl'
+                        return fif_pars_for_agent()   #continue#while_fif
+            if fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
+                app.msg_box(f(_('Set existing value in "{}"  or use "{}" (see {})'), caps['fold'], IN_OPEN_FILES, caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
+                focused     = 'fold'
+                return fif_pars_for_agent()   #continue#while_fif
+            if not incl_s:
+                app.msg_box(f(_('Fill the "{}" field'), caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
+                focused     = 'incl'
+                return fif_pars_for_agent()   #continue#while_fif
+            if 0 != incl_s.count('"')%2:
+                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
+                focused     = 'incl'
+                return fif_pars_for_agent()   #continue#while_fif
+            if 0 != excl_s.count('"')%2:
+                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
+                focused     = 'excl'
+                return fif_pars_for_agent()   #continue#while_fif
+            if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                                      ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                                      ) and \
+               sort_s!='0':
+                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'), caps['sort'], caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
+                focused     = 'shtp'
+                return fif_pars_for_agent()   #continue#while_fif
+            if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                                      ,SHTP_SPARS_R, SHTP_SPARS_RCL
+                                      ) and \
+               fold_s==IN_OPEN_FILES:
+                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'),IN_OPEN_FILES, caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
+                focused     = 'shtp'
+                return fif_pars_for_agent()   #continue#while_fif
+            how_walk    =dict(                                  #NOTE: fif params
+                 root       =root
+                ,file_incl  =incl_s
+                ,file_excl  =excl_s
+                ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', …]
+                ,skip_hidn  =skip_s in ('1', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
+                ,skip_binr  =skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
+                ,sort_type  =apx.icase( sort_s=='0','' 
+                                       ,sort_s=='1','date,desc' 
+                                       ,sort_s=='2','date,asc' ,'')
+                ,only_frst  =int((frst_s+',0').split(',')[1])
+#               ,only_frst  =int(frst_s)
+                ,skip_unwr  =btn_p=='!rep'
+                ,enco       =enco_l[int(enco_s)].split(', ')
+                )
+            what_find   =dict(
+                 find       =what_s
+                ,repl       =repl_s if btn_p=='!rep' else None
+                ,mult       =False
+                ,reex       =reex01=='1'
+                ,case       =case01=='1'
+                ,word       =word01=='1'
+                ,only_frst  =int((frst_s+',0').split(',')[0])
+                )
+            cllc_v      = cllc_l[int(cllc_s)]
+            what_save   = dict(  # cllc_s in ['All matches', 'Match counts'==(btn=='!cnt'), 'Filenames']
+                 count      = not (btn_m=='s/!cnt' or  cllc_v==CLLC_FNAME)
+#                count      = (btn=='!cnt' and scam!='s') or  cllc_v!=CLLC_FNAME
+#                count      = btn=='!cnt' or  cllc_v!=CLLC_FNAME
+                ,place      = btn_p!='!cnt' and cllc_v==CLLC_MATCH
+                ,lines      = btn_p!='!cnt' and cllc_v==CLLC_MATCH #and reex01=='0'
+                )
+            shtp_v      = shtp_l[int(shtp_s)]
+            totb_i      = int(totb_s)
+            totb_it     = totb_l[totb_i]
+            fxs         = stores.get('tofx', [])
+            totb_v      = TOTB_NEW_TAB              if btn_m=='s/!fnd' or totb_it==TOTB_NEW_TAB     else \
+                          totb_it                   if totb_it.startswith('tab:')                   else \
+                          'file:'+fxs[totb_i-4]     if totb_it.startswith('file:')                  else \
+                          TOTB_USED_TAB
+            pass;               LOG and log('totb_s,totb_it,totb_v={}',(totb_s,totb_it,totb_v))
+            how_rpt     = dict(
+                 totb   =    totb_v
+#                totb   =    totb_l[int(totb_s)] if btn_m!='s/!fnd' else totb_l[0]  # NewTab if Shift+Find
+#                totb   =    totb_l[int(totb_s)]
+                ,sprd   =              sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
+                ,shtp   =    shtp_v if sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
+                ,cntx   =    '1'==cntx_s and btn_p!='!rep'
+                ,algn   =    '1'==algn_s
+                ,join   =    '1'==join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
+#               ,join   =    '1'==join_s
+                )
+            totb_s  = '1' if totb_s=='0' else totb_s
+#           totb_s  = str(min(1, int(totb_s)))
+            ################################
+            progressor = ProgressAndBreak()
+            rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
+                 how_walk   = how_walk
+                ,what_find  = what_find
+                ,what_save  = what_save
+                ,how_rpt    = how_rpt
+                ,progressor = progressor
+                )
+            if not rpt_data and not rpt_info: 
+                app.msg_status(_("Search stopped"))
+                return fif_pars_for_agent()   #continue#while_fif
+            frfls   = rpt_info['files']
+            frgms   = rpt_info['frgms']
+            ################################
+            pass;              #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
+            msg_rpt = _('No matches found') \
+                        if 0==frfls else \
+                      f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
+            progressor.set_progress(msg_rpt)
+            if 0==frgms and not REPORT_FAIL:    return fif_pars_for_agent()   #continue#while_fif
+            req_opts= None
+            if SAVE_REQ_TO_RPT:
+                req_opts= {k:v for (k,v) in stores.items() if k[:3] not in ('wd_', 'wo_', 'pse')}
+                req_opts['what']=what_s
+                req_opts['repl']=repl_s
+                req_opts['incl']=incl_s
+                req_opts['excl']=excl_s
+                req_opts['fold']=fold_s
+                req_opts['dept']-=1
+                req_opts    = json.dumps(req_opts)
+            report_to_tab(                      #NOTE: run-report
+                rpt_data
+               ,rpt_info
+               ,how_rpt
+               ,how_walk
+               ,what_find
+               ,what_save
+               ,progressor  = progressor
+               ,req_opts    = req_opts
+               )
+            progressor.set_progress(msg_rpt)
+            ################################
+            if 0<frgms and CLOSE_AFTER_GOOD:    return [None]*5#break#while_fif
+        
+        return              fif_pars_for_agent()
+       #def fif_dlg_loop
+#   dlg_agent(fif_dlg_loop, get_fif_cap(), (dlg_w, dlg_h), get_fif_cnts(), get_fif_vals(), focused) ##!!
+    dlg_agent(fif_dlg_loop, *fif_pars_for_agent()) ##!!
+   #def dlg_fif_ag
+
+def dlg_fif_wr(what='', opts={}):
     stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
                 if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
               OrdDict()
@@ -754,7 +1726,6 @@ def dlg_fif(what='', opts={}):
     word01  = opts.get('word', stores.get('word', '0'))
     if USE_EDFIND_OPS:
         ed_opt  = CdSw.app_proc(CdSw.PROC_GET_FIND_OPTIONS, '')
-#       ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
         # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
         reex01  = '1' if 'r' in ed_opt else '0'
         case01  = '1' if 'c' in ed_opt else '0'
@@ -766,7 +1737,6 @@ def dlg_fif(what='', opts={}):
     cllc_s  = opts.get('cllc', stores.get('cllc', '0'))
     join_s  = opts.get('join', stores.get('join', '0'))
     totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = '1' if totb_s=='0' else totb_s
-#   totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = str(min(1, int(totb_s)))
     shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
     cntx_s  = opts.get('cntx', stores.get('cntx', '0'))
     algn_s  = opts.get('algn', stores.get('algn', '0'))
@@ -900,7 +1870,6 @@ def dlg_fif(what='', opts={}):
                  +[dict(cid='!cnt',tp='bt'      ,tid='incl'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Coun&t')        ,hint=coun_h)] # &t
                  +[dict(cid='cust',tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w*ad01   ,cap=_('Ad&just…')      ,hint=cust_h)] # &j
                  +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=GAP      ,w=38*3*ad01    ,cap=_('&Help')                     )] # &h
-#                +[dict(cid='help',tp='bt'  ,t=dlg_h-GAP-25-EG1 ,l=tbn_l-100-GAP,w=100*ad01 ,cap=_('&Help')                     )] # &h
                  +[dict(cid='-'   ,tp='bt'      ,tid='help'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
                 if not wo_adva else []
                  +[dict(cid='-'   ,tp='bt'      ,tid='dept'     ,l=tbn_l    ,w=btn_w        ,cap=_('Close')                     )] # 
@@ -953,7 +1922,7 @@ def dlg_fif(what='', opts={}):
                                                             ).rstrip(', ') + ']'
                                            )
 #       btn,vals,fid,chds   = dlg_agent(  dlg_cap, (dlg_w, dlg_h), cnts, vals, focus_cid=focused)
-        btn,vals,fid,chds   = dlg_wrapper(dlg_cap, dlg_w, dlg_h,   cnts, vals, focus_cid=focused)     #NOTE: dlg-fif
+        btn,vals,fid,chds   = dlg_wrapper(dlg_cap, dlg_w, dlg_h,   cnts, vals, focus_cid=focused)     #NOTE: dlg-fif    ##!!
         if btn is None or btn=='-': return None
         scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
         btn_p       = btn
@@ -1412,7 +2381,7 @@ def dlg_fif(what='', opts={}):
             ################################
             if 0<frgms and CLOSE_AFTER_GOOD:    break#while_fif
        #while_fif
-   #def dlg_fif
+   #def dlg_fif_wr
 
 if __name__ == '__main__' :     # Tests
     Command().show_dlg()    #??
@@ -1510,4 +2479,5 @@ ToDo
 [+][kv-kv][30mat17] !! Need Properties dlg to show/edit opts from/to user.json
 [ ][kv-kv][12apr17] os.walk is wide or depth? How to switch mode?
 [ ][kv-kv][17apr17] ? Use local menu to show presets (after dlg_proc)
+[ ][kv-kv][28apr17] ReStore user's (x,y) for dlg
 '''
