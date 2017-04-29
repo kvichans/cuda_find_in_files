@@ -24,6 +24,7 @@ except:
 
 pass;                           # Logging
 pass;                           from pprint import pformat
+pass;                           import tempfile
 
 odict       = collections.OrderedDict
 GAP         = 5
@@ -377,7 +378,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                     if not re.match(r'\d+$', vals['v']): continue
                     return vals['v']
     """
-    pass;                      #log('in_vals={}',pformat(in_vals, width=120))
+    pass;                       log('in_vals={}',pformat(in_vals, width=120))
     cid2i       = {cnt['cid']:i for i,cnt in enumerate(cnts) if 'cid' in cnt}
     if True:
         # Checks
@@ -499,9 +500,9 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
        #for cnt
     pass;                      #log('ok ctrls_l={}',pformat(ctrls_l, width=120))
 
-    pass;                      #ctrls_fn=r'c:\temp\dlg_custom_ctrls.txt'
-    pass;                      #open(ctrls_fn, 'w', encoding='UTF-8').write('\n'.join(ctrls_l).replace('\r',''))
-    pass;                      #log(f(r'app.dlg_custom("{t}",{w},{h},open(r"{fn}",encoding="UTF-8").read(), {f})',t=title, w=w, h=h, fn=ctrls_fn, f=cid2i.get(focus_cid, -1)))
+    pass;                       ctrls_fn=tempfile.gettempdir()+os.sep+'dlg_custom_ctrls.txt'
+    pass;                       open(ctrls_fn, 'w', encoding='UTF-8').write('\n'.join(ctrls_l).replace('\r',''))
+    pass;                       log(f(r'app.dlg_custom("{t}",{w},{h},open(r"{fn}",encoding="UTF-8").read(), {f})',t=title, w=w, h=h, fn=ctrls_fn, f=cid2i.get(focus_cid, -1)))
     ans     = app.dlg_custom(title, w, h, '\n'.join(ctrls_l), cid2i.get(focus_cid, -1))
     if ans is None: return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
     pass;                      #log('ans={})',ans)
