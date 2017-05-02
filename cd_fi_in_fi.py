@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.3.01 2017-04-28'
+    '1.3.02 2017-05-02'
 ToDo: (see end of file)
 '''
 
@@ -314,7 +314,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
     ind_save= len(pset_l)+2
     ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
 #   ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list))
-    pass;                       LOG and log('ps_ind={}',(ps_ind))
+    pass;                      #LOG and log('ps_ind={}',(ps_ind))
     if ps_ind is None:  return None
     if False:pass
     elif ps_ind==ind_inop:
@@ -485,7 +485,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
         
     elif ps_ind==ind_save:
         # Save
-        pass;                   LOG and log('ps_ind={}',(ps_ind))
+        pass;                  #LOG and log('ps_ind={}',(ps_ind))
         items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
         btn,vals,*_t   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
              [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
@@ -1056,7 +1056,7 @@ def dlg_fif_ag(what='', opts={}):
                  +[dict(cid='more',tp='bt'      ,tid='dept'     ,l=GAP      ,w=38*3     ,cap=c_more                 ,hint=more_h                    )] # &e
                                                                                                                                     
 #               +([] if wo_adva else  []                                                                                            
-                 +[dict(           tp='--'      ,t=gap2+163+EG5                                                                     ,vis=w_adva     )] # 
+                 +[dict(           tp='--'      ,t=gap2+170+EG5                                                                     ,vis=w_adva     )] # 
                  +[dict(           tp='lb'      ,t=gap2+175+EG5 ,l=GAP+80   ,r=cmb_l    ,cap=_('Adv. report options')               ,vis=w_adva     )] # 
 #                +[dict(           tp='lb'      ,tid='skip'     ,l=GAP      ,r=80       ,cap='>'+_('Co&llect:')                     ,vis=w_adva     )] # &l
 #                +[dict(cid='cllc',tp='cb-ro'   ,tid='skip'     ,l=GAP+80   ,r=cmb_l    ,items=cllc_l                               ,vis=w_adva     )] # 

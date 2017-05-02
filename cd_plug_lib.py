@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.3.01 2017-04-28'
+    '1.3.02 2017-05-02'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -53,6 +53,7 @@ REDUCTS = {'lb'     :'label'
         ,  'im'     :'image'
         ,  'f-lb'   :'filter_listbox'
         ,  'f-lvw'  :'filter_listview'
+        ,  'fr'     :'bevel'
         }
 
 def f(s, *args, **kwargs):return s.format(*args, **kwargs)
@@ -378,7 +379,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                     if not re.match(r'\d+$', vals['v']): continue
                     return vals['v']
     """
-    pass;                       log('in_vals={}',pformat(in_vals, width=120))
+    pass;                      #log('in_vals={}',pformat(in_vals, width=120))
     cid2i       = {cnt['cid']:i for i,cnt in enumerate(cnts) if 'cid' in cnt}
     if True:
         # Checks
@@ -500,9 +501,9 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
        #for cnt
     pass;                      #log('ok ctrls_l={}',pformat(ctrls_l, width=120))
 
-    pass;                       ctrls_fn=tempfile.gettempdir()+os.sep+'dlg_custom_ctrls.txt'
-    pass;                       open(ctrls_fn, 'w', encoding='UTF-8').write('\n'.join(ctrls_l).replace('\r',''))
-    pass;                       log(f(r'app.dlg_custom("{t}",{w},{h},open(r"{fn}",encoding="UTF-8").read(), {f})',t=title, w=w, h=h, fn=ctrls_fn, f=cid2i.get(focus_cid, -1)))
+    pass;                      #ctrls_fn=tempfile.gettempdir()+os.sep+'dlg_custom_ctrls.txt'
+    pass;                      #open(ctrls_fn, 'w', encoding='UTF-8').write('\n'.join(ctrls_l).replace('\r',''))
+    pass;                      #log(f(r'app.dlg_custom("{t}",{w},{h},open(r"{fn}",encoding="UTF-8").read(), {f})',t=title, w=w, h=h, fn=ctrls_fn, f=cid2i.get(focus_cid, -1)))
     ans     = app.dlg_custom(title, w, h, '\n'.join(ctrls_l), cid2i.get(focus_cid, -1))
     if ans is None: return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
     pass;                      #log('ans={})',ans)
@@ -639,12 +640,19 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
             tp      = REDUCTS.get(tp, tp)
             
             # Start preprocessor
-            if tp=='--':
+            if False:pass
+            elif tp=='--' and app.app_api_version()<'1.0.161':
                 tp              = 'label'
                 cnt['cap']      = '—'*300
                 cnt['font_color']=str(rgb_to_int(185,185,185))
                 cnt['l']        = cnt.get('l', 0)
-                cnt['r']        = cnt.get('r', l+cnt.get('w', 0))   # def: to   DlgRight
+                cnt['r']        = cnt.get('r', l+cnt.get('w', 0))       # def: to   DlgRight
+            elif tp=='--' and app.app_api_version()>='1.0.161':
+                tp              = 'colorpanel'
+                cnt['l']        = cnt.get('l', 0)
+                cnt['r']        = cnt.get('r', l+cnt.get('w', 5000))    # def: to   DlgRight
+                cnt['h']        = 1
+                cnt['props']    = f('0,{},0,0',rgb_to_int(185,185,185)) # brdW_fillC_fontC_brdC
             
             if 'props' in cnt:
                 pass
@@ -670,22 +678,13 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
                 cnt['props']=               cnt.get('ro_mono_brd')
             # Finish preprocessor
 
+            # Add/Reuse
             prC_pre     = {}
             if create:
                 cr_idC  = app.dlg_proc(id_dlg, app.DLG_CTL_ADD, tp)
                 assert cr_idC==idC
             else:
                 prC_pre = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=idC)
-                
-            # Add/Reuse
-#           idC     = -1
-#           if 'cid' in cnt:
-#               idC     = app.dlg_proc(id_dlg, app.DLG_CTL_FIND, cnt['cid'])    # Try to reuse control (CTL_FIND returns -1)
-#               cid2i[cnt['cid']]   = idC
-#           if -1==idC:
-#               idC = app.dlg_proc(id_dlg, app.DLG_CTL_ADD, tp)                 # Add control
-#           if 'cid' in cnt:
-#               cid2i[cnt['cid']]   = idC
 
             # Simple props are copying directly 
             prC_new = {k:v for (k,v) in cnt.items() if k in ['cap','hint'
@@ -775,12 +774,13 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
             else:
                 # Changed
                 app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop=prC_new)
-            pass;              #log('memo CTL_PROP_GET={}',({k:v for k,v in app.dlg_proc(id_dlg, app.   , index=idC).items() 
-                               #                            if k in ('x','y','w','h',)})) if tp=='memo' else 0
+
+            app.dlg_proc(    id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop={'tag':json.dumps(prC_new)}) # Some attrs are not return by DLG_CTL_PROP_GET
            #for cnt
-            if in_fid in cid2i:
-                pass;          #log('in_fid={}',(in_fid))
-                app.dlg_proc(id_dlg, app.DLG_CTL_FOCUS, index=cid2i[in_fid])
+        
+        if in_fid in cid2i:
+            pass;              #log('in_fid={}',(in_fid))
+            app.dlg_proc(    id_dlg, app.DLG_CTL_FOCUS,    index=cid2i[in_fid])
         return
        #def agent_ctrls_updater
        
@@ -899,18 +899,21 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
     idDlg   = app.dlg_proc(0, app.DLG_CREATE)
     agent_ctrls_updater(idDlg, cnts0, vals0, fid0)
     pass;                      #log('idDlg={}',(idDlg))
-    pass;                       gen_repro_code(idDlg, r'c:\temp\repro_dlg_proc.py')         if 'write repro'!='write repro' else None
+    pass;                       gen_repro_code(idDlg, tempfile.gettempdir()+os.sep+'repro_dlg_proc.py') if 'write repro'!='write repro' else None
     app.dlg_proc(       idDlg, app.DLG_PROP_SET, prop={'cap':title0, 'w':size0[0], 'h':size0[1]
                                                       ,'callback':f('module={};func=dlg_agent_callback;', __name__)
                                                       ,'events':'on_change'
+                                                      ,'topmost':True
                                                       })
     
     global agent_callbacks
+    ed_caller   = ed
     agent_callbacks[    idDlg] = agent_loop
     app.dlg_proc(       idDlg, app.DLG_SHOW_MODAL)
     # Finish
     agent_callbacks.pop(idDlg, None)
     app.dlg_proc(       idDlg, app.DLG_FREE)
+    ed_caller.focus()
    #def dlg_agent
 
 #pass;                           from cudatext import *
@@ -1240,6 +1243,7 @@ def gen_repro_code(idDlg, rerpo_fn):
     srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
     for idC in range(app.dlg_proc(idDlg, app.DLG_CTL_COUNT)):
         prC = app.dlg_proc(idDlg, app.DLG_CTL_PROP_GET, index=idC)
+        prC['props'] = json.loads(prC['tag']).get('props','')
         srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC.pop('type',None))
         srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', repr(prC))
     prD     = app.dlg_proc(idDlg, app.DLG_PROP_GET)
