@@ -238,9 +238,13 @@ class Command:
    #class Command
 
 def dlg_fif_opts():
+    try:
+        from cuda_options_editor import dlg_opt_editor
+    except:
+        app.msg_status(_('To view/edit options install plugin cuda_options_editor'))
+        return
     FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
     fif_opts    = json.loads(open(FIF_OPTS).read())
-    from cuda_options_editor import dlg_opt_editor
     dlg_opt_editor('FiF options', fif_opts, subset='fif.')
    #def dlg_fif_opts
 
