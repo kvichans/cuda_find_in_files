@@ -1120,7 +1120,8 @@ def dlg_valign_consts():
                  ], dict(rprt=rpt
                         ,mail='kvichans@mail.ru'), focus_cid='rprt')
             pass;               log('aid_r={}',(aid_r))
-        return dict(fm_cap=_('Adjust vertical alignments'), fm_w=DLG_W, fm_h=DLG_H, fm_ctrls=get_cnts()) \
+        return dict(cap=_('Adjust vertical alignments'), w=DLG_W, h=DLG_H) \
+             , get_cnts() \
              , dict(values=vals, focused=focused)
        #def dlg_loop
     dlg_agent( dlg_loop
