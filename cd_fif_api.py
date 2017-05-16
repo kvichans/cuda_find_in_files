@@ -39,9 +39,6 @@ RPT_FIND_SIGN   = _('+Search')
 RPT_REPL_SIGN   = _('+Replace')
 
 IN_OPEN_FILES   = _('<Open Files>')
-CLLC_MATCH      = _('Usual matches')
-CLLC_COUNT      = _('Counts only')
-CLLC_FNAME      = _('File names only')
 TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
@@ -499,14 +496,6 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
                   int(where[3])                         \
                      if where[0:3]=='gr#'           else\
                   -1
-#       op_grp  = apx.icase(False,-1
-#                       ,app.app_proc(app.PROC_GET_GROUPING,'')==app.GROUPS_ONE , -1
-#                       ,where=='same'                                          , -1
-#                       ,where=='next'                                          , (ed_grp+1)%grps
-#                       ,where=='prev'                                          , (ed_grp-1)%grps
-#                       ,where[0:3]=='gr#'                                      , int(where[3])
-#                       ,True                                                   , -1
-#                       )
         pass;                   NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
         CdSw.file_open(path, op_grp)
 #       app.file_open(path, op_grp)

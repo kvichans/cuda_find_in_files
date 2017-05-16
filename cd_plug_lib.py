@@ -27,6 +27,7 @@ pass;                           from pprint import pformat
 pass;                           import tempfile
 
 odict       = collections.OrderedDict
+T,F,N       = True, False, None
 GAP         = 5
 c13,c10,c9  = chr(13),chr(10),chr(9)
 REDUCTS = {'lb'     :'label'
@@ -39,6 +40,7 @@ REDUCTS = {'lb'     :'label'
         ,  'rd'     :'radio'
         ,  'ch'     :'check'
         ,  'ch-bt'  :'checkbutton'
+        ,  'ch-b'   :'checkbutton'
         ,  'ch-gp'  :'checkgroup'
         ,  'rd-gp'  :'radiogroup'
         ,  'cb'     :'combo'
@@ -380,6 +382,7 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                     return vals['v']
     """
     pass;                      #log('in_vals={}',pformat(in_vals, width=120))
+    cnts        = [cnt for cnt in cnts if cnt.get('vis', True) in (True, '1')]
     cid2i       = {cnt['cid']:i for i,cnt in enumerate(cnts) if 'cid' in cnt}
     if True:
         # Checks
@@ -389,6 +392,15 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         no_vids = {cid          for   cid in    in_vals if                          cid not in cid2i}
         if no_vids:
             raise Exception(f('No cid(s) for vals: {}', no_vids))
+    
+    simpp   = ['cap','hint'
+              ,'props'
+              ,'color'
+              ,'font_name', 'font_size', 'font_color', 'font'
+              ,'act'
+              ,'en','vis'
+             #,'tag'
+              ]
     ctrls_l = []
     for cnt in cnts:
         tp      = cnt['tp']
@@ -431,10 +443,10 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         elif tp in ('edit', 'memo') and cnt.get('ro_mono_brd'):
             cnt['props']=               cnt.get('ro_mono_brd')
 
-        # Simple props
-        for k in ['cap', 'hint', 'props', 'font_name', 'font_size', 'font_color', 'font', 'name']:
-            if k in cnt:
-                lst += [k+'='+str(cnt[k])]
+#       # Simple props
+#       for k in ['cap', 'hint', 'props', 'font_name', 'font_size', 'font_color', 'font', 'name']:
+#               lst += [k+'='+str(cnt[k])]
+
         # Position:
         #   t[op] or tid, l[eft] required
         #   w[idth]  >>> r[ight ]=l+w
@@ -451,9 +463,9 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         r       = cnt.get('r', l+cnt.get('w', 0)) 
         b       = cnt.get('b', t+cnt.get('h', 0)) 
         lst    += ['pos={l},{t},{r},{b}'.format(l=l,t=t,r=r,b=b)]
-        if 'en' in cnt:
-            val     = cnt['en']
-            lst    += ['en='+('1' if val in [True, '1'] else '0')]
+#       if 'en' in cnt:
+#           val     = cnt['en']
+#           lst    += ['en='+('1' if val in [True, '1'] else '0')]
 
         if 'items' in cnt:
             items   = cnt['items']
@@ -493,9 +505,16 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
                 in_val = ';'.join( (str(in_val[0]), ','.join( in_val[1]) ) )
             lst+= ['val='+str(in_val)]
 
-        if 'act' in cnt:    # must be last in lst
-            val     = cnt['act']
-            lst    += ['act='+('1' if val in [True, '1'] else '0')]
+#       if 'act' in cnt:    # must be last in lst
+#           val     = cnt['act']
+#           lst    += ['act='+('1' if val in [True, '1'] else '0')]
+ 
+        # Simple props
+        for k in simpp:
+            if k in cnt:
+                v   = cnt[k]
+                v   = ('1' if v else '0') if isinstance(v, bool) else str(v)
+                lst += [k+'='+v]
         pass;                  #log('lst={}',lst)
         ctrls_l+= [chr(1).join(lst)]
        #for cnt
@@ -569,42 +588,23 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         ,   chds
    #def dlg_wrapper
 
-agent_callbacks = {}    # id_dlg:agent_callback
-def dlg_agent_callback(id_dlg, id_ctl_act, id_event='', info=''):
+_agent_callbacks = {}    # id_dlg:agent_callback
+def _dlg_agent_callback(id_dlg, id_ctl_act, id_event='', info=''):
     pass;                      #log('id_dlg, id_ctl_act, id_event, info={}',(id_dlg, id_ctl_act, id_event, info))
     if id_event.startswith('on_close'):
+#       agent_form_acts('save', id_dlg=id_dlg)
         return 
     if id_event!='on_change':
         return 
-    global agent_callbacks
-    agent_callback  = agent_callbacks.get(id_dlg)
+    global _agent_callbacks
+    agent_callback  = _agent_callbacks.get(id_dlg)
     if agent_callback:
         agent_callback(id_dlg, id_ctl_act, id_event, info)
 
-def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
+RT_BREAK_AG = (None,None,None)
+def  dlg_agent(client_data_updater, fm_prs0, ctrls0, settings0={}):
     """ Wrapper for dlg_proc to show MODAL dlg. """
-    pass;                      #log('size0={}',(size0))
 
-    ctrl_attrs  = { 'name'      :''
-                ,   'en'        :True
-                ,   'vis'       :True
-                ,   'cap'       :''
-                ,   'hint'      :''
-                ,   'x'         :0
-                ,   'y'         :0
-                ,   'w'         :0
-                ,   'h'         :23 ##??
-                ,   'props'     :''
-                ,   'items'     :''
-                ,   'color'     :''
-                ,   'font_name' :''
-                ,   'font_size' :''
-                ,   'font_color':''
-                ,   'val'       :''
-                ,   'tag'       :''
-                ,   'callback'  :''
-                ,   'act'       :False
-                }
     def agent_ctrls_updater(id_dlg, cnts, in_vals={}, in_fid=''):
         """ Create/update controls.
             - All controls are created once.
@@ -654,6 +654,9 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
                 cnt['h']        = 1
                 cnt['props']    = f('0,{},0,0',rgb_to_int(185,185,185)) # brdW_fillC_fontC_brdC
             
+            if 'sto' in cnt:
+                cnt['tab_stop'] = cnt.pop('sto')
+            
             if 'props' in cnt:
                 pass
             elif tp=='label' and cnt['cap'][0]=='>':
@@ -694,6 +697,9 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
                                                             ,'act'
                                                             ,'en','vis'
                                                            #,'tag'
+                                                            ,'tab_stop' ,'tab_order' 
+                                                           #,'sp_l','sp_r','sp_t','sp_b','sp_a'
+                                                           #,'a_l','a_r','a_t','a_b'
                                                             ]}
             if 'cid' in cnt:
                 prC_new['name'] = cnt['cid'] # cid -> name
@@ -705,9 +711,9 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
             #   b dont need for buttons, edit, labels
             l       = cnt['l']
             t       = cnt.get('t', 0)
-            if 'tid' in cnt and vis:
+            if 'tid' in cnt and cnt['tid'] in cid2i:
+#           if 'tid' in cnt and vis:
                 # cid for horz-align text
-#               bs_cnt  = [c for c in cnts if 'cid' in c and c['cid']==cnt['tid']][0]
                 bs_cnt  = cnts[cid2i[cnt['tid']]]
                 bs_tp   = bs_cnt['tp']
                 t       = bs_cnt['t'] + fit_top_by_env(tp, REDUCTS.get(bs_tp, bs_tp))
@@ -757,7 +763,7 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
             
 
             if tp in ('button') or cnt.get('act') in ('1', True):
-                prC_new['callback'] = f('module={};func=dlg_agent_callback;', __name__)
+                prC_new['callback'] = f('module={};func=_dlg_agent_callback;', __name__)
 
             pass;              #log('idC,cid,prC_new={}',(idC, cnt.get('cid'), prC_new))
             if create:
@@ -783,18 +789,96 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
             app.dlg_proc(    id_dlg, app.DLG_CTL_FOCUS,    index=cid2i[in_fid])
         return
        #def agent_ctrls_updater
+    
+    def agent_ctrls_anc(id_dlg, cnts, fm_prs):
+        """ Translate attr 'a' to 'a_*','sp_*'
+            Values for 'a' are str-mask with signs
+                'l' 'L'    fixed distanse ctrl-left     to form-left  or form-right
+                't' 'T'    fixed distanse ctrl-top      to form-top   or form-bottom
+                'r' 'R'    fixed distanse ctrl-right    to form-left  or form-right
+                'b' 'B'    fixed distanse ctrl-bottom   to form-top   or form-bottom
+        """
+        fm_w    = fm_prs['w']
+        fm_h    = fm_prs['h']
+        for idC,cnt in enumerate(cnts):
+            anc     = cnt.get('a', '')
+            if not anc: continue
+            prOld   = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=idC)
+            prNew   = {}
+            if '-' in anc:
+                # Center by horz
+                prNew.update(dict( a_l=(None, '-')
+                                  ,a_r=(None, '-')))
+            if 'LR' in anc:
+                # Both left/right to form right
+                prNew.update(dict( a_l=None
+                                  ,a_r=(None, ']'), sp_r=fm_w-prOld['x']-prOld['w']))
+            if 'lR' in anc:
+                # Left to form left. Right to form right.
+                prNew.update(dict( a_l=(None, '['), sp_l=     prOld['x']
+                                  ,a_r=(None, ']'), sp_r=fm_w-prOld['x']-prOld['w']))
+            if '|' in anc:
+                # Center by vert
+                prNew.update(dict( a_t=(None, '-')
+                                  ,a_b=(None, '-')))
+            if 'TB' in anc:
+                # Both top/bottom to form bottom
+                prNew.update(dict( a_t=None
+                                  ,a_b=(None, ']'), sp_b=fm_h-prOld['y']-prOld['h']))
+            if 'tB' in anc:
+                # Top to form top. Bottom to form bottom.
+                prNew.update(dict( a_t=(None, '['), sp_t=     prOld['y']
+                                  ,a_b=(None, ']'), sp_b=fm_h-prOld['y']-prOld['h']))
+            if prNew:
+                app.dlg_proc(      id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop=prNew)
+       #def agent_ctrls_anc
+    
+    def agent_form_acts(what, fm_prs=None, id_dlg=None):
+        """ Save/Restore pos of form """
+        pass;                  #log('what, fm_prs, id_dlg={}',(what, fm_prs, id_dlg))
+        CFG_JSON= CdSw.get_setting_dir()+os.sep+'forms data.json'
+        stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
+                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+                  odict()
+        def get_form_key(prs):
+            fm_cap  = prs['cap']
+            return fm_cap if ' (' not in fm_cap else fm_cap[:fm_cap.rindex(' (')]
+        if False:pass
+        if what=='move' and fm_prs:
+            fm_key  = get_form_key(fm_prs)
+            if fm_key not in stores:    return fm_prs
+            return dict_upd(fm_prs, stores[fm_key])
+        if what=='save' and id_dlg:
+            dlg_pr  = app.dlg_proc(id_dlg, app.DLG_PROP_GET)
+            fm_key  = get_form_key(dlg_pr)
+            pass;              #log('{}={}', fm_key,{k:v for k,v in dlg_pr.items() if k in ('x','y','w','h')})
+            stores[fm_key]  = {k:v for k,v in dlg_pr.items() if k in ('x','y','w','h')}
+            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+       #def agent_form_acts
        
-    def agent_scaner(id_dlg, id_ctl_act, in_vals_p):
+    settings_t  = settings0
+    idDlg       = app.dlg_proc(0, app.DLG_CREATE)
+    pass;                      #log('idDlg={}',(idDlg))
+    agent_ctrls_updater(idDlg, ctrls0, settings0.get('values'), settings0.get('focused'))
+    if fm_prs0.get('resize', False):
+        agent_ctrls_anc(idDlg, ctrls0, fm_prs0)
+        fm_prs0['w_min']    = fm_prs0.get('w_min', fm_prs0['w'])
+        fm_prs0['h_min']    = fm_prs0.get('h_min', fm_prs0['h'])
+    fm_prs0     = agent_form_acts('move', fm_prs=fm_prs0)
+    app.dlg_proc(       idDlg, app.DLG_PROP_SET, prop=dict_upd(fm_prs0, dict(
+                                                               callback = f('module={};func=_dlg_agent_callback;', __name__)
+                                                              ,events   = 'on_change'
+                                                              ,topmost  = True
+                                                              )))
+    pass;                       gen_repro_code(idDlg, tempfile.gettempdir()+os.sep+'repro_dlg_proc.py')     if F else None
+    
+    def agent_scaner(id_dlg, id_ctl_act, in_vals_p=None):
         """ Collect values of controls
         """
         pass;                  #log('id_dlg, id_ctl_act={}',(id_dlg, id_ctl_act))
         pass;                  #log('cnts_p={}',(cnts_p))
+        in_vals_p   = in_vals_p if in_vals_p else {}
         pass;                  #log('in_vals_p={}',(in_vals_p))
-#       pass;                   return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
-#       cid2i       = {cnt['cid']:i for i,cnt in enumerate(cnts_p) if 'cid' in cnt}
-        pass;                  #log('cid2i={}',(cid2i))
-        
-        pass;                  #return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
         
         dlg_pr      = app.dlg_proc(id_dlg, app.DLG_PROP_GET)
         pass;                  #log('dlg_pr={}',(dlg_pr))
@@ -802,12 +886,9 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
         focus_idC   = dlg_pr.get('focused', -1)
         focus_prC   = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=focus_idC) if -1!=focus_idC else {}
         focus_cid   = focus_prC.get('name', '')
-#       focus_cid   = '' if -1==dlg_pr.get('focused', -1) else cnts_p[dlg_pr['focused']].get('cid', '')
         pass;                  #log('focus_cid={})',(focus_cid))
         act_prC     = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=id_ctl_act)
         act_cid     = act_prC['name']
-#       act_cid     = cnts_p[id_ctl_act]['cid']
-
 
         # Parse output values
         cid2i       = {}
@@ -825,9 +906,6 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
         pass;                  #log('an_vals={}',(an_vals))
     
         for cid in an_vals:
-#           cnt     = cnts_p[cid2i[cid]]
-#           tp      = cnt['tp']
-#           tp      = REDUCTS.get(tp, tp)
             tp      = cid2tp[cid]
             in_val  = in_vals_p[cid]
             an_val  = an_vals[cid]
@@ -869,50 +947,40 @@ def dlg_agent(client_data_updater, title0, size0, cnts0, vals0=None, fid0=None):
             ,   chds
        #def agent_scaner
 
-    in_vals_t   = vals0
     def agent_loop(id_dlg, id_ctl_act, id_event='', info=''):
-        nonlocal in_vals_t
+        nonlocal settings_t
         pass;                  #log('id_dlg, id_ctl_act, id_event={}',(id_dlg, id_ctl_act, id_event))
         pass;                  #log('cnts_t={}',(cnts_t))
-        pass;                  #log('in_vals_t={}',(in_vals_t))
+        pass;                  #log('settings_t={}',(settings_t))
         
         fm_aid, fm_vals,\
-        fm_fid, fm_chds = agent_scaner(id_dlg, id_ctl_act, in_vals_t)
+        fm_fid, fm_chds = agent_scaner(id_dlg, id_ctl_act, settings_t.get('values'))
         if not fm_aid:
             pass;               log('Error',)
             app.dlg_proc(   id_dlg, app.DLG_HIDE)
             return
 
-        us_title, us_size,\
-        us_cnts,  us_vals,\
-        us_fid  = client_data_updater(fm_aid, fm_vals, fm_fid, fm_chds)
-        in_vals_t   = us_vals
-        if not us_title:
+        fm_prs,     \
+        ctrls,      \
+        settings    = client_data_updater(fm_aid, fm_vals, fm_fid, fm_chds)
+        settings_t  = settings
+        if fm_prs is None:
             pass;              #log('break agent_loop',)
             app.dlg_proc(   id_dlg, app.DLG_HIDE)
             return
         pass;                  #log('next agent_loop',)
-        agent_ctrls_updater(id_dlg, us_cnts,  us_vals, us_fid)
-        app.dlg_proc(       id_dlg, app.DLG_PROP_SET, prop={'cap':us_title, 'w':us_size[0], 'h':us_size[1]})
+        agent_ctrls_updater(id_dlg, ctrls, settings.get('values'),  settings.get('focused'))
+        app.dlg_proc(       id_dlg, app.DLG_PROP_SET, prop=fm_prs)  if fm_prs else None
        #def agent_loop
 
-    idDlg   = app.dlg_proc(0, app.DLG_CREATE)
-    agent_ctrls_updater(idDlg, cnts0, vals0, fid0)
-    pass;                      #log('idDlg={}',(idDlg))
-    pass;                       gen_repro_code(idDlg, tempfile.gettempdir()+os.sep+'repro_dlg_proc.py') if 'write repro'!='write repro' else None
-    app.dlg_proc(       idDlg, app.DLG_PROP_SET, prop={'cap':title0, 'w':size0[0], 'h':size0[1]
-                                                      ,'callback':f('module={};func=dlg_agent_callback;', __name__)
-                                                      ,'events':'on_change'
-                                                      ,'topmost':True
-                                                      })
-    
-    global agent_callbacks
+    global _agent_callbacks
     ed_caller   = ed
-    agent_callbacks[    idDlg] = agent_loop
-    app.dlg_proc(       idDlg, app.DLG_SHOW_MODAL)
+    _agent_callbacks[       idDlg] = agent_loop
+    app.dlg_proc(           idDlg, app.DLG_SHOW_MODAL)
     # Finish
-    agent_callbacks.pop(idDlg, None)
-    app.dlg_proc(       idDlg, app.DLG_FREE)
+    _agent_callbacks.pop(   idDlg, None)
+    agent_form_acts('save', id_dlg=idDlg)
+    app.dlg_proc(           idDlg, app.DLG_FREE)
     ed_caller.focus()
    #def dlg_agent
 
@@ -999,13 +1067,13 @@ def dlg_valign_consts():
             ]
        #def get_cnts
     def dlg_loop(aid, vals, fid, chds):
-        pass;                   log('aid={}',(aid))
+        pass;                  #log('aid={}',(aid))
         
         pass;                  #return None,None,None,None,None#while True
         
 #       if aid is None or aid=='-':
         if aid=='-':
-            return [None]*5#while True
+            return RT_BREAK_AG#while True
         scam        = app.app_proc(app.PROC_GET_KEYSTATE, '') if app.app_api_version()>='1.0.143' else ''
         aid_m       = scam + '/' + aid if scam and scam!='a' else aid   # smth == a/smth
         focused = chds[0] if 1==len(chds) else fid
@@ -1030,7 +1098,7 @@ def dlg_valign_consts():
                 apx.set_opt('dlg_wrapper_fit_va_for_'+nc, fit)
                #for ic, nc
             fit_top_by_env__clear()
-            return [None]*5#break#while
+            return RT_BREAK_AG#break#while
             
         if aid_m=='c/save': # Report
             rpt = 'env:'+get_desktop_environment()
@@ -1052,11 +1120,13 @@ def dlg_valign_consts():
                  ], dict(rprt=rpt
                         ,mail='kvichans@mail.ru'), focus_cid='rprt')
             pass;               log('aid_r={}',(aid_r))
-#           if aid_r is None or btn_hlp=='-': break#while
-        return          _('Adjust vertical alignments'), (DLG_W, DLG_H), get_cnts(), vals, focused
+        return dict(fm_cap=_('Adjust vertical alignments'), fm_w=DLG_W, fm_h=DLG_H, fm_ctrls=get_cnts()) \
+             , dict(values=vals, focused=focused)
        #def dlg_loop
-    dlg_agent(dlg_loop, _('Adjust vertical alignments'), (DLG_W, DLG_H), get_cnts(), vals, focused)
-#      #while
+    dlg_agent( dlg_loop
+             , dict(cap=_('Adjust vertical alignments'), w=DLG_W, h=DLG_H) \
+             , get_cnts()
+             , dict(values=vals, focused=focused))
    #def dlg_valign_consts
 
 def get_hotkeys_desc(cmd_id, ext_id=None, keys_js=None, def_ans=''):
@@ -1243,7 +1313,10 @@ def gen_repro_code(idDlg, rerpo_fn):
     srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
     for idC in range(app.dlg_proc(idDlg, app.DLG_CTL_COUNT)):
         prC = app.dlg_proc(idDlg, app.DLG_CTL_PROP_GET, index=idC)
-        prC['props'] = json.loads(prC['tag']).get('props','')
+        prTg= json.loads(prC.pop('tag','{}'))
+        prC.update(prTg)
+#       prC['props'] = prTg.get('props','')
+#       prC['props'] = json.loads(prC['tag']).get('props','')
         srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC.pop('type',None))
         srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', repr(prC))
     prD     = app.dlg_proc(idDlg, app.DLG_PROP_GET)
@@ -1290,6 +1363,12 @@ def get_translation(plug_file):
 
 _   = get_translation(__file__) # I18N
 
+def dict_upd(d1, d2):
+    d   = d1.copy()
+    d.update(d2)
+    return d
+   #def dict_upd
+   
 if __name__ == '__main__' :     # Tests
     pass
     def test_ask_number(ask, def_val):
