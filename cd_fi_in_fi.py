@@ -1087,7 +1087,7 @@ class FifD:
 
         if btn_m=='pres' \
         or btn_m=='s/pres': # Shift+Preset - Show list in history order
-            ag.bind_do(['totb'])
+#           ag.bind_do(['totb'])
             ag.bind_do()
             onof        = {'0':'Off', '1':'On'}
 #           totb_i      = int(totb_s)
@@ -1126,7 +1126,8 @@ class FifD:
        #def do_pres
 
     def do_fold(self, aid, ag):
-        ag.bind_do(['excl','fold','dept'])
+        ag.bind_do()
+#       ag.bind_do(['excl','fold','dept'])
         btn_p,btn_m = FifD.scam_pair(aid)
 
         if False:pass
@@ -1187,7 +1188,8 @@ class FifD:
        #def do_dept
     
     def do_more(self, aid, ag):
-        ag.bind_do(['excl','repl','adva'])
+        ag.bind_do()
+#       ag.bind_do(['excl','repl','adva'])
         btn_p,btn_m = FifD.scam_pair(aid)
 
         if False:pass
