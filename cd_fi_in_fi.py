@@ -363,12 +363,22 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
         if not pset_l:  return app.msg_status(_('No preset to config'))
 
         def save_close(cid, ag):
+            if pset_l:
+                ps_ind      = ag.cval('prss')
+                ps          = pset_l[ps_ind]
+                ps['name']  = ag.cval('name')
             stores_main.update(stores)
             open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
             return None
             
         def acts(cid, ag):
-            ps_ind  = ag.cval('prss')
+            if not pset_l:  return {}
+            ps_ind      = ag.cval('prss')
+            ps          = pset_l[ps_ind]
+            new_name    = ag.cval('name')
+            prss_nms    = []
+            if ps['name'] != new_name:
+                ps['name']  = new_name
             if False:pass
             elif cid=='mvup' and ps_ind>0 \
             or   cid=='mvdn' and ps_ind<len(pset_l)-1:
@@ -383,7 +393,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                           ,('mvup',dict(en=ps_ind>0)                )
                           ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))  )
                           ]
-                        )
+                   ,fid='prss')
             elif cid=='delt':
                 pset_l.pop(ps_ind)
                 ps_ind  = min(ps_ind, len(pset_l)-1)
@@ -394,13 +404,14 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                 ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
                 return dict(
                     ctrls=[('prss',dict(items=ps_mns, val=ps_ind)                   )
+                          ,('name',dict(              val=ps['name'])               )
                           ,('what',dict(items=ps_its, val=(-1,ps_vls))              )
                           ,('mvup',dict(en=len(pset_l)>0 and ps_ind>0)              )
                           ,('mvdn',dict(en=len(pset_l)>0 and ps_ind<(len(pset_l)-1)))
                           ,('clon',dict(en=len(pset_l)>0)                           )
                           ,('delt',dict(en=len(pset_l)>0)                           )
                           ]
-                        )
+                   ,fid='prss')
             elif cid=='clon':
                 ps  = pset_l[ps_ind]
                 psd = {k:v for k,v in ps.items()}
@@ -411,25 +422,37 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                           ,('mvup',dict(en=ps_ind>0)                )
                           ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))  )
                           ]
-                        )
-            return {}
+                   ,fid='prss')
+            
+            pass;               LOG and log('no act: cid,ps_ind={}',(cid,ps_ind))
+            return {'fid':'prss'}
         
         def fill_what(cid, ag):
-            ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
             ps_ind  = ag.cval('prss')
+            prss_nms= [('prss',dict(val=ps_ind))]
+            if pset_l:
+                ps_ind_p    = ag.cval('prss', live=False)
+                pass;          #LOG and log('ps_ind,ps_ind_p={}',(ps_ind,ps_ind_p))
+                ps_p        = pset_l[ps_ind_p]
+                if ps_p['name']!= ag.cval('name'):
+                    ps_p['name']= ag.cval('name')
+                    ps_mns      = [ps['name'] for ps in pset_l]
+                    prss_nms    = [('prss',dict(items=ps_mns, val=ps_ind))]
             pass;              #LOG and log('ps_ind={}',(ps_ind))
             ps      = pset_l[ps_ind]                                                                        if pset_l else {}
             pass;              #LOG and log('ps={}',(ps))
             ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
             ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
             return dict(
-                ctrls=[('what',dict(items=ps_its, val=(-1,ps_vls)))
-                      ,('mvup',dict(en=ps_ind>0)                  )
-                      ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))    )
-                      ]
-                    )
+                ctrls=[('what',dict(items=ps_its, val=(-1,ps_vls))  )
+                      ,('name',dict(              val=ps['name'])   )
+                      ,('mvup',dict(en=ps_ind>0)                    )
+                      ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))      )
+                      ]+prss_nms
+               ,fid='prss')
 
         ps_ind      = 0
+        ps          = pset_l[ps_ind]                                                                        if pset_l else {}
         DLG_W       = 5*4+245+300
         ps_mns      = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
         ps_its      = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
@@ -977,7 +1000,6 @@ class FifD:
             self.stores['frst']     = self.frst_s
             self.stores['enco']     = self.enco_s
             open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
-            pass;               LOG and log('len(pset)={}',(len(self.stores.get('pset',[]))))
        #def store
     
     def pre_cnts(self):
@@ -1065,12 +1087,12 @@ class FifD:
 
         if btn_m=='pres' \
         or btn_m=='s/pres': # Shift+Preset - Show list in history order
+            ag.bind_do(['totb'])
             ag.bind_do()
             onof        = {'0':'Off', '1':'On'}
 #           totb_i      = int(totb_s)
             self.totb_i = self.totb_i if 0<self.totb_i<4+len(self.stores.get('tofx', [])) else 1   # "tab:" skiped
             totb_v      = self.totb_l[self.totb_i]
-            pass;               LOG and log('len(pset)={}',(len(self.stores.get('pset',[]))))
             ans     = dlg_press(self.stores, btn_m=='s/pres',
                        (self.reex01,self.case01,self.word01,
                         self.incl_s,self.excl_s,
@@ -1083,7 +1105,6 @@ class FifD:
                         SKIP_L[int(self.skip_s)],SORT_L[int(self.sort_s)],self.frst_s,ENCO_L[int(self.enco_s)],
                         totb_v,onof[self.join_s],SHTP_L[int(self.shtp_s)],onof[self.algn_s],onof[self.cntx_s])
                         )
-            pass;               LOG and log('len(pset)={}',(len(self.stores.get('pset',[]))))
             ag.activate()
             if ans is None:
                 return FifD.do_focus(aid,ag)   #continue#while_fif
@@ -1218,7 +1239,6 @@ class FifD:
                     ,vals =self.get_fif_vals()
 #                   ,ctrls=self.get_fif_cnts())
                     ,ctrls=self.get_fif_cnts('vis+pos'))
-               ,dict(ctrls=[('more',{'cap':_('Mor&e >>') if self.wo_adva else _('L&ess <<')})])
                ,FifD.do_focus(aid,ag)
                )
        #def do_more
@@ -1513,7 +1533,7 @@ class FifD:
 ,('dept',d(          t=m.gap2+140+M.EG5                         ))
 ,('cfld',d(          tid='fold'                                 ))
 ,('----',d(          t=m.gap2+172+M.EG5                         ))
-,('more',d(          t=m.gap2+160+M.EG5                         ))
+,('more',d(          t=m.gap2+160+M.EG5 ,cap=c_more             ))
 ,('arp_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
 ,('tot_',d(          tid='skip'                     ,vis=w_adva ))
 ,('totb',d(          tid='skip'                     ,vis=w_adva ))
@@ -2420,4 +2440,5 @@ ToDo
 [ ][at-kv][19may17] Anchor --- to right
 [ ][at-kv][31may17] Live apply changes from opt-dlg
 [ ][at-kv][31may17] en=F for PresDlg Up/Dn if sel=0/max
+[ ][at-kv][31may17] ? Use pages control for Help
 '''
