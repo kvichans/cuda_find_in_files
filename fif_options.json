@@ -108,8 +108,11 @@
         "chapter":"Searching",
         "tags":["searching", "scope"]
     },
-    {   "comment": "Default encoding to read files",
-        "def_val": "cp1251",
+    {   "comment": ["Default encoding to read files.",
+                    "If value is empty then will be used",
+                    "  cp1252 for Linux,",
+                    "  preferred encoding from locale for others (Win, Mac, ...)."],
+        "def_val": "",
         "key": "fif_locale_encoding",
         "chapter":"Searching",
         "tags":["searching", "internal", "encoding"]
