@@ -976,6 +976,32 @@ class FifD:
         self.dlg_h   = None
        #def __init__
     
+    def copy_vals(self, ag):
+        self.reex01     = ag.cval('reex')
+        self.case01     = ag.cval('case')
+        self.word01     = ag.cval('word')
+        self.what_s     = ag.cval('what')
+        self.incl_s     = ag.cval('incl')
+        if not self.wo_excl:     
+            self.excl_s = ag.cval('excl')
+        else:
+            self.excl_s = ''
+        self.fold_s     = ag.cval('fold')
+        self.dept_n     = ag.cval('dept')
+        if not self.wo_repl:     
+            self.repl_s = ag.cval('repl')
+        if not self.wo_adva:     
+            self.join_s = ag.cval('join')
+            self.totb_s = ag.cval('totb')
+            self.shtp_s = ag.cval('shtp')
+            self.cntx_s = ag.cval('cntx')
+            self.algn_s = ag.cval('algn')
+            self.skip_s = ag.cval('skip')
+            self.sort_s = ag.cval('sort')
+            self.frst_s = ag.cval('frst')
+            self.enco_s = ag.cval('enco')
+       #def copy_vals
+    
     def store(self, save=True, set=''):
         if save:
             self.stores['wo_adva']  = self.wo_adva
@@ -1088,7 +1114,8 @@ class FifD:
         if btn_m=='pres' \
         or btn_m=='s/pres': # Shift+Preset - Show list in history order
 #           ag.bind_do(['totb'])
-            ag.bind_do()
+#           ag.bind_do()
+            self.copy_vals(ag)
             onof        = {'0':'Off', '1':'On'}
 #           totb_i      = int(totb_s)
             self.totb_i = self.totb_i if 0<self.totb_i<4+len(self.stores.get('tofx', [])) else 1   # "tab:" skiped
@@ -1126,7 +1153,8 @@ class FifD:
        #def do_pres
 
     def do_fold(self, aid, ag):
-        ag.bind_do()
+        self.copy_vals(ag)
+#       ag.bind_do()
 #       ag.bind_do(['excl','fold','dept'])
         btn_p,btn_m = FifD.scam_pair(aid)
 
@@ -1176,7 +1204,8 @@ class FifD:
        #def do_fold
        
     def do_dept(self, aid, ag):
-        ag.bind_do(['dept'])
+        self.copy_vals(ag)
+#       ag.bind_do(['dept'])
         pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
         self.dept_n = 0 if aid=='depa' else \
                       1 if aid=='depo' else \
@@ -1188,7 +1217,8 @@ class FifD:
        #def do_dept
     
     def do_more(self, aid, ag):
-        ag.bind_do()
+        self.copy_vals(ag)
+#       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
         btn_p,btn_m = FifD.scam_pair(aid)
 
@@ -1246,7 +1276,8 @@ class FifD:
        #def do_more
 
     def do_cntx(self, aid, ag):
-        ag.bind_do(['cntx'])
+#       ag.bind_do(['cntx'])
+        self.copy_vals(ag)
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_m=='c/cntx' and self.cntx_s=='1':    # '1'? so 
             sBf = str(apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1)))
@@ -1271,7 +1302,8 @@ class FifD:
     def do_totb(self, aid, ag):
         pass;                  #LOG and log('totb props={}',(ag.cattrs('totb')))
         totb_i_pre  = self.totb_i
-        ag.bind_do(['totb', 'fold'])
+#       ag.bind_do(['totb', 'fold'])
+        self.copy_vals(ag)
         totb_v      = self.totb_l[self.totb_i]
         pass;                   LOG and log('totb_i_pre,totb_i,totb_v={}',(totb_i_pre,self.totb_i,totb_v))
         fxs         = self.stores.get('tofx', [])
@@ -1316,14 +1348,16 @@ class FifD:
        #def do_help
     
     def do_exit(self, aid, ag):
-        ag.bind_do()
+#       ag.bind_do()
+        self.copy_vals(ag)
         self.store()
 #       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         return None
        #def do_exit
     
     def do_work(self, aid, ag):
-        ag.bind_do()
+#       ag.bind_do()
+        self.copy_vals(ag)
         self.store()
         
         btn_p,btn_m = FifD.scam_pair(aid)
