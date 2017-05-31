@@ -2,11 +2,11 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.01 2017-05-31'
+    '2.1.02 2017-05-31'
 ToDo: (see end of file)
 '''
 
-import  re, os, sys, locale, json, collections #, traceback
+import  re, os, sys, locale, json, collections, copy
 
 import  cudatext            as app
 from    cudatext        import ed
@@ -35,13 +35,14 @@ MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
 CFG_JSON= CdSw.get_setting_dir()+os.sep+'cuda_find_in_files.json'
 #CFG_JSON= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
 
+CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
 #if 'sw'==app.__name__:
 #   USE_EDFIND_OPS  = False
 
-GAP     = 5
+#GAP     = 5
 
 totb_l          = [TOTB_NEW_TAB, TOTB_USED_TAB]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
@@ -75,6 +76,31 @@ DEPT_L          = dept_l
 SKIP_L          = skip_l
 SORT_L          = sort_l
 ENCO_L          = enco_l
+
+def reload_opts():
+    api_reload_opts()
+    
+    global CLOSE_AFTER_GOOD,USE_EDFIND_OPS, loc_enco, enco_l
+    CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
+    USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
+    loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
+    enco_l          = ['{}, UTF-8, '+ENCO_DETD 
+                      ,'UTF-8, {}, '+ENCO_DETD 
+                      ,'{}, '       +ENCO_DETD 
+                      ,'UTF-8, '    +ENCO_DETD 
+                      ,'{}, UTF-8'             
+                      ,'UTF-8, {}'             
+                      ,'{}'                    
+                      ,'UTF-8'                 
+                      ,              ENCO_DETD
+                      ]     \
+                        if loc_enco!='UTF-8' else   \
+                      ['{}, '       +ENCO_DETD 
+                      ,'{}'                    
+                      ,              ENCO_DETD
+                      ]
+    enco_l          = [f(enco, loc_enco) for enco in enco_l]
+   #def reload_opts()
 
 def desc_fif_val(fifkey, val=None):
     pass;                      #LOG and log('fifkey, val={}',(fifkey, val))
@@ -139,7 +165,6 @@ class Command:
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         return jump_to(drct, what)
     def on_goto_def(self, ed_self):
-        pass;                   LOG and log('',())
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
             self._nav_to_src('same', 'move')
@@ -243,9 +268,11 @@ def dlg_fif_opts():
     FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
     fif_opts    = json.loads(open(FIF_OPTS).read())
     dlg_opt_editor('FiF options', fif_opts, subset='fif.')
+    reload_opts()
    #def dlg_fif_opts
 
-def dlg_press(stores, hist_order, invl_l, desc_l):
+def dlg_press(stores_main, hist_order, invl_l, desc_l):
+    stores  = copy.deepcopy(stores_main)
     pset_l  = stores.setdefault('pset', [])
     stores.setdefault('pset_nnus', 0)
     keys_l  = ['reex','case','word'
@@ -314,7 +341,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
     if ps_ind is None:  return None
     if False:pass
     elif ps_ind==ind_inop:
-        # Find in open files
+        # To find in open files
         ouvl_l[keys_l.index('fold')]    = IN_OPEN_FILES
         return ouvl_l
         
@@ -323,92 +350,21 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
         ps      = pset_l[ps_ind]
         stores['pset_nnus'] += 1
         ps['nnus'] = stores['pset_nnus']
-        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+        stores_main.update(stores)
+        open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
         for i, k in enumerate(keys_l):
             if ps.get('_'+k, '')=='x':
                 ouvl_l[i]   = ps.get(k, ouvl_l[i])
         app.msg_status(_('Options is restored from preset: ')+ps['name'])
         return ouvl_l
         
-    elif ps_ind==ind_conf and pset_l:
+    elif ps_ind==ind_conf:
         # Config
+        if not pset_l:  return app.msg_status(_('No preset to config'))
 
-#       def get_cnts(): 
-#           nonlocal pset_l,ps_ind,keys_l
-#           ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
-#           pass;              #LOG and log('ps_mns={}',(ps_mns))
-#           pass;              #LOG and log('ps_ind={}',(ps_ind))
-#           ps      = pset_l[ps_ind]                                                                        if pset_l else {}
-#           pass;              #LOG and log('ps={}',(ps))
-#           ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-#           pass;              #LOG and log('ps_its={}',(ps_its))
-#           ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
-#           return \
-#                    [dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
-#                    ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1'
-#                                                                                                       ,en=(len(pset_l)>0) ) #
-#                     # Content
-#                    ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')                        ) # &n
-#                    ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                      ,en=(len(pset_l)>0) ) # 
-#                     # Acts
-#                    ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) ) # &u
-#                    ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1) ) # &d
-#                    ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0) ) # &e
-#                    ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0) ) # &t
-#                     #
-#                    ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
-#                    ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
-#                     #
-#                    ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True        ) # &
-#                    ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
-#                    ]
-#          #def get_cnts
-
-#       def dlg_loop(btn, vals, fid, chds):
-#           pass;              #LOG and log('btn, vals={}',(btn, vals))
-#           nonlocal ps,ps_ind,ps_mns,ps_its,ps_vls
-#           if btn is None or btn=='-': return RT_BREAK_AG
-#           if btn=='!':
-#               open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-#               return RT_BREAK_AG #break#while_pss
-#           if not pset_l: #continue#while_pss
-#               return      _('Config presets'), (DLG_W,490), get_cnts(), vals, fid
-#           ps['name']  = vals['name']
-#           ps_ind      = vals['prss']
-#           ps_vls      = vals['what'][1]
-#           for i, k in enumerate(keys_l):
-#               ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
-#           if False:pass
-#           elif btn=='mvup' and ps_ind>0 \
-#           or   btn=='mvdn' and ps_ind<len(pset_l)-1:
-#               mv_ind  = ps_ind + (-1 if btn=='mvup' else 1)
-#               pset_l[mv_ind], \
-#               pset_l[ps_ind]  = pset_l[ps_ind], \
-#                                 pset_l[mv_ind]
-#               ps_ind  = mv_ind
-#
-#           elif btn=='delt':
-#               pset_l.pop(ps_ind)
-#               ps_ind  = min(ps_ind, len(pset_l)-1)
-#
-#           elif btn=='clon':
-#               ps  = pset_l[ps_ind]
-#               psd = {k:v for k,v in ps.items()}
-#               pset_l.insert(ps_ind, psd)
-#
-#           ps      = pset_l[ps_ind]                                                                        if pset_l else {}
-#           ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
-#           return dict(cap=_('Config presets'), w=DLG_W, h=490) \
-#                , get_cnts() \
-#                , dict(values=dict(prss=ps_ind
-#                             ,name=ps.get('name', '')
-#                             ,what=(-1,ps_vls)
-#                             )
-#                      ,focused='prss')
-#          #def dlg_loop
-#
         def save_close(cid, ag):
-            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))         ##!! Need local copy for stores to Cancel
+            stores_main.update(stores)
+            open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
             return None
             
         def acts(cid, ag):
@@ -423,7 +379,10 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                 ps_ind  = mv_ind
                 ps_mns  = [ps['name'] for ps in pset_l]
                 return dict(
-                    ctrls=[('prss',dict(items=ps_mns, val=ps_ind))]
+                    ctrls=[('prss',dict(items=ps_mns, val=ps_ind)   )
+                          ,('mvup',dict(en=ps_ind>0)                )
+                          ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))  )
+                          ]
                         )
             elif cid=='delt':
                 pset_l.pop(ps_ind)
@@ -434,8 +393,13 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                 ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
                 ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
                 return dict(
-                    ctrls=[('prss',dict(items=ps_mns, val=ps_ind))
-                          ,('what',dict(items=ps_its, val=(-1,ps_vls)))]
+                    ctrls=[('prss',dict(items=ps_mns, val=ps_ind)                   )
+                          ,('what',dict(items=ps_its, val=(-1,ps_vls))              )
+                          ,('mvup',dict(en=len(pset_l)>0 and ps_ind>0)              )
+                          ,('mvdn',dict(en=len(pset_l)>0 and ps_ind<(len(pset_l)-1)))
+                          ,('clon',dict(en=len(pset_l)>0)                           )
+                          ,('delt',dict(en=len(pset_l)>0)                           )
+                          ]
                         )
             elif cid=='clon':
                 ps  = pset_l[ps_ind]
@@ -443,7 +407,10 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                 pset_l.insert(ps_ind, psd)
                 ps_mns  = [ps['name'] for ps in pset_l]
                 return dict(
-                    ctrls=[('prss',dict(items=ps_mns, val=ps_ind))]
+                    ctrls=[('prss',dict(items=ps_mns, val=ps_ind)   )
+                          ,('mvup',dict(en=ps_ind>0)                )
+                          ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))  )
+                          ]
                         )
             return {}
         
@@ -456,7 +423,10 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
             ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
             ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
             return dict(
-                ctrls=[('what',dict(items=ps_its, val=(-1,ps_vls)))]
+                ctrls=[('what',dict(items=ps_its, val=(-1,ps_vls)))
+                      ,('mvup',dict(en=ps_ind>0)                  )
+                      ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))    )
+                      ]
                     )
 
         ps_ind      = 0
@@ -473,7 +443,7 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                  ,('lnam',dict(tp='lb'      ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name:')                                                        )) # &n
                  ,('name',dict(tp='ed'      ,t=5+20+345+30  ,l=5        ,w=245                      ,en=(len(pset_l)>0)  ,val=ps.get('name', '')        )) # 
                   # Acts
-                 ,('mvup',dict(tp='bt'      ,t=435          ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1)                 ,call=acts      )) # &u
+                 ,('mvup',dict(tp='bt'      ,t=435          ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) and ps_ind>0    ,call=acts      )) # &u
                  ,('mvdn',dict(tp='bt'      ,t=460          ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1)                 ,call=acts      )) # &d
                  ,('clon',dict(tp='bt'      ,t=435          ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0)                 ,call=acts      )) # &e
                  ,('delt',dict(tp='bt'      ,t=460          ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0)                 ,call=acts      )) # &t
@@ -486,156 +456,9 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                  ]
         DlgAgent(form   =dict(cap=_('Config presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
-#               ,vals   =dict(prss=ps_ind
-#                            ,name=ps.get('name', '')
-#                            ,what=(-1,ps_vls)
-#                            )
                 ,fid    ='prss'
         ).show()
-
-#       def get_cnts(): 
-#           nonlocal pset_l,ps_ind,keys_l
-#           ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
-#           pass;              #LOG and log('ps_mns={}',(ps_mns))
-#           pass;              #LOG and log('ps_ind={}',(ps_ind))
-#           ps      = pset_l[ps_ind]                                                                        if pset_l else {}
-#           pass;              #LOG and log('ps={}',(ps))
-#           ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-#           pass;              #LOG and log('ps_its={}',(ps_its))
-#           ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
-#           return \
-#                    [dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
-#                    ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1'
-#                                                                                                       ,en=(len(pset_l)>0) ) #
-#                     # Content
-#                    ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')                        ) # &n
-#                    ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                      ,en=(len(pset_l)>0) ) # 
-#                     # Acts
-#                    ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) ) # &u
-#                    ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1) ) # &d
-#                    ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0) ) # &e
-#                    ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0) ) # &t
-#                     #
-#                    ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
-#                    ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
-#                     #
-#                    ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True        ) # &
-#                    ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
-#                    ]
-#          #def get_cnts
-#
-#       def dlg_loop(btn, vals, fid, chds):
-#           pass;              #LOG and log('btn, vals={}',(btn, vals))
-#           nonlocal ps,ps_ind,ps_mns,ps_its,ps_vls
-#           if btn is None or btn=='-': return RT_BREAK_AG
-#           if btn=='!':
-#               open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-#               return RT_BREAK_AG #break#while_pss
-#           if not pset_l: #continue#while_pss
-#               return      _('Config presets'), (DLG_W,490), get_cnts(), vals, fid
-#           ps['name']  = vals['name']
-#           ps_ind      = vals['prss']
-#           ps_vls      = vals['what'][1]
-#           for i, k in enumerate(keys_l):
-#               ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
-#           if False:pass
-#           elif btn=='mvup' and ps_ind>0 \
-#           or   btn=='mvdn' and ps_ind<len(pset_l)-1:
-#               mv_ind  = ps_ind + (-1 if btn=='mvup' else 1)
-#               pset_l[mv_ind], \
-#               pset_l[ps_ind]  = pset_l[ps_ind], \
-#                                 pset_l[mv_ind]
-#               ps_ind  = mv_ind
-#
-#           elif btn=='delt':
-#               pset_l.pop(ps_ind)
-#               ps_ind  = min(ps_ind, len(pset_l)-1)
-#
-#           elif btn=='clon':
-#               ps  = pset_l[ps_ind]
-#               psd = {k:v for k,v in ps.items()}
-#               pset_l.insert(ps_ind, psd)
-#
-#           ps      = pset_l[ps_ind]                                                                        if pset_l else {}
-#           ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
-#           return dict(cap=_('Config presets'), w=DLG_W, h=490) \
-#                , get_cnts() \
-#                , dict(values=dict(prss=ps_ind
-#                             ,name=ps.get('name', '')
-#                             ,what=(-1,ps_vls)
-#                             )
-#                      ,focused='prss')
-#          #def dlg_loop
-#
-#       dlg_agent(dlg_loop
-#               , dict(cap=_('Config presets'), w=DLG_W, h=490) \
-#               , get_cnts() \
-#               , dict(values=dict(prss=ps_ind
-#                                 ,name=ps.get('name', '')
-#                                 ,what=(-1,ps_vls)
-#                                 )
-#                     ,focused='prss'))
-#
-
-#       while_pss   = True
-#       while while_pss:
-#           ps      = pset_l[ps_ind]                                                                        if pset_l else {}
-#           ps_mns  = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
-#           ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-#           ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
-#           cnts    =[dict(           tp='lb'    ,t=5           ,l=5        ,w=245  ,cap=_('&Presets:')                     ) # &p
-#                    ,dict(cid='prss',tp='lbx'   ,t=5+20,h=345  ,l=5        ,w=245  ,items=ps_mns       ,act='1'
-#                                                                                                       ,en=(len(pset_l)>0) ) #
-#                     # Content
-#                    ,dict(           tp='lb'    ,t=5+20+345+10 ,l=5        ,w=245  ,cap=_('&Name:')                        ) # &n
-#                    ,dict(cid='name',tp='ed'    ,t=5+20+345+30 ,l=5        ,w=245                      ,en=(len(pset_l)>0) ) # 
-#                     # Acts
-#                    ,dict(cid='mvup',tp='bt'    ,t=435         ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) ) # &u
-#                    ,dict(cid='mvdn',tp='bt'    ,t=460         ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1) ) # &d
-#                    ,dict(cid='clon',tp='bt'    ,t=435         ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0) ) # &e
-#                    ,dict(cid='delt',tp='bt'    ,t=460         ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0) ) # &t
-#                     #
-#                    ,dict(           tp='lb'    ,t=5           ,l=260      ,w=300  ,cap=_('&What to restore:')             ) # &w
-#                    ,dict(cid='what',tp='ch-lbx',t=5+20,h=400  ,l=260      ,w=300  ,items=ps_its       ,en=(len(pset_l)>0) )
-#                     #
-#                    ,dict(cid='!'   ,tp='bt'    ,t=435         ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True        ) # &
-#                    ,dict(cid='-'   ,tp='bt'    ,t=460         ,l=DLG_W-5-100,w=100,cap=_('Cancel')                        )
-#                    ]
-#           btn,vals,*_t   = dlg_wrapper(_('Config presets'), DLG_W,490, cnts     #NOTE: dlg-pres-cfg
-#                            ,  dict(prss=ps_ind
-#                                   ,name=ps.get('name', '')
-#                                   ,what=(-1,ps_vls)
-#                                   )
-#                            ,  focus_cid='prss')
-#           pass;                  #LOG and log('vals={}',vals)
-#           if btn is None or btn=='-': return None
-#           if btn=='!':
-#               open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-#               break#while_pss
-#           if not pset_l: continue#while_pss
-#           ps['name']  = vals['name']
-#           ps_ind      = vals['prss']
-#           ps_vls      = vals['what'][1]
-#           for i, k in enumerate(keys_l):
-#               ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
-#           if False:pass
-#           elif btn=='mvup' and ps_ind>0 \
-#           or   btn=='mvdn' and ps_ind<len(pset_l)-1:
-#               mv_ind  = ps_ind + (-1 if btn=='mvup' else 1)
-#               pset_l[mv_ind], \
-#               pset_l[ps_ind]  = pset_l[ps_ind], \
-#                                 pset_l[mv_ind]
-#               ps_ind  = mv_ind
-#
-#           elif btn=='delt':
-#               pset_l.pop(ps_ind)
-#               ps_ind  = min(ps_ind, len(pset_l)-1)
-#
-#           elif btn=='clon':
-#               ps  = pset_l[ps_ind]
-#               psd = {k:v for k,v in ps.items()}
-#               pset_l.insert(ps_ind, psd)
-#          #while_pss
+        return None
         
     elif ps_ind==ind_save:
         # Save
@@ -666,9 +489,11 @@ def dlg_press(stores, hist_order, invl_l, desc_l):
                 ps['_'+k] = '-'
         pass;                  #LOG and log('ps={}',(ps))
         pset_l += [ps]
-        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+        stores_main.update(stores)
+        open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
         app.msg_status(_('Options is saved to preset: ')+ps['name'])
         return None
+    
     return      ouvl_l
    #def dlg_press
 
@@ -1152,6 +977,7 @@ class FifD:
             self.stores['frst']     = self.frst_s
             self.stores['enco']     = self.enco_s
             open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
+            pass;               LOG and log('len(pset)={}',(len(self.stores.get('pset',[]))))
        #def store
     
     def pre_cnts(self):
@@ -1193,7 +1019,7 @@ class FifD:
         fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo')
         fid     = aid    if aid_ed                                  else \
                   fid    if fid_ed                                  else \
-                  'fold' if aid in ('brow', 'cfld')                 else \
+                  'what' if aid in ('brow', 'cfld')                 else \
                   'what'
         return {'fid':fid}
        #def do_focus
@@ -1244,6 +1070,7 @@ class FifD:
 #           totb_i      = int(totb_s)
             self.totb_i = self.totb_i if 0<self.totb_i<4+len(self.stores.get('tofx', [])) else 1   # "tab:" skiped
             totb_v      = self.totb_l[self.totb_i]
+            pass;               LOG and log('len(pset)={}',(len(self.stores.get('pset',[]))))
             ans     = dlg_press(self.stores, btn_m=='s/pres',
                        (self.reex01,self.case01,self.word01,
                         self.incl_s,self.excl_s,
@@ -1256,6 +1083,7 @@ class FifD:
                         SKIP_L[int(self.skip_s)],SORT_L[int(self.sort_s)],self.frst_s,ENCO_L[int(self.enco_s)],
                         totb_v,onof[self.join_s],SHTP_L[int(self.shtp_s)],onof[self.algn_s],onof[self.cntx_s])
                         )
+            pass;               LOG and log('len(pset)={}',(len(self.stores.get('pset',[]))))
             ag.activate()
             if ans is None:
                 return FifD.do_focus(aid,ag)   #continue#while_fif
@@ -1390,6 +1218,7 @@ class FifD:
                     ,vals =self.get_fif_vals()
 #                   ,ctrls=self.get_fif_cnts())
                     ,ctrls=self.get_fif_cnts('vis+pos'))
+               ,dict(ctrls=[('more',{'cap':_('Mor&e >>') if self.wo_adva else _('L&ess <<')})])
                ,FifD.do_focus(aid,ag)
                )
        #def do_more
@@ -2137,16 +1966,13 @@ def dlg_fif_o(what='', opts={}):
         if btn_m=='s/cust':
             hm = app.menu_proc(0, app.MENU_CREATE)
             def switch_excl():
-                pass;           LOG and log('',())
                 stores['wo_excl']   = not stores['wo_excl']
             def switch_repl():
-                pass;           LOG and log('',())
                 stores['wo_repl']   = not stores['wo_repl']
             app.menu_proc(hm, app.MENU_ADD, command=switch_excl, caption='Show/hide "Not in files"')
             app.menu_proc(hm, app.MENU_ADD, command=switch_repl, caption='Show/hide "Replace"')
 #           nx, ny = dlg_proc(id_dlg, DLG_COORD_LOCAL_TO_SCREEN, index=nx, index2=ny)
             app.menu_proc(hm, app.MENU_SHOW, command='100,100')
-            pass;               LOG and log('',())
             return fif_pars_for_agent()   #continue#while_fif
         if btn_m=='cust':
             shex_c  = f(_('Show "&{}"')                          , caps['excl'])
@@ -2592,4 +2418,6 @@ ToDo
 [+][kv-kv][12may17] Use T/F as short form of True/False
 [+][kv-kv][15may17] Help and Adjust to move to right+bottom, Close not to relocate, DlgHeight to reduce
 [ ][at-kv][19may17] Anchor --- to right
+[ ][at-kv][31may17] Live apply changes from opt-dlg
+[ ][at-kv][31may17] en=F for PresDlg Up/Dn if sel=0/max
 '''

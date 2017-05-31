@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '1.2.14 2017-04-12'
+    '2.1.02 2017-05-31'
 ToDo: (see end of file)
 '''
 
@@ -58,7 +58,6 @@ USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
 ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
 REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
 FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
-CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
 BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
 CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
@@ -98,6 +97,39 @@ def fit_mark_style_for_attr(js:dict)->dict:
 MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
 MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
 MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
+
+def api_reload_opts():
+    global                      LOG, FNDLOG, RPTLOG, NAVLOG, DBG_DATA_TO_REPORT
+    pass;                       LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+    pass;                       FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
+    pass;                       RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
+    pass;                       NAVLOG  = (-4== 4) and LOG or apx.get_opt('fif_NAVLOG', False)
+    pass;                       DBG_DATA_TO_REPORT  =         apx.get_opt('fif_DBG_data_to_report', False)
+
+    global lexers_l,FIF_LEXER,lexers_l,USE_SEL_ON_START,ESC_FULL_STOP,REPORT_FAIL,FOLD_PREV_RES,LEN_TRG_IN_TITLE
+    global BLOCKSIZE,CONTEXT_WIDTH,SKIP_FILE_SIZE,AUTO_SAVE,FOCUS_TO_RPT,SAVE_REQ_TO_RPT
+    global MARK_FIND_STYLE,MARK_TREPL_STYLE,MARK_FREPL_STYLE
+    lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
+    FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
+    lexers_l        = list(map(lambda s: s.upper(), lexers_l))
+    USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
+    ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
+    REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
+    FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
+    LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
+    BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
+    CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
+    SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
+    AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
+    FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
+    SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
+    MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
+    MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
+    MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
+    MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
+    MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
+    MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
+   #def api_reload_opts
 
 REQ_KEY = (' '*100)+'_req_info_='
 def report_extract_request(red):
@@ -1406,10 +1438,10 @@ ToDo
 [+][a1-kv][10may16] Replace in files
 [+][at-kv][10may16] Checks for preset
 [+][kv-kv][11may16] Try to save last active control
-[ ][kv-kv][13may16] Set empty Exclude if hidden
+[-][kv-kv][13may16] Set empty Exclude if hidden
 [?][kv-kv][13may16] Custom: hide Append+Firsts
-[ ][kv-kv][13may16] UnDo for ReplaceInFiles by report
-[ ][kv-kv][13may16] Auto-Click-More before focus hidden field
+[-][kv-kv][13may16] UnDo for ReplaceInFiles by report
+[-][kv-kv][13may16] Auto-Click-More before focus hidden field
 [+][kv-kv][13may16] Ask "Want repl in OPEN TABS"
 [+][kv-kv][13may16] Use os.access(path, os.W_OK)
 [+][kv-kv][14may16] Calc place for new fragment: old_head|new|old_tail
