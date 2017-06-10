@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.01 2017-05-31'
+    '2.1.10 2017-06-10'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -465,7 +465,6 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
             bs_cnt  = cnts[cid2i[cnt['tid']]]
             bs_tp   = bs_cnt['tp']
             t       = bs_cnt['t'] + fit_top_by_env(tp, REDUCTIONS.get(bs_tp, bs_tp))
-#           t       = bs_cnt['t'] + top_plus_for_os(tp, REDUCTIONS.get(bs_tp, bs_tp))
         r       = cnt.get('r', l+cnt.get('w', 0)) 
         b       = cnt.get('b', t+cnt.get('h', 0)) 
         lst    += ['pos={l},{t},{r},{b}'.format(l=l,t=t,r=r,b=b)]
@@ -594,415 +593,6 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         ,   chds
    #def dlg_wrapper
 
-_agent_callbacks = {}    # id_dlg:agent_callback
-def _dlg_agent_callback(id_dlg, id_ctl_act, id_event='', info=''):
-    pass;                      #log('id_dlg, id_ctl_act, id_event, info={}',(id_dlg, id_ctl_act, id_event, info))
-    if id_event.startswith('on_close'):
-#       agent_form_acts('save', id_dlg=id_dlg)
-        return 
-    if id_event!='on_change':
-        return 
-    global _agent_callbacks
-    agent_callback  = _agent_callbacks.get(id_dlg)
-    if agent_callback:
-        agent_callback(id_dlg, id_ctl_act, id_event, info)
-
-RT_BREAK_AG = (None,None,None)
-def dlg_agent(client_data_updater, fm_prs0, ctrls0, settings0={}):
-    """ Wrapper for dlg_proc to show MODAL dlg. """
-
-    def agent_ctrls_updater(id_dlg, cnts, in_vals={}, in_fid=''):
-        """ Create/update controls.
-            - All controls are created once.
-            - Order of controls in cnts must be same on create and on update
-            Params
-                id_dlg  -           dlg_proc id of form
-                cnts    - [{}]      Desc for all controls
-                in_vals - {cid:v}   Values for ed-controls.
-                                    All cid ref to visibled control
-                in_fid  - str       cid to next focuced control
-        """
-        pass;                  #log('id_dlg={}',(id_dlg))
-
-        if 'checks'=='checks':
-            cids    = {cnt['cid'] for cnt in cnts if cnt.get('vis', True) and 
-                                                     'cid' in cnt}
-            no_tids = {cnt['tid'] for cnt in cnts if cnt.get('vis', True) and 
-                                                     'tid' in cnt         and 
-                                                     cnt['tid'] not in cids}
-            if no_tids:
-                raise Exception(f('No cid(s) for tid(s): {}', no_tids))
-            no_vids = {cid for cid in in_vals if cid not in cids}
-            if no_vids:
-                raise Exception(f('No cid(s) for vals: {}', no_vids))
-
-        # Add/Upd controls
-        cid2i       = odict([(cnt['cid'],i) for i,cnt in enumerate(cnts) if cnt.get('vis', True) and 'cid' in cnt])
-        pass;                  #log('cid2i={}',(cid2i))
-        create      = 0==app.dlg_proc(id_dlg, app.DLG_CTL_COUNT)
-        for idC,cnt in enumerate(cnts):
-            vis     = cnt.get('vis', True)
-            tp      = cnt['tp']
-            tp      = REDUCTIONS.get(tp, tp)
-            
-            # Start preprocessor
-            if False:pass
-            elif tp=='--' and app.app_api_version()<'1.0.161':
-                tp              = 'label'
-                cnt['cap']      = '—'*300
-                cnt['font_color']=str(rgb_to_int(185,185,185))
-                cnt['l']        = cnt.get('l', 0)
-                cnt['r']        = cnt.get('r', l+cnt.get('w', 0))       # def: to   DlgRight
-            elif tp=='--' and app.app_api_version()>='1.0.161':
-                tp              = 'colorpanel'
-                cnt['l']        = cnt.get('l', 0)
-                cnt['r']        = cnt.get('r', l+cnt.get('w', 5000))    # def: to   DlgRight
-                cnt['h']        = 1
-                cnt['props']    = f('0,{},0,0',rgb_to_int(185,185,185)) # brdW_fillC_fontC_brdC
-            
-            if 'sto' in cnt:
-                cnt['tab_stop'] = cnt.pop('sto')
-            
-            if 'props' in cnt:
-                pass
-            elif tp=='label' and cnt['cap'][0]=='>':
-                #   cap='>smth' --> cap='smth', props='1' (r-align)
-                cnt['cap']  = cnt['cap'][1:]
-                cnt['props']= '1'
-            elif tp=='label' and    cnt.get('ralign'):
-                cnt['props']=       cnt.get('ralign')
-            elif tp=='button' and cnt.get('def_bt') in ('1', True):
-                cnt['props']= '1'
-            elif tp=='spinedit' and cnt.get('min_max_inc'):
-                cnt['props']=       cnt.get('min_max_inc')
-            elif tp=='linklabel' and    cnt.get('url'):
-                cnt['props']=           cnt.get('url')
-            elif tp=='listview' and cnt.get('grid'):
-                cnt['props']=       cnt.get('grid')
-            elif tp=='tabs' and     cnt.get('at_botttom'):
-                cnt['props']=       cnt.get('at_botttom')
-            elif tp=='colorpanel' and   cnt.get('brdW_fillC_fontC_brdC'):
-                cnt['props']=           cnt.get('brdW_fillC_fontC_brdC')
-            elif tp in ('edit', 'memo') and cnt.get('ro_mono_brd'):
-                cnt['props']=               cnt.get('ro_mono_brd')
-            # Finish preprocessor
-
-            # Add/Reuse
-            prC_pre     = {}
-            if create:
-                cr_idC  = app.dlg_proc(id_dlg, app.DLG_CTL_ADD, tp)
-                assert cr_idC==idC
-            else:
-                prC_pre = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=idC)
-
-            # Simple props are copying directly 
-            prC_new = {k:v for (k,v) in cnt.items() if k in ['cap','hint'
-                                                            ,'props'
-                                                            ,'color'
-                                                            ,'font_name', 'font_size', 'font_color', 'font'
-                                                            ,'act'
-                                                            ,'en','vis'
-                                                           #,'tag'
-                                                            ,'tab_stop' ,'tab_order' 
-                                                           #,'sp_l','sp_r','sp_t','sp_b','sp_a'
-                                                           #,'a_l','a_r','a_t','a_b'
-                                                            ]}
-            if 'cid' in cnt:
-                prC_new['name'] = cnt['cid'] # cid -> name
-
-            # Position:
-            #   t[op] or tid, l[eft] required
-            #   w[idth]  >>> r[ight ]=l+w
-            #   h[eight] >>> b[ottom]=t+h
-            #   b dont need for buttons, edit, labels
-            l       = cnt['l']
-            t       = cnt.get('t', 0)
-            if 'tid' in cnt and cnt['tid'] in cid2i:
-#           if 'tid' in cnt and vis:
-                # cid for horz-align text
-                bs_cnt  = cnts[cid2i[cnt['tid']]]
-                bs_tp   = bs_cnt['tp']
-                t       = bs_cnt['t'] + fit_top_by_env(tp, REDUCTIONS.get(bs_tp, bs_tp))
-            r       = cnt.get('r', l+cnt.get('w', 0)) 
-            b       = cnt.get('b', t+cnt.get('h', 0)) 
-            prC_new.update(dict(x=l, y=t, w=r-l)) 
-            prC_new.update(dict(h=cnt.get('h')))    if 0!=cnt.get('h', 0) else 0 
-            pass;              #log('memo prC_new={}',(prC_new)) if tp=='memo' else 0
-
-            if 'items' in cnt:
-                items   = cnt['items']
-                if isinstance(items, str):
-                    pass
-                elif tp in ['listview', 'checklistview']:
-                    # For listview, checklistview: "\t"-separated items.
-                    #   first item is column headers: title1+"="+size1 + "\r" + title2+"="+size2 + "\r" +...
-                    #   other items are data: cell1+"\r"+cell2+"\r"+...
-                    # ([(hd,wd)], [[cells],[cells],])
-                    items   = '\t'.join(['\r'.join(['='.join((hd,sz)) for hd,sz in items[0]])]
-                                       +['\r'.join(row) for row in items[1]]
-                                       )
-                else:
-                    # For combo, combo_ro, listbox, checkgroup, radiogroup, checklistbox: "\t"-separated lines
-                    items   = '\t'.join(items)
-                prC_new.update(dict(items=items)) 
-        
-            # Prepare val
-            if cnt.get('cid') in in_vals:
-                in_val = in_vals[cnt['cid']]
-                if False:pass
-                elif tp in ['check', 'radio', 'checkbutton'] and isinstance(in_val, bool):
-                    # For check, radio, checkbutton: value "0"/"1" 
-                    in_val  = '1' if in_val else '0'
-                elif tp=='memo':
-                    # For memo: "\t"-separated lines (in lines "\t" must be replaced to chr(2)) 
-                    if isinstance(in_val, list):
-                        in_val = '\t'.join([v.replace('\t', chr(2)) for v in in_val])
-                    else:
-                        in_val = in_val.replace('\t', chr(2)).replace('\r\n','\n').replace('\r','\n').replace('\n','\t')
-                elif tp=='checkgroup' and isinstance(in_val, list):
-                    # For checkgroup: ","-separated checks (values "0"/"1") 
-                    in_val = ','.join(in_val)
-                elif tp in ['checklistbox', 'checklistview'] and isinstance(in_val, tuple):
-                    # For checklistbox, checklistview: index+";"+checks 
-                    in_val = ';'.join( (str(in_val[0]), ','.join( in_val[1]) ) )
-                prC_new.update(dict(val=str(in_val)))
-            
-
-            if tp in ('button') or cnt.get('act') in ('1', True):
-                if 'cbk' in cnt and callable(cnt['cbk']):
-                    def agent_cbk(idd, idc, evn):
-                        fm_aid, fm_vals,\
-                        fm_fid, fm_chds = agent_scaner(id_dlg, idC, settings_t.get('values'))
-                        cnt['cbk'](fm_vals)
-                       #def agent_cbk
-                    prC_new['callback'] = cnt['cbk'] 
-                else:
-                    prC_new['callback'] = f('module={};func=_dlg_agent_callback;', __name__)
-
-            pass;              #log('idC,cid,prC_new={}',(idC, cnt.get('cid'), prC_new))
-            if create:
-                app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop=prC_new)
-#               app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop={'tag':json.dumps(prC_new)})
-            elif     vis and not prC_pre.get('vis'):
-                # Only to show
-                app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop=prC_new)
-#               app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop={'tag':json.dumps(prC_new)})
-            elif not vis and     prC_pre.get('vis'):
-                # Only to hide
-                app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop={'vis':False})
-#           elif prC_new != json.loads(prC_pre.get('tag', '{}')):
-            else:
-                # Changed
-                app.dlg_proc(id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop=prC_new)
-
-            app.dlg_proc(    id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop={'tag':json.dumps(prC_new)}) # Some attrs are not return by DLG_CTL_PROP_GET
-           #for cnt
-        
-        if in_fid in cid2i:
-            pass;              #log('in_fid={}',(in_fid))
-            app.dlg_proc(    id_dlg, app.DLG_CTL_FOCUS,    index=cid2i[in_fid])
-        return
-       #def agent_ctrls_updater
-    
-    def agent_ctrls_anc(id_dlg, cnts, fm_prs):
-        """ Translate attr 'a' to 'a_*','sp_*'
-            Values for 'a' are str-mask with signs
-                'l' 'L'    fixed distanse ctrl-left     to form-left  or form-right
-                't' 'T'    fixed distanse ctrl-top      to form-top   or form-bottom
-                'r' 'R'    fixed distanse ctrl-right    to form-left  or form-right
-                'b' 'B'    fixed distanse ctrl-bottom   to form-top   or form-bottom
-        """
-        fm_w    = fm_prs['w']
-        fm_h    = fm_prs['h']
-        for idC,cnt in enumerate(cnts):
-            anc     = cnt.get('a', '')
-            if not anc: continue
-            prOld   = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=idC)
-            prNew   = {}
-            if '-' in anc:
-                # Center by horz
-                prNew.update(dict( a_l=(None, '-')
-                                  ,a_r=(None, '-')))
-            if 'LR' in anc:
-                # Both left/right to form right
-                prNew.update(dict( a_l=None
-                                  ,a_r=(None, ']'), sp_r=fm_w-prOld['x']-prOld['w']))
-            if 'lR' in anc:
-                # Left to form left. Right to form right.
-                prNew.update(dict( a_l=(None, '['), sp_l=     prOld['x']
-                                  ,a_r=(None, ']'), sp_r=fm_w-prOld['x']-prOld['w']))
-            if '|' in anc:
-                # Center by vert
-                prNew.update(dict( a_t=(None, '-')
-                                  ,a_b=(None, '-')))
-            if 'TB' in anc:
-                # Both top/bottom to form bottom
-                prNew.update(dict( a_t=None
-                                  ,a_b=(None, ']'), sp_b=fm_h-prOld['y']-prOld['h']))
-            if 'tB' in anc:
-                # Top to form top. Bottom to form bottom.
-                prNew.update(dict( a_t=(None, '['), sp_t=     prOld['y']
-                                  ,a_b=(None, ']'), sp_b=fm_h-prOld['y']-prOld['h']))
-            if prNew:
-                app.dlg_proc(      id_dlg, app.DLG_CTL_PROP_SET, index=idC, prop=prNew)
-       #def agent_ctrls_anc
-    
-    def agent_form_acts(what, fm_prs=None, id_dlg=None):
-        """ Save/Restore pos of form """
-        pass;                  #log('what, fm_prs, id_dlg={}',(what, fm_prs, id_dlg))
-        CFG_JSON= CdSw.get_setting_dir()+os.sep+'forms data.json'
-        stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                  odict()
-        def get_form_key(prs):
-            fm_cap  = prs['cap']
-            return fm_cap if ' (' not in fm_cap else fm_cap[:fm_cap.rindex(' (')]
-        if False:pass
-        if what=='move' and fm_prs:
-            fm_key  = get_form_key(fm_prs)
-            if fm_key not in stores:    return fm_prs
-            return upd_dict(fm_prs, stores[fm_key])
-        if what=='save' and id_dlg:
-            dlg_pr  = app.dlg_proc(id_dlg, app.DLG_PROP_GET)
-            fm_key  = get_form_key(dlg_pr)
-            pass;              #log('{}={}', fm_key,{k:v for k,v in dlg_pr.items() if k in ('x','y','w','h')})
-            stores[fm_key]  = {k:v for k,v in dlg_pr.items() if k in ('x','y','w','h')}
-            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-       #def agent_form_acts
-       
-    settings_t  = settings0
-    idDlg       = app.dlg_proc(0, app.DLG_CREATE)
-    pass;                      #log('idDlg={}',(idDlg))
-    agent_ctrls_updater(idDlg, ctrls0, settings0.get('values'), settings0.get('focused'))
-    if fm_prs0.get('resize', False):
-        agent_ctrls_anc(idDlg, ctrls0, fm_prs0)
-        fm_prs0['w_min']    = fm_prs0.get('w_min', fm_prs0['w'])
-        fm_prs0['h_min']    = fm_prs0.get('h_min', fm_prs0['h'])
-    fm_prs0     = agent_form_acts('move', fm_prs=fm_prs0)
-#   app.dlg_proc(       idDlg, app.DLG_PROP_SET, prop=upd_dict({k:v for k,v in fm_prs0.items() if     ('min' in k or 'max' in k)}, dict(
-    app.dlg_proc(       idDlg, app.DLG_PROP_SET, prop=upd_dict(fm_prs0, dict(
-                                                               callback = f('module={};func=_dlg_agent_callback;', __name__)
-                                                              ,events   = 'on_change'
-                                                              ,topmost  = True
-                                                              )))
-#   app.dlg_proc(       idDlg, app.DLG_PROP_SET, prop=         {k:v for k,v in fm_prs0.items() if not ('min' in k or 'max' in k)})
-    pass;                       gen_repro_code(idDlg, tempfile.gettempdir()+os.sep+'repro_dlg_proc.py')     if F else None
-    
-    def agent_scaner(id_dlg, id_ctl_act, in_vals_p=None):
-        """ Collect values of controls
-        """
-        pass;                  #log('id_dlg, id_ctl_act={}',(id_dlg, id_ctl_act))
-        pass;                  #log('cnts_p={}',(cnts_p))
-        in_vals_p   = in_vals_p if in_vals_p else {}
-        pass;                  #log('in_vals_p={}',(in_vals_p))
-        
-        dlg_pr      = app.dlg_proc(id_dlg, app.DLG_PROP_GET)
-        pass;                  #log('dlg_pr={}',(dlg_pr))
-        
-        focus_idC   = dlg_pr.get('focused', -1)
-        focus_prC   = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=focus_idC) if -1!=focus_idC else {}
-        focus_cid   = focus_prC.get('name', '')
-        pass;                  #log('focus_cid={})',(focus_cid))
-        act_prC     = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=id_ctl_act)
-        act_cid     = act_prC['name']
-
-        # Parse output values
-        cid2i       = {}
-        cid2tp      = {}
-        an_vals     = {}
-        for idC in range(app.dlg_proc(id_dlg, app.DLG_CTL_COUNT)):
-            prC     = app.dlg_proc(id_dlg, app.DLG_CTL_PROP_GET, index=idC)
-            cid     = prC['name']
-            if not cid or cid not in in_vals_p:
-                continue#for idC
-            cid2i[cid]  = idC
-            cid2tp[cid] = prC['type']
-            an_vals[cid]= prC['val']
-        pass;                  #log('cid2i={}',(cid2i))
-        pass;                  #log('an_vals={}',(an_vals))
-    
-        for cid in an_vals:
-            tp      = cid2tp[cid]
-            in_val  = in_vals_p[cid]
-            an_val  = an_vals[cid]
-            pass;                  #log('tp,in_val,an_val={})',(tp,in_val,an_val))
-            if False:pass
-            elif tp=='memo':
-                # For memo: "\t"-separated lines (in lines "\t" must be replaced to chr(2)) 
-                if isinstance(in_val, list):
-                    an_val = [v.replace(chr(2), '\t') for v in an_val.split('\t')]
-                   #in_val = '\t'.join([v.replace('\t', chr(2)) for v in in_val])
-                else:
-                    an_val = an_val.replace('\t','\n').replace(chr(2), '\t')
-                   #in_val = in_val.replace('\t', chr(2)).replace('\r\n','\n').replace('\r','\n').replace('\n','\t')
-            elif tp=='checkgroup' and isinstance(in_val, list):
-                # For checkgroup: ","-separated checks (values "0"/"1") 
-                an_val = an_val.split(',')
-               #in_val = ','.join(in_val)
-            elif tp in ['checklistbox', 'checklistview'] and isinstance(in_val, tuple):
-                an_val = an_val.split(';')
-                an_val = (an_val[0], an_val[1].split(','))
-               #in_val = ';'.join(in_val[0], ','.join(in_val[1]))
-            elif isinstance(in_val, bool): 
-                an_val = an_val=='1'
-            elif tp=='listview':
-                an_val = -1 if an_val=='' else int(an_val)
-            else: 
-                an_val = type(in_val)(an_val)
-                pass;              #log('type(in_val),an_val={})',(type(in_val),an_val))
-            an_vals[cid]    = an_val
-           #for cid
-        chds    = [cid for cid in in_vals_p if in_vals_p[cid]!=an_vals[cid]]
-
-        pass;                  #log('act_cid,focus_cid,chds={})',(act_cid,focus_cid,chds))
-        pass;                  #log('an_vals={})',(an_vals))
-        pass;                  #return None, None, None, None   # btn_cid, {cid:v}, focus_cid, [cid]
-        return  act_cid \
-            ,   an_vals \
-            ,   focus_cid \
-            ,   chds
-       #def agent_scaner
-
-    def agent_loop(id_dlg, id_ctl_act, id_event='', info=''):
-        nonlocal settings_t
-        pass;                  #log('id_dlg, id_ctl_act, id_event={}',(id_dlg, id_ctl_act, id_event))
-        pass;                  #log('cnts_t={}',(cnts_t))
-        pass;                  #log('settings_t={}',(settings_t))
-        
-        fm_aid, fm_vals,\
-        fm_fid, fm_chds = agent_scaner(id_dlg, id_ctl_act, settings_t.get('values'))
-        if not fm_aid:
-            pass;               log('Error',)
-            app.dlg_proc(   id_dlg, app.DLG_HIDE)
-            return
-
-        fm_prs,     \
-        ctrls,      \
-        settings    = client_data_updater(fm_aid, fm_vals, fm_fid, fm_chds)
-        settings_t  = settings
-        if fm_prs is None:
-            pass;              #log('break agent_loop',)
-            app.dlg_proc(   id_dlg, app.DLG_HIDE)
-            return
-        pass;                  #log('next agent_loop',)
-        agent_ctrls_updater(id_dlg, ctrls, settings.get('values'),  settings.get('focused'))
-        pass;                  #log('fm_prs={}',(fm_prs))
-        app.dlg_proc(       id_dlg, app.DLG_PROP_SET, prop=fm_prs)  if fm_prs else None
-#       app.dlg_proc(       id_dlg, app.DLG_PROP_SET, prop={k:v for k,v in fm_prs.items() if     ('min' in k or 'max' in k)})  if fm_prs else None
-#       app.dlg_proc(       id_dlg, app.DLG_PROP_SET, prop={k:v for k,v in fm_prs.items() if not ('min' in k or 'max' in k)})  if fm_prs else None
-       #def agent_loop
-
-    global _agent_callbacks
-    ed_caller   = ed
-    _agent_callbacks[       idDlg] = agent_loop
-    app.dlg_proc(           idDlg, app.DLG_SHOW_MODAL)
-    # Finish
-    _agent_callbacks.pop(   idDlg, None)
-    agent_form_acts('save', id_dlg=idDlg)
-    app.dlg_proc(           idDlg, app.DLG_FREE)
-    ed_caller.focus()
-   #def dlg_agent
-
 LMBD_HIDE   = lambda cid,ag:None
 class BaseDlgAgent:
     """ 
@@ -1042,8 +632,6 @@ class BaseDlgAgent:
     Useful methods of agent
     - agent.cattr(name, '??', live=T)               To get a control actual/configured attribute
     - agent.cattrs(name, ['??'], live=T)            To get dict of a control listed actual/configured attributes
-    - agent.cval(name, live=T)                      To get actual/configured 'val' attribute (short of agent.cattr(name, 'val'))
-    - agent.cvals([name], live=T)                   To get dict of actual/configured 'val' the listed attributes
     - agent.fattr('??', live=T)                     To get actual/configured form attribute
     - agent.fattrs(live=T, ['??']=None)             To get actual/configured all/listed form attributes
     
@@ -1067,10 +655,12 @@ class BaseDlgAgent:
     """
  
     def activate(self):
+        """ Set focus to the form """
         app.dlg_proc(self.id_dlg, app.DLG_FOCUS)
        #def activate
     
     def show(self):
+        """ Show the form """
         ed_caller   = ed
         
         app.dlg_proc(self.id_dlg, app.DLG_SHOW_MODAL)
@@ -1081,6 +671,7 @@ class BaseDlgAgent:
        #def show
         
     def fattr(self, attr, live=True, defv=None):
+        """ Return one form property """
         pr  = app.dlg_proc(self.id_dlg
                         , app.DLG_PROP_GET)     if live else    self.form
         pass;                  #log('pr={}',(pr))
@@ -1091,12 +682,14 @@ class BaseDlgAgent:
        #def fattr
 
     def fattrs(self, live=True, attrs=None):
+        """ Return form properties """
         pr  = app.dlg_proc(self.id_dlg
                         , app.DLG_PROP_GET)     if live else    self.form
         return pr   if not attrs else   {attr:pr.get(attr) for attr in attrs}
        #def fattrs
 
     def cattr(self, name, attr, live=True, defv=None):
+        """ Return one the control property """
         live= False if attr in ('type',) else live          # Unchangable
         pr  = app.dlg_proc(self.id_dlg
                         , app.DLG_CTL_PROP_GET
@@ -1107,12 +700,13 @@ class BaseDlgAgent:
        #def cattr
 
     def cattrs(self, name, attrs=None, live=True):
+        """ Return the control properties """
         pr  = app.dlg_proc(self.id_dlg
                         , app.DLG_CTL_PROP_GET
                         , name=name)            if live else    self.ctrls[name]
         attrs   = attrs if attrs else list(pr.keys())
         pass;                  #log('pr={}',(pr))
-        rsp     = {attr:pr.get(attr) for attr in attrs if attr not in ('val','callback')}
+        rsp     = {attr:pr.get(attr) for attr in attrs if attr not in ('val','on_change','callback')}
         if 'val' in attrs:
             rsp['val'] = self._take_val(name, pr.get('val')) if live else pr.get('val')
         return rsp
@@ -1169,6 +763,7 @@ class BaseDlgAgent:
             assert 'type' in cfg_ctrl
             # Create control
             cfg_ctrl.pop('callback', None)
+            cfg_ctrl.pop('on_change', None)
             ind_c   = app.dlg_proc(self.id_dlg
                         , app.DLG_CTL_ADD
                         , cfg_ctrl['type'])
@@ -1274,12 +869,10 @@ class BaseDlgAgent:
             if tp!='button':
                 c_pr['act'] = True
             user_callbk = cfg_ctrl['call']
-#           user_callof = cfg_ctrl.get('callof', self.callof)
             
-            def bda_c_callbk(idd, idc, evn):
+            def bda_c_callbk(idd, idc, data):
                 pass;              #log('idc,name={}',(idc,name))
                 upds = user_callbk(name, self)
-#               upds = user_callof.user_callbk(name, self) if user_callof else user_callbk(name, self)
                 if upds is None:                                        # To hide/close
                     app.dlg_proc(self.id_dlg, app.DLG_HIDE)
                     return
@@ -1289,7 +882,7 @@ class BaseDlgAgent:
                             ,form   =upds.get('form',   {})
                             ,focused=upds.get('focused',None))
                #def agent_cbk
-            c_pr['callback']= bda_c_callbk
+            c_pr['on_change']= bda_c_callbk
         
         return c_pr
        #def _prepare_c_pr
@@ -1520,8 +1113,10 @@ class DlgAgent(BaseDlgAgent):
        #def __init__
         
     def cval(self, cid, live=True, defv=None):
+        """ Return the control val property """
         return self.cattr(cid, 'val', live=live, defv=defv)
     def cvals(self, cids, live=True):
+        """ Return the controls val property """
         return {cid:self.cattr(cid, 'val', live=live) for cid in cids}
     
     def _setup(self, ctrls, vals=None, form=None, fid=None):
@@ -1553,6 +1148,7 @@ class DlgAgent(BaseDlgAgent):
         # Create controls
         for cid,cfg_ctrl in ctrls:
             cfg_ctrl.pop('callback', None)
+            cfg_ctrl.pop('on_change', None)
 #           cid     = cfg_ctrl.get('cid', cfg_ctrl.get('name'))
 #           cfg_ctrl['cid']     = cid
 #           cfg_ctrl['name']    = cid
@@ -1607,12 +1203,10 @@ class DlgAgent(BaseDlgAgent):
             if tp!='button':
                 c_pr['act'] = True
             user_callbk = cfg_ctrl['call']
-#           user_callof = cfg_ctrl.get('callof', self.callof)
             
-            def da_c_callbk(idd, idc, evn):
+            def da_c_callbk(idd, idc, data):
                 pass;          #log('idc,cid={}',(idc,cid))
                 upds    = user_callbk(cid, self)
-#               upds    = user_callof.user_callbk(cid, self) if user_callof else user_callbk(cid, self)
                 if upds is None:                                        # To hide/close
                     app.dlg_proc(self.id_dlg, app.DLG_HIDE)
                     return
@@ -1639,6 +1233,7 @@ class DlgAgent(BaseDlgAgent):
                 for cid_, c in ctrls_u.items():
                     pass;      #log('cid_, c={}',(cid_, c))
                     c.pop('callback', None)
+                    c.pop('on_change', None)
                     c.pop('call', None)
                     c['type']   = self.ctrls[cid_]['type']
                 super(DlgAgent,self)._update(ctrls  =ctrls_u
@@ -1648,7 +1243,7 @@ class DlgAgent(BaseDlgAgent):
                     self.form['fid']    = fid
                #def agent_cbk
             
-            c_pr['callback']= da_c_callbk
+            c_pr['on_change']= da_c_callbk
            #if callable
         
         return c_pr

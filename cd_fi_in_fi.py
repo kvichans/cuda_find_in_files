@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.02 2017-05-31'
+    '2.1.10 2017-06-10'
 ToDo: (see end of file)
 '''
 
@@ -13,6 +13,7 @@ from    cudatext        import ed
 import  cudax_lib           as apx
 MIN_API_VER = '1.0.178'
 MIN_API_VER = '1.0.180' # panel group p
+MIN_API_VER = '1.0.183' # on_change
 
 from    .cd_plug_lib        import *
 from    .cd_fif_api         import *
@@ -866,7 +867,6 @@ def get_live_fiftabs(_fxs)->list:
    #def get_live_fiftabs
     
 def dlg_fif(what='', opts={}):
-#   return dlg_fif_o(what, opts)
     return FifD(what, opts).show()
 
 class FifD:
@@ -946,34 +946,32 @@ class FifD:
         self.fold_s  = opts.get('fold', self.stores.get('fold',  [''])[0])
         self.dept_n  = opts.get('dept', self.stores.get('dept',  0)-1)+1
         self.join_s  = opts.get('join', self.stores.get('join', '0'))
-        self.totb_i  = opts.get('totb', self.stores.get('totb',  0 ));    self.totb_i =  1  if self.totb_i== 0  else self.totb_i
+        self.totb_i  = opts.get('totb', self.stores.get('totb',  0 ));  self.totb_i =  1  if self.totb_i== 0  else self.totb_i
         self.shtp_s  = opts.get('shtp', self.stores.get('shtp', '0'))
         self.cntx_s  = opts.get('cntx', self.stores.get('cntx', '0'))
         self.algn_s  = opts.get('algn', self.stores.get('algn', '0'))
         self.skip_s  = opts.get('skip', self.stores.get('skip', '0'))
         self.sort_s  = opts.get('sort', self.stores.get('sort', '0'))
-        self.frst_s  = opts.get('frst', self.stores.get('frst', '0'))
+        self.frst_s  = opts.get('frst', self.stores.get('frst', '0'));  self.frst_s  = '0' if not self.frst_s else self.frst_s
         self.enco_s  = opts.get('enco', self.stores.get('enco', '0'))
-
-        self.caps    = None
 
         self.wo_excl= self.stores.get('wo_excl', True)
         self.wo_repl= self.stores.get('wo_repl', True)
         self.wo_adva= self.stores.get('wo_adva', True)
-        self.what_l  = None
-        self.incl_l  = None
-        self.excl_l  = None
-        self.fold_l  = None
-        self.repl_l  = None
-        self.totb_l  = None
-#       self.wo_excl = None
-#       self.wo_repl = None
-#       self.wo_adva = None
-        self.gap1    = None
-        self.gap2    = None
-        self.gap3    = None
-        self.dlg_w   = None
-        self.dlg_h   = None
+
+        self.caps    = None     # Will be filled in get_fif_cnts
+
+        self.what_l  = None     # Will be filled in pre_cnts
+        self.incl_l  = None     # Will be filled in pre_cnts
+        self.excl_l  = None     # Will be filled in pre_cnts
+        self.fold_l  = None     # Will be filled in pre_cnts
+        self.repl_l  = None     # Will be filled in pre_cnts
+        self.totb_l  = None     # Will be filled in pre_cnts
+        self.gap1    = None     # Will be filled in pre_cnts
+        self.gap2    = None     # Will be filled in pre_cnts
+        self.gap3    = None     # Will be filled in pre_cnts
+        self.dlg_w   = None     # Will be filled in pre_cnts
+        self.dlg_h   = None     # Will be filled in pre_cnts
        #def __init__
     
     def copy_vals(self, ag):
@@ -992,7 +990,7 @@ class FifD:
             self.repl_s = ag.cval('repl')
         if not self.wo_adva:     
             self.join_s = ag.cval('join')
-            self.totb_s = ag.cval('totb')
+            self.totb_i = ag.cval('totb')
             self.shtp_s = ag.cval('shtp')
             self.cntx_s = ag.cval('cntx')
             self.algn_s = ag.cval('algn')
@@ -1060,8 +1058,8 @@ class FifD:
                                 ).rstrip(', ') + ']'
                , VERSION_V)
 
-    @staticmethod
-    def do_focus(aid,ag):
+    def do_focus(self,aid,ag, store=True):
+        self.store() if store else None
         aid_ed  = ag.cattr(aid, 'type') in ('edit', 'combo')
         fid     = ag.fattr('focused')
         fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo')
@@ -1073,14 +1071,14 @@ class FifD:
        #def do_focus
     
     def do_pres(self, aid, ag):
-        if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return FifD.do_focus(aid,ag)
+        if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus(aid,ag)
         btn_p,btn_m = FifD.scam_pair(aid)
         
         if btn_p in ('prs1', 'prs2', 'prs3') \
         or btn_m=='c/pres': # Ctrl+Preset - Apply last used preset
             pset_l  = self.stores.setdefault('pset', [])
             if not pset_l:
-                return FifD.do_focus(aid,ag)   #continue#while_fif
+                return self.do_focus(aid,ag)   #continue#while_fif
             ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0] \
                     if btn_m=='c/pres'                      else \
                   pset_l[0] \
@@ -1091,7 +1089,7 @@ class FifD:
                     if btn_p=='prs3' and len(pset_l)>2 else \
                   None
             if not ps:
-                return FifD.do_focus(aid,ag)   #continue#while_fif
+                return self.do_focus(aid,ag)   #continue#while_fif
             FifD.upgrade(ps)
             self.reex01  = ps['reex'] if ps.get('_reex', '')=='x' else self.reex01
             self.case01  = ps['case'] if ps.get('_case', '')=='x' else self.case01
@@ -1134,7 +1132,7 @@ class FifD:
                         )
             ag.activate()
             if ans is None:
-                return FifD.do_focus(aid,ag)   #continue#while_fif
+                return self.do_focus(aid,ag)   #continue#while_fif
             (           self.reex01,self.case01,self.word01,
                         self.incl_s,self.excl_s,
                         self.fold_s,self.dept_n,
@@ -1144,11 +1142,11 @@ class FifD:
                           totb_v                    if totb_v in ('0', '1')    else \
                           1
         
-        self.store()
+#       self.store()
         return (dict(vals=self.get_fif_vals()
                     ,form={'cap':self.get_fif_cap()}
                     )
-               ,FifD.do_focus(aid,ag)
+               ,self.do_focus(aid,ag)
                )
        #def do_pres
 
@@ -1161,7 +1159,7 @@ class FifD:
         if False:pass
         elif btn_m=='brow':     # BroDir
             path        = CdSw.dlg_dir(os.path.expanduser(self.fold_s))
-            if not path: return FifD.do_focus(aid,ag)   #continue#while_fif
+            if not path: return self.do_focus(aid,ag)   #continue#while_fif
             self.fold_s = path
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
@@ -1169,7 +1167,7 @@ class FifD:
 #           self.focused= 'fold'
         elif btn_m=='s/brow':   # [Shift+]BroDir = BroFile
             fn          = app.dlg_file(True, '', os.path.expanduser(self.fold_s), '')
-            if not fn or not os.path.isfile(fn):    return FifD.do_focus(aid,ag)   #continue#while_fif
+            if not fn or not os.path.isfile(fn):    return self.do_focus(aid,ag)   #continue#while_fif
             self.incl_s = os.path.basename(fn)
             self.fold_s = os.path.dirname(fn)
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
@@ -1181,7 +1179,7 @@ class FifD:
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
                           self.fold_s
         elif btn_m=='s/cfld':   # [Shift+]CurDir = CurFile
-            if not os.path.isfile(     ed.get_filename()):   return FifD.do_focus(aid,ag)   #continue#while_fif
+            if not os.path.isfile(     ed.get_filename()):   return self.do_focus(aid,ag)   #continue#while_fif
             self.incl_s = os.path.basename(ed.get_filename())
             self.fold_s = os.path.dirname( ed.get_filename())
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
@@ -1197,9 +1195,9 @@ class FifD:
             self.fold_s = IN_OPEN_FILES
             self.excl_s = ''
 
-        self.store()
+#       self.store()
         return (dict(vals=self.get_fif_vals())
-               ,FifD.do_focus(aid,ag)
+               ,self.do_focus(aid,ag)
                )
        #def do_fold
        
@@ -1210,9 +1208,9 @@ class FifD:
         self.dept_n = 0 if aid=='depa' else \
                       1 if aid=='depo' else \
                       self.dept_n
-        self.store()
+#       self.store()
         return (dict(vals={'dept':self.dept_n})
-               ,FifD.do_focus(aid,ag)
+               ,self.do_focus(aid,ag)
                )
        #def do_dept
     
@@ -1254,13 +1252,13 @@ class FifD:
                            ,shre=not self.wo_repl
                            ), focus_cid='wdtx')
             pass;              #LOG and log('vals={}',vals)
-            if aid_ is None or aid_=='-': return FifD.do_focus(aid,ag)   #continue#while_fif
+            if aid_ is None or aid_=='-': return self.do_focus(aid,ag)   #continue#while_fif
             self.wo_excl    = not vals['shex']
             self.wo_repl    = not vals['shre']
         else:
-            return FifD.do_focus(aid,ag)
+            return self.do_focus(aid,ag)
         
-        self.store()
+#       self.store()
 #       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         self.pre_cnts()
         pass;                  #LOG and log('dlg_h={}',(dlg_h))
@@ -1271,7 +1269,7 @@ class FifD:
                     ,vals =self.get_fif_vals()
 #                   ,ctrls=self.get_fif_cnts())
                     ,ctrls=self.get_fif_cnts('vis+pos'))
-               ,FifD.do_focus(aid,ag)
+               ,self.do_focus(aid,ag)
                )
        #def do_more
 
@@ -1295,8 +1293,8 @@ class FifD:
             if nBf+nAf > 0:
                 apx.set_opt('fif_context_width_before', nBf)
                 apx.set_opt('fif_context_width_after' , nAf)
-        self.store()
-        return FifD.do_focus(aid,ag)
+#       self.store()
+        return self.do_focus(aid,ag)
        #def do_cntx
 
     def do_totb(self, aid, ag):
@@ -1329,12 +1327,13 @@ class FifD:
                 else:
                     self.stores['tofx'] = fxs + [fx]
                     self.totb_i  = 4+len(self.stores['tofx'])-1 # skip: new,prev,clear,add,files-1
-        else:   return FifD.do_focus(aid,ag)
+        else:   return self.do_focus(aid,ag)
         
         self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
-        self.store()
+        pass;                   LOG and log('self.totb_i={}',(self.totb_i))
+#       self.store()
         return ({'ctrls':[('totb', {'val':self.totb_i ,'items':self.totb_l})]}
-               ,FifD.do_focus(aid,ag)
+               ,self.do_focus(aid,ag)
                ) 
        #def do_totb
        
@@ -1344,12 +1343,13 @@ class FifD:
         ,   self.stores.get('help.data'))
         open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         ag.activate()
-        return FifD.do_focus(aid,ag)
+        return self.do_focus(aid,ag)
        #def do_help
     
     def do_exit(self, aid, ag):
 #       ag.bind_do()
         self.copy_vals(ag)
+        pass;                   LOG and log('self.totb_i={}',(self.totb_i))
         self.store()
 #       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         return None
@@ -1358,10 +1358,10 @@ class FifD:
     def do_work(self, aid, ag):
 #       ag.bind_do()
         self.copy_vals(ag)
-        self.store()
+#       self.store()
         
         btn_p,btn_m = FifD.scam_pair(aid)
-        if btn_p not in ('!cnt', '!fnd', '!rep'):   return FifD.do_focus(aid,ag)
+        if btn_p not in ('!cnt', '!fnd', '!rep'):   return self.do_focus(aid,ag)
         
         w_excl      = not self.wo_excl
         self.excl_s = self.excl_s if w_excl else ''
@@ -1374,7 +1374,7 @@ class FifD:
                 _('all found files')
              )
             ,app.MB_OKCANCEL+app.MB_ICONQUESTION):
-            return FifD.do_focus(aid,ag)
+            return self.do_focus(aid,ag)
 
 #       fold_s  = ag.cval('fold')
 #       what_s  = ag.cval('what')  
@@ -1505,7 +1505,7 @@ class FifD:
             )
         if not rpt_data and not rpt_info: 
             app.msg_status(_("Search stopped"))
-            return FifD.do_focus(aid,ag)   #continue#while_fif
+            return self.do_focus(aid,ag)   #continue#while_fif
         frfls   = rpt_info['files']
         frgms   = rpt_info['frgms']
         ################################
@@ -1514,7 +1514,7 @@ class FifD:
                     if 0==frfls else \
                   f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
         progressor.set_progress(msg_rpt)
-        if 0==frgms and not REPORT_FAIL:    return FifD.do_focus(aid,ag)   #continue#while_fif
+        if 0==frgms and not REPORT_FAIL:    return self.do_focus(aid,ag)   #continue#while_fif
         req_opts= None
         if SAVE_REQ_TO_RPT:
             req_opts= {k:v for (k,v) in self.stores.items() if k[:3] not in ('wd_', 'wo_', 'pse')}
@@ -1539,7 +1539,7 @@ class FifD:
         ################################
         if 0<frgms and CLOSE_AFTER_GOOD:    return None #break#while_fif
 
-        return FifD.do_focus(aid,ag)
+        return self.do_focus(aid,ag)
        #def do_work
        
     def get_fif_cnts(self, how=''): #NOTE: fif_cnts
@@ -1689,688 +1689,6 @@ class FifD:
        #def get_fif_vals
     
    #class FifD
-    
-def dlg_fif_o(what='', opts={}):
-    def downgrade(dct):
-        dct['totb']  = str(dct['totb'])
-    # Start COMMON STATIC data
-    
-    WIN_MAC     = (get_desktop_environment() in ('win', 'mac'))
-    EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if WIN_MAC else [5*i for i in range(11)]
-    DLG_W0, \
-    DLG_H0  = (700, 335 + EG1 + EG10)
-    DEF_WD_TXTS = 300
-    DEF_WD_BTNS = 100
-    # Finish COMMON STATIC data
-
-    # Start COMMON DINAMIC data
-    stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-              odict()
-    downgrade(stores)   # Downgrade types
-    
-    what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
-    what_s  = what_s.splitlines()[0] if what_s else ''
-    repl_s  = opts.get('repl', '')
-    reex01  = opts.get('reex', stores.get('reex', '0'))
-    case01  = opts.get('case', stores.get('case', '0'))
-    word01  = opts.get('word', stores.get('word', '0'))
-    if USE_EDFIND_OPS:
-        ed_opt  = CdSw.app_proc(CdSw.PROC_GET_FIND_OPTIONS, '')
-        # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
-        reex01  = '1' if 'r' in ed_opt else '0'
-        case01  = '1' if 'c' in ed_opt else '0'
-        word01  = '1' if 'w' in ed_opt else '0'
-    incl_s  = opts.get('incl', stores.get('incl',  [''])[0])
-    excl_s  = opts.get('excl', stores.get('excl',  [''])[0])
-    fold_s  = opts.get('fold', stores.get('fold',  [''])[0])
-    dept_n  = opts.get('dept', stores.get('dept',  0)-1)+1
-    join_s  = opts.get('join', stores.get('join', '0'))
-    totb_s  = opts.get('totb', stores.get('totb', '0'));    totb_s = '1' if totb_s=='0' else totb_s
-    shtp_s  = opts.get('shtp', stores.get('shtp', '0'))
-    cntx_s  = opts.get('cntx', stores.get('cntx', '0'))
-    algn_s  = opts.get('algn', stores.get('algn', '0'))
-    skip_s  = opts.get('skip', stores.get('skip', '0'))
-    sort_s  = opts.get('sort', stores.get('sort', '0'))
-    frst_s  = opts.get('frst', stores.get('frst', '0'))
-    enco_s  = opts.get('enco', stores.get('enco', '0'))
-
-    caps    = None
-
-    what_l  = None
-    incl_l  = None
-    excl_l  = None
-    fold_l  = None
-    repl_l  = None
-    fxs     = None
-    tofx_l  = None
-    totb_l  = None
-    wo_excl = None
-    wo_repl = None
-    wo_adva = None
-    ad01    = None
-    c_more  = None
-    txt_w   = None
-    btn_w   = None
-    lbl_l   = None
-    cmb_l   = None
-    tl2_l   = None
-    tbn_l   = None
-    gap1    = None
-    gap2    = None
-    gap3    = None
-    dlg_w   = None
-    dlg_h   = None
-
-    focused = 'what'
-    # Finish COMMON DINAMIC data
-
-    def pre_cnts():
-        nonlocal what_l,incl_l,excl_l,fold_l,repl_l,fxs,tofx_l,totb_l
-        nonlocal wo_excl,wo_repl,wo_adva
-        nonlocal ad01,c_more,txt_w,btn_w,lbl_l,cmb_l,tl2_l,tbn_l,gap1,gap2,gap3,dlg_w,dlg_h
-
-        what_l  = [s for s in stores.get('what', []) if s ]
-        incl_l  = [s for s in stores.get('incl', []) if s ]
-        excl_l  = [s for s in stores.get('excl', []) if s ]
-        fold_l  = [s for s in stores.get('fold', []) if s ]
-        repl_l  = [s for s in stores.get('repl', []) if s ]
-        fxs     = stores.get('tofx', [])
-        tofx_l  = [f('file:{1}'+' '*100+'{0}', *os.path.split(fx)) for fx in fxs if os.path.isfile(fx) ]    # ' '*100 to hide folder in list-/combo-boxes
-        totb_l  = [TOTB_NEW_TAB, TOTB_USED_TAB] + [_('[Clear fixed files]'), _('[Add fixed file]')] + tofx_l + get_live_fiftabs(fxs)
-        
-        wo_excl = stores.get('wo_excl', True)
-        wo_repl = stores.get('wo_repl', True)
-        wo_adva = stores.get('wo_adva', True)
-        ad01    = 0 if wo_adva else 1
-        c_more  = _('Mor&e >>') if wo_adva else _('L&ess <<')
-        txt_w   = DEF_WD_TXTS #stores.get('wd_txts', DEF_WD_TXTS)
-        btn_w   = DEF_WD_BTNS #stores.get('wd_btns', DEF_WD_BTNS)
-        lbl_l   = GAP+38*3+GAP+25
-        cmb_l   = lbl_l+100
-        tl2_l   = lbl_l+220-85
-        tbn_l   = cmb_l+txt_w+GAP
-        gap1    = (GAP- 28 if wo_repl else GAP)
-        gap2    = (GAP- 28 if wo_excl else GAP)+gap1 -GAP
-        gap3    = (GAP-132 if wo_adva else GAP)+gap2 -GAP
-        dlg_w,\
-        dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(15+EG4 if wo_adva else 15))
-#       dlg_h   = (tbn_l+btn_w+GAP, DLG_H0+gap3-(30+EG4 if wo_adva else  0))
-        pass;                  #LOG and log('gap1={}',(gap1))
-        pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
-       #def pre_cnts
-
-    def get_fif_cap():  return f(_('Find in Files{} ({})')
-                                           , '' if not wo_adva else  ' [' + (''
-                                                            +   (_(shtp_l[int(shtp_s)]+', ')                        )
-                                                            +   (_('Append, ')                if join_s=='1' else '')
-                                                            +   (_('Context, ')               if cntx_s=='1' else '')
-                                                            +   (_('Sorted, ')                if sort_s!='0' else '')
-                                                            +   (_('First ')+frst_s+', '      if frst_s!='0' else '')
-                                                            ).rstrip(', ') + ']'
-                                           , VERSION_V)
-    def get_fif_cnts(): #NOTE: fif_cnts
-        pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
-        pass;                  #LOG and log('gap1={}',(gap1))
-        nonlocal caps
-        w_excl  = not wo_excl
-        w_repl  = not wo_repl
-        w_adva  = not wo_adva
-        cnts    = [                                                                                                                          #  gmqz
-           dict(cid='prs1',tp='bt'  ,t  =0          ,l=1000     ,w=0    ,tab_stop=F ,cap=_('&1')                                            )# &1
-          ,dict(cid='prs2',tp='bt'  ,t  =0          ,l=1000     ,w=0    ,tab_stop=F ,cap=_('&2')                                            )# &2
-          ,dict(cid='prs3',tp='bt'  ,t  =0          ,l=1000     ,w=0    ,tab_stop=F ,cap=_('&3')                                            )# &3
-          ,dict(cid='pres',tp='bt'  ,tid='incl'     ,l=5        ,w=38*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h            )# &s
-          ,dict(cid='reex',tp='ch-b',tid='what'     ,l=5+38*0   ,w=38               ,cap='&.*'             ,act=T   ,hint=reex_h            )# &.
-          ,dict(cid='case',tp='ch-b',tid='what'     ,l=5+38*1   ,w=38               ,cap='&aA'             ,act=T   ,hint=case_h            )# &a
-          ,dict(cid='word',tp='ch-b',tid='what'     ,l=5+38*2   ,w=38               ,cap='"&w"'            ,act=T   ,hint=word_h            )# &w
-                                                                                                                                    
-          ,dict(           tp='lb'  ,tid='what'     ,l=lbl_l    ,r=cmb_l-5          ,cap='>'+_('*&Find what:')                              )# &f
-          ,dict(cid='what',tp='cb'  ,t  =5          ,l=cmb_l    ,w=txt_w    ,a='lR' ,items=what_l                                           )# 
-          ,dict(           tp='lb'  ,tid='repl'     ,l=lbl_l    ,r=cmb_l-5          ,cap='>'+_('&Replace with:')                ,vis=w_repl )# &r
-          ,dict(cid='repl',tp='cb'  ,t  =5+  28+EG1 ,l=cmb_l    ,w=txt_w    ,a='lR' ,items=repl_l                               ,vis=w_repl )# 
-          ,dict(           tp='lb'  ,tid='incl'     ,l=lbl_l    ,r=cmb_l-5          ,cap='>'+_('*&In files:')       ,hint=mask_h            )# &i
-          ,dict(cid='incl',tp='cb'  ,t=gap1+ 56+EG2 ,l=cmb_l    ,w=txt_w    ,a='lR' ,items=incl_l                                           )# 
-          ,dict(           tp='lb'  ,tid='excl'     ,l=lbl_l    ,r=cmb_l-5          ,cap='>'+_('Not in files:')     ,hint=mask_h,vis=w_excl )# 
-          ,dict(cid='excl',tp='cb'  ,t=gap1+ 84+EG3 ,l=cmb_l    ,w=txt_w    ,a='lR' ,items=excl_l                               ,vis=w_excl )# 
-          ,dict(           tp='lb'  ,tid='fold'     ,l=lbl_l    ,r=cmb_l-5          ,cap='>'+_('*I&n folder:')                              )# &n
-          ,dict(cid='fold',tp='cb'  ,t=gap2+112+EG4 ,l=cmb_l    ,w=txt_w    ,a='lR' ,items=fold_l                                           )# 
-          ,dict(cid='brow',tp='bt'  ,tid='fold'     ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('&Browse…')              ,hint=brow_h            )# &b
-          ,dict(           tp='lb'  ,tid='dept'     ,l=lbl_l    ,w=100  -5          ,cap='>'+_('In s&ubfolders:')   ,hint=dept_h            )# &u
-          ,dict(cid='dept',tp='cb-r',t=gap2+140+EG5 ,l=cmb_l    ,w=135              ,items=dept_l                                           )# 
-          ,dict(cid='depa',tp='bt'  ,tid='dept'     ,l=1000     ,w=0    ,tab_stop=F ,cap=_('&l')                                            )# &l
-          ,dict(cid='depo',tp='bt'  ,tid='dept'     ,l=1000     ,w=0    ,tab_stop=F ,cap=_('&y')                                            )# &y
-          ,dict(cid='cfld',tp='bt'  ,tid='fold'     ,l=5        ,w=38*3             ,cap=_('&Current folder')       ,hint=cfld_h            )# &c
-
-          ,dict(           tp='clr' ,t=gap2+172+EG5 ,l=0        ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))            )#  ,vis=w_adva )# 
-          ,dict(cid='more',tp='bt'  ,t=gap2+160+EG5 ,l=5        ,w=38*3             ,cap=c_more                     ,hint=more_h            )# &e
-
-          ,dict(           tp='lb'  ,t=gap2+190+EG5 ,l=5+80     ,r=cmb_l            ,cap=_('Adv. report options')               ,vis=w_adva )# 
-          ,dict(           tp='lb'  ,tid='skip'     ,l=5        ,r=80               ,cap='>'+_('Show in&:')                     ,vis=w_adva )# &:
-          ,dict(cid='totb',tp='cb-r',tid='skip'     ,l=5+80     ,r=cmb_l            ,items=totb_l           ,act=T              ,vis=w_adva )# 
-          ,dict(cid='join',tp='ch'  ,tid='sort'     ,l=5+80     ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva )# &d
-          ,dict(           tp='lb'  ,tid='frst'     ,l=5        ,r=80               ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva )# &/
-          ,dict(cid='shtp',tp='cb-r',tid='frst'     ,l=5+80     ,r=cmb_l            ,items=shtp_l                               ,vis=w_adva )# 
-          ,dict(cid='algn',tp='ch'  ,tid='enco'     ,l=5+80     ,w=100              ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva )# &|
-          ,dict(cid='cntx',tp='ch'  ,tid='enco'     ,l=5+170    ,w=150              ,cap=_('Conte&xt')      ,act=T  ,hint=cntx_h,vis=w_adva )# &x
-                                                                                                                                    
-          ,dict(           tp='lb'  ,t=gap2+190+EG5 ,l=tl2_l+100,r=tbn_l-GAP        ,cap=_('Adv. search options')               ,vis=w_adva )# 
-          ,dict(           tp='lb'  ,tid='skip'     ,l=tl2_l    ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva )# &k
-          ,dict(cid='skip',tp='cb-r',t=gap2+210+EG6 ,l=tl2_l+100,r=tbn_l-GAP        ,items=skip_l                               ,vis=w_adva )# 
-          ,dict(           tp='lb'  ,tid='sort'     ,l=tl2_l    ,w=100-5            ,cap='>'+_('S&ort file list:')              ,vis=w_adva )# &o
-          ,dict(cid='sort',tp='cb-r',t=gap2+237+EG7 ,l=tl2_l+100,r=tbn_l-GAP        ,items=sort_l                               ,vis=w_adva )# 
-          ,dict(           tp='lb'  ,tid='frst'     ,l=tl2_l    ,w=100-5            ,cap='>'+_('Firsts (&0=all):')  ,hint=frst_h,vis=w_adva )# &0
-          ,dict(cid='frst',tp='ed'  ,t=gap2+264+EG8 ,l=tl2_l+100,r=tbn_l-GAP                                                    ,vis=w_adva )# 
-          ,dict(           tp='lb'  ,tid='enco'     ,l=tl2_l    ,w=100-5            ,cap='>'+_('Encodings &\\:')    ,hint=enco_h,vis=w_adva )# \
-          ,dict(cid='enco',tp='cb-r',t=gap2+291+EG9 ,l=tl2_l+100,r=tbn_l-GAP        ,items=enco_l                               ,vis=w_adva )# 
-                                                                                                                                    
-          ,dict(cid='!fnd',tp='bt'  ,tid='what'     ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h            )# 
-          ,dict(cid='!rep',tp='bt'  ,tid='repl'     ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl )# &p
-          ,dict(cid='!cnt',tp='bt'  ,tid='incl'     ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva )# &t
-          ,dict(cid='cust',tp='bt'  ,t=gap2+264+EG8 ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva )# &j
-          ,dict(cid='loop',tp='bt'  ,tid='cust'     ,l=1000     ,w=0    ,tab_stop=F ,cap=_('&v')                                            )# &v
-          ,dict(cid='help',tp='bt'  ,t=gap2+291+EG9 ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('&Help')                             ,sto=w_adva )# &h
-          ,dict(cid='-'   ,tp='bt'  ,tid='dept'     ,l=tbn_l    ,w=btn_w    ,a='LR' ,cap=_('Close')                                         )# 
-                ]
-        caps    =   {cnt['cid']:cnt['cap']          for cnt         in cnts
-                    if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
-        caps.update({cnt['cid']:cnts[icnt-1]['cap'] for (icnt,cnt)  in enumerate(cnts)
-                    if cnt['tp'] in ('cb', 'cb-r', 'ed')  and 'cap' in cnts[icnt-1]})
-        caps.update({'excl':_('Not in files:')
-                    ,'repl':_('&Replace with:')
-                    ,'!rep':_('Re&place')
-                    })
-        caps    = {k:v.strip(' :*|\\/>*').replace('&', '') for (k,v) in caps.items()}
-        return cnts
-       #def get_cnts
-    def get_fif_vals():
-        vals    =       dict( reex=reex01
-                             ,case=case01
-                             ,word=word01
-                             ,what=what_s
-                             ,incl=incl_s
-                             ,fold=fold_s
-                             ,dept=dept_n
-                            )
-        if not wo_excl:
-            vals.update(dict( excl=excl_s))
-        if not wo_repl:
-            vals.update(dict( repl=repl_s))
-        if not wo_adva:
-            vals.update(dict( join=join_s
-                             ,totb=totb_s
-                             ,shtp=shtp_s
-                             ,cntx=cntx_s
-                             ,algn=algn_s
-                             ,skip=skip_s
-                             ,sort=sort_s
-                             ,frst=frst_s
-                             ,enco=enco_s
-                            ))
-        pass;                  #LOG and log('vals={}',pf(vals))
-        return vals
-       #def get_fif_vals
-    
-    def fif_pars_for_agent(how=''):
-        pre_cnts()      ##!! set dlg_w, dlg_h
-        fm_prs  = dict(
-                cap     = get_fif_cap()
-            ,   h       = dlg_h
-            ,   h_max   = dlg_h
-            )
-        if how=='start':
-            fm_prs.update(dict(
-                resize  = True
-            ,   w       = dlg_w
-            ))
-        return fm_prs \
-             , get_fif_cnts() \
-             , dict(values=get_fif_vals(), focused=focused)
-    
-    def fif_dlg_loop(btn,vals,fid,chds):
-        nonlocal stores
-        nonlocal what_s,repl_s,reex01,case01,word01,incl_s,excl_s,fold_s,dept_n,join_s,totb_s,shtp_s,cntx_s,algn_s,skip_s,sort_s,frst_s,enco_s,focused
-        nonlocal focused
-        
-        if btn is None or btn=='-': return RT_BREAK_AG
-        scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
-        btn_p       = btn
-        btn_m       = scam + '/' + btn if scam and scam!='a' else btn   # smth == a/smth
-        pass;                  #LOG and log('btn_p, scam, btn_m={}',(btn_p, scam, btn_m))
-        focused     = 'what' \
-                        if 1==len(chds) and chds[0] in ('reex', 'case', 'word') else \
-                      chds[0] \
-                        if 1==len(chds) else \
-                      focused
-        pass;                  #LOG and log('vals={}',pf(vals))
-        reex01      = vals['reex']
-        case01      = vals['case']
-        word01      = vals['word']
-        what_s      = vals['what']
-        incl_s      = vals['incl']
-        if not wo_excl:     
-            excl_s  = vals['excl']
-        else:
-            excl_s  = ''
-        fold_s      = vals['fold']
-        dept_n      = vals['dept']
-        if not wo_repl:     
-            repl_s  = vals['repl']
-        if not wo_adva:     
-            join_s  = vals['join']
-            totb_s  = vals['totb']
-            shtp_s  = vals['shtp']
-            cntx_s  = vals['cntx']
-            algn_s  = vals['algn']
-            skip_s  = vals['skip']
-            sort_s  = vals['sort']
-            frst_s  = vals['frst']
-            enco_s  = vals['enco']
-        pass;                  #LOG and log('what_s,repl_s,incl_s,fold_s={}',(what_s,repl_s,incl_s,fold_s))
-        
-        # Save user data
-        stores['reex']  = reex01
-        stores['case']  = case01
-        stores['word']  = word01
-        stores['what']  = add_to_history(what_s, stores.get('what', []), MAX_HIST, unicase=False)
-        stores['incl']  = add_to_history(incl_s, stores.get('incl', []), MAX_HIST, unicase=(os.name=='nt'))
-        stores['excl']  = add_to_history(excl_s, stores.get('excl', []), MAX_HIST, unicase=(os.name=='nt'))
-        stores['fold']  = add_to_history(fold_s, stores.get('fold', []), MAX_HIST, unicase=(os.name=='nt'))
-        stores['dept']  = dept_n
-        stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
-        stores['join']  = join_s
-        totb_s_pre      = stores.get('totb', '1')
-        stores['totb']  = '1' if totb_s=='0' else totb_s
-        stores['shtp']  = shtp_s
-        stores['cntx']  = cntx_s
-        stores['algn']  = algn_s
-        stores['skip']  = skip_s
-        stores['sort']  = sort_s
-        stores['frst']  = frst_s
-        stores['enco']  = enco_s
-        stores.pop('toed',None)     # rudiment
-        stores.pop('reed',None)     # rudiment
-        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-        
-        # Cmds without data: help, custom
-        if btn_p=='help':
-            stores['help.data'] = dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,pset_h,more_h,cust_h, stores.get('help.data'))
-            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-            return fif_pars_for_agent()   #continue#while_fif
-        
-        if btn_m=='more':
-            stores['wo_adva']       = not stores.get('wo_adva', True)
-            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-            return fif_pars_for_agent()   #continue#while_fif
-        if btn_m=='c/more':     # [Ctrl+]More       = show/hide excl
-            stores['wo_excl']   = not stores['wo_excl']
-        if btn_m=='s/more':     # [Shift+]More      = show/hide repl
-            stores['wo_repl']   = not stores['wo_repl']
-
-        if btn_p=='loop':
-            v_excl  = not wo_excl
-            v_repl  = not wo_repl
-            (v_excl,v_repl) = (T,F) if (v_excl,v_repl)==(F,F) else \
-                              (T,T) if (v_excl,v_repl)==(T,F) else \
-                              (F,T) if (v_excl,v_repl)==(T,T) else \
-                              (F,F) if (v_excl,v_repl)==(F,T) else (v_excl,v_repl)
-            stores['wo_excl']   = not v_excl
-            stores['wo_repl']   = not v_repl
-        if btn_m=='c/cust':     # [Ctrl+]Adjust  = dlg_valign_consts
-            dlg_valign_consts()
-            return fif_pars_for_agent()   #continue#while_fif
-        if btn_m=='s/cust':
-            hm = app.menu_proc(0, app.MENU_CREATE)
-            def switch_excl():
-                stores['wo_excl']   = not stores['wo_excl']
-            def switch_repl():
-                stores['wo_repl']   = not stores['wo_repl']
-            app.menu_proc(hm, app.MENU_ADD, command=switch_excl, caption='Show/hide "Not in files"')
-            app.menu_proc(hm, app.MENU_ADD, command=switch_repl, caption='Show/hide "Replace"')
-#           nx, ny = dlg_proc(id_dlg, DLG_COORD_LOCAL_TO_SCREEN, index=nx, index2=ny)
-            app.menu_proc(hm, app.MENU_SHOW, command='100,100')
-            return fif_pars_for_agent()   #continue#while_fif
-        if btn_m=='cust':
-            shex_c  = f(_('Show "&{}"')                          , caps['excl'])
-            shre_c  = f(_('Show "&{}" and "{}"')                 , caps['repl'], caps['!rep'])
-            aid,vals,*_t   = dlg_wrapper(_('Adjust dialog controls'), GAP+290+GAP,GAP+90+GAP,      #NOTE: dlg-cust
-                 [dict(cid='shex',tp='ch'    ,t=GAP             ,l=GAP          ,w=150  ,cap=shex_c                                     ) # &n
-                 ,dict(cid='shre',tp='ch'    ,t=GAP+ 30         ,l=GAP          ,w=150  ,cap=shre_c                                     ) # &r
-                 ,dict(cid='!'   ,tp='bt'    ,t=GAP+ 90-28      ,l=GAP+290-170  ,w=80   ,cap=_('OK')    ,def_bt=True                    ) # 
-                 ,dict(cid='-'   ,tp='bt'    ,t=GAP+ 90-28      ,l=GAP+290-80   ,w=80   ,cap=_('Cancel')                                )
-                 ],    dict(shex=not stores.get('wo_excl', True)
-                           ,shre=not stores.get('wo_repl', True)
-                           ), focus_cid='wdtx')
-            pass;              #LOG and log('vals={}',vals)
-            if aid is None or aid=='-': return fif_pars_for_agent()   #continue#while_fif
-            stores['wo_excl']   = not               vals['shex']
-            stores['wo_repl']   = not               vals['shre']
-            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-            return fif_pars_for_agent()   #continue#while_fif
-        
-        # Cmds with data
-        if btn_p in ('depa', 'depo'):
-            dept_n  = 0 if btn_p=='depa' else 1
-        
-        if btn_p in ('prs1', 'prs2', 'prs3') \
-        or btn_m=='c/pres': # Ctrl+Preset - Apply last used preset
-            pset_l  = stores.setdefault('pset', [])
-            if not pset_l:
-                return fif_pars_for_agent()   #continue#while_fif
-            ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0] \
-                    if btn_m=='c/pres'                  else \
-                  pset_l[0] \
-                    if btn_p=='prs1'                    else \
-                  pset_l[1] \
-                    if btn_p=='prs2' and len(pset_l)>1  else \
-                  pset_l[2] \
-                    if btn_p=='prs3' and len(pset_l)>2  else \
-                  None
-            if not ps:
-                return fif_pars_for_agent()   #continue#while_fif
-            reex01  = ps['reex'] if ps.get('_reex', '')=='x' else reex01
-            case01  = ps['case'] if ps.get('_case', '')=='x' else case01
-            word01  = ps['word'] if ps.get('_word', '')=='x' else word01
-            incl_s  = ps['incl'] if ps.get('_incl', '')=='x' else incl_s
-            excl_s  = ps['excl'] if ps.get('_excl', '')=='x' else excl_s
-            fold_s  = ps['fold'] if ps.get('_fold', '')=='x' else fold_s
-            dept_n  = ps['dept'] if ps.get('_dept', '')=='x' else dept_n
-            skip_s  = ps['skip'] if ps.get('_skip', '')=='x' else skip_s
-            sort_s  = ps['sort'] if ps.get('_sort', '')=='x' else sort_s
-            frst_s  = ps['frst'] if ps.get('_frst', '')=='x' else frst_s
-            enco_s  = ps['enco'] if ps.get('_enco', '')=='x' else enco_s
-            totb_s  = ps['totb'] if ps.get('_totb', '')=='x' else totb_s
-            join_s  = ps['join'] if ps.get('_join', '')=='x' else join_s
-            shtp_s  = ps['shtp'] if ps.get('_shtp', '')=='x' else shtp_s
-            algn_s  = ps['algn'] if ps.get('_algn', '')=='x' else algn_s
-            cntx_s  = ps['cntx'] if ps.get('_cntx', '')=='x' else cntx_s
-            app.msg_status(_('Options is restored from preset: ')+ps['name'])
-
-        if btn_m=='pres' \
-        or btn_m=='s/pres': # Shift+Preset - Show list in history order
-            onof    = {'0':'Off', '1':'On'}
-            totb_i  = int(totb_s)
-            totb_i  = totb_i if 0<totb_i<4+len(stores.get('tofx', [])) else 1   # "tab:" skiped
-            totb_v  = totb_l[totb_i]
-            ans     = dlg_press(stores, btn_m=='s/pres',
-                       (reex01,case01,word01,
-                        incl_s,excl_s,
-                        fold_s,dept_n,
-                        skip_s,sort_s,frst_s,enco_s,
-                        totb_v,join_s,shtp_s,algn_s,cntx_s),
-                       (onof[reex01],onof[case01],onof[word01],
-                        '"'+incl_s+'"','"'+excl_s+'"',
-                        '"'+fold_s+'"',dept_l[dept_n],
-                        skip_l[int(skip_s)],sort_l[int(sort_s)],frst_s,enco_l[int(enco_s)],
-                        totb_v,onof[join_s],shtp_l[int(shtp_s)],onof[algn_s],onof[cntx_s])
-                        )
-            if ans is None:
-                return fif_pars_for_agent()   #continue#while_fif
-            (           reex01,case01,word01,
-                        incl_s,excl_s,
-                        fold_s,dept_n,
-                        skip_s,sort_s,frst_s,enco_s,
-                        totb_v,join_s,shtp_s,algn_s,cntx_s)  = ans
-            totb_s  = str(totb_l.index(totb_v))     if totb_v in totb_l         else \
-                      totb_v                        if totb_v in ('0', '1')     else \
-                      '1'
-                
-        if False:pass
-        elif btn_m=='brow':     # BroDir
-            path    = CdSw.dlg_dir(os.path.expanduser(fold_s))
-            if not path: return fif_pars_for_agent()   #continue#while_fif
-            fold_s  = path
-            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
-            focused = 'fold'
-        elif btn_m=='s/brow':   # [Shift+]BroDir = BroFile
-            fn      = app.dlg_file(True, '', os.path.expanduser(fold_s), '')
-            if not fn or not os.path.isfile(fn):    return fif_pars_for_agent()   #continue#while_fif
-            incl_s  = os.path.basename(fn)
-            fold_s  = os.path.dirname(fn)
-            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
-        elif btn_m=='cfld' and ed.get_filename():
-            fold_s  = os.path.dirname(ed.get_filename())
-            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
-        elif btn_m=='s/cfld':   # [Shift+]CurDir = CurFile
-            if not os.path.isfile(     ed.get_filename()):   return fif_pars_for_agent()   #continue#while_fif
-            incl_s  = os.path.basename(ed.get_filename())
-            fold_s  = os.path.dirname( ed.get_filename())
-            fold_s  = fold_s.replace(os.path.expanduser('~'), '~', 1) if fold_s.startswith(os.path.expanduser('~')) else fold_s
-            dept_n  = 1
-            excl_s  = ''
-        elif btn_m=='c/cfld':   # [Ctrl+]CurDir  = InTabs
-            incl_s  = '*'
-            fold_s  = IN_OPEN_FILES
-        elif btn_m=='sc/cfld':  # [Ctrl+Shift+]CurDir = CurTab
-            incl_s  = ed.get_prop(app.PROP_TAB_TITLE)   ##!! need tab-id?
-            fold_s  = IN_OPEN_FILES
-            excl_s  = ''
-            
-        elif btn_p=='totb':
-            totb_it = totb_l[int(totb_s)]
-            pass;              #LOG and log('totb_s,totb_it={}',(totb_s,totb_it))
-            fxs     = stores.get('tofx', [])
-            if False:pass
-            elif totb_it==_('[Clear fixed files]') and fxs:
-                if app.ID_YES == app.msg_box(
-                                  f(_('Clear all fixed files ({}) for "Show in?"'), len(fxs))
-                                , app.MB_OKCANCEL+app.MB_ICONQUESTION):
-                    stores['tofx']  = []
-                    totb_s  = '1'                                   # == TOTB_USED_TAB
-                else:
-                    totb_s  = totb_s_pre
-                   #continue#while_fif
-            elif totb_it==_('[Add fixed file]'):
-                fx      = app.dlg_file(True, '', os.path.expanduser(fold_s), '')
-                if not fx or not os.path.isfile(fx):
-                    totb_s  = totb_s_pre
-                   #continue#while_fif
-                else:
-                    fxs     = stores.get('tofx', [])
-                    if fx in fxs:
-                        totb_s  = str(4+fxs.index(fx))
-                    else:
-                        stores['tofx'] = fxs + [fx]
-                        totb_s  = str(4+len(stores['tofx'])-1)      # skip: new,prev,clear,add,files-1
-                pass;          #LOG and log('totb_s={}',(totb_s))
-
-        elif btn_m=='c/cntx' and cntx_s=='1':
-            sBf = str(apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1)))
-            sAf = str(apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1)))
-            ans   = app.dlg_input_ex(2, _('Report context settings')
-                , _('Report with lines before') , sBf
-                , _('Report with lines after')  , sAf
-                )
-            pass;               LOG and log('cntx ans={}',(ans))
-            sBf,sAf = ans   if ans is not None else     ('0', '0')
-            pass;               LOG and log('cntx sBf,sAf={}',(sBf,sAf))
-            nBf = int(sBf) if sBf.isdigit() else 0
-            nAf = int(sAf) if sAf.isdigit() else 0
-            pass;               LOG and log('cntx nBf,nAf={}',(nBf,nAf))
-            if nBf+nAf > 0:
-                apx.set_opt('fif_context_width_before', nBf)
-                apx.set_opt('fif_context_width_after' , nAf)
-            focused = 'what'
-
-        # Save data after cmd
-        stores['reex']  = reex01
-        stores['case']  = case01
-        stores['word']  = word01
-        stores['what']  = add_to_history(what_s, stores.get('what', []), MAX_HIST, unicase=False)
-        stores['incl']  = add_to_history(incl_s, stores.get('incl', []), MAX_HIST, unicase=(os.name=='nt'))
-        stores['excl']  = add_to_history(excl_s, stores.get('excl', []), MAX_HIST, unicase=(os.name=='nt'))
-        stores['fold']  = add_to_history(fold_s, stores.get('fold', []), MAX_HIST, unicase=(os.name=='nt'))
-        stores['dept']  = dept_n
-        stores['repl']  = add_to_history(repl_s, stores.get('repl', []), MAX_HIST, unicase=False)
-        stores['join']  = join_s
-        stores['totb']  = '1' if totb_s=='0' else totb_s
-        stores['shtp']  = shtp_s
-        stores['cntx']  = cntx_s
-        stores['algn']  = algn_s
-        stores['skip']  = skip_s
-        stores['sort']  = sort_s
-        stores['frst']  = frst_s
-        stores['enco']  = enco_s
-        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-        
-        # Cmds to act
-        if btn_p in ('!cnt', '!fnd', '!rep'):
-            if  btn_m=='!rep' \
-            and app.ID_OK != app.msg_box(
-                 f(_('Do you want to replace in {}?'), 
-                    _('current tab')        if fold_s==IN_OPEN_FILES and not ('*' in incl_s or '?' in incl_s) else 
-                    _('all tabs')           if fold_s==IN_OPEN_FILES else 
-                    _('all found files')
-                 )
-                ,app.MB_OKCANCEL+app.MB_ICONQUESTION):
-                return fif_pars_for_agent()   #continue#while_fif
-            root        = fold_s.rstrip(r'\/') if fold_s!='/' else fold_s
-            root        = os.path.expanduser(root)
-            root        = os.path.expandvars(root)
-            if not what_s:
-                app.msg_box(f(_('Fill the "{}" field'), caps['what']), app.MB_OK+app.MB_ICONWARNING)
-                focused     = 'what'
-                return fif_pars_for_agent()   #continue#while_fif
-            if reex01=='1':
-                try:
-                    re.compile(what_s)
-                except Exception as ex:
-                    app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['what'], ex), app.MB_OK+app.MB_ICONWARNING) 
-                    focused = 'what'
-                    return fif_pars_for_agent()   #continue#while_fif
-                if btn_p=='!rep':
-                    try:
-                        re.sub(what_s, repl_s, '')
-                    except Exception as ex:
-                        app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}'), caps['repl'], ex), app.MB_OK+app.MB_ICONWARNING) 
-                        focused = 'repl'
-                        return fif_pars_for_agent()   #continue#while_fif
-            if fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
-                app.msg_box(f(_('Set existing value in "{}"  or use "{}" (see {})'), caps['fold'], IN_OPEN_FILES, caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
-                focused     = 'fold'
-                return fif_pars_for_agent()   #continue#while_fif
-            if not incl_s:
-                app.msg_box(f(_('Fill the "{}" field'), caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
-                focused     = 'incl'
-                return fif_pars_for_agent()   #continue#while_fif
-            if 0 != incl_s.count('"')%2:
-                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
-                focused     = 'incl'
-                return fif_pars_for_agent()   #continue#while_fif
-            if 0 != excl_s.count('"')%2:
-                app.msg_box(f(_('Fix quotes in the "{}" field'), caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
-                focused     = 'excl'
-                return fif_pars_for_agent()   #continue#while_fif
-            if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
-                                      ,SHTP_SPARS_R, SHTP_SPARS_RCL
-                                      ) and \
-               sort_s!='0':
-                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'), caps['sort'], caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
-                focused     = 'shtp'
-                return fif_pars_for_agent()   #continue#while_fif
-            if shtp_l[int(shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
-                                      ,SHTP_SPARS_R, SHTP_SPARS_RCL
-                                      ) and \
-               fold_s==IN_OPEN_FILES:
-                app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.'),IN_OPEN_FILES, caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
-                focused     = 'shtp'
-                return fif_pars_for_agent()   #continue#while_fif
-            how_walk    =dict(                                  #NOTE: fif params
-                 root       =root
-                ,file_incl  =incl_s
-                ,file_excl  =excl_s
-                ,depth      =dept_n-1               # ['All', 'In folder only', '1 level', …]
-                ,skip_hidn  =skip_s in ('1', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
-                ,skip_binr  =skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
-                ,sort_type  =apx.icase( sort_s=='0','' 
-                                       ,sort_s=='1','date,desc' 
-                                       ,sort_s=='2','date,asc' ,'')
-                ,only_frst  =int((frst_s+',0').split(',')[1])
-                ,skip_unwr  =btn_p=='!rep'
-                ,enco       =enco_l[int(enco_s)].split(', ')
-                )
-            what_find   =dict(
-                 find       =what_s
-                ,repl       =repl_s if btn_p=='!rep' else None
-                ,mult       =False
-                ,reex       =reex01=='1'
-                ,case       =case01=='1'
-                ,word       =word01=='1'
-                ,only_frst  =int((frst_s+',0').split(',')[0])
-                )
-            what_save   = dict(
-                 count      = btn_m!='s/!cnt'
-                ,place      = btn_p!='!cnt'
-                ,lines      = btn_p!='!cnt'
-                )
-            shtp_v      = shtp_l[int(shtp_s)]
-            totb_i      = int(totb_s)
-            totb_it     = totb_l[totb_i]
-            fxs         = stores.get('tofx', [])
-            totb_v      = TOTB_NEW_TAB              if btn_m=='s/!fnd' or totb_it==TOTB_NEW_TAB     else \
-                          totb_it                   if totb_it.startswith('tab:')                   else \
-                          'file:'+fxs[totb_i-4]     if totb_it.startswith('file:')                  else \
-                          TOTB_USED_TAB
-            pass;               LOG and log('totb_s,totb_it,totb_v={}',(totb_s,totb_it,totb_v))
-            how_rpt     = dict(
-                 totb   =    totb_v
-                ,sprd   =              sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
-                ,shtp   =    shtp_v if sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
-                ,cntx   =    '1'==cntx_s and btn_p!='!rep'
-                ,algn   =    '1'==algn_s
-                ,join   =    '1'==join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
-                )
-            totb_s  = '1' if totb_s=='0' else totb_s
-            ################################
-            progressor = ProgressAndBreak()
-            rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
-                 how_walk   = how_walk
-                ,what_find  = what_find
-                ,what_save  = what_save
-                ,how_rpt    = how_rpt
-                ,progressor = progressor
-                )
-            if not rpt_data and not rpt_info: 
-                app.msg_status(_("Search stopped"))
-                return fif_pars_for_agent()   #continue#while_fif
-            frfls   = rpt_info['files']
-            frgms   = rpt_info['frgms']
-            ################################
-            pass;              #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
-            msg_rpt = _('No matches found') \
-                        if 0==frfls else \
-                      f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
-            progressor.set_progress(msg_rpt)
-            if 0==frgms and not REPORT_FAIL:    return fif_pars_for_agent()   #continue#while_fif
-            req_opts= None
-            if SAVE_REQ_TO_RPT:
-                req_opts= {k:v for (k,v) in stores.items() if k[:3] not in ('wd_', 'wo_', 'pse')}
-                req_opts['what']=what_s
-                req_opts['repl']=repl_s
-                req_opts['incl']=incl_s
-                req_opts['excl']=excl_s
-                req_opts['fold']=fold_s
-                req_opts['dept']-=1
-                req_opts    = json.dumps(req_opts)
-            report_to_tab(                      #NOTE: run-report
-                rpt_data
-               ,rpt_info
-               ,how_rpt
-               ,how_walk
-               ,what_find
-               ,what_save
-               ,progressor  = progressor
-               ,req_opts    = req_opts
-               )
-            progressor.set_progress(msg_rpt)
-            ################################
-            if 0<frgms and CLOSE_AFTER_GOOD:    return RT_BREAK_AG#break#while_fif
-        
-        return              fif_pars_for_agent()
-       #def fif_dlg_loop
-    dlg_agent(fif_dlg_loop, *fif_pars_for_agent('start')) ##!!
-   #def dlg_fif_o
-
 
 if __name__ == '__main__' :     # Tests
     Command().show_dlg()    #??
@@ -2477,4 +1795,6 @@ ToDo
 [ ][at-kv][31may17] Live apply changes from opt-dlg
 [ ][at-kv][31may17] en=F for PresDlg Up/Dn if sel=0/max
 [ ][at-kv][31may17] ? Use pages control for Help
+[ ][kv-kv][01jun17] ? Show in Help ref to Issues on GH
+[ ][kv-kv][01jun17] ? Add hidden button to find in current file (=Shift+"CurrFold")
 '''
