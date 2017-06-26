@@ -659,13 +659,14 @@ class BaseDlgAgent:
         app.dlg_proc(self.id_dlg, app.DLG_FOCUS)
        #def activate
     
-    def show(self):
+    def show(self, callbk_on_exit=None):
         """ Show the form """
         ed_caller   = ed
         
         app.dlg_proc(self.id_dlg, app.DLG_SHOW_MODAL)
         
         BaseDlgAgent._form_acts('save', id_dlg=self.id_dlg, key4store=self.opts.get('form data key'))
+        if callbk_on_exit:  callbk_on_exit(self)
         app.dlg_proc(self.id_dlg, app.DLG_FREE)
         ed_caller.focus()
        #def show

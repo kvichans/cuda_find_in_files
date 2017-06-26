@@ -918,7 +918,8 @@ class FifD:
         ,   vals =self.get_fif_vals()
         ,   fid  ='what'
         ,   options = {'bindof':self}
-        ).show()
+        ).show(callbk_on_exit=self.copy_vals)
+        self.store()
        #def show
 
     def __init__(self, what='', opts={}):
