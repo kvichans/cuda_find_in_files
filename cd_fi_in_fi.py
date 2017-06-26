@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.10 2017-06-10'
+    '2.1.11 2017-06-26'
 ToDo: (see end of file)
 '''
 
@@ -1142,7 +1142,7 @@ class FifD:
                           totb_v                    if totb_v in ('0', '1')    else \
                           1
         
-#       self.store()
+#       self.store() # in do_focus
         return (dict(vals=self.get_fif_vals()
                     ,form={'cap':self.get_fif_cap()}
                     )
@@ -1195,7 +1195,7 @@ class FifD:
             self.fold_s = IN_OPEN_FILES
             self.excl_s = ''
 
-#       self.store()
+#       self.store() # in do_focus
         return (dict(vals=self.get_fif_vals())
                ,self.do_focus(aid,ag)
                )
@@ -1208,7 +1208,7 @@ class FifD:
         self.dept_n = 0 if aid=='depa' else \
                       1 if aid=='depo' else \
                       self.dept_n
-#       self.store()
+#       self.store() # in do_focus
         return (dict(vals={'dept':self.dept_n})
                ,self.do_focus(aid,ag)
                )
@@ -1258,7 +1258,7 @@ class FifD:
         else:
             return self.do_focus(aid,ag)
         
-#       self.store()
+#       self.store() # in do_focus
 #       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         self.pre_cnts()
         pass;                  #LOG and log('dlg_h={}',(dlg_h))
@@ -1293,7 +1293,7 @@ class FifD:
             if nBf+nAf > 0:
                 apx.set_opt('fif_context_width_before', nBf)
                 apx.set_opt('fif_context_width_after' , nAf)
-#       self.store()
+#       self.store() # in do_focus
         return self.do_focus(aid,ag)
        #def do_cntx
 
@@ -1331,7 +1331,7 @@ class FifD:
         
         self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
         pass;                   LOG and log('self.totb_i={}',(self.totb_i))
-#       self.store()
+#       self.store() # in do_focus
         return ({'ctrls':[('totb', {'val':self.totb_i ,'items':self.totb_l})]}
                ,self.do_focus(aid,ag)
                ) 
@@ -1358,7 +1358,7 @@ class FifD:
     def do_work(self, aid, ag):
 #       ag.bind_do()
         self.copy_vals(ag)
-#       self.store()
+#       self.store() # in do_focus
         
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_p not in ('!cnt', '!fnd', '!rep'):   return self.do_focus(aid,ag)
@@ -1537,7 +1537,9 @@ class FifD:
            )
         progressor.set_progress(msg_rpt)
         ################################
-        if 0<frgms and CLOSE_AFTER_GOOD:    return None #break#while_fif
+        if 0<frgms and CLOSE_AFTER_GOOD:
+            self.store()
+            return None #break#while_fif
 
         return self.do_focus(aid,ag)
        #def do_work
@@ -1797,4 +1799,5 @@ ToDo
 [ ][at-kv][31may17] ? Use pages control for Help
 [ ][kv-kv][01jun17] ? Show in Help ref to Issues on GH
 [ ][kv-kv][01jun17] ? Add hidden button to find in current file (=Shift+"CurrFold")
+[ ][kv-kv][16jun17] Show src ed AFTER set src caret to fragment
 '''
