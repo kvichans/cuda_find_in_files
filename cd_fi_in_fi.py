@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.11 2017-06-26'
+    '2.2.01 2017-06-28'
 ToDo: (see end of file)
 '''
 
@@ -677,45 +677,56 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,p
     pass;                      #TIPS_BODY='tips';KEYS_BODY='keys';TREE_BODY='tree';OPTS_BODY='opts'
     DW, DH      = 830, 600
     hints_png   = os.path.dirname(__file__)+os.sep+r'images/fif-hints_820x400.PNG'
+    tab                 = stores.get('tab', 'keys')
 
     def prep(tab):
         htxt            = KEYS_BODY            if tab=='keys' else \
                           TIPS_BODY            if tab=='tips' else \
                           TREE_BODY            if tab=='tree' else \
                           OPTS_BODY            if tab=='opts' else ''
-        me_t            = GAP   +( 400+GAP     if tab=='keys' else 0)
-        me_h            = DH-28 +(-400-GAP     if tab=='keys' else 0)
+        me_t            = GAP       +( 400+GAP if tab=='keys' else 0)
+        me_h            = DH-28     +(-400-GAP if tab=='keys' else 0)
         return htxt, me_t, me_h
        #def prep
+       
+    def when_resize(ag):
+        f_wh    = ag.fattrs(attrs=('w', 'h'), live=ag.fattr('vis'))
+        return {'ctrls':[('htxt',dict(
+                                w=f_wh['w']-10 
+                               ,t=5              + (5+400 if tab=='keys' else 0)
+                               ,h=f_wh['h']-10-28- (5+400 if tab=='keys' else 0)
+                               ))]}
 
     def acts(aid, ag):
+        nonlocal tab
         if aid=='-':                    return None
         if aid=='prps': dlg_fif_opts(); return {}
         stores['tab']   = tab = aid
         htxt, me_t, me_h= prep(tab)
-        return {'ctrls':
-                [('imge' ,dict(vis=(tab=='keys')        ))
-                ,('htxt' ,dict(y=me_t,h=me_h  ,val=htxt ))
-                ,('porg' ,dict(vis=(tab=='tips')        ))
-                ,('prps' ,dict(vis=(tab=='opts')        ))
-                ,('keys' ,dict(val=(tab=='keys')        ))
-                ,('tips' ,dict(val=(tab=='tips')        ))
-                ,('tree' ,dict(val=(tab=='tree')        ))
-                ,('opts' ,dict(val=(tab=='opts')        ))
-                ]
-             , 'fid':'htxt'}
+        me_thw          = odict(when_resize(ag)['ctrls'])['htxt']
+        return  {'ctrls':
+                    [('imge' ,dict(vis=(tab=='keys')        ))
+                    ,('htxt' ,dict(val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
+                    ,('porg' ,dict(vis=(tab=='tips')        ))
+                    ,('prps' ,dict(vis=(tab=='opts')        ))
+                    ,('keys' ,dict(val=(tab=='keys')        ))
+                    ,('tips' ,dict(val=(tab=='tips')        ))
+                    ,('tree' ,dict(val=(tab=='tree')        ))
+                    ,('opts' ,dict(val=(tab=='opts')        ))
+                    ]
+                 ,'fid':'htxt'}
        #def acts
 
-    tab                 = stores.get('tab', 'keys')
     htxt, me_t, me_h    = prep(tab)
     DlgAgent( form  =dict( cap      =_('Help for "Find in Files"')
                           ,w        = GAP+DW+GAP
                           ,h        = GAP+DH+GAP
                           ,resize   = True
+                          ,on_resize= when_resize
                           )
             , ctrls = 
                 [('imge',dict(tp='im'   ,t=GAP ,h=400   ,l=GAP          ,w=820  ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
-                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW   ,a='lRtB'   ,ro_mono_brd='1,1,1'        ,val=htxt                       ))
+                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'        ,val=htxt                       ))
                 ,('porg',dict(tp='llb'  ,tid='-'        ,l=GAP          ,w=180  ,a='TB'     ,cap=_('Reg.ex. on python.org')
                                                                                             ,url=RE_DOC_REF             ,vis=(tab=='tips')              ))
                 ,('prps',dict(tp='bt'   ,tid='-'        ,l=GAP          ,w=130  ,a='TB'     ,cap=_('&Edit options…')    ,vis=(tab=='opts')  ,call=acts  ))# &e
@@ -1265,6 +1276,7 @@ class FifD:
         pass;                  #LOG and log('dlg_h={}',(dlg_h))
         return (dict(form =dict( cap  =self.get_fif_cap()
                                 ,h    =self.dlg_h
+                                ,h_min=self.dlg_h
                                 ,h_max=self.dlg_h
                                 )
                     ,vals =self.get_fif_vals()

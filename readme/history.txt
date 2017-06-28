@@ -1,3 +1,11 @@
+2.2.01 (2017-06-28)
+fixed: layout dlg help
+
+2.1.02 (2017-05-31)
+added: availability for buttons in dlg presets
+added: live applying opts from user.json via dlg opts
+fixed: no flashing on user acts (use dlg_proc not api dlg_custom)
+
 1.4.01 (2017-05-16)
 added: resize
 added: restore pos/size of dlg

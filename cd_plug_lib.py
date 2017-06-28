@@ -780,7 +780,8 @@ class BaseDlgAgent:
             if fpr.get('resize', False):
                 fpr['w_min']    = fpr.get('w_min', fpr['w'])
                 fpr['h_min']    = fpr.get('h_min', fpr['h'])
-            fpr     = BaseDlgAgent._form_acts('move', form=fpr, key4store=self.opts.get('form data key'))
+            fpr     = BaseDlgAgent._form_acts('move', form=fpr      # Move and (maybe) resize
+                                             , key4store=self.opts.get('form data key'))
             fpr['topmost']      = True
             app.dlg_proc(       self.id_dlg
                             , app.DLG_PROP_SET
@@ -1166,12 +1167,32 @@ class DlgAgent(BaseDlgAgent):
                         , prop=self._prepare_c_pr(cid, cfg_ctrl))    # Upd live-attrs
            #for cnt
 
+        # Resize callback
+        if 'on_resize' in self.form:
+            user_callbk = self.form['on_resize']
+            def da_rs_callbk(id_dlg, id_ctl=-1, data=''):
+                upds    = user_callbk(self)
+                if upds:
+                    self._update_on_call(upds)
+            self.form['on_resize'] = da_rs_callbk
+        
+        # Resize on start
         fpr     = self.form
+        w0      = fpr['w']
+        h0      = fpr['h']
         if fpr.get('resize', False):
-            self._prepare_anchors()                                         # a,aid -> a_*,sp_*
+            self._prepare_anchors()                                 # a,aid -> a_*,sp_*
             fpr['w_min']    = fpr.get('w_min', fpr['w'])
             fpr['h_min']    = fpr.get('h_min', fpr['h'])
-        fpr     = DlgAgent._form_acts('move', form=fpr)
+        pass;                  #log('fpr is self.form={}',(fpr is self.form))
+        fpr     = BaseDlgAgent._form_acts('move', form=fpr)         # Move and (maybe) resize
+        pass;                  #log('fpr is self.form={}',(fpr is self.form))
+        if 'on_resize' in self.form and \
+           (fpr['w'] != w0 or \
+            fpr['h'] != h0):
+            pass;              #log('fpr[w],fpr[h],w0,h0={}',(fpr['w'], fpr['h'], w0,h0))
+            self.form['on_resize'](self)
+
         fpr['topmost']      = True
         app.dlg_proc(           self.id_dlg
                             , app.DLG_PROP_SET
@@ -1214,34 +1235,7 @@ class DlgAgent(BaseDlgAgent):
                 elif not upds:                                          # No changes
                     return
                 pass;          #log('upds={}',(upds))
-                if isinstance(upds, tuple) or isinstance(upds, list) :
-                    upds    = deep_upd(*upds)
-                    pass;      #log('upds={}',(upds))
-                ctrls_u = odict(upds.get('ctrls',  []))
-                pass;          #log('ctrls_u={}',(ctrls_u))
-                vals    = upds.get('vals',   {})
-                form    = upds.get('form',   {})
-                fid     = upds.get('fid'  , upds.get('focused', form.get('fid', form.get('focused'))))
-                if False:pass
-                elif vals and not ctrls_u:
-                    ctrls_u     = { cid_    :  {'val':val} for cid_, val in vals.items()}
-                elif vals and     ctrls_u:
-                    for cid_, val in vals.items():
-                        if cid_ not in ctrls_u:
-                            ctrls_u[cid_]   =  {'val':val}
-                        else:
-                            ctrls_u[cid_]['val']    = val
-                for cid_, c in ctrls_u.items():
-                    pass;      #log('cid_, c={}',(cid_, c))
-                    c.pop('callback', None)
-                    c.pop('on_change', None)
-                    c.pop('call', None)
-                    c['type']   = self.ctrls[cid_]['type']
-                super(DlgAgent,self)._update(ctrls  =ctrls_u
-                                            ,form   =form
-                                            ,focused=fid)
-                if fid in self.ctrls:
-                    self.form['fid']    = fid
+                self._update_on_call(upds)
                #def agent_cbk
             
             c_pr['on_change']= da_c_callbk
@@ -1249,6 +1243,37 @@ class DlgAgent(BaseDlgAgent):
         
         return c_pr
        #def _prepare_c_pr
+
+    def _update_on_call(self, upds):
+        if isinstance(upds, tuple) or isinstance(upds, list) :          # Allow to use list of upd data
+            upds    = deep_upd(upds)
+            pass;      #log('upds={}',(upds))
+        ctrls_u = odict(upds.get('ctrls',  []))
+        pass;          #log('ctrls_u={}',(ctrls_u))
+        vals    = upds.get('vals',   {})
+        form    = upds.get('form',   {})
+        fid     = upds.get('fid'  , upds.get('focused', form.get('fid', form.get('focused'))))
+        if False:pass
+        elif vals and not ctrls_u:
+            ctrls_u     = { cid_    :  {'val':val} for cid_, val in vals.items()}
+        elif vals and     ctrls_u:
+            for cid_, val in vals.items():
+                if cid_ not in ctrls_u:
+                    ctrls_u[cid_]   =  {'val':val}
+                else:
+                    ctrls_u[cid_]['val']    = val
+        for cid_, c in ctrls_u.items():
+            pass;      #log('cid_, c={}',(cid_, c))
+            c.pop('callback', None)
+            c.pop('on_change', None)
+            c.pop('call', None)
+            c['type']   = self.ctrls[cid_]['type']
+        super(DlgAgent,self)._update(ctrls  =ctrls_u
+                                    ,form   =form
+                                    ,focused=fid)
+        if fid in self.ctrls:
+            self.form['fid']    = fid
+       #def _update_on_call
        
     def _prepare_anchors(self):
         """ Translate attrs 'a' 'aid' to 'a_*','sp_*'
@@ -1733,7 +1758,15 @@ def upd_dict(d1, d2):
     return rsp
    #def upd_dict
 
-def deep_upd(dct1, *dcts):
+def deep_upd(dcts):
+    pass;                      #log('dcts={}',(dcts))
+    if not dcts:
+        return dcts
+    if isinstance(dcts, dict):
+        return dcts
+
+    dct1, *dcts = dcts
+#def deep_upd(dct1, *dcts):
     pass;                      #log('dct1, dcts={}',(dct1, dcts))
     rsp   = dct1.copy()
     for dct in dcts:
