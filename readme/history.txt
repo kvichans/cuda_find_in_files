@@ -1,3 +1,6 @@
+2.2.02 (2017-06-28)
+fixed: block find/count/replace while plugin works
+
 2.2.01 (2017-06-28)
 fixed: layout dlg help
 

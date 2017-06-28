@@ -880,7 +880,7 @@ class BaseDlgAgent:
                     return
                 elif not upds:                                          # No changes
                     return
-                self._update(ctrls  =upds.get('ctrls',  [])
+                self._update(ctrls  =odict(upds.get('ctrls',  []))
                             ,form   =upds.get('form',   {})
                             ,focused=upds.get('focused',None))
                #def agent_cbk

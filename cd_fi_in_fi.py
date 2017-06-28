@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.2.01 2017-06-28'
+    '2.2.02 2017-06-28'
 ToDo: (see end of file)
 '''
 
@@ -1460,6 +1460,13 @@ class FifD:
 #       sort_s  = ag.cval('sort', '0')
 #       frst_s  = ag.cval('frst', '0')
 #       enco_s  = ag.cval('enco', '0')
+
+        # Block action buttons
+        ag._update(ctrls={
+             '!fnd':{'en': False}
+            ,'!rep':{'en': False}
+            ,'!cnt':{'en': False}
+        })
         
         pass;                   LOG and log('self.dept_n={}',(repr(self.dept_n)))
         how_walk    =dict(                                  #NOTE: fif params
@@ -1554,6 +1561,12 @@ class FifD:
             self.store()
             return None #break#while_fif
 
+        # UnBlock action buttons
+        ag._update(ctrls={
+             '!fnd':{'en': True}
+            ,'!rep':{'en': True}
+            ,'!cnt':{'en': True}
+        })
         return self.do_focus(aid,ag)
        #def do_work
        
