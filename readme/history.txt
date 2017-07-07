@@ -1,3 +1,6 @@
+2.2.03 (2017-07-07)
+fixed: unblock find/count/replace after failed search
+
 2.2.02 (2017-06-28)
 fixed: block find/count/replace while plugin works
 

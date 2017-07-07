@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.2.02 2017-06-28'
+    '2.2.03 2017-07-07'
 ToDo: (see end of file)
 '''
 
@@ -1525,6 +1525,11 @@ class FifD:
             )
         if not rpt_data and not rpt_info: 
             app.msg_status(_("Search stopped"))
+            ag._update(ctrls={
+                 '!fnd':{'en': True}
+                ,'!rep':{'en': True}
+                ,'!cnt':{'en': True}
+            })  # UnBlock action buttons
             return self.do_focus(aid,ag)   #continue#while_fif
         frfls   = rpt_info['files']
         frgms   = rpt_info['frgms']
@@ -1534,7 +1539,13 @@ class FifD:
                     if 0==frfls else \
                   f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
         progressor.set_progress(msg_rpt)
-        if 0==frgms and not REPORT_FAIL:    return self.do_focus(aid,ag)   #continue#while_fif
+        if 0==frgms and not REPORT_FAIL:    
+            ag._update(ctrls={
+                 '!fnd':{'en': True}
+                ,'!rep':{'en': True}
+                ,'!cnt':{'en': True}
+            })  # UnBlock action buttons
+            return self.do_focus(aid,ag)   #continue#while_fif
         req_opts= None
         if SAVE_REQ_TO_RPT:
             req_opts= {k:v for (k,v) in self.stores.items() if k[:3] not in ('wd_', 'wo_', 'pse')}
@@ -1561,12 +1572,11 @@ class FifD:
             self.store()
             return None #break#while_fif
 
-        # UnBlock action buttons
         ag._update(ctrls={
              '!fnd':{'en': True}
             ,'!rep':{'en': True}
             ,'!cnt':{'en': True}
-        })
+        })  # UnBlock action buttons
         return self.do_focus(aid,ag)
        #def do_work
        
