@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.2.03 2017-07-07'
+    '2.3.01 2017-09-13'
 ToDo: (see end of file)
 '''
 
@@ -173,7 +173,7 @@ class Command:
     def on_click_dbl(self, ed_self, scam):
         dcls    = Command.get_dcls()
         dcl     = dcls.get(scam, '')
-        pass;                   LOG and log('scam, dcl={}',(scam, dcl))
+        pass;                  #LOG and log('scam, dcl={}',(scam, dcl))
         if not dcl:
             return
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() not in lexers_l:
@@ -332,11 +332,13 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                 ) 
                 for ps in pset_l] \
             + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
+              ,f(_('In project={}\tFind in all project folders'), IN_PROJ_FOLDS)
               ,_('Config presets…\tChange, Move up/down, Delete')
               ,_('Save as preset\tSelect options to save…')]
     ind_inop= len(pset_l)
-    ind_conf= len(pset_l)+1
-    ind_save= len(pset_l)+2
+    ind_inpj= len(pset_l)+1
+    ind_conf= len(pset_l)+2
+    ind_save= len(pset_l)+3
     ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
     pass;                      #LOG and log('ps_ind={}',(ps_ind))
     if ps_ind is None:  return None
@@ -344,6 +346,11 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
     elif ps_ind==ind_inop:
         # To find in open files
         ouvl_l[keys_l.index('fold')]    = IN_OPEN_FILES
+        return ouvl_l
+        
+    elif ps_ind==ind_inpj:
+        # To find in project folders
+        ouvl_l[keys_l.index('fold')]    = IN_PROJ_FOLDS
         return ouvl_l
         
     elif ps_ind<len(pset_l):
@@ -580,6 +587,8 @@ _KEYS_BODY  = _(r'''
  
 • "Current folder" - {cfld}
  
+• "In folder" - {fold}
+ 
 • "Browse…" - {brow}
  
 • "In subfolders" - {dept}
@@ -659,13 +668,14 @@ Default values:
     "fif_read_head_size(bytes)":1024,
 ''')
 
-def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,pset_h,more_h,cust_h, stores=None):
+def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h, stores=None):
     stores      = {} if stores is None else stores
     TIPS_BODY   =_TIPS_BODY.strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES)
     KEYS_BODY   =_KEYS_BODY.strip().format(find=find_h.replace('\r', '\n')
                                           ,repl=repl_h.replace('\r', '\n')
                                           ,coun=coun_h.replace('\r', '\n')
                                           ,cfld=cfld_h.replace('\r', '\n')
+                                          ,fold=fold_h.replace('\r', '\n')
                                           ,brow=brow_h.replace('\r', '\n')
                                           ,dept=dept_h.replace('\r', '\n')
                                           ,pset=pset_h.replace('\r', '\n')
@@ -758,6 +768,14 @@ word_h  = _('Option "Whole words". It is ignored when:'
 brow_h  = _('Choose folder.'
             '\rShift+Click - Choose file to find in it.'
             )
+fold_h  = f(_('Start folder(s).'
+            '\rSpace-separated folders.'
+            '\rDouble-quote folder, which needs space-char.'
+            '\r~ is user Home folder.'
+            '\r$VAR or ${{VAR}} is environment variable.'
+            '\r{} to search in tabs.'
+            '\r{} to search in project folders.'
+            ), IN_OPEN_FILES, IN_PROJ_FOLDS)
 dept_h  = _('Which subfolders will be used to search.'
             '\rAlt+L - Apply "All".'
             '\rAlt+Y - Apply "In folder only".'
@@ -814,6 +832,7 @@ shtp_h  = f(_(  'Format of the reported tree structure.'
             '\r  In folder={}'
             '\ronly Compact options are used.'
            ),IN_OPEN_FILES)
+cntx_c  = _('Conte&xt -{}+{}')
 cntx_h  = _('Show result line and both its nearest lines, above and below result'
             '\rCtrl+Click  - Set count of above and below lines.')
 algn_h  = _("Align columns (filenames/numbers) by widest cell width")
@@ -1086,6 +1105,10 @@ class FifD:
         if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus(aid,ag)
         btn_p,btn_m = FifD.scam_pair(aid)
         
+        self.what_s = ag.cval('what')
+        if not self.wo_repl:     
+            self.repl_s = ag.cval('repl')
+        
         if btn_p in ('prs1', 'prs2', 'prs3') \
         or btn_m=='c/pres': # Ctrl+Preset - Apply last used preset
             pset_l  = self.stores.setdefault('pset', [])
@@ -1103,22 +1126,22 @@ class FifD:
             if not ps:
                 return self.do_focus(aid,ag)   #continue#while_fif
             FifD.upgrade(ps)
-            self.reex01  = ps['reex'] if ps.get('_reex', '')=='x' else self.reex01
-            self.case01  = ps['case'] if ps.get('_case', '')=='x' else self.case01
-            self.word01  = ps['word'] if ps.get('_word', '')=='x' else self.word01
-            self.incl_s  = ps['incl'] if ps.get('_incl', '')=='x' else self.incl_s
-            self.excl_s  = ps['excl'] if ps.get('_excl', '')=='x' else self.excl_s
-            self.fold_s  = ps['fold'] if ps.get('_fold', '')=='x' else self.fold_s
-            self.dept_n  = ps['dept'] if ps.get('_dept', '')=='x' else self.dept_n
-            self.skip_s  = ps['skip'] if ps.get('_skip', '')=='x' else self.skip_s
-            self.sort_s  = ps['sort'] if ps.get('_sort', '')=='x' else self.sort_s
-            self.frst_s  = ps['frst'] if ps.get('_frst', '')=='x' else self.frst_s
-            self.enco_s  = ps['enco'] if ps.get('_enco', '')=='x' else self.enco_s
-            self.totb_i  = ps['totb'] if ps.get('_totb', '')=='x' else self.totb_i
-            self.join_s  = ps['join'] if ps.get('_join', '')=='x' else self.join_s
-            self.shtp_s  = ps['shtp'] if ps.get('_shtp', '')=='x' else self.shtp_s
-            self.algn_s  = ps['algn'] if ps.get('_algn', '')=='x' else self.algn_s
-            self.cntx_s  = ps['cntx'] if ps.get('_cntx', '')=='x' else self.cntx_s
+            self.reex01 = ps['reex'] if ps.get('_reex', '')=='x' else self.reex01
+            self.case01 = ps['case'] if ps.get('_case', '')=='x' else self.case01
+            self.word01 = ps['word'] if ps.get('_word', '')=='x' else self.word01
+            self.incl_s = ps['incl'] if ps.get('_incl', '')=='x' else self.incl_s
+            self.excl_s = ps['excl'] if ps.get('_excl', '')=='x' else self.excl_s
+            self.fold_s = ps['fold'] if ps.get('_fold', '')=='x' else self.fold_s
+            self.dept_n = ps['dept'] if ps.get('_dept', '')=='x' else self.dept_n
+            self.skip_s = ps['skip'] if ps.get('_skip', '')=='x' else self.skip_s
+            self.sort_s = ps['sort'] if ps.get('_sort', '')=='x' else self.sort_s
+            self.frst_s = ps['frst'] if ps.get('_frst', '')=='x' else self.frst_s
+            self.enco_s = ps['enco'] if ps.get('_enco', '')=='x' else self.enco_s
+            self.totb_i = ps['totb'] if ps.get('_totb', '')=='x' else self.totb_i
+            self.join_s = ps['join'] if ps.get('_join', '')=='x' else self.join_s
+            self.shtp_s = ps['shtp'] if ps.get('_shtp', '')=='x' else self.shtp_s
+            self.algn_s = ps['algn'] if ps.get('_algn', '')=='x' else self.algn_s
+            self.cntx_s = ps['cntx'] if ps.get('_cntx', '')=='x' else self.cntx_s
             app.msg_status(_('Options is restored from preset: ')+ps['name'])
 
         if btn_m=='pres' \
@@ -1298,7 +1321,9 @@ class FifD:
                 , _('Report with lines after')  , sAf
                 )
             pass;              #LOG and log('cntx ans={}',(ans))
-            sBf,sAf = ans   if ans is not None else     ('0', '0')
+            if ans is None: 
+                return self.do_focus(aid,ag)
+            sBf,sAf = ans   #if ans is not None else     ('0', '0')
             pass;              #LOG and log('cntx sBf,sAf={}',(sBf,sAf))
             nBf = int(sBf) if sBf.isdigit() else 0
             nAf = int(sAf) if sAf.isdigit() else 0
@@ -1306,6 +1331,10 @@ class FifD:
             if nBf+nAf > 0:
                 apx.set_opt('fif_context_width_before', nBf)
                 apx.set_opt('fif_context_width_after' , nAf)
+            cntx_cs = f(cntx_c, nBf, nAf)
+            return (dict(ctrls=[('cntx', dict(cap=cntx_cs))])
+                   ,self.do_focus(aid,ag)
+                   )
 #       self.store() # in do_focus
         return self.do_focus(aid,ag)
        #def do_cntx
@@ -1352,7 +1381,7 @@ class FifD:
        
     def do_help(self, aid, ag):
         self.stores['help.data'] = dlg_help(
-            word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,brow_h,dept_h,pset_h,more_h,cust_h
+            word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h
         ,   self.stores.get('help.data'))
         open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         ag.activate()
@@ -1395,9 +1424,10 @@ class FifD:
         w_repl      = not self.wo_repl
         self.repl_s = self.repl_s if w_repl else ''
         
-        root        = self.fold_s.rstrip(r'\/') if self.fold_s!='/' else self.fold_s
-        root        = os.path.expanduser(root)
-        root        = os.path.expandvars(root)
+        if 0 != self.fold_s.count('"')%2:
+            app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['fold']), app.MB_OK+app.MB_ICONWARNING) 
+            return {'fid':'fold'}
+            
         if not self.what_s:
             app.msg_box(f(_('Fill the "{}" field'), self.caps['what']), app.MB_OK+app.MB_ICONWARNING)
             return {'fid':'what'}
@@ -1418,10 +1448,6 @@ class FifD:
                     app.msg_box(f(_('Set correct "{}" reg.ex.\n\nError:\n{}')
                                  , self.caps['repl'], ex), app.MB_OK+app.MB_ICONWARNING) 
                     return {'fid':'repl'}
-        if self.fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
-            app.msg_box(f(_('Set existing value in "{}"  or use "{}" (see {})')
-                         , self.caps['fold'], IN_OPEN_FILES, self.caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
-            return {'fid':'fold'}
         if not self.incl_s:
             app.msg_box(f(_('Fill the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'incl'}
@@ -1431,6 +1457,27 @@ class FifD:
         if 0 != self.excl_s.count('"')%2:
             app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'excl'}
+
+        roots       = []
+        if self.fold_s in (IN_OPEN_FILES, IN_PROJ_FOLDS):
+            roots   = [self.fold_s]
+        else:
+            roots   = prep_quoted_folders(self.fold_s)
+            pass;               LOG and log('roots={}',(roots))
+            roots   = map(os.path.expanduser, roots)
+            roots   = map(os.path.expandvars, roots)
+            roots   = map(lambda f: f.rstrip(r'\/') if f!='/' else f, roots)
+            roots   = list(roots)
+            pass;               LOG and log('roots={}',(roots))
+#       root        = self.fold_s
+#       root        = os.path.expanduser(root)
+#       root        = os.path.expandvars(root)
+#       root        = self.fold_s.rstrip(r'\/') if self.fold_s!='/' else self.fold_s
+        if self.fold_s not in (IN_OPEN_FILES, IN_PROJ_FOLDS) and not all(map(lambda f:os.path.isdir(f), roots)):
+#       if self.fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
+            app.msg_box(f(_('Set existing folder in "{}" \nor use "{}" \nor use "{}".\n\n{} can help.')
+                         , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS, self.caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
+            return {'fid':'fold'}
 
 #       shtp_s  = ag.cval('shtp', '0')
 
@@ -1470,7 +1517,8 @@ class FifD:
         
         pass;                   LOG and log('self.dept_n={}',(repr(self.dept_n)))
         how_walk    =dict(                                  #NOTE: fif params
-             root       =root
+             roots      =roots
+#            root       =root
             ,file_incl  =self.incl_s
             ,file_excl  =self.excl_s
             ,depth      =self.dept_n-1               # ['All', 'In folder only', '1 level', …]
@@ -1534,7 +1582,7 @@ class FifD:
         frfls   = rpt_info['files']
         frgms   = rpt_info['frgms']
         ################################
-        pass;              #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
+        pass;                  #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
         msg_rpt = _('No matches found') \
                     if 0==frfls else \
                   f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
@@ -1634,6 +1682,9 @@ class FifD:
 ,('-'   ,d(          tid='dept'                               ))
   ] 
     # Start=Full cnts
+        nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
+        nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))
+        cntx_cs = f(cntx_c, nBf, nAf)
         cnts    = [                                                                                                                                                       #  gmqz
  ('prs1',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&1')                                                            ,call=m.do_pres ))# &1
 ,('prs2',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&2')                                                            ,call=m.do_pres ))# &2
@@ -1651,7 +1702,7 @@ class FifD:
 ,('incl',d(tp='cb'  ,t=m.gap1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                         ,bind='incl_s'                  ))# 
 ,('exc_',d(tp='lb'  ,tid='excl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:')     ,hint=mask_h,vis=w_excl                                 ))# 
 ,('excl',d(tp='cb'  ,t=m.gap1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                             ,vis=w_excl ,bind='excl_s'                  ))# 
-,('fol_',d(tp='lb'  ,tid='fold'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')                                                              ))# &n
+,('fol_',d(tp='lb'  ,tid='fold'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')      ,hint=fold_h                                            ))# &n
 ,('fold',d(tp='cb'  ,t=m.gap2+112+M.EG4 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.fold_l                                         ,bind='fold_s'                  ))# 
 ,('brow',d(tp='bt'  ,tid='fold'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')              ,hint=brow_h                            ,call=m.do_fold ))# &b
 ,('dep_',d(tp='lb'  ,tid='dept'         ,l=M.LBL_L      ,w=100  -5          ,cap='>'+_('In s&ubfolders:')   ,hint=dept_h                                            ))# &u
@@ -1670,7 +1721,7 @@ class FifD:
 ,('sht_',d(tp='lb'  ,tid='frst'         ,l=5            ,r=80               ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ))# &/
 ,('shtp',d(tp='cb-r',tid='frst'         ,l=5+80         ,r=M.CMB_L          ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ))# 
 ,('algn',d(tp='ch'  ,tid='enco'         ,l=5+80         ,w=100              ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ))# &|
-,('cntx',d(tp='ch'  ,tid='enco'         ,l=5+170        ,w=150              ,cap=_('Conte&xt')              ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
+,('cntx',d(tp='ch'  ,tid='enco'         ,l=5+155        ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
                                                                                                                                                      
 ,('ase_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                 ))# 
 ,('ski_',d(tp='lb'  ,tid='skip'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva                                 ))# &k
@@ -1836,4 +1887,12 @@ ToDo
 [ ][kv-kv][01jun17] ? Show in Help ref to Issues on GH
 [ ][kv-kv][01jun17] ? Add hidden button to find in current file (=Shift+"CurrFold")
 [ ][kv-kv][16jun17] Show src ed AFTER set src caret to fragment
+[+][kv-kv][10jul17] Save "Find what" value on load preset
+[ ][kv-kv][12jul17] Esc dont to close dlg while seaching
+[ ][kv-kv][13jul17] ? Bold for def-button (as in dlg FindReplace)
+[+][at-kv][22aug17] Start folder[s] from current project (cuda_project_man.global_project_info['nodes'])
+[+][kv-kv][22aug17] Hint for 'In folder'
+[ ][kv-kv][22aug17] ? Rename to 'In folder[s]'
+[+][kv-kv][08sep17] "Context -1+1"
+[ ][kv-kv][14sep17] Save fold before to work
 '''

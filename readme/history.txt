@@ -1,3 +1,13 @@
+2.3.01 (2017-09-13)
+added: many folders "In folder" 
+added: <Project Folders> "In folder" 
+
+2.2.05 (2017-09-08)
+added: show "Context -1+1"
+
+2.2.04 (2017-07-12)
+fixed: save "Find what" and "Replace with" on load preset
+
 2.2.03 (2017-07-07)
 fixed: unblock find/count/replace after failed search
 

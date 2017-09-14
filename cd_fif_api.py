@@ -38,6 +38,7 @@ _   = get_translation(__file__) # I18N
 RPT_FIND_SIGN   = _('+Search')
 RPT_REPL_SIGN   = _('+Replace')
 
+IN_PROJ_FOLDS   = _('<Project Folders>')
 IN_OPEN_FILES   = _('<Open Files>')
 TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
@@ -314,7 +315,9 @@ def report_to_tab(rpt_data:dict
     need_rcl= shtp in (SHTP_SHORT_RCL, SHTP_SHRTS_RCL, SHTP_MIDDL_RCL, SHTP_SPARS_RCL)
     need_pth= shtp in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_MIDDL_R, SHTP_MIDDL_RCL)
     only_fn = shtp in (SHTP_MIDDL_R, SHTP_MIDDL_RCL)
-    root    = how_walk['root']
+    roots   = how_walk['roots']
+    root    = roots[0] if 1==len(roots) else '_no_root_'
+#   root    = how_walk['root']
     repl_b  = what_find['repl'] is not None
     pass;                       RPTLOG and log('algn, need_rcl, need_pth, only_fn={}',(algn, need_rcl, need_pth, only_fn))
     fl_wd, rw_wd, cl_wd, ln_wd  = calc_width(       rpt_data, algn, need_rcl, need_pth, only_fn)
@@ -323,18 +326,20 @@ def report_to_tab(rpt_data:dict
 #   wds                         = calc_width4depth( rpt_data, algn, need_rcl, need_pth, only_fn)
 #   pass;                       RPTLOG and log('wds={}',(wds))
 
-    line_1  =   f(_('{} for "{}" in "{}" ({} matches in {} files)')
+    line_1  =   f(_('{} for "{}" in {} ({} matches in {} files)')
                 ,RPT_FIND_SIGN
                 ,what_find['find']
-                ,root
+                ,(repr(roots[0]) if 1==len(roots) else repr(roots)).replace('\\\\','\\').replace("'", '"')
+#               ,root
                 ,rpt_info['frgms']
                 ,rpt_info['files']) \
             if not repl_b else      \
-                f(_('{} "{}" to "{}" in "{}" ({} changes in {} files)')
+                f(_('{} "{}" to "{}" in {} ({} changes in {} files)')
                 ,RPT_REPL_SIGN
                 ,what_find['find']
                 ,what_find['repl']
-                ,root
+                ,(repr(roots[0]) if 1==len(roots) else repr(roots)).replace('\\\\','\\').replace("'", '"')
+#               ,root
                 ,rpt_info['frgms']
                 ,rpt_info['files'])
     line_1 += ' ' + REQ_KEY + req_opts  if req_opts else ''
@@ -356,7 +361,7 @@ def report_to_tab(rpt_data:dict
             has_itm = 'items' in path_d
             path    = path_d['file']
             isfl    = path_d.get('isfl')
-            pass;               RPTLOG and log('path={}',path)
+            pass;               RPTLOG and log('path,root={}',(path,root))
             if   shtp   in (SHTP_SHRTS_R, SHTP_SHRTS_RCL):
                 pass
             elif shtp   in (SHTP_MIDDL_R, SHTP_MIDDL_RCL, SHTP_SPARS_R, SHTP_SPARS_RCL) and \
@@ -368,7 +373,7 @@ def report_to_tab(rpt_data:dict
                     path= os.path.relpath(path, path_d['prnt']['file'])
                     pass;       RPTLOG and log('(prnt-rel)path={}',path)
                 else:
-                    path= os.path.relpath(path, root)
+                    path= os.path.relpath(path, root) if root!='_no_root_' else path
                     pass;       RPTLOG and log('(root-rel)path={}',path)
             dept    = 1+path_d.get('dept', 0)
             c9dt    = c9*dept
@@ -784,7 +789,7 @@ def nav_to_src(where:str, how_act='move'):
     pass;                   path,rw,cl,ln  = _t
 #   path,rw,\
 #   cl, ln  = _get_data4nav(ed, row)
-    if path and os.path.isfile(path) or path.startswith('tab:'):
+    if path and (os.path.isfile(path) or path.startswith('tab:')):
         return _open_and_nav(where, how_act, path, rw, cl, ln)
     app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
    #def nav_to_src
@@ -831,7 +836,10 @@ def fold_all_roots(rpt_ed:app.Editor, what1:str, what2:str):
 ##############################################################################
 def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, progressor=None)->(list, dict):
     """ Scan files by how_walk:
-            'root'         !str         disk folder or <in open files> to scan tabs
+            'roots'        ![str]       disk folder(s) 
+                                        or <in proj files> 
+                                        or <in open files> to scan tabs
+        //  'root'         !str         disk folder or <in open files> to scan tabs
             'depth'         int(-1)    -1=all, 0=only root
             'file_incl'    !str
             'file_excl'     str('')
@@ -897,10 +905,20 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                   ,find_stopped=False
                   ,brow_files=0, files=0, frgms=0)
 
-    root    = how_walk['root']
+    roots   = how_walk['roots']
+#   root    = how_walk['root']
+    if roots==[IN_PROJ_FOLDS]:
+        try:
+            from cuda_project_man import global_project_info
+            roots   = global_project_info['nodes'][:]
+            how_walk['roots'] = roots
+        except:
+            roots   = []
+            how_walk['roots'] = roots
+    pass;                       LOG and log('roots={}',(roots))
     files,  \
     cllc_stp= collect_tabs(how_walk) \
-                if root==IN_OPEN_FILES else \
+                if roots==[IN_OPEN_FILES] else \
               collect_files(how_walk, progressor)
     if cllc_stp and ESC_FULL_STOP:   return [], {}
     pass;                      #FNDLOG and log('#collect_files={}',len(files))
@@ -1040,7 +1058,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         return _count
        #def find_for_lines
 
-    if root==IN_OPEN_FILES:
+    if roots==[IN_OPEN_FILES]:
+#   if root == IN_OPEN_FILES:
         # Find in tabs
         for path, h_tab in files:
             ted     = app.Editor(h_tab)
@@ -1072,7 +1091,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     tree4rsp= {}                # {path:rsp_l[?]} 
                                 # (1) store dir-items, 
                                 # (2) tree-parent-links in item of rsp_l to sum 'count' for dir
-    if spr_dirs:    # Separate dir in rsp
+    if spr_dirs and 1==len(roots):    # Separate dir in rsp
+        root            = roots[0]
         tree4rsp[root]  = dict(dept=0, file=root, count=0, prnt=None)
         rsp_l          += [tree4rsp[root]]
         pass;                  #FNDLOG and log('tree4rsp={}',pf(tree4rsp))
@@ -1099,15 +1119,23 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             #   NB! Rely to Up-Down dir sequence in files
             pathdir = os.path.dirname(path)
             pass;              #FNDLOG and log('?path,pathdir={}',(path,pathdir))
+            if 1<len(roots):
+                # Add root on demand
+                root            = [root for root in roots if pathdir.startswith(root)][0]
+                if  root not in tree4rsp:
+                    tree4rsp[root]  = dict(dept=0, file=root, count=0, prnt=None)
+                    rsp_l          += [tree4rsp[root]]
+                    pass;      #FNDLOG and log('add root tree4rsp[{}]={}',root,prntdct)
             prntdct = tree4rsp.get(pathdir)
             if not prntdct:
                 prntdct = get_prnt_path_dct(pathdir, tree4rsp)
                 pass;          #FNDLOG and log('prntdct={}',prntdct)
                 if not prntdct:
-                    pass;      #FNDLOG and log('no prntdct=',())
+                    pass;      #FNDLOG and log('no prntdct',())
                 if prntdct:
                     dct     = dict(dept=1+prntdct['dept'], file=pathdir, count=0, prnt=prntdct)
                     tree4rsp[pathdir]= dct
+                    pass;      #FNDLOG and log('tree4rsp[{}]={}',pathdir,dct)
                     rsp_l  += [dct]
                     prntdct = dct
                 pass;          #FNDLOG and log('tree4rsp={}',pf(tree4rsp))
@@ -1180,6 +1208,24 @@ def prep_filename_masks(mask:str)->(list,list):
     return (fi_masks, fo_masks)
    #def prep_filename_masks
     
+def prep_quoted_folders(mask:str)->list:
+    """ Parse folders quoted mask to [folder]
+        Exaple.
+            mask:             /   "/a b/c"   m/n
+            output:         ['/', '/a b/c', 'm/n']
+    """
+    mask    = mask.strip()
+    flds    = mask.split(' ')
+    if '"' in mask:
+        # Temporary replace all ' ' into "" to '·'
+        re_binqu= re.compile(r'"([^"]+) ([^"]+)"')
+        while re_binqu.search(mask):
+            mask= re_binqu.sub(r'"\1·\2"', mask) 
+        flds   = mask.split(' ')
+        flds   = [f.strip('"').replace('·', ' ') for f in flds if f]
+    return flds
+   #def prep_quoted_folders
+    
 def collect_tabs(how_walk:dict)->tuple:
     """ how_walk keys:
             'file_incl'    !str
@@ -1207,7 +1253,8 @@ def collect_tabs(how_walk:dict)->tuple:
 
 def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     """ how_walk keys:
-            'root'         !str
+            'roots'        ![str]
+        //  'root'         !str
             'depth'         int(-1)    -1=all, 0=only root
             'file_incl'    !str
             'file_excl'     str('')
@@ -1221,10 +1268,14 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
             [path], stoped
     """
     pass;                       t=log('>>(:)how_walk={}',how_walk) if LOG else 0 
-    root    = how_walk['root']
-    if not os.path.isdir(root): return [], False
+    roots   = how_walk['roots']
+#   root    = how_walk['root']
+    
+    if not all(map(lambda f:os.path.isdir(f), roots)):  return [], False
+#   if                      os.path.isdir(root):        return [], False
     rsp     = []
     stoped  = False
+    breaked = False
     incl    = how_walk[    'file_incl'    ].strip()
     excl    = how_walk.get('file_excl', '').strip()
     depth   = how_walk.get('depth', -1)
@@ -1241,65 +1292,72 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     pass;                      #LOG and log('incls={} incls_fo={}',incls, incls_fo)
     pass;                      #LOG and log('excls={} excls_fo={}',excls, excls_fo)
     dir_n   = 0
-    for dirpath, dirnames, filenames in os.walk(os.path.abspath(root)):
-        pass;                  #LOG and log('dirpath, #filenames={}',(dirpath, len(filenames)))
-        pass;                  #LOG and log('dirpath, dirnames, filenames={}',(dirpath, dirnames, filenames))
-        dir_n   += 1
-        if progressor and 0==dir_n%13:
-            progressor.set_progress(f(_('[ESC?][Found {} file(s) in {} dir(s)] Picking files in: {}'), len(rsp), dir_n ,dirpath))
-            if progressor.need_break():
-                if ESC_FULL_STOP:   return [], True
-                stoped  = True
-                progressor.prefix += _('(Picking stopped) ')
-                break#for dirpath
-        # Cut links
-        dir4cut     = [dirname for dirname in dirnames if os.path.islink(os.path.join(dirpath, dirname))]
-        for dirname in dir4cut:
-            dirnames.remove(dirname)
-        if hidn:
-            # Cut hidden dirs
-            dir4cut = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
+    for root in roots:
+        if stoped:  break#for root
+        if breaked: break#for root
+        pass;                  #LOG and log('root={}',(root))
+        for dirpath, dirnames, filenames in os.walk(os.path.abspath(root)):
+            pass;              #LOG and log('dirpath, #filenames={}',(dirpath, len(filenames)))
+            pass;              #LOG and log('dirpath, dirnames, filenames={}',(dirpath, dirnames, filenames))
+            dir_n   += 1
+            if progressor and 0==dir_n%13:
+                progressor.set_progress(f(_('[ESC?][Found {} file(s) in {} dir(s)] Picking files in: {}'), len(rsp), dir_n ,dirpath))
+                if progressor.need_break():
+                    if ESC_FULL_STOP:   return [], True
+                    stoped  = True
+                    progressor.prefix += _('(Picking stopped) ')
+                    break#for dirpath
+            # Cut links
+            dir4cut     = [dirname for dirname in dirnames if os.path.islink(os.path.join(dirpath, dirname))]
             for dirname in dir4cut:
                 dirnames.remove(dirname)
-        if incls_fo:
-            dir4cut = [dirname for dirname in dirnames if not any(map(lambda cl:fnmatch(dirname, cl), incls_fo))]
-            for dirname in dir4cut:
-                dirnames.remove(dirname)
-        if excls_fo:
-            dir4cut = [dirname for dirname in dirnames if     any(map(lambda cl:fnmatch(dirname, cl), excls_fo))]
-            for dirname in dir4cut:
-                dirnames.remove(dirname)
+            if hidn:
+                # Cut hidden dirs
+                dir4cut = [dirname for dirname in dirnames if is_hidden_file(os.path.join(dirpath, dirname))]
+                for dirname in dir4cut:
+                    dirnames.remove(dirname)
+            if incls_fo:
+                dir4cut = [dirname for dirname in dirnames if not any(map(lambda cl:fnmatch(dirname, cl), incls_fo))]
+                for dirname in dir4cut:
+                    dirnames.remove(dirname)
+            if excls_fo:
+                dir4cut = [dirname for dirname in dirnames if     any(map(lambda cl:fnmatch(dirname, cl), excls_fo))]
+                for dirname in dir4cut:
+                    dirnames.remove(dirname)
             
-        walk_depth  = 0 \
-                        if os.path.samefile(dirpath, root) else \
-                      1 +  os.path.relpath( dirpath, root).count(os.sep)
-        pass;                  #LOG and log('depth,walk_depth={}',(depth,walk_depth))
-        if walk_depth>depth>0:
-            pass;              #LOG and log('skip by >depth',())
-            dirnames.clear()
-            continue#for dirpath
-        for filename in filenames:
-            if not      any(map(lambda cl:fnmatch(filename, cl), incls)):   continue#for filename
-            if excl and any(map(lambda cl:fnmatch(filename, cl), excls)):   continue#for filename
-            path    = os.path.join(dirpath, filename)
-            if          os.path.islink(path):                               continue#for filename
-            if          os.path.getsize(path) == 0:                         continue#for filename
-            if size and os.path.getsize(path) > size*1024:                  continue#for filename
-            if          not os.access(path, os.R_OK):                       continue#for filename
-            if unwr and not os.access(path, os.W_OK):                       continue#for filename
-            if hidn and is_hidden_file(path):                               continue#for filename
-            if binr and is_birary_file(path):                               continue#for filename
-            rsp    += [path]
-            if  not sort and 0<frst<=len(rsp):
-                break#for filename
-           #for filename
-        if      not sort and 0<frst<=len(rsp):
-            pass;               LOG and log('break by >frst',())
-            break#for dirpath
-        if depth==0:
-            pass;               LOG and log('break by depth==0',())
-            break#for dirpath
-       #for dirpath
+            walk_depth  = 0 \
+                            if os.path.samefile(dirpath, root) else \
+                          1 +  os.path.relpath( dirpath, root).count(os.sep)
+            pass;              #LOG and log('depth,walk_depth={}',(depth,walk_depth))
+            if walk_depth>depth>0:
+                pass;          #LOG and log('skip by >depth',())
+                dirnames.clear()
+                continue#for dirpath
+            for filename in filenames:
+                if not      any(map(lambda cl:fnmatch(filename, cl), incls)):   continue#for filename
+                if excl and any(map(lambda cl:fnmatch(filename, cl), excls)):   continue#for filename
+                path    = os.path.join(dirpath, filename)
+                if          os.path.islink(path):                               continue#for filename
+                if          os.path.getsize(path) == 0:                         continue#for filename
+                if size and os.path.getsize(path) > size*1024:                  continue#for filename
+                if          not os.access(path, os.R_OK):                       continue#for filename
+                if unwr and not os.access(path, os.W_OK):                       continue#for filename
+                if hidn and is_hidden_file(path):                               continue#for filename
+                if binr and is_birary_file(path):                               continue#for filename
+                rsp    += [path]
+                if  not sort and 0<frst<=len(rsp):
+                    break#for filename
+               #for filename
+            if      not sort and 0<frst<=len(rsp):
+                pass;               LOG and log('break by >frst',())
+                breaked = True
+                break#for dirpath
+            if depth==0:
+                pass;               LOG and log('break by depth==0',())
+                breaked = True
+                break#for dirpath
+           #for dirpath
+       #for root
     if sort:
         tm_pth  = [(os.path.getmtime(path),path) for path in rsp]
         pass;                  #log('tm_pth={}',(tm_pth))
