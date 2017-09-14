@@ -1,26 +1,27 @@
 2.3.01 (2017-09-13)
-added: many folders "In folder" 
-added: <Project Folders> "In folder" 
+added: can specify several folders in the field "In folder" (space separated)
+added: can use string "<Project Folders>" for the field "In folder", to search in ProjManager project
+added: can specify OS env vars in the forms $VAR, ${VAR}
 
 2.2.05 (2017-09-08)
-added: show "Context -1+1"
+added: checkbox "Context" shows how many lines will be before/after
 
 2.2.04 (2017-07-12)
-fixed: save "Find what" and "Replace with" on load preset
+fixed: save "Find what" and "Replace with" on loading preset
 
 2.2.03 (2017-07-07)
-fixed: unblock find/count/replace after failed search
+fixed: must unblock find/count/replace fields after search stopped
 
 2.2.02 (2017-06-28)
-fixed: block find/count/replace while plugin works
+fixed: must block find/count/replace while plugin works
 
 2.2.01 (2017-06-28)
-fixed: layout dlg help
+fixed: layout of Help dialog
 
 2.1.02 (2017-05-31)
-added: availability for buttons in dlg presets
-added: live applying opts from user.json via dlg opts
-fixed: no flashing on user acts (use dlg_proc not api dlg_custom)
+added: availability for buttons in Presets dialog
+added: live applying opts from user.json via Options dialog
+fixed: no window flashing on user actions (used dlg_proc API)
 
 1.4.01 (2017-05-16)
 added: resize
