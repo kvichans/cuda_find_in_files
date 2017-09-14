@@ -1,3 +1,6 @@
+2.3.02 (2017-09-14)
+added: synonyms <t>==<Tabs>==<Open Files> and <p>==<Proj>==<Project Folders>
+
 2.3.01 (2017-09-13)
 added: can specify several folders in the field "In folder" (space separated)
 added: can use string "<Project Folders>" for the field "In folder", to search in ProjManager project

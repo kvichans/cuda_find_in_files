@@ -40,6 +40,10 @@ RPT_REPL_SIGN   = _('+Replace')
 
 IN_PROJ_FOLDS   = _('<Project Folders>')
 IN_OPEN_FILES   = _('<Open Files>')
+root_is_proj    = lambda rt:    (rt[:2]+rt[-1]).upper() in ('<P>')
+root_is_tabs    = lambda rt:    (rt[:2]+rt[-1]).upper() in ('<O>', '<T>')
+roots_is_proj   = lambda rts:1==len(rts) and root_is_proj(rts[0])
+roots_is_tabs   = lambda rts:1==len(rts) and root_is_tabs(rts[0])
 TOTB_USED_TAB   = _('<prior tab>')
 TOTB_NEW_TAB    = _('<new tab>')
 SHTP_SHORT_R    = _('path(r):line')
@@ -907,7 +911,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 
     roots   = how_walk['roots']
 #   root    = how_walk['root']
-    if roots==[IN_PROJ_FOLDS]:
+    if roots_is_proj(roots):
+#   if roots==[IN_PROJ_FOLDS]:
         try:
             from cuda_project_man import global_project_info
             roots   = global_project_info['nodes'][:]
@@ -918,7 +923,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     pass;                       LOG and log('roots={}',(roots))
     files,  \
     cllc_stp= collect_tabs(how_walk) \
-                if roots==[IN_OPEN_FILES] else \
+                if roots_is_tabs(roots) else \
               collect_files(how_walk, progressor)
     if cllc_stp and ESC_FULL_STOP:   return [], {}
     pass;                      #FNDLOG and log('#collect_files={}',len(files))
@@ -1058,7 +1063,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         return _count
        #def find_for_lines
 
-    if roots==[IN_OPEN_FILES]:
+    if roots_is_tabs(roots):
+#   if roots==[IN_OPEN_FILES]:
 #   if root == IN_OPEN_FILES:
         # Find in tabs
         for path, h_tab in files:

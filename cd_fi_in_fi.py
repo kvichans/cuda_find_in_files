@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.01 2017-09-13'
+    '2.3.02 2017-09-14'
 ToDo: (see end of file)
 '''
 
@@ -773,8 +773,8 @@ fold_h  = f(_('Start folder(s).'
             '\rDouble-quote folder, which needs space-char.'
             '\r~ is user Home folder.'
             '\r$VAR or ${{VAR}} is environment variable.'
-            '\r{} to search in tabs.'
-            '\r{} to search in project folders.'
+            '\r{} to search in tabs (in short <Tabs> or <t>).'
+            '\r{} to search in project folders (in short <p>).'
             ), IN_OPEN_FILES, IN_PROJ_FOLDS)
 dept_h  = _('Which subfolders will be used to search.'
             '\rAlt+L - Apply "All".'
@@ -1411,8 +1411,8 @@ class FifD:
         if btn_m=='!rep' \
         and app.ID_OK != app.msg_box(
              f(_('Do you want to replace in {}?'), 
-                _('current tab')        if self.fold_s==IN_OPEN_FILES and not ('*' in self.incl_s or '?' in self.incl_s) else 
-                _('all tabs')           if self.fold_s==IN_OPEN_FILES else 
+                _('current tab')        if root_is_tabs(self.fold_s) and not ('*' in self.incl_s or '?' in self.incl_s) else 
+                _('all tabs')           if root_is_tabs(self.fold_s) else 
                 _('all found files')
              )
             ,app.MB_OKCANCEL+app.MB_ICONQUESTION):
@@ -1459,7 +1459,8 @@ class FifD:
             return {'fid':'excl'}
 
         roots       = []
-        if self.fold_s in (IN_OPEN_FILES, IN_PROJ_FOLDS):
+        if root_is_proj(self.fold_s) or root_is_tabs(self.fold_s):
+#       if self.fold_s in (IN_OPEN_FILES, IN_PROJ_FOLDS):
             roots   = [self.fold_s]
         else:
             roots   = prep_quoted_folders(self.fold_s)
@@ -1473,11 +1474,11 @@ class FifD:
 #       root        = os.path.expanduser(root)
 #       root        = os.path.expandvars(root)
 #       root        = self.fold_s.rstrip(r'\/') if self.fold_s!='/' else self.fold_s
-        if self.fold_s not in (IN_OPEN_FILES, IN_PROJ_FOLDS) and not all(map(lambda f:os.path.isdir(f), roots)):
+            if not all(map(lambda f:os.path.isdir(f), roots)):
 #       if self.fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
-            app.msg_box(f(_('Set existing folder in "{}" \nor use "{}" \nor use "{}".\n\n{} can help.')
-                         , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS, self.caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
-            return {'fid':'fold'}
+                app.msg_box(f(_('Set existing folder in "{}" \nor use "{}" \nor use "{}".\n\n{} can help.')
+                             , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS, self.caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
+                return {'fid':'fold'}
 
 #       shtp_s  = ag.cval('shtp', '0')
 
