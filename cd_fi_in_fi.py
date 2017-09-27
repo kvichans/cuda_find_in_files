@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.02 2017-09-14'
+    '2.3.03 2017-09-27'
 ToDo: (see end of file)
 '''
 
@@ -129,8 +129,10 @@ class Command:
     def find_in_ed(self):
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         filename= ed.get_filename()
+        incl_s  = os.path.basename(filename) if filename else ed.get_prop(app.PROP_TAB_TITLE)
+        incl_s  = '"'+incl_s+'"' if ' ' in incl_s else incl_s
         return dlg_fif(what='', opts=dict(
-             incl = os.path.basename(filename) if filename else ed.get_prop(app.PROP_TAB_TITLE)
+             incl = incl_s
             ,fold = IN_OPEN_FILES
             ))
        #def find_in_ed

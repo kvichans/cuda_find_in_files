@@ -1,3 +1,6 @@
+2.3.03 (2017-09-27)
+fixed: add quotes around spaced filename for command "Find in current tab"
+
 2.3.02 (2017-09-14)
 added: synonyms <t>==<Tabs>==<Open Files> and <p>==<Proj>==<Project Folders>
 
