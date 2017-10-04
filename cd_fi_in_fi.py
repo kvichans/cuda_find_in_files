@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.03 2017-09-27'
+    '2.3.04 2017-10-04'
 ToDo: (see end of file)
 '''
 
@@ -1582,6 +1582,14 @@ class FifD:
                 ,'!cnt':{'en': True}
             })  # UnBlock action buttons
             return self.do_focus(aid,ag)   #continue#while_fif
+        if 0==rpt_info['cllc_files']: 
+            app.msg_status(_("No files found"))
+            ag._update(ctrls={
+                 '!fnd':{'en': True}
+                ,'!rep':{'en': True}
+                ,'!cnt':{'en': True}
+            })  # UnBlock action buttons
+            return self.do_focus(aid,ag)   #continue#while_fif
         frfls   = rpt_info['files']
         frgms   = rpt_info['frgms']
         ################################
@@ -1898,4 +1906,6 @@ ToDo
 [ ][kv-kv][22aug17] ? Rename to 'In folder[s]'
 [+][kv-kv][08sep17] "Context -1+1"
 [ ][kv-kv][14sep17] Save fold before to work
+[ ][kv-kv][27sep17] ? New "Show in": in dlg editor (footer?)
+[+][kv-kv][04oct17] "No files found" if collect_files returns []
 '''
