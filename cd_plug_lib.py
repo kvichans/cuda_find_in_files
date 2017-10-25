@@ -10,7 +10,7 @@ Content
 ToDo: (see end of file)
 '''
 
-import  sys, os, gettext, logging, inspect, time, collections, json
+import  sys, os, gettext, logging, inspect, time, collections, json, subprocess
 from    time        import perf_counter
 
 try:
