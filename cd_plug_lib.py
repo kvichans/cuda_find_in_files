@@ -663,6 +663,7 @@ class BaseDlgAgent:
         """ Show the form """
         ed_caller   = ed
         
+        app.dlg_proc(self.id_dlg, app.DLG_SCALE)        #??
         app.dlg_proc(self.id_dlg, app.DLG_SHOW_MODAL)
         
         BaseDlgAgent._form_acts('save', id_dlg=self.id_dlg, key4store=self.opts.get('form data key'))
