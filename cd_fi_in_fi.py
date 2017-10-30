@@ -1908,4 +1908,5 @@ ToDo
 [ ][kv-kv][14sep17] Save fold before to work
 [ ][kv-kv][27sep17] ? New "Show in": in dlg editor (footer?)
 [+][kv-kv][04oct17] "No files found" if collect_files returns []
+[ ][at-kv][25oct17] DLG_SCALE
 '''
