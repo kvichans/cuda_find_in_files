@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.02 2017-05-31'
+    '2.3.05 2017-12-07'
 ToDo: (see end of file)
 '''
 
@@ -1301,7 +1301,7 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     for root in roots:
         if stoped:  break#for root
         if breaked: break#for root
-        pass;                  #LOG and log('root={}',(root))
+        pass;                   LOG and log('root={}',(root))
         for dirpath, dirnames, filenames in os.walk(os.path.abspath(root)):
             pass;              #LOG and log('dirpath, #filenames={}',(dirpath, len(filenames)))
             pass;              #LOG and log('dirpath, dirnames, filenames={}',(dirpath, dirnames, filenames))
@@ -1336,7 +1336,7 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
                           1 +  os.path.relpath( dirpath, root).count(os.sep)
             pass;              #LOG and log('depth,walk_depth={}',(depth,walk_depth))
             if walk_depth>depth>0:
-                pass;          #LOG and log('skip by >depth',())
+                pass;          #LOG and log('skip root by >depth',())
                 dirnames.clear()
                 continue#for dirpath
             for filename in filenames:
@@ -1355,12 +1355,12 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
                     break#for filename
                #for filename
             if      not sort and 0<frst<=len(rsp):
-                pass;               LOG and log('break by >frst',())
+                pass;          #LOG and log('break by >frst',())
                 breaked = True
                 break#for dirpath
             if depth==0:
-                pass;               LOG and log('break by depth==0',())
-                breaked = True
+                pass;          #LOG and log('break root by depth==0',())
+#               breaked = True
                 break#for dirpath
            #for dirpath
        #for root

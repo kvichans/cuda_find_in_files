@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.04 2017-10-04'
+    '2.3.05 2017-12-07'
 ToDo: (see end of file)
 '''
 
@@ -554,8 +554,8 @@ See full documentation by link at bottom.
     [seq]   any character in seq,
     [!seq]  any character not in seq. 
 Note: 
-    *       matchs all names, 
-    *.*     doesnt match all.
+    *       matches all names, 
+    *.*     doesn't match all.
  
 • Values in fields "In files" and "Not in files" can filter subfolder names if they start with "/".
 Example.
@@ -778,7 +778,7 @@ fold_h  = f(_('Start folder(s).'
             '\r{} to search in tabs (in short <Tabs> or <t>).'
             '\r{} to search in project folders (in short <p>).'
             ), IN_OPEN_FILES, IN_PROJ_FOLDS)
-dept_h  = _('Which subfolders will be used to search.'
+dept_h  = _('Which subfolders will be searched.'
             '\rAlt+L - Apply "All".'
             '\rAlt+Y - Apply "In folder only".'
             )
@@ -1590,13 +1590,14 @@ class FifD:
                 ,'!cnt':{'en': True}
             })  # UnBlock action buttons
             return self.do_focus(aid,ag)   #continue#while_fif
+        clfls   = rpt_info['cllc_files']
         frfls   = rpt_info['files']
         frgms   = rpt_info['frgms']
         ################################
         pass;                  #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
-        msg_rpt = _('No matches found') \
+        msg_rpt = f(_('No matches found (in {} file(s))'), clfls) \
                     if 0==frfls else \
-                  f(_('Found {} match(es) in {} file(s)'), frgms, frfls)
+                  f(_('Found {} match(es) in {}/{} file(s)'), frgms, frfls, clfls)
         progressor.set_progress(msg_rpt)
         if 0==frgms and not REPORT_FAIL:    
             ag._update(ctrls={
@@ -1909,4 +1910,5 @@ ToDo
 [ ][kv-kv][27sep17] ? New "Show in": in dlg editor (footer?)
 [+][kv-kv][04oct17] "No files found" if collect_files returns []
 [ ][at-kv][25oct17] DLG_SCALE
+[ ][kv-kv][01dec17] Show count of searched files in status (NB for "nothing")
 '''
