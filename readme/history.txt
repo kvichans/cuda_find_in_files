@@ -1,9 +1,10 @@
 2.3.05 (2017-12-07)
 fixed: several paths "In folder" and not all "In subfolders"
+fixed: show status "No matches found (in N file(s))"
+fixed: show status "Found N match(es) in N/N file(s)"
 
 2.3.04 (2017-10-04)
 fixed: show status "No files found"
-added: count seen files in status if no mathes
 
 2.3.03 (2017-09-27)
 fixed: add quotes around spaced filename for command "Find in current tab"
