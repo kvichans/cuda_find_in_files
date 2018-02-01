@@ -341,7 +341,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
     ind_inpj= len(pset_l)+1
     ind_conf= len(pset_l)+2
     ind_save= len(pset_l)+3
-    ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list))      #NOTE: dlg-menu-press
+    ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list), caption=_('Presets'))      #NOTE: dlg-menu-press
     pass;                      #LOG and log('ps_ind={}',(ps_ind))
     if ps_ind is None:  return None
     if False:pass
@@ -1911,4 +1911,8 @@ ToDo
 [+][kv-kv][04oct17] "No files found" if collect_files returns []
 [ ][at-kv][25oct17] DLG_SCALE
 [ ][kv-kv][01dec17] Show count of searched files in status (NB for "nothing")
+[ ][at-kv][07jan18] Replace: Create backup of modified files
+[ ][at-kv][07jan18] Replace: Simulate, don’t actually modify
+[ ][at-kv][07jan18] Replace: Prompt and confirm each modification
+
 '''

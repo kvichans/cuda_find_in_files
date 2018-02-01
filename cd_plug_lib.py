@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.10 2017-06-10'
+    '2.1.11 2018-02-01'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -10,7 +10,7 @@ Content
 ToDo: (see end of file)
 '''
 
-import  sys, os, gettext, logging, inspect, time, collections, json, subprocess
+import  sys, os, gettext, logging, inspect, time, collections, json, re, subprocess
 from    time        import perf_counter
 
 try:
@@ -263,7 +263,7 @@ def is_running(process):
     except: #Windows
         s = subprocess.Popen(["tasklist", "/v"],stdout=subprocess.PIPE)
     for x in s.stdout:
-        if re.search(process, x):
+        if re.search(process, str(x)):
             return True
     return False
 
@@ -1672,11 +1672,11 @@ class CdSw:
     MENU_LIST     = 0 if 'sw'==app.__name__ else app.MENU_LIST
     MENU_LIST_ALT = 1 if 'sw'==app.__name__ else app.MENU_LIST_ALT
     @staticmethod
-    def dlg_menu(mid, text):
+    def dlg_menu(mid, text, focused=0, caption=''):
         if 'sw'==app.__name__:
             return app.dlg_menu(app.MENU_SIMPLE if mid==CdSw.MENU_LIST else app.MENU_DOUBLE, '', text)
         else:
-            return app.dlg_menu(mid, text)
+            return app.dlg_menu(mid, text, focused=focused, caption=caption)
     
     @staticmethod
     def msg_status(msg, process_messages=False):
