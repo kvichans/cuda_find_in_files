@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.05 2017-12-07'
+    '2.3.06 2018-02-19'
 ToDo: (see end of file)
 '''
 
@@ -125,6 +125,20 @@ class Command:
 #   def undo_by_report(self):
 #       undo_by_report()
        #def undo_by_report
+
+#   def __init__(self):
+#       fif_lxrdir  = os.path.dirname(__file__)+os.sep+'data'+os.sep+'lexlib'
+#       cud_lxrdir  = app.app_path(app.APP_DIR_DATA)         +os.sep+'lexlib'
+#       if not os.path.exists(cud_lxrdir+os.sep+'Search results.lcf')
+#           shutil.copy(
+#               fif_lxrdir+os.sep+'Search results.lcf'
+#           ,   cud_lxrdir+os.sep+'Search results.lcf'
+#           )
+#           shutil.copy(
+#               fif_lxrdir+os.sep+'Search results.cuda-lexmap'
+#           ,   cud_lxrdir+os.sep+'Search results.cuda-lexmap'
+#           )
+#      #def __init__
 
     def find_in_ed(self):
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
@@ -490,6 +504,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
         DlgAgent(form   =dict(cap=_('Config presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
                 ,fid    ='prss'
+#                              ,options={'gen_repro_to_file':'repro_dlg_pres.py'}
         ).show()
         return None
         
@@ -781,6 +796,7 @@ fold_h  = f(_('Start folder(s).'
 dept_h  = _('Which subfolders will be searched.'
             '\rAlt+L - Apply "All".'
             '\rAlt+Y - Apply "In folder only".'
+            '\rAlt+! - Apply "1 level".'
             )
 cfld_h  = _('Use folder of current file.'
             '\rShift+Click - Prepare search in the current file.'
@@ -945,11 +961,14 @@ class FifD:
                       ,resize  = True
                       ,w       = self.dlg_w
                       ,h       = self.dlg_h,   h_max   = self.dlg_h
+                     ,on_close_query = lambda idd, idc, data: not self.is_working_stop()
                       )
         ,   ctrls=self.get_fif_cnts()
         ,   vals =self.get_fif_vals()
         ,   fid  ='what'
-        ,   options = {'bindof':self}
+        ,   options = {'bindof':self
+                              #,'gen_repro_to_file':'repro_dlg_fif.py'
+                    }
         ).show(callbk_on_exit=self.copy_vals)
         self.store()
        #def show
@@ -1005,7 +1024,17 @@ class FifD:
         self.gap3    = None     # Will be filled in pre_cnts
         self.dlg_w   = None     # Will be filled in pre_cnts
         self.dlg_h   = None     # Will be filled in pre_cnts
+
+        self.progressor = None  # For lock dlg-hiding while search
+        self.locked_cids= None  # Locked controls while working
        #def __init__
+    
+    def is_working_stop(self):
+        pass;                  #log('?? is_working_stop={}',(self.progressor))
+        if self.progressor:
+            self.progressor.will_break = True
+        return bool(self.progressor)
+       #def is_working_stop
     
     def copy_vals(self, ag):
         self.reex01     = ag.cval('reex')
@@ -1244,6 +1273,7 @@ class FifD:
         pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
         self.dept_n = 0 if aid=='depa' else \
                       1 if aid=='depo' else \
+                      2 if aid=='dep1' else \
                       self.dept_n
 #       self.store() # in do_focus
         return (dict(vals={'dept':self.dept_n})
@@ -1391,6 +1421,7 @@ class FifD:
        #def do_help
     
     def do_exit(self, aid, ag):
+        if self.progressor:    return False
 #       ag.bind_do()
         self.copy_vals(ag)
         pass;                   LOG and log('self.totb_i={}',(self.totb_i))
@@ -1512,11 +1543,7 @@ class FifD:
 #       enco_s  = ag.cval('enco', '0')
 
         # Block action buttons
-        ag._update(ctrls={
-             '!fnd':{'en': False}
-            ,'!rep':{'en': False}
-            ,'!cnt':{'en': False}
-        })
+        self.lock_act(ag, 'lock-save')
         
         pass;                   LOG and log('self.dept_n={}',(repr(self.dept_n)))
         how_walk    =dict(                                  #NOTE: fif params
@@ -1566,29 +1593,23 @@ class FifD:
             )
     #   totb_s  = '1' if totb_s=='0' else totb_s
         ################################
-        progressor = ProgressAndBreak()
+        self.progressor = ProgressAndBreak()
         rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
              how_walk   = how_walk
             ,what_find  = what_find
             ,what_save  = what_save
             ,how_rpt    = how_rpt
-            ,progressor = progressor
+            ,progressor = self.progressor
             )
         if not rpt_data and not rpt_info: 
             app.msg_status(_("Search stopped"))
-            ag._update(ctrls={
-                 '!fnd':{'en': True}
-                ,'!rep':{'en': True}
-                ,'!cnt':{'en': True}
-            })  # UnBlock action buttons
+            self.lock_act(ag, 'unlock-saved')
+            self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
         if 0==rpt_info['cllc_files']: 
             app.msg_status(_("No files found"))
-            ag._update(ctrls={
-                 '!fnd':{'en': True}
-                ,'!rep':{'en': True}
-                ,'!cnt':{'en': True}
-            })  # UnBlock action buttons
+            self.lock_act(ag, 'unlock-saved')
+            self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
         clfls   = rpt_info['cllc_files']
         frfls   = rpt_info['files']
@@ -1598,13 +1619,10 @@ class FifD:
         msg_rpt = f(_('No matches found (in {} file(s))'), clfls) \
                     if 0==frfls else \
                   f(_('Found {} match(es) in {}/{} file(s)'), frgms, frfls, clfls)
-        progressor.set_progress(msg_rpt)
+        self.progressor.set_progress(msg_rpt)
         if 0==frgms and not REPORT_FAIL:    
-            ag._update(ctrls={
-                 '!fnd':{'en': True}
-                ,'!rep':{'en': True}
-                ,'!cnt':{'en': True}
-            })  # UnBlock action buttons
+            self.lock_act(ag, 'unlock-saved')
+            self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
         req_opts= None
         if SAVE_REQ_TO_RPT:
@@ -1623,21 +1641,44 @@ class FifD:
            ,how_walk
            ,what_find
            ,what_save
-           ,progressor  = progressor
+           ,progressor  = self.progressor
            ,req_opts    = req_opts
            )
-        progressor.set_progress(msg_rpt)
+        self.progressor.set_progress(msg_rpt)
+        self.progressor = None
         ################################
         if 0<frgms and CLOSE_AFTER_GOOD:
             self.store()
             return None #break#while_fif
 
-        ag._update(ctrls={
-             '!fnd':{'en': True}
-            ,'!rep':{'en': True}
-            ,'!cnt':{'en': True}
-        })  # UnBlock action buttons
+        self.lock_act(ag, 'unlock-saved')
+        self.progressor = None
         return self.do_focus(aid,ag)
+       #def do_work
+       
+    def lock_act(self, ag, how, cids=None):
+        ''' Block/UnBlock controls while working 
+                how     'lock'          from cids
+                        'unlock'        from cids
+                        'lock-save'     save locked controls
+                        'unlock-saved'  saved controls
+        '''
+        if False:pass
+        elif how=='lock'     and cids:
+            ag.update(ctrls={cid:{'en': False} for cid in cids})
+        elif how=='unlock'   and cids:
+            ag.update(ctrls={cid:{'en': True } for cid in cids})
+        elif how=='lock-save':
+            pass;              #log('c-type={}',({cid:cfg['type'] for cid,cfg in ag.ctrls.items()}))
+            self.locked_cids    = [cid 
+                for cid,cfg in ag.ctrls.items()
+                if  cfg['type'] in ('button', 'edit', 'check', 'checkbutton', 'combo_ro')    # types of the active controls in main dlg
+                and cfg.get('en', True)
+            ]
+            pass;              #log('self.locked_cids={}',(self.locked_cids))
+            ag.update(ctrls={cid:{'en': False} for cid in self.locked_cids})
+        elif how=='unlock-saved'   and self.locked_cids:
+            ag.update(ctrls={cid:{'en': True } for cid in self.locked_cids})
        #def do_work
        
     def get_fif_cnts(self, how=''): #NOTE: fif_cnts
@@ -1721,6 +1762,7 @@ class FifD:
 ,('dept',d(tp='cb-r',t=m.gap2+140+M.EG5 ,l=M.CMB_L      ,w=135              ,items=DEPT_L                                           ,bind='dept_n'                  ))# 
 ,('depa',d(tp='bt'  ,tid='dept'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&l')                                                            ,call=m.do_dept ))# &l
 ,('depo',d(tp='bt'  ,tid='dept'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&y')                                                            ,call=m.do_dept ))# &y
+,('dep1',d(tp='bt'  ,tid='dept'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&!')                                                            ,call=m.do_dept ))# &!
 ,('cfld',d(tp='bt'  ,tid='fold'         ,l=5            ,w=38*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ))# &c
                                                                                                                                                      
 ,('----',d(tp='clr' ,t=m.gap2+172+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                            ))#
@@ -1914,5 +1956,7 @@ ToDo
 [ ][at-kv][07jan18] Replace: Create backup of modified files
 [ ][at-kv][07jan18] Replace: Simulate, don’t actually modify
 [ ][at-kv][07jan18] Replace: Prompt and confirm each modification
-
+[ ][at-kv][07feb18] Event on_click_dbl by PROC_SET_EVENTS with lexers
+[ ][kv-kv][07feb18] Use pathlib
+[?][at-kv][12feb18] "Install" lexer on init
 '''

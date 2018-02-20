@@ -1,3 +1,8 @@
+2.3.06 (2018-02-19)
+added: hotkeys alt+! to set depth "1 level"
+added: lock controls while working
+fixed: ESC stops search (does not close dlg)
+
 2.3.05 (2017-12-07)
 fixed: several paths "In folder" and not all "In subfolders"
 fixed: show status "No matches found (in N file(s))"

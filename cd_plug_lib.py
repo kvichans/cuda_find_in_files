@@ -593,6 +593,105 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         ,   chds
    #def dlg_wrapper
 
+DLG_CTL_ADD_SET = 26
+DLG_PROC_I2S={
+0:'DLG_CREATE'
+,1:'DLG_FREE'
+,5:'DLG_SHOW_MODAL'
+,6:'DLG_SHOW_NONMODAL'
+,7:'DLG_HIDE'
+,8:'DLG_FOCUS'
+,9:'DLG_SCALE'
+,10:'DLG_PROP_GET'
+,11:'DLG_PROP_SET'
+,12:'DLG_DOCK'
+,13:'DLG_UNDOCK'
+,20:'DLG_CTL_COUNT'
+,21:'DLG_CTL_ADD'
+,26:'DLG_CTL_ADD_SET'
+,22:'DLG_CTL_PROP_GET'
+,23:'DLG_CTL_PROP_SET'
+,24:'DLG_CTL_DELETE'
+,25:'DLG_CTL_DELETE_ALL'
+,30:'DLG_CTL_FOCUS'
+,31:'DLG_CTL_FIND'
+,32:'DLG_CTL_HANDLE'
+}
+_SCALED_KEYS = ('x', 'y', 'w', 'h'
+            ,  'w_min', 'w_max', 'h_min', 'h_max'
+            ,  'sp_l', 'sp_r', 'sp_t', 'sp_b', 'sp_a'
+            )
+_scale_store = {}
+def _os_scale(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
+    ppi     = app.app_proc(app.PROC_GET_SYSTEM_PPI, '')
+    if ppi==96:
+        return
+    scale   = ppi/96
+    if False:pass
+    elif id_action==app.DLG_CREATE:
+        _scale_store[id_dialog]  = {}
+    
+    elif id_action==app.DLG_FREE:
+        _scale_store.pop(id_dialog, None)
+    
+    elif id_action in (app.DLG_PROP_SET, app.DLG_PROP_GET, app.DLG_CTL_PROP_SET, app.DLG_CTL_PROP_GET):
+        dlg_store   = _scale_store.setdefault(id_dialog, {})
+#       pass;                   print('a={}, st={}'.format(DLG_PROC_I2S[id_action], dlg_store))
+        
+        def save_and_scale_up(prop_dct, store_key):
+            xywh_p  = {k:prop_dct[k] for k in prop_dct if k in _SCALED_KEYS}
+            xywh_s  = dlg_store.setdefault(store_key, {})
+            xywh_s.update(xywh_p)                                               # Save!
+            for k in _SCALED_KEYS:
+                if k in prop_dct:
+                    prop_dct[k]   =               int(prop_dct[k] * scale)      # Scale!
+        
+        def restore_or_scale_dn(prop_dct, store_key):
+            xywh_s  = dlg_store.get(store_key, {})
+            for k in _SCALED_KEYS:
+                if k in prop_dct:
+                    prop_dct[k]   = xywh_s.get(k, int(prop_dct[k] / scale))     # Restore or UnScale!
+        
+#       pass;                   print('a={}, ?? pr={}'.format(DLG_PROC_I2S[id_action], {k:prop[k] for k in prop if k in _SCALED_KEYS or k=='name'}))
+        if False:pass
+        elif id_action==app.DLG_PROP_SET:                   save_and_scale_up(prop, id_dialog)
+        elif id_action==app.DLG_PROP_GET:                   restore_or_scale_dn(prop, id_dialog)
+        elif id_action==app.DLG_CTL_PROP_SET and -1!=index: save_and_scale_up(prop, index)
+        elif id_action==app.DLG_CTL_PROP_SET and ''!=name:  save_and_scale_up(prop, name)
+        elif id_action==app.DLG_CTL_PROP_GET and -1!=index: restore_or_scale_dn(prop, index)
+        elif id_action==app.DLG_CTL_PROP_GET and ''!=name:  restore_or_scale_dn(prop, name)
+#       pass;                   print('a={}, ok pr={}'.format(DLG_PROC_I2S[id_action], {k:prop[k] for k in prop if k in _SCALED_KEYS or k=='name'}))
+   #def os_scale
+
+def dlg_proc_wpr(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
+    if id_action==app.DLG_SCALE:
+        return
+#   if id_dialog==0:
+#       print('idd=dlg_proc(0, {})'.format(DLG_PROC_I2S[id_action]))
+#   else:
+#       print('dlg_proc(idd, {}, index={}, name="{}", prop={}, index2={})'.format(   DLG_PROC_I2S[id_action], 
+#           index, name, 
+#           '""' if type(prop)==str else prop, 
+##           '""' if type(prop)==str else {k:prop[k] for k in prop if k not in ['on_change']}, 
+#           index2))
+    #print('#dlg_proc id_action='+str(id_action)+' prop='+repr(prop))
+
+    scale_on_set    = id_action in (app.DLG_PROP_SET, app.DLG_CTL_PROP_SET)
+    scale_on_get    = id_action in (app.DLG_PROP_GET, app.DLG_CTL_PROP_GET)
+    res             = ''
+    if id_action==DLG_CTL_ADD_SET:  # Join ADD and SET for a control
+        res = ctl_ind = \
+        app.dlg_proc(id_dialog, app.DLG_CTL_ADD, name, -1, -1, '')       # type in name
+        _os_scale(   id_dialog, app.DLG_CTL_PROP_SET, prop, ctl_ind, -1, '')
+        app.dlg_proc(id_dialog, app.DLG_CTL_PROP_SET, prop, ctl_ind, -1, '')
+    else:
+        _os_scale(         id_dialog, id_action, prop, index, index2, name) if scale_on_set else 0
+        res = app.dlg_proc(id_dialog, id_action, prop, index, index2, name)
+    
+    _os_scale(id_dialog, id_action, res, index, index2, name) if scale_on_get else 0
+    return res
+   #def dlg_proc_wpr
+
 LMBD_HIDE   = lambda cid,ag:None
 class BaseDlgAgent:
     """ 
@@ -663,39 +762,49 @@ class BaseDlgAgent:
         """ Show the form """
         ed_caller   = ed
         
-        app.dlg_proc(self.id_dlg, app.DLG_SCALE)        #??
+#       app.dlg_proc(self.id_dlg, app.DLG_SCALE)        #??
         app.dlg_proc(self.id_dlg, app.DLG_SHOW_MODAL)
+        pass;                  #log('ok DLG_SHOW_MODAL',())
         
         BaseDlgAgent._form_acts('save', id_dlg=self.id_dlg, key4store=self.opts.get('form data key'))
         if callbk_on_exit:  callbk_on_exit(self)
-        app.dlg_proc(self.id_dlg, app.DLG_FREE)
+        dlg_proc_wpr(self.id_dlg, app.DLG_FREE)
+#       app.dlg_proc(self.id_dlg, app.DLG_FREE)
         ed_caller.focus()
        #def show
         
     def fattr(self, attr, live=True, defv=None):
         """ Return one form property """
-        pr  = app.dlg_proc(self.id_dlg
+        pr  = dlg_proc_wpr(self.id_dlg
                         , app.DLG_PROP_GET)     if live else    self.form
+#       pr  = app.dlg_proc(self.id_dlg
+#                       , app.DLG_PROP_GET)     if live else    self.form
         pass;                  #log('pr={}',(pr))
         rsp = pr.get(attr, defv)
         if live and attr=='focused':
-            rsp = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)['name']
+            rsp = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)['name']
+#           rsp = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)['name']
         return rsp
        #def fattr
 
     def fattrs(self, live=True, attrs=None):
         """ Return form properties """
-        pr  = app.dlg_proc(self.id_dlg
+        pr  = dlg_proc_wpr(self.id_dlg
                         , app.DLG_PROP_GET)     if live else    self.form
+#       pr  = app.dlg_proc(self.id_dlg
+#                       , app.DLG_PROP_GET)     if live else    self.form
         return pr   if not attrs else   {attr:pr.get(attr) for attr in attrs}
        #def fattrs
 
     def cattr(self, name, attr, live=True, defv=None):
         """ Return one the control property """
         live= False if attr in ('type',) else live          # Unchangable
-        pr  = app.dlg_proc(self.id_dlg
+        pr  = dlg_proc_wpr(self.id_dlg
                         , app.DLG_CTL_PROP_GET
                         , name=name)            if live else    self.ctrls[name]
+#       pr  = app.dlg_proc(self.id_dlg
+#                       , app.DLG_CTL_PROP_GET
+#                       , name=name)            if live else    self.ctrls[name]
         if attr not in pr:  return defv
         rsp = pr[attr]
         return self._take_val(name, rsp, defv)   if attr=='val' and live else    rsp
@@ -703,9 +812,12 @@ class BaseDlgAgent:
 
     def cattrs(self, name, attrs=None, live=True):
         """ Return the control properties """
-        pr  = app.dlg_proc(self.id_dlg
+        pr  = dlg_proc_wpr(self.id_dlg
                         , app.DLG_CTL_PROP_GET
                         , name=name)            if live else    self.ctrls[name]
+#       pr  = app.dlg_proc(self.id_dlg
+#                       , app.DLG_CTL_PROP_GET
+#                       , name=name)            if live else    self.ctrls[name]
         attrs   = attrs if attrs else list(pr.keys())
         pass;                  #log('pr={}',(pr))
         rsp     = {attr:pr.get(attr) for attr in attrs if attr not in ('val','on_change','callback')}
@@ -724,14 +836,15 @@ class BaseDlgAgent:
                 self.bindof.__setattr__(self.binds[name], self.cattr(name, attr))
             else:
                 val = self.bindof.__getattr(self.binds[name])
-                self._update({'ctrls':[(name, {attr:val})]})
+                self.update({'ctrls':[(name, {attr:val})]})
        #def bind_do
 
     def __init__(self, ctrls, form=None, focused=None, options=None):
         # Fields
         self.opts   = options if options else {}
         
-        self.id_dlg = app.dlg_proc(0, app.DLG_CREATE)
+        self.id_dlg = dlg_proc_wpr(0, app.DLG_CREATE)
+#       self.id_dlg = app.dlg_proc(0, app.DLG_CREATE)
         self.ctrls  = None                      # Conf-attrs of all controls by name (may be with 'val')
         self.form   = None                      # Conf-attrs of form
 #       self.callof = self.opts.get('callof')   # Object for callbacks
@@ -766,14 +879,23 @@ class BaseDlgAgent:
             # Create control
             cfg_ctrl.pop('callback', None)
             cfg_ctrl.pop('on_change', None)
-            ind_c   = app.dlg_proc(self.id_dlg
-                        , app.DLG_CTL_ADD
-                        , cfg_ctrl['type'])
-            pass;              #log('ind_c,cfg_ctrl[type]={}',(ind_c,cfg_ctrl['type']))
-            app.dlg_proc(   self.id_dlg
-                        , app.DLG_CTL_PROP_SET
-                        , index=ind_c
+            ind_c   = dlg_proc_wpr(self.id_dlg
+                        , DLG_CTL_ADD_SET
+                        , name=cfg_ctrl['type']
                         , prop=self._prepare_c_pr(name, cfg_ctrl))
+#           ind_c   = app.dlg_proc(self.id_dlg
+#                       , app.DLG_CTL_ADD_SET
+#                       , name=cfg_ctrl['type']
+#                       , prop=self._prepare_c_pr(name, cfg_ctrl))
+            pass;              #log('ind_c,cfg_ctrl[type]={}',(ind_c,cfg_ctrl['type']))
+#           ind_c   = app.dlg_proc(self.id_dlg
+#                       , app.DLG_CTL_ADD
+#                       , cfg_ctrl['type'])
+#           pass;              #log('ind_c,cfg_ctrl[type]={}',(ind_c,cfg_ctrl['type']))
+#           app.dlg_proc(   self.id_dlg
+#                       , app.DLG_CTL_PROP_SET
+#                       , index=ind_c
+#                       , prop=self._prepare_c_pr(name, cfg_ctrl))
            #for cnt
         
         if self.form:
@@ -784,9 +906,12 @@ class BaseDlgAgent:
             fpr     = BaseDlgAgent._form_acts('move', form=fpr      # Move and (maybe) resize
                                              , key4store=self.opts.get('form data key'))
             fpr['topmost']      = True
-            app.dlg_proc(       self.id_dlg
+            dlg_proc_wpr(       self.id_dlg
                             , app.DLG_PROP_SET
                             , prop=fpr)
+#           app.dlg_proc(       self.id_dlg
+#                           , app.DLG_PROP_SET
+#                           , prop=fpr)
         
         if focused in self.ctrls:
             self.form['focused']   = focused
@@ -881,7 +1006,7 @@ class BaseDlgAgent:
                     return
                 elif not upds:                                          # No changes
                     return
-                self._update(ctrls  =odict(upds.get('ctrls',  []))
+                self.update( ctrls  =odict(upds.get('ctrls',  []))
                             ,form   =upds.get('form',   {})
                             ,focused=upds.get('focused',None))
                #def agent_cbk
@@ -890,7 +1015,7 @@ class BaseDlgAgent:
         return c_pr
        #def _prepare_c_pr
 
-    def _update(self, ctrls={}, form={}, focused=None):
+    def update(self, ctrls={}, form={}, focused=None):
         """ Change some attrs of form/controls """
         pass;                  #log('',())
         pass;                  #log('ctrls={}',(ctrls))
@@ -902,19 +1027,26 @@ class BaseDlgAgent:
             cfg_ctrl= self.ctrls[name]
             cfg_ctrl.update(new_ctrl)
             new_ctrl['type']    = cfg_ctrl['type']
-            app.dlg_proc(   self.id_dlg
+            dlg_proc_wpr(   self.id_dlg
                         , app.DLG_CTL_PROP_SET
                         , name=name
                         , prop=self._prepare_c_pr(name, new_ctrl, {'ctrls':ctrls}))
+#           app.dlg_proc(   self.id_dlg
+#                       , app.DLG_CTL_PROP_SET
+#                       , name=name
+#                       , prop=self._prepare_c_pr(name, new_ctrl, {'ctrls':ctrls}))
         
         if form:
             self.form.update(form)
             pass;              #log('form={}',(self.fattrs(live=F)))
             pass;              #log('form={}',(self.fattrs()))
             pass;              #log('form={}',(form))
-            app.dlg_proc(   self.id_dlg
+            dlg_proc_wpr(   self.id_dlg
                         , app.DLG_PROP_SET
                         , prop=form)
+#           app.dlg_proc(   self.id_dlg
+#                       , app.DLG_PROP_SET
+#                       , prop=form)
 
         if focused in self.ctrls:
             self.form['focused']    = focused
@@ -929,15 +1061,17 @@ class BaseDlgAgent:
         srp     =    ''
         srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
         for idC in range(app.dlg_proc(self.id_dlg, app.DLG_CTL_COUNT)):
-            prC = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, index=idC)
+            prC = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=idC)
+#           prC = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, index=idC)
             name = prC['name']
             prC.update({k:v for k,v in self.ctrls[name].items() if k not in ('callback','call')})
             srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC['type'])
             srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', repr(prC))
-        prD     = app.dlg_proc(self.id_dlg, app.DLG_PROP_GET)
+        prD     = dlg_proc_wpr(self.id_dlg, app.DLG_PROP_GET)
+#       prD     = app.dlg_proc(self.id_dlg, app.DLG_PROP_GET)
         prD.update(self.form)
         srp    +=l+f('dlg_proc(idd, DLG_PROP_SET, prop={})', repr(prD))
-        srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, index={})', prD['focused'])
+        srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, name={})', prD['focused'])
         srp    +=l+  'dlg_proc(idd, DLG_SHOW_MODAL)'
         srp    +=l+  'dlg_proc(idd, DLG_FREE)'
         open(rerpo_fn, 'w', encoding='UTF-8').write(srp)
@@ -968,7 +1102,8 @@ class BaseDlgAgent:
             return form
         
         if act=='save' and id_dlg:
-            dlg_pr  = app.dlg_proc(id_dlg, app.DLG_PROP_GET)
+            dlg_pr  = dlg_proc_wpr(id_dlg, app.DLG_PROP_GET)
+#           dlg_pr  = app.dlg_proc(id_dlg, app.DLG_PROP_GET)
             fm_key  = key4store if key4store else get_form_key(dlg_pr)
             pass;              #log('{}={}', fm_key,{k:v for k,v in dlg_pr.items() if k in ('x','y','w','h')})
             stores[fm_key]  = {k:v for k,v in dlg_pr.items() if k in ('x','y','w','h')}
@@ -1159,13 +1294,21 @@ class DlgAgent(BaseDlgAgent):
             tp      = cfg_ctrl.get('tp',  cfg_ctrl.get('type'))
             cfg_ctrl['tp']      = tp
             cfg_ctrl['type']    = REDUCTIONS.get(tp, tp)
-            ind_c   = app.dlg_proc(self.id_dlg
-                        , app.DLG_CTL_ADD
-                        , cfg_ctrl['type'])
-            app.dlg_proc(   self.id_dlg
-                        , app.DLG_CTL_PROP_SET
-                        , index=ind_c
-                        , prop=self._prepare_c_pr(cid, cfg_ctrl))    # Upd live-attrs
+            ind_c   = dlg_proc_wpr(self.id_dlg
+                        , DLG_CTL_ADD_SET
+                        , name=cfg_ctrl['type']
+                        , prop=self._prepare_c_pr(cid, cfg_ctrl))
+#           ind_c   = app.dlg_proc(self.id_dlg
+#                       , app.DLG_CTL_ADD_SET
+#                       , name=cfg_ctrl['type']
+#                       , prop=self._prepare_c_pr(cid, cfg_ctrl))
+#           ind_c   = app.dlg_proc(self.id_dlg
+#                       , app.DLG_CTL_ADD
+#                       , cfg_ctrl['type'])
+#           app.dlg_proc(   self.id_dlg
+#                       , app.DLG_CTL_PROP_SET
+#                       , index=ind_c
+#                       , prop=self._prepare_c_pr(cid, cfg_ctrl))    # Upd live-attrs
            #for cnt
 
         # Resize callback
@@ -1195,9 +1338,12 @@ class DlgAgent(BaseDlgAgent):
             self.form['on_resize'](self)
 
         fpr['topmost']      = True
-        app.dlg_proc(           self.id_dlg
+        dlg_proc_wpr(           self.id_dlg
                             , app.DLG_PROP_SET
                             , prop=fpr)                         # Upd live-attrs
+#       app.dlg_proc(           self.id_dlg
+#                           , app.DLG_PROP_SET
+#                           , prop=fpr)                         # Upd live-attrs
         
         fid     = fid   if fid in self.ctrls else     self.form.get('fid')
         if fid in self.ctrls:
@@ -1269,7 +1415,7 @@ class DlgAgent(BaseDlgAgent):
             c.pop('on_change', None)
             c.pop('call', None)
             c['type']   = self.ctrls[cid_]['type']
-        super(DlgAgent,self)._update(ctrls  =ctrls_u
+        super(DlgAgent,self).update( ctrls  =ctrls_u
                                     ,form   =form
                                     ,focused=fid)
         if fid in self.ctrls:
@@ -1292,11 +1438,13 @@ class DlgAgent(BaseDlgAgent):
             trg_w,  \
             trg_h   = fm_w, fm_h
             if aid in self.ctrls:
-                prTrg   = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, name=aid)
+                prTrg   = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, name=aid)
+#               prTrg   = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, name=aid)
                 trg_w,  \
                 trg_h   = prTrg['w'], prTrg['h']
             if not anc: continue
-            prOld   = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, name=cid)
+            prOld   = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, name=cid)
+#           prOld   = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, name=cid)
             prAnc   = {}
             if '-' in anc:
                 # Center by horz
@@ -1323,7 +1471,8 @@ class DlgAgent(BaseDlgAgent):
                 prAnc.update(dict( a_t=(aid, '['), sp_t=      prOld['y']
                                   ,a_b=(aid, ']'), sp_b=trg_h-prOld['y']-prOld['h']))
             if prAnc:
-                app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_SET, name=cid, prop=prAnc)
+                dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_SET, name=cid, prop=prAnc)
+#               app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_SET, name=cid, prop=prAnc)
        #def _prepare_anchors
 
     def _prep_pos_attrs(self, cnt, cid, ctrls4t=None):
@@ -1704,16 +1853,18 @@ def gen_repro_code(idDlg, rerpo_fn):
     srp     =    ''
     srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
     for idC in range(app.dlg_proc(idDlg, app.DLG_CTL_COUNT)):
-        prC = app.dlg_proc(idDlg, app.DLG_CTL_PROP_GET, index=idC)
+        prC = dlg_proc_wpr(idDlg, app.DLG_CTL_PROP_GET, index=idC)
+#       prC = app.dlg_proc(idDlg, app.DLG_CTL_PROP_GET, index=idC)
         prTg= json.loads(prC.pop('tag','{}'))
         prC.update(prTg)
 #       prC['props'] = prTg.get('props','')
 #       prC['props'] = json.loads(prC['tag']).get('props','')
         srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC.pop('type',None))
         srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', repr(prC))
-    prD     = app.dlg_proc(idDlg, app.DLG_PROP_GET)
+    prD     = dlg_proc_wpr(idDlg, app.DLG_PROP_GET)
+#   prD     = app.dlg_proc(idDlg, app.DLG_PROP_GET)
     srp    +=l+f('dlg_proc(idd, DLG_PROP_SET, prop={})', repr({'cap':prD['cap'], 'w':prD['w'], 'h':prD['h']}))
-    srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, index={})', prD['focused'])
+    srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, name="{}")', prD['focused'])
     srp    +=l+  'dlg_proc(idd, DLG_SHOW_MODAL)'
     srp    +=l+  'dlg_proc(idd, DLG_FREE)'
     open(rerpo_fn, 'w', encoding='UTF-8').write(srp)

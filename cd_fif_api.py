@@ -1413,6 +1413,7 @@ class ProgressAndBreak:
     """
     def __init__(self):
         self.prefix = ''
+        self.will_break = False
         app.app_proc(app.PROC_SET_ESCAPE, '0')
 
     def set_progress(self, msg:str):
@@ -1420,13 +1421,18 @@ class ProgressAndBreak:
 #       app.msg_status(self.prefix+msg, process_messages=True)
 
     def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
-        was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
-        app.app_proc(app.PROC_SET_ESCAPE, '0')
-        if was_esc and with_request:
+#       was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
+#       app.app_proc(app.PROC_SET_ESCAPE, '0')
+#       if was_esc and with_request:
+#           if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO+app.MB_ICONQUESTION):
+#               return True
+#           was_esc = False
+#       return was_esc
+        if self.will_break and with_request:
             if app.ID_YES == app.msg_box(process_hint, app.MB_YESNO+app.MB_ICONQUESTION):
                 return True
-            was_esc = False
-        return was_esc
+            self.will_break = False
+        return self.will_break
    #class ProgressAndBreak
 
 #def undo_by_report():
