@@ -1,3 +1,6 @@
+2.3.07 (2018-02-21)
+fixed: reformat messages to show in status and in report
+
 2.3.06 (2018-02-19)
 added: hotkeys alt+! to set depth "1 level"
 added: lock controls while working

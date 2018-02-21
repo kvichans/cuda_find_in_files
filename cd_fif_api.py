@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.05 2017-12-07'
+    '2.3.07 2018-02-21'
 ToDo: (see end of file)
 '''
 
@@ -330,22 +330,26 @@ def report_to_tab(rpt_data:dict
 #   wds                         = calc_width4depth( rpt_data, algn, need_rcl, need_pth, only_fn)
 #   pass;                       RPTLOG and log('wds={}',(wds))
 
-    line_1  =   f(_('{} for "{}" in {} ({} matches in {} files)')
+    line_1  =   f(_('{} for "{}" in "{}" from {} ({} matches in {}({}) files)')
                 ,RPT_FIND_SIGN
                 ,what_find['find']
+                ,how_walk['file_incl']
                 ,(repr(roots[0]) if 1==len(roots) else repr(roots)).replace('\\\\','\\').replace("'", '"')
 #               ,root
                 ,rpt_info['frgms']
-                ,rpt_info['files']) \
+                ,rpt_info['files']
+                ,rpt_info['cllc_files']) \
             if not repl_b else      \
-                f(_('{} "{}" to "{}" in {} ({} changes in {} files)')
+                f(_('{} "{}" to "{}" in "{}" from {} ({} changes in {}({}) files)')
                 ,RPT_REPL_SIGN
                 ,what_find['find']
                 ,what_find['repl']
+                ,how_walk['file_incl']
                 ,(repr(roots[0]) if 1==len(roots) else repr(roots)).replace('\\\\','\\').replace("'", '"')
 #               ,root
                 ,rpt_info['frgms']
-                ,rpt_info['files'])
+                ,rpt_info['files']
+                ,rpt_info['cllc_files'])
     line_1 += ' ' + REQ_KEY + req_opts  if req_opts else ''
                 
     row4crt = append_line(line_1)
@@ -355,9 +359,9 @@ def report_to_tab(rpt_data:dict
         for path_n, path_d in enumerate(rpt_data):                  #NOTE: rpt main loop
             if progressor and (0==path_n%37):# or 0==rpt_ed.get_line_count()%137):
                 pc  = int(100*path_n/len(rpt_data))
-                progressor.set_progress( f(_('[ESC?] Reporting: {}%'), pc))
+                progressor.set_progress( f(_('[ESC?] Report: {}%'), pc))
                 if progressor.need_break():
-                    progressor.prefix += f(_('(Reporting stopped {}%) '), pc)
+                    progressor.prefix += f(_('(Report stopped on {}%) '), pc)
                     append_line(         f('\t<{}>', progressor.prefix))
                     rpt_stop= True
                     break#for path
@@ -407,9 +411,9 @@ def report_to_tab(rpt_data:dict
                 for item_n, item in enumerate(items):
                     if progressor and (1000==item_n%1039):
                         pc  = int(100*path_n/len(rpt_data))
-                        progressor.set_progress( f(_('[ESC?] Reporting: {}%'), pc))
+                        progressor.set_progress( f(_('[ESC?] Report: {}%'), pc))
                         if progressor.need_break():
-                            progressor.prefix += f(_('(Reporting stopped {}%) '), pc)
+                            progressor.prefix += f(_('(Report stopped on {}%) '), pc)
                             append_line(         f('\t<{}>', progressor.prefix))
                             rpt_stop= True
                             break#for item
@@ -1110,13 +1114,13 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         pass;                   FNDLOG and log('path_n, path={}',(path_n, path))
         if progressor and 0==path_n%17:
             pc  = int(100*path_n/len(files))
-            progressor.set_progress( f(_('[ESC?] Seaching: {}% [found {} match(es) in {} file(s)]')
+            progressor.set_progress( f(_('[ESC?] Search: {}% [found {} matches in {}({}) files]')
                                     , pc
-                                    , rsp_i['frgms'], rsp_i['files']))
+                                    , rsp_i['frgms'], rsp_i['files'], len(files)))
             if progressor.need_break():
                 if ESC_FULL_STOP:   return [], {}
                 rsp_i['find_stopped']   = True
-                progressor.prefix += f(_('(Seaching stopped {}%) '), pc)
+                progressor.prefix += f(_('(Search stopped on {}%) '), pc)
                 break#for path
         
         prntdct = None
@@ -1307,7 +1311,8 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
             pass;              #LOG and log('dirpath, dirnames, filenames={}',(dirpath, dirnames, filenames))
             dir_n   += 1
             if progressor and 0==dir_n%13:
-                progressor.set_progress(f(_('[ESC?][Found {} file(s) in {} dir(s)] Picking files in: {}'), len(rsp), dir_n ,dirpath))
+                progressor.set_progress(f(_('[ESC?][Found {} file(s) in {} dir(s)] Picking in: {}')
+                                        , len(rsp), dir_n ,dirpath))
                 if progressor.need_break():
                     if ESC_FULL_STOP:   return [], True
                     stoped  = True

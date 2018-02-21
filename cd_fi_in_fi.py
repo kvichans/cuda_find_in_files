@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.06 2018-02-19'
+    '2.3.07 2018-02-21'
 ToDo: (see end of file)
 '''
 
@@ -1608,7 +1608,7 @@ class FifD:
             self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
         if 0==rpt_info['cllc_files']: 
-            app.msg_status(_("No files found"))
+            app.msg_status(_("No files picked"))
             self.lock_act(ag, 'unlock-saved')
             self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
@@ -1619,7 +1619,7 @@ class FifD:
         pass;                  #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
         msg_rpt = f(_('No matches found (in {} file(s))'), clfls) \
                     if 0==frfls else \
-                  f(_('Found {} match(es) in {}/{} file(s)'), frgms, frfls, clfls)
+                  f(_('Found {} match(es) in {}({}) file(s)'), frgms, frfls, clfls)
         self.progressor.set_progress(msg_rpt)
         if 0==frgms and not REPORT_FAIL:    
             self.lock_act(ag, 'unlock-saved')
@@ -1943,7 +1943,7 @@ ToDo
 [ ][kv-kv][01jun17] ? Add hidden button to find in current file (=Shift+"CurrFold")
 [ ][kv-kv][16jun17] Show src ed AFTER set src caret to fragment
 [+][kv-kv][10jul17] Save "Find what" value on load preset
-[ ][kv-kv][12jul17] Esc dont to close dlg while seaching
+[+][kv-kv][12jul17] Esc dont to close dlg while seaching
 [ ][kv-kv][13jul17] ? Bold for def-button (as in dlg FindReplace)
 [+][at-kv][22aug17] Start folder[s] from current project (cuda_project_man.global_project_info['nodes'])
 [+][kv-kv][22aug17] Hint for 'In folder'
@@ -1960,4 +1960,5 @@ ToDo
 [ ][at-kv][07feb18] Event on_click_dbl by PROC_SET_EVENTS with lexers
 [ ][kv-kv][07feb18] Use pathlib
 [?][at-kv][12feb18] "Install" lexer on init
+[ ][kv-kv][21feb18] Use ~ to show path in msg/report
 '''
