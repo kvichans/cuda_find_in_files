@@ -782,7 +782,9 @@ class BaseDlgAgent:
         pass;                  #log('pr={}',(pr))
         rsp = pr.get(attr, defv)
         if live and attr=='focused':
-            rsp = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)['name']
+            prf = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)
+            rsp = prf['name'] if prf else None
+#           rsp = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)['name']
 #           rsp = app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, index=rsp)['name']
         return rsp
        #def fattr

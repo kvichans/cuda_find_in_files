@@ -1124,7 +1124,8 @@ class FifD:
         self.store() if store else None
         aid_ed  = ag.cattr(aid, 'type') in ('edit', 'combo')
         fid     = ag.fattr('focused')
-        fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo')
+        fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo') if fid else None
+#       fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo')
         fid     = aid    if aid_ed                                  else \
                   fid    if fid_ed                                  else \
                   'what' if aid in ('brow', 'cfld')                 else \
