@@ -806,13 +806,9 @@ cfld_h  = _('Use folder of current file.'
 more_h  = _('Show/Hide advanced options'
             '\rCtrl+Click   - Show/Hide "Not in files".'
             '\rShift+Click - Show/Hide "Replace".'
-            '\rAlt+V - Toggle visibility on cycle'
-            '\r   hidden "Not in files", hidden  "Replace"'
-            '\r   visible  "Not in files", hidden  "Replace"'
-            '\r   visible  "Not in files", visible   "Replace"'
-            '\r   hidden "Not in files", visible   "Replace"'
             )
-cust_h  = _('Change dialog layout'
+cust_h  = _('Adjust visibility of "Not in files" and "Replace"'
+            '\r '
             '\rAlt+V - Toggle visibility on cycle'
             '\r   hidden "Not in files", hidden  "Replace"'
             '\r   visible  "Not in files", hidden  "Replace"'
@@ -872,10 +868,14 @@ repl_h  = _('Start search and replacement.'
             )
 coun_h  = _('Count matches only.'
             '\rShift+Click  - Find file names only.'
+            '\r '
+            '\rNote: Alt+T works if button is hidden.'
             )
 pset_h  = _('Save options for future. Restore saved options.'
             '\rShift+Click - Show preset list in applying history order.'
             '\rCtrl+Click   - Apply last used preset.'
+            '\r '
+            '\rNote: Alt+S works if button is hidden.'
             '\rAlt+1 - Apply first preset.'
             '\rAlt+2 - Apply second preset.'
             '\rAlt+3 - Apply third preset.'
@@ -950,7 +950,7 @@ class FifD:
     EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if WIN_MAC else [5*i for i in range(11)]
     DLG_W0,     \
     DLG_H0      = (700, 335 + EG1 + EG10)
-    DEF_WD_TXTS = 300
+    DEF_WD_TXTS = 330
     DEF_WD_BTNS = 100
 
     TXT_W       = DEF_WD_TXTS
@@ -1111,7 +1111,8 @@ class FifD:
         self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
         self.gap3   = (GAP-132 if self.wo_adva else GAP)+self.gap2 -GAP
         self.dlg_w,\
-        self.dlg_h  = (self.TBN_L+FifD.BTN_W+GAP, FifD.DLG_H0+self.gap3-(15+FifD.EG4 if self.wo_adva else 15))
+        self.dlg_h  = (self.TBN_L + FifD.BTN_W + GAP
+                      ,FifD.DLG_H0 + self.gap3 - (15 + FifD.EG4 if self.wo_adva else 15)+5)
         pass;                  #LOG and log('gap2={}',(self.gap2))
         pass;                  #LOG and log('dlg_w, dlg_h={}',(self.dlg_w, self.dlg_h))
         return self
@@ -1445,6 +1446,7 @@ class FifD:
 #       self.store() # in do_focus
         
         btn_p,btn_m = FifD.scam_pair(aid)
+        btn_p,btn_m = btn_p.replace('!ctt', '!cnt'),btn_m.replace('!ctt', '!cnt')
         if btn_p not in ('!cnt', '!fnd', '!rep'):   return self.do_focus(aid,ag)
         
         w_excl      = not self.wo_excl
@@ -1697,12 +1699,13 @@ class FifD:
         w_repl  = not self.wo_repl
         w_adva  = not self.wo_adva
         ad01    = 0             if self.wo_adva else 1
+        ad1_1   = -1            if self.wo_adva else 1
         c_more  = _('Mor&e >>') if self.wo_adva else _('L&ess <<')
         M       = FifD
         m       = self
         d       = dict
         if how=='vis+pos':  return [
- ('pres',d(          tid='incl'         ,w=38*3*ad01            ))
+ ('pres',d(          tid='incl'         ,w=39*3*ad01            ))
                                                                                                                    
 ,('rep_',d(          tid='repl'                     ,vis=w_repl ))
 ,('repl',d(          t  =5+    28+M.EG1             ,vis=w_repl ))
@@ -1753,11 +1756,11 @@ class FifD:
  ('prs1',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&1')                                                            ,call=m.do_pres ))# &1
 ,('prs2',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&2')                                                            ,call=m.do_pres ))# &2
 ,('prs3',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&3')                                                            ,call=m.do_pres ))# &3
-,('pres',d(tp='bt'  ,tid='incl'         ,l=5            ,w=38*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h                            ,call=m.do_pres ))# &s
-,('reex',d(tp='ch-b',tid='what'         ,l=5+38*0       ,w=38               ,cap='&.*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus))# &.
-,('case',d(tp='ch-b',tid='what'         ,l=5+38*1       ,w=38               ,cap='&aA'                      ,hint=case_h            ,bind='case01'  ,call=m.do_focus))# &a
-,('word',d(tp='ch-b',tid='what'         ,l=5+38*2       ,w=38               ,cap='"&w"'                     ,hint=word_h            ,bind='word01'  ,call=m.do_focus))# &w
-                                                                                                                                
+,('pres',d(tp='bt'  ,tid='incl'         ,l=5            ,w=39*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h                            ,call=m.do_pres ))# &s
+,('reex',d(tp='ch-b',tid='what'         ,l=5+38*0       ,w=39               ,cap='.&*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus))# &.
+,('case',d(tp='ch-b',tid='what'         ,l=5+38*1       ,w=39               ,cap='&aA'                      ,hint=case_h            ,bind='case01'  ,call=m.do_focus))# &a
+,('word',d(tp='ch-b',tid='what'         ,l=5+38*2       ,w=39               ,cap='"&w"'                     ,hint=word_h            ,bind='word01'  ,call=m.do_focus))# &w
+                                                                                                                                                                    
 ,('wha_',d(tp='lb'  ,tid='what'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                              ))# &f
 ,('what',d(tp='cb'  ,t  =5              ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                         ,bind='what_s'                  ))# 
 ,('rep_',d(tp='lb'  ,tid='repl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')                ,vis=w_repl                                 ))# &r
@@ -1771,26 +1774,35 @@ class FifD:
 ,('brow',d(tp='bt'  ,tid='fold'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')              ,hint=brow_h                            ,call=m.do_fold ))# &b
 ,('dep_',d(tp='lb'  ,tid='dept'         ,l=M.LBL_L      ,w=100  -5          ,cap='>'+_('In s&ubfolders:')   ,hint=dept_h                                            ))# &u
 ,('dept',d(tp='cb-r',t=m.gap2+140+M.EG5 ,l=M.CMB_L      ,w=135              ,items=DEPT_L                                           ,bind='dept_n'                  ))# 
-,('depa',d(tp='bt'  ,tid='dept'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&l')                                                            ,call=m.do_dept ))# &l
-,('depo',d(tp='bt'  ,tid='dept'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&y')                                                            ,call=m.do_dept ))# &y
-,('dep1',d(tp='bt'  ,tid='dept'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&!')                                                            ,call=m.do_dept ))# &!
-,('cfld',d(tp='bt'  ,tid='fold'         ,l=5            ,w=38*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ))# &c
-                                                                                                                                                     
-,('----',d(tp='clr' ,t=m.gap2+172+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                            ))#
-,('more',d(tp='bt'  ,t=m.gap2+160+M.EG5 ,l=5            ,w=38*3             ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ))# &e
-                                                                                                                                                     
-,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=35+80        ,r=M.CMB_L+30       ,cap=_('Adv. report options')               ,vis=w_adva                                 ))# 
-,('tot_',d(tp='lb'  ,tid='skip'         ,l=35           ,r=80     +30       ,cap='>'+_('Show in&:')                     ,vis=w_adva                                 ))# &:
-,('totb',d(tp='cb-r',tid='skip'         ,l=35+80        ,r=M.CMB_L+30       ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ))# 
-,('join',d(tp='ch'  ,tid='sort'         ,l=35+80        ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ))# &d
-,('sht_',d(tp='lb'  ,tid='frst'         ,l=35           ,r=80     +30       ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ))# &/
-,('shtp',d(tp='cb-r',tid='frst'         ,l=35+80        ,r=M.CMB_L+30       ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ))# 
-,('algn',d(tp='ch'  ,tid='enco'         ,l=35+80        ,w=100              ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ))# &|
-,('cntx',d(tp='ch'  ,tid='enco'         ,l=35+155       ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
-
-,('cust',d(tp='bt'  ,t=m.gap2+160+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
-                                                                                                                                                     
-,('ase_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                 ))# 
+,('depa',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&l')                                                            ,call=m.do_dept ))# &l
+,('depo',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&y')                                                            ,call=m.do_dept ))# &y
+,('dep1',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&!')                                                            ,call=m.do_dept ))# &!
+,('cfld',d(tp='bt'  ,tid='fold'         ,l=5            ,w=39*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ))# &c
+                                                                                                                                                                    
+,('----',d(tp='clr' ,t=m.gap2+175+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                            ))#
+,('more',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5            ,w=39*2+7           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ))# &e
+,('cust',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5+39*2+7     ,w=39  -7           ,cap=_('.&..')                  ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
+#,('cust',d(tp='bt' ,t=m.gap2+163+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
+                                                                                                                                                                    
+                                                                                                                                                                    
+,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=39*3+20      ,w=150-10           ,cap=_('Adv. report options')               ,vis=w_adva                                 ))# 
+,('tot_',d(tp='lb'  ,tid='skip'         ,l=5            ,w=39*3             ,cap='>'+_('Show in&:')                     ,vis=w_adva                                 ))# &:
+,('totb',d(tp='cb-r',tid='skip'         ,l=39*3+10      ,w=150              ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ))# 
+,('join',d(tp='ch'  ,tid='sort'         ,l=39*3+10      ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ))# &d
+,('sht_',d(tp='lb'  ,tid='frst'         ,l=5            ,w=39*3             ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ))# &/
+,('shtp',d(tp='cb-r',tid='frst'         ,l=39*3+10      ,w=150              ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ))# 
+,('algn',d(tp='ch'  ,tid='enco'         ,l=39*3+10      ,w=80               ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ))# &|
+,('cntx',d(tp='ch'  ,tid='enco'         ,l=39*3+80      ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
+#,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=40+80+10     ,r=M.CMB_L+35       ,cap=_('Adv. report options')               ,vis=w_adva                                 ))# 
+#,('tot_',d(tp='lb'  ,tid='skip'         ,l=40           ,r=80     +35       ,cap='>'+_('Show in&:')                     ,vis=w_adva                                 ))# &:
+#,('totb',d(tp='cb-r',tid='skip'         ,l=40+80        ,r=M.CMB_L+35       ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ))# 
+#,('join',d(tp='ch'  ,tid='sort'         ,l=40+80        ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ))# &d
+#,('sht_',d(tp='lb'  ,tid='frst'         ,l=40           ,r=80     +35       ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ))# &/
+#,('shtp',d(tp='cb-r',tid='frst'         ,l=40+80        ,r=M.CMB_L+35       ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ))# 
+#,('algn',d(tp='ch'  ,tid='enco'         ,l=40+80        ,w=100              ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ))# &|
+#,('cntx',d(tp='ch'  ,tid='enco'         ,l=40+155       ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
+                                                                                                                                                                    
+,('ase_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+110  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                 ))# 
 ,('ski_',d(tp='lb'  ,tid='skip'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva                                 ))# &k
 ,('skip',d(tp='cb-r',t=m.gap2+210+M.EG6 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SKIP_L                               ,vis=w_adva ,bind='skip_s'                  ))# 
 ,('sor_',d(tp='lb'  ,tid='sort'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&ort file list:')              ,vis=w_adva                                 ))# &o
@@ -1800,14 +1812,15 @@ class FifD:
 ,('enc_',d(tp='lb'  ,tid='enco'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Encodings &\\:')    ,hint=enco_h,vis=w_adva                                 ))# \
 ,('enco',d(tp='cb-r',t=m.gap2+291+M.EG9 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=ENCO_L                               ,vis=w_adva ,bind='enco_s'                  ))# 
                                                                                                                                                      
-,('!fnd',d(tp='bt'  ,tid='what'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h                            ,call=m.do_work ))# 
-,('!rep',d(tp='bt'  ,tid='repl'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl                 ,call=m.do_work ))# &p
-,('!cnt',d(tp='bt'  ,tid='incl'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva                 ,call=m.do_work ))# &t
-#,('cust',d(tp='bt' ,t=m.gap2+264+M.EG8 ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
-,('loop',d(tp='bt'  ,tid='cust'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&v')                                                            ,call=m.do_more ))# &v
-,('help',d(tp='bt'  ,tid='dept'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Help')                             ,sto=w_adva                 ,call=m.do_help ))# &h
-#,('help',d(tp='bt' ,t=m.gap2+291+M.EG9 ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Help')                             ,sto=w_adva                 ,call=m.do_help ))# &h
-#,('-'   ,d(tp='bt' ,tid='dept'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Close')                                                         ,call=m.do_exit ))# 
+,('!fnd',d(tp='bt'  ,tid='what'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h                            ,call=m.do_work ))# 
+,('!rep',d(tp='bt'  ,tid='repl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl                 ,call=m.do_work ))# &p
+,('!cnt',d(tp='bt'  ,tid='incl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva                 ,call=m.do_work ))# &t
+,('!ctt',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&t')                                                            ,call=m.do_work ))# &t
+#,('cust',d(tp='bt' ,t=m.gap2+264+M.EG8 ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
+,('loop',d(tp='bt'  ,tid='cust'         ,l=1000     ,w=0            ,sto=F  ,cap=_('&v')                                                            ,call=m.do_more ))# &v
+,('help',d(tp='bt'  ,tid='dept'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('&Help…')                            ,sto=w_adva                 ,call=m.do_help ))# &h
+#,('help',d(tp='bt' ,t=m.gap2+291+M.EG9 ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('&Help')                             ,sto=w_adva                 ,call=m.do_help ))# &h
+#,('-'   ,d(tp='bt' ,tid='dept'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Close')                                                         ,call=m.do_exit ))# 
                 ]
         self.caps   = {cid:cnt['cap']             for cid,cnt           in cnts
                         if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
@@ -1815,7 +1828,7 @@ class FifD:
                         if cnt['tp'] in ('cb', 'cb-r', 'ed')  and 'cap' in cnts[icnt-1][1]})
         self.caps   = {k:v.strip(' :*|\\/>*').replace('&', '') for (k,v) in self.caps.items()}
         return cnts
-       #def get_cnts
+       #def get_fif_cnts
     
     def get_fif_vals(self):
         vals    =       dict( reex=self.reex01

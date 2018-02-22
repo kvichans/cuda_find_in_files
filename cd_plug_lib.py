@@ -1098,7 +1098,9 @@ class BaseDlgAgent:
         
         def get_form_key(prs):
             fm_cap  = prs['cap']
-            return fm_cap if ' (' not in fm_cap else fm_cap[:fm_cap.rindex(' (')]
+            fm_cap  = fm_cap[:fm_cap.rindex(' (')]      if ' (' in fm_cap else fm_cap
+            fm_cap  = fm_cap[:fm_cap.rindex(' [')]      if ' [' in fm_cap else fm_cap
+            return fm_cap #if ' (' not in fm_cap else fm_cap[:fm_cap.rindex(' (')]
         
         if False:pass
         
