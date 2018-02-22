@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.12 2018-02-22'
+    '2.1.13 2018-02-22'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -1561,6 +1561,76 @@ class DlgAgent(BaseDlgAgent):
             cnt['props']=           cnt.pop('brdW_fillC_fontC_brdC')
         elif tp in ('edit', 'memo') and cnt.get('ro_mono_brd'):
             cnt['props']=               cnt.pop('ro_mono_brd')
+
+        if 'props' in cnt and app.app_api_version()>='1.0.224':
+            # Convert props to ex0..ex9
+            #   See 'Prop "ex"' at wiki.freepascal.org/CudaText_API
+            lsPr = cnt.pop('props').split(',')
+            if False:pass
+            elif tp=='button':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: default for Enter key
+            elif tp in ('edit', 'memo'):
+                cnt['ex0']  = '1'==lsPr[0]  #bool: read-only
+                cnt['ex1']  = '1'==lsPr[1]  #bool: font is monospaced
+                cnt['ex2']  = '1'==lsPr[2]  #bool: show border
+            elif tp=='spinedit':
+                cnt['ex0']  =  int(lsPr[0]) #int:  min value
+                cnt['ex1']  =  int(lsPr[1]) #int:  max value
+                cnt['ex2']  =  int(lsPr[2]) #int:  increment
+            elif tp=='label':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: right aligned
+            elif tp=='linklabel':
+                cnt['ex0']  = lsPr[0]       #str: URL. Should not have ','. Clicking on http:/mailto: URLs should work, result of clicking on other kinds depends on OS.
+            elif tp=='listview':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: show grid lines
+            elif tp=='tabs':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: show tabs at bottom
+            elif tp=='colorpanel':
+                cnt['ex0']  =  int(lsPr[0]) #int:  border width (from 0)
+                cnt['ex1']  =  int(lsPr[1]) #int:  color of fill
+                cnt['ex2']  =  int(lsPr[2]) #int:  color of font
+                cnt['ex3']  =  int(lsPr[3]) #int:  color of border
+            elif tp=='filter_listview':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: filter works for all columns
+            elif tp=='image':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: center picture
+                cnt['ex1']  = '1'==lsPr[1]  #bool: stretch picture
+                cnt['ex2']  = '1'==lsPr[2]  #bool: allow stretch in
+                cnt['ex3']  = '1'==lsPr[3]  #bool: allow stretch out
+                cnt['ex4']  = '1'==lsPr[4]  #bool: keep origin x, when big picture clipped
+                cnt['ex5']  = '1'==lsPr[5]  #bool: keep origin y, when big picture clipped
+            elif tp=='trackbar':
+                cnt['ex0']  =  int(lsPr[0]) #int:  orientation (0: horz, 1: vert)
+                cnt['ex1']  =  int(lsPr[1]) #int:  min value
+                cnt['ex2']  =  int(lsPr[2]) #int:  max value
+                cnt['ex3']  =  int(lsPr[3]) #int:  line size
+                cnt['ex4']  =  int(lsPr[4]) #int:  page size
+                cnt['ex5']  = '1'==lsPr[5]  #bool: reversed
+                cnt['ex6']  =  int(lsPr[6]) #int:  tick marks position (0: bottom-right, 1: top-left, 2: both)
+                cnt['ex7']  =  int(lsPr[7]) #int:  tick style (0: none, 1: auto, 2: manual)
+            elif tp=='progressbar':
+                cnt['ex0']  =  int(lsPr[0]) #int:  orientation (0: horz, 1: vert, 2: right-to-left, 3: top-down)
+                cnt['ex1']  =  int(lsPr[1]) #int:  min value
+                cnt['ex2']  =  int(lsPr[2]) #int:  max value
+                cnt['ex3']  = '1'==lsPr[3]  #bool: smooth bar
+                cnt['ex4']  =  int(lsPr[4]) #int:  step
+                cnt['ex5']  =  int(lsPr[5]) #int:  style (0: normal, 1: marquee)
+                cnt['ex6']  = '1'==lsPr[6]  #bool: show text (only for some OSes)
+            elif tp=='progressbar_ex':
+                cnt['ex0']  =  int(lsPr[0]) #int:  style (0: text only, 1: horz bar, 2: vert bar, 3: pie, 4: needle, 5: half-pie)
+                cnt['ex1']  =  int(lsPr[1]) #int:  min value
+                cnt['ex2']  =  int(lsPr[2]) #int:  max value
+                cnt['ex3']  = '1'==lsPr[3]  #bool: show text
+                cnt['ex4']  =  int(lsPr[4]) #int:  color of background
+                cnt['ex5']  =  int(lsPr[5]) #int:  color of foreground
+                cnt['ex6']  =  int(lsPr[6]) #int:  color of border
+            elif tp=='bevel':
+                cnt['ex0']  =  int(lsPr[0]) #int:  shape (0: sunken panel, 1: 4 separate lines - use it as border for group of controls, 2: top line, 3: bottom line, 4: left line, 5: right line, 6: no lines, empty space)
+            elif tp=='splitter':
+                cnt['ex0']  = '1'==lsPr[0]  #bool: beveled style
+                cnt['ex1']  = '1'==lsPr[1]  #bool: instant repainting
+                cnt['ex2']  = '1'==lsPr[2]  #bool: auto snap to edge
+                cnt['ex3']  =  int(lsPr[3]) #int:  min size
        #def _preprocessor
 
 #class DlgAgent

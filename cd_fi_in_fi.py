@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.07 2018-02-21'
+    '2.3.08 2018-02-22'
 ToDo: (see end of file)
 '''
 
@@ -21,10 +21,10 @@ from    .cd_fif_api         import *
 odict = collections.OrderedDict
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                           LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
-pass;                           ##!! waits correction
+pass;                           ##!! "waits correction"
 
 _   = get_translation(__file__) # I18N
 
@@ -807,12 +807,18 @@ more_h  = _('Show/Hide advanced options'
             '\rCtrl+Click   - Show/Hide "Not in files".'
             '\rShift+Click - Show/Hide "Replace".'
             '\rAlt+V - Toggle visibility on cycle'
-            '\r   Hidden "Not in files", hidden  "Replace"'
-            '\r   Visible  "Not in files", hidden  "Replace"'
-            '\r   Visible  "Not in files", visible   "Replace"'
-            '\r   Hidden "Not in files", visible   "Replace"'
+            '\r   hidden "Not in files", hidden  "Replace"'
+            '\r   visible  "Not in files", hidden  "Replace"'
+            '\r   visible  "Not in files", visible   "Replace"'
+            '\r   hidden "Not in files", visible   "Replace"'
             )
-cust_h  = _('Change dialog layout')
+cust_h  = _('Change dialog layout'
+            '\rAlt+V - Toggle visibility on cycle'
+            '\r   hidden "Not in files", hidden  "Replace"'
+            '\r   visible  "Not in files", hidden  "Replace"'
+            '\r   visible  "Not in files", visible   "Replace"'
+            '\r   hidden "Not in files", visible   "Replace"'
+            )
 frst_h  = _('M[, F]'
             '\rStop after M fragments will be found.'
             '\rSearch only inside F first proper files.'
@@ -951,7 +957,8 @@ class FifD:
     BTN_W       = DEF_WD_BTNS
     LBL_L       = GAP+38*3+GAP+25
     CMB_L       = LBL_L+100
-    TL2_L       = LBL_L+220-85
+    TL2_L       = LBL_L+250-85
+#   TL2_L       = LBL_L+220-85
     TBN_L       = CMB_L+TXT_W+GAP
 
     def show(self):
@@ -967,6 +974,7 @@ class FifD:
         ,   vals =self.get_fif_vals()
         ,   fid  ='what'
         ,   options = {'bindof':self
+                               ,'gen_repro_to_file':apx.get_opt('fif_repro_to_file', '')
                               #,'gen_repro_to_file':'repro_dlg_fif.py'
                     }
         ).show(callbk_on_exit=self.copy_vals)
@@ -1731,9 +1739,11 @@ class FifD:
                                                     
 ,('!rep',d(          tid='repl'                     ,vis=w_repl ))
 ,('!cnt',d(          tid='incl'                     ,vis=w_adva ))
-,('cust',d(          t=m.gap2+264+M.EG8                         ))
-,('help',d(          t=m.gap2+291+M.EG9                         ))
-,('-'   ,d(          tid='dept'                               ))
+,('cust',d(          t=m.gap2+160+M.EG5                         ))
+#,('cust',d(         t=m.gap2+264+M.EG8                         ))
+,('help',d(          tid='dept'                                 ))
+#,('help',d(         t=m.gap2+291+M.EG9                         ))
+#,('-'   ,d(         tid='dept'                                 ))
   ] 
     # Start=Full cnts
         nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
@@ -1769,14 +1779,16 @@ class FifD:
 ,('----',d(tp='clr' ,t=m.gap2+172+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                            ))#
 ,('more',d(tp='bt'  ,t=m.gap2+160+M.EG5 ,l=5            ,w=38*3             ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ))# &e
                                                                                                                                                      
-,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=5+80         ,r=M.CMB_L          ,cap=_('Adv. report options')               ,vis=w_adva                                 ))# 
-,('tot_',d(tp='lb'  ,tid='skip'         ,l=5            ,r=80               ,cap='>'+_('Show in&:')                     ,vis=w_adva                                 ))# &:
-,('totb',d(tp='cb-r',tid='skip'         ,l=5+80         ,r=M.CMB_L          ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ))# 
-,('join',d(tp='ch'  ,tid='sort'         ,l=5+80         ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ))# &d
-,('sht_',d(tp='lb'  ,tid='frst'         ,l=5            ,r=80               ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ))# &/
-,('shtp',d(tp='cb-r',tid='frst'         ,l=5+80         ,r=M.CMB_L          ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ))# 
-,('algn',d(tp='ch'  ,tid='enco'         ,l=5+80         ,w=100              ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ))# &|
-,('cntx',d(tp='ch'  ,tid='enco'         ,l=5+155        ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
+,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=35+80        ,r=M.CMB_L+30       ,cap=_('Adv. report options')               ,vis=w_adva                                 ))# 
+,('tot_',d(tp='lb'  ,tid='skip'         ,l=35           ,r=80     +30       ,cap='>'+_('Show in&:')                     ,vis=w_adva                                 ))# &:
+,('totb',d(tp='cb-r',tid='skip'         ,l=35+80        ,r=M.CMB_L+30       ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ))# 
+,('join',d(tp='ch'  ,tid='sort'         ,l=35+80        ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ))# &d
+,('sht_',d(tp='lb'  ,tid='frst'         ,l=35           ,r=80     +30       ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ))# &/
+,('shtp',d(tp='cb-r',tid='frst'         ,l=35+80        ,r=M.CMB_L+30       ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ))# 
+,('algn',d(tp='ch'  ,tid='enco'         ,l=35+80        ,w=100              ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ))# &|
+,('cntx',d(tp='ch'  ,tid='enco'         ,l=35+155       ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ))# &x
+
+,('cust',d(tp='bt'  ,t=m.gap2+160+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
                                                                                                                                                      
 ,('ase_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                 ))# 
 ,('ski_',d(tp='lb'  ,tid='skip'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva                                 ))# &k
@@ -1791,10 +1803,11 @@ class FifD:
 ,('!fnd',d(tp='bt'  ,tid='what'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h                            ,call=m.do_work ))# 
 ,('!rep',d(tp='bt'  ,tid='repl'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl                 ,call=m.do_work ))# &p
 ,('!cnt',d(tp='bt'  ,tid='incl'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva                 ,call=m.do_work ))# &t
-,('cust',d(tp='bt'  ,t=m.gap2+264+M.EG8 ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
+#,('cust',d(tp='bt' ,t=m.gap2+264+M.EG8 ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
 ,('loop',d(tp='bt'  ,tid='cust'         ,l=1000         ,w=0        ,sto=F  ,cap=_('&v')                                                            ,call=m.do_more ))# &v
-,('help',d(tp='bt'  ,t=m.gap2+291+M.EG9 ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Help')                             ,sto=w_adva                 ,call=m.do_help ))# &h
-,('-'   ,d(tp='bt'  ,tid='dept'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Close')                                                         ,call=m.do_exit ))# 
+,('help',d(tp='bt'  ,tid='dept'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Help')                             ,sto=w_adva                 ,call=m.do_help ))# &h
+#,('help',d(tp='bt' ,t=m.gap2+291+M.EG9 ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Help')                             ,sto=w_adva                 ,call=m.do_help ))# &h
+#,('-'   ,d(tp='bt' ,tid='dept'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('Close')                                                         ,call=m.do_exit ))# 
                 ]
         self.caps   = {cid:cnt['cap']             for cid,cnt           in cnts
                         if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
@@ -1947,7 +1960,7 @@ ToDo
 [ ][kv-kv][13jul17] ? Bold for def-button (as in dlg FindReplace)
 [+][at-kv][22aug17] Start folder[s] from current project (cuda_project_man.global_project_info['nodes'])
 [+][kv-kv][22aug17] Hint for 'In folder'
-[ ][kv-kv][22aug17] ? Rename to 'In folder[s]'
+[-][kv-kv][22aug17] ? Rename to 'In folder[s]'
 [+][kv-kv][08sep17] "Context -1+1"
 [ ][kv-kv][14sep17] Save fold before to work
 [ ][kv-kv][27sep17] ? New "Show in": in dlg editor (footer?)
@@ -1961,4 +1974,6 @@ ToDo
 [ ][kv-kv][07feb18] Use pathlib
 [?][at-kv][12feb18] "Install" lexer on init
 [ ][kv-kv][21feb18] Use ~ to show path in msg/report
+[ ][kv-kv][22feb18] Catch report bug - "cut lines"
+[ ][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
 '''
