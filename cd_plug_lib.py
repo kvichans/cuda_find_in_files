@@ -667,7 +667,7 @@ def dlg_proc_wpr(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
     """ Wrapper on app.dlg_proc 
         1. To set/get dlg-props in scaled OS
         2. New command DLG_CTL_ADD_SET to set props of created ctrl
-        3. Correct prop for ('button', 'checkbutton'): if no 'h' then set 'h' as OS default
+        3. Correct prop for ('label', 'button', 'checkbutton'): if no 'h' then set 'h' as OS default
     """
     if id_action==app.DLG_SCALE:
         return
@@ -687,7 +687,7 @@ def dlg_proc_wpr(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
     if id_action==DLG_CTL_ADD_SET:  # Join ADD and SET for a control
         res = ctl_ind = \
         app.dlg_proc(id_dialog, app.DLG_CTL_ADD, name, -1, -1, '')       # type in name
-        if name in ('button', 'checkbutton') and 'h' not in prop:
+        if name in ('label', 'button', 'checkbutton') and 'h' not in prop:
             prop['h'] = app.dlg_proc(id_dialog, app.DLG_CTL_PROP_GET, index=ctl_ind)['h']
         _os_scale(   id_dialog, app.DLG_CTL_PROP_SET, prop, ctl_ind, -1, '')
         app.dlg_proc(id_dialog, app.DLG_CTL_PROP_SET, prop, ctl_ind, -1, '')
