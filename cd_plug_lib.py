@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.11 2018-02-01'
+    '2.1.12 2018-02-22'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -621,7 +621,7 @@ _SCALED_KEYS = ('x', 'y', 'w', 'h'
             ,  'w_min', 'w_max', 'h_min', 'h_max'
             ,  'sp_l', 'sp_r', 'sp_t', 'sp_b', 'sp_a'
             )
-_scale_store = {}
+_scale_store = {}       # {id_dialog:{id_dialog:{}, id_ctrl:{}, name_ctrl:{}}}
 def _os_scale(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
     ppi     = app.app_proc(app.PROC_GET_SYSTEM_PPI, '')
     if ppi==96:
@@ -664,6 +664,11 @@ def _os_scale(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
    #def os_scale
 
 def dlg_proc_wpr(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
+    """ Wrapper on app.dlg_proc 
+        1. To set/get dlg-props in scaled OS
+        2. New command DLG_CTL_ADD_SET to set props of created ctrl
+        3. Correct prop for ('button', 'checkbutton'): if no 'h' then set 'h' as OS default
+    """
     if id_action==app.DLG_SCALE:
         return
 #   if id_dialog==0:
@@ -682,6 +687,8 @@ def dlg_proc_wpr(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
     if id_action==DLG_CTL_ADD_SET:  # Join ADD and SET for a control
         res = ctl_ind = \
         app.dlg_proc(id_dialog, app.DLG_CTL_ADD, name, -1, -1, '')       # type in name
+        if name in ('button', 'checkbutton') and 'h' not in prop:
+            prop['h'] = app.dlg_proc(id_dialog, app.DLG_CTL_PROP_GET, index=ctl_ind)['h']
         _os_scale(   id_dialog, app.DLG_CTL_PROP_SET, prop, ctl_ind, -1, '')
         app.dlg_proc(id_dialog, app.DLG_CTL_PROP_SET, prop, ctl_ind, -1, '')
     else:
@@ -1073,7 +1080,7 @@ class BaseDlgAgent:
 #       prD     = app.dlg_proc(self.id_dlg, app.DLG_PROP_GET)
         prD.update(self.form)
         srp    +=l+f('dlg_proc(idd, DLG_PROP_SET, prop={})', repr(prD))
-        srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, name={})', prD['focused'])
+        srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, name="{}")', prD['focused'])
         srp    +=l+  'dlg_proc(idd, DLG_SHOW_MODAL)'
         srp    +=l+  'dlg_proc(idd, DLG_FREE)'
         open(rerpo_fn, 'w', encoding='UTF-8').write(srp)
