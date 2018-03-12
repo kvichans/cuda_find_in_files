@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.08 2018-02-22'
+    '2.3.09 2018-03-12'
 ToDo: (see end of file)
 '''
 
@@ -702,8 +702,9 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
     TREE_BODY   =_TREE_BODY.strip().format(shtp=shtp_h.replace('\r', '\n'))
     OPTS_BODY   =_OPTS_BODY.strip().replace('{def_enco}', DEF_LOC_ENCO)
     pass;                      #TIPS_BODY='tips';KEYS_BODY='keys';TREE_BODY='tree';OPTS_BODY='opts'
-    DW, DH      = 830, 600
-    hints_png   = os.path.dirname(__file__)+os.sep+r'images/fif-hints_820x400.PNG'
+    PW, PH      = 730, 310
+    DW, DH      = PW+10, PH+200
+    hints_png   = os.path.dirname(__file__)+os.sep+r'images'+os.sep+f('fif-hints_{}x{}.png', PW, PH)
     tab                 = stores.get('tab', 'keys')
 
     def prep(tab):
@@ -711,8 +712,8 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                           TIPS_BODY            if tab=='tips' else \
                           TREE_BODY            if tab=='tree' else \
                           OPTS_BODY            if tab=='opts' else ''
-        me_t            = GAP       +( 400+GAP if tab=='keys' else 0)
-        me_h            = DH-28     +(-400-GAP if tab=='keys' else 0)
+        me_t            = GAP       +( PH+GAP  if tab=='keys' else 0)
+        me_h            = DH-28     +(-PH-GAP  if tab=='keys' else 0)
         return htxt, me_t, me_h
        #def prep
        
@@ -720,8 +721,8 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
         f_wh    = ag.fattrs(attrs=('w', 'h'), live=ag.fattr('vis'))
         return {'ctrls':[('htxt',dict(
                                 w=f_wh['w']-10 
-                               ,t=5              + (5+400 if tab=='keys' else 0)
-                               ,h=f_wh['h']-10-28- (5+400 if tab=='keys' else 0)
+                               ,t=5              + (5+PH  if tab=='keys' else 0)
+                               ,h=f_wh['h']-10-28- (5+PH  if tab=='keys' else 0)
                                ))]}
 
     def acts(aid, ag):
@@ -752,7 +753,7 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                           ,on_resize= when_resize
                           )
             , ctrls = 
-                [('imge',dict(tp='im'   ,t=GAP ,h=400   ,l=GAP          ,w=820  ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
+                [('imge',dict(tp='im'   ,t=GAP ,h=PH    ,l=GAP          ,w=PW   ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
                 ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'        ,val=htxt                       ))
                 ,('porg',dict(tp='llb'  ,tid='-'        ,l=GAP          ,w=180  ,a='TB'     ,cap=_('Reg.ex. on python.org')
                                                                                             ,url=RE_DOC_REF             ,vis=(tab=='tips')              ))
@@ -1693,6 +1694,7 @@ class FifD:
        #def do_work
        
     def get_fif_cnts(self, how=''): #NOTE: fif_cnts
+        M,m     = FifD,self
         pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
         pass;                  #LOG and log('gap1={}',(gap1))
         w_excl  = not self.wo_excl
@@ -1701,8 +1703,7 @@ class FifD:
         ad01    = 0             if self.wo_adva else 1
         ad1_1   = -1            if self.wo_adva else 1
         c_more  = _('Mor&e >>') if self.wo_adva else _('L&ess <<')
-        M       = FifD
-        m       = self
+        w_more  = 39*3          if self.wo_adva else 39*2+7
         d       = dict
         if how=='vis+pos':  return [
  ('pres',d(          tid='incl'         ,w=39*3*ad01            ))
@@ -1720,7 +1721,7 @@ class FifD:
 ,('dept',d(          t=m.gap2+140+M.EG5                         ))
 ,('cfld',d(          tid='fold'                                 ))
 ,('----',d(          t=m.gap2+172+M.EG5                         ))
-,('more',d(          t=m.gap2+160+M.EG5 ,cap=c_more             ))
+,('more',d(          t=m.gap2+160+M.EG5 ,cap=c_more ,w=w_more   ))
 ,('arp_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
 ,('tot_',d(          tid='skip'                     ,vis=w_adva ))
 ,('totb',d(          tid='skip'                     ,vis=w_adva ))
@@ -1742,7 +1743,7 @@ class FifD:
                                                     
 ,('!rep',d(          tid='repl'                     ,vis=w_repl ))
 ,('!cnt',d(          tid='incl'                     ,vis=w_adva ))
-,('cust',d(          t=m.gap2+160+M.EG5                         ))
+,('cust',d(          t=m.gap2+160+M.EG5         ,w=(39 -7)*ad01 ))
 #,('cust',d(         t=m.gap2+264+M.EG8                         ))
 ,('help',d(          tid='dept'                                 ))
 #,('help',d(         t=m.gap2+291+M.EG9                         ))
@@ -1757,7 +1758,7 @@ class FifD:
 ,('prs2',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&2')                                                            ,call=m.do_pres ))# &2
 ,('prs3',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&3')                                                            ,call=m.do_pres ))# &3
 ,('pres',d(tp='bt'  ,tid='incl'         ,l=5            ,w=39*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h                            ,call=m.do_pres ))# &s
-,('reex',d(tp='ch-b',tid='what'         ,l=5+38*0       ,w=39               ,cap='.&*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus))# &.
+,('reex',d(tp='ch-b',tid='what'         ,l=5+38*0       ,w=39               ,cap='.&*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus))# &*
 ,('case',d(tp='ch-b',tid='what'         ,l=5+38*1       ,w=39               ,cap='&aA'                      ,hint=case_h            ,bind='case01'  ,call=m.do_focus))# &a
 ,('word',d(tp='ch-b',tid='what'         ,l=5+38*2       ,w=39               ,cap='"&w"'                     ,hint=word_h            ,bind='word01'  ,call=m.do_focus))# &w
                                                                                                                                                                     
@@ -1780,10 +1781,10 @@ class FifD:
 ,('cfld',d(tp='bt'  ,tid='fold'         ,l=5            ,w=39*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ))# &c
                                                                                                                                                                     
 ,('----',d(tp='clr' ,t=m.gap2+175+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                            ))#
-,('more',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5            ,w=39*2+7           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ))# &e
-,('cust',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5+39*2+7     ,w=39  -7           ,cap=_('.&..')                  ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
+,('more',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5            ,w=w_more           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ))# &e
+#,('more',d(tp='bt' ,t=m.gap2+163+M.EG5 ,l=5            ,w=39*2+7           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ))# &e
+,('cust',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5+39*2+7     ,w=(39 -7)*ad01     ,cap=_('.&..')                  ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &.
 #,('cust',d(tp='bt' ,t=m.gap2+163+M.EG5 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,cap=_('Ad&just…')              ,hint=cust_h,sto=w_adva                 ,call=m.do_more ))# &j
-                                                                                                                                                                    
                                                                                                                                                                     
 ,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=39*3+20      ,w=150-10           ,cap=_('Adv. report options')               ,vis=w_adva                                 ))# 
 ,('tot_',d(tp='lb'  ,tid='skip'         ,l=5            ,w=39*3             ,cap='>'+_('Show in&:')                     ,vis=w_adva                                 ))# &:
@@ -1988,5 +1989,6 @@ ToDo
 [?][at-kv][12feb18] "Install" lexer on init
 [ ][kv-kv][21feb18] Use ~ to show path in msg/report
 [ ][kv-kv][22feb18] Catch report bug - "cut lines"
-[ ][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
+[+][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
+[ ][kv-kv][12mar18] Rebuild help-pic
 '''
