@@ -63,6 +63,7 @@ REDUCTIONS  = {'lb'     :'label'
             ,  'pn'     :'panel'
             ,  'gr'     :'group'
             ,  'tvw'    :'treeview'
+            ,  'edr'    :'editor'
             
 #           ,  'fid'    :'focused'
             }
@@ -1105,7 +1106,7 @@ class BaseDlgAgent:
         srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
         for idC in range(app.dlg_proc(self.id_dlg, app.DLG_CTL_COUNT)):
             prC = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=idC)
-            if True:                                        prC.pop('act', None)
+#           if True:                                        prC.pop('act', None)
             if ''==prC.get('hint', ''):                     prC.pop('hint', None)
             if ''==prC.get('tag', ''):                      prC.pop('tag', None)
             if ''==prC.get('items', None):                  prC.pop('items')

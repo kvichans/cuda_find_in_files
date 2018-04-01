@@ -1,8 +1,8 @@
-''' Plugin for CudaText editor
+﻿''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.10 2018-03-13'
+    '2.3.11 2018-03-22'
 ToDo: (see end of file)
 '''
 
@@ -11,9 +11,10 @@ import  re, os, sys, locale, json, collections, copy
 import  cudatext            as app
 from    cudatext        import ed
 import  cudax_lib           as apx
-MIN_API_VER = '1.0.178'
-MIN_API_VER = '1.0.180' # panel group p
-MIN_API_VER = '1.0.183' # on_change
+MIN_API_VER     = '1.0.178'
+MIN_API_VER     = '1.0.180' # panel group p
+MIN_API_VER     = '1.0.183' # on_change
+MIN_API_VER_HLP = '1.0.232' # PROP_GUTTER_ALL
 
 from    .cd_plug_lib        import *
 from    .cd_fif_api         import *
@@ -694,8 +695,74 @@ Default values:
     // Size of buffer (at file start) to detect binary files
     "fif_read_head_size(bytes)":1024,
 ''')
+_OPTS_JSON  = _(r'''
+//Extra options for "user.json" (needed restart after changing).
+
+    // Use selection-text from current file when dialog opens
+    "fif_use_selection_on_start":false,
+    
+    // Copy options [.*], [aA], ["w"] from CudaText dialog to plugin's dialog
+    "fif_use_edfind_opt_on_start":false,
+    
+    // ESC stops all stages 
+    "fif_esc_full_stop":false,
+    
+    // Close dialog if search has found matches
+    "fif_hide_if_success":false,
+    // Save report after filling if tab has filename
+    "fif_auto_save_if_file":false,
+    // Activate tab with report after filling
+    "fif_focus_to_rpt":true,
+    
+    // Save all request details ("Find", "In folder", …) in first line of result file. 
+    // The info will be used in command "Repeat search for this report-tab"
+    "fif_save_request_to_rpt":false,
+    
+    // Length of substring (of field "Find") which appears in title of the search result
+    "fif_len_target_in_title":10,
+    
+    // Show report if nothing found
+    "fif_report_no_matches":false,
+    
+    // Option "Show context" appends N nearest lines to reported lines.
+    // So, 2*N+1 lines will be reported for each found line.
+    "fif_context_width":1,
+    // Or N lines before and M lines after for each found line.
+    // N or M can be set to 0
+    "fif_context_width_before":1,
+    "fif_context_width_after":1,
+    
+    // Style which marks found fragment in report
+    // Full form:
+    //    "fif_mark_style":{
+    //      "color_back":"", 
+    //      "color_font":"",
+    //      "font_bold":false, 
+    //      "font_italic":false,
+    //      "color_border":"", 
+    //      "borders":{"left":"","right":"","bottom":"","top":""}
+    //    },
+    //  Color values: "" - skip, "#RRGGBB" - hex-digits
+    //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
+    "fif_mark_style":{"borders":{"bottom":"dotted"}},
+    "fif_mark_true_replace_style":{"borders":{"bottom":"solid"}},
+    "fif_mark_false_replace_style":{"borders":{"bottom":"wave"},"color_border":"#777"},
+    
+    // Default encoding to read files
+    "fif_locale_encoding":"{def_enco}",
+    
+    // List of lexer names for report. First available lexer will be used.
+    "fif_lexers":["Search results"],
+    
+    // Skip too big files (0 - don't skip)
+    "fif_skip_file_size_more_Kb":0,
+    
+    // Size of buffer (at file start) to detect binary files
+    "fif_read_head_size(bytes)":1024,
+''')
 
 def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h, stores=None):
+    if app.app_api_version()<MIN_API_VER_HLP: return app.msg_status(_('Need update application'))
     stores      = {} if stores is None else stores
     TIPS_BODY   =_TIPS_BODY.strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES)
     KEYS_BODY   =_KEYS_BODY.strip().format(find=find_h.replace('\r', '\n')
@@ -711,6 +778,11 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                                           )
     TREE_BODY   =_TREE_BODY.strip().format(shtp=shtp_h.replace('\r', '\n'))
     OPTS_BODY   =_OPTS_BODY.strip().replace('{def_enco}', DEF_LOC_ENCO)
+    OPTS_JSON   =_OPTS_JSON.strip().replace('{def_enco}', DEF_LOC_ENCO)
+#   pass;                      TIPS_BODY = 'TIPS_BODY'
+#   pass;                      KEYS_BODY = 'KEYS_BODY'
+#   pass;                      TREE_BODY = 'TREE_BODY'
+#   pass;                      OPTS_BODY = 'OPTS_BODY'
     pass;                      #TIPS_BODY='tips';KEYS_BODY='keys';TREE_BODY='tree';OPTS_BODY='opts'
     PW, PH      = 730, 310
     DW, DH      = PW+10, PH+200
@@ -728,6 +800,8 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
        #def prep
        
     def when_resize(ag):
+        if tab=='opts':
+            return {}
         f_wh    = ag.fattrs(attrs=('w', 'h'), live=ag.fattr('vis'))
         return {'ctrls':[('htxt',dict(
                                 w=f_wh['w']-10 
@@ -740,11 +814,20 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
         if aid=='-':                    return None
         if aid=='prps': dlg_fif_opts(); return {}
         stores['tab']   = tab = aid
+        htxt_vi         = (tab!='opts')
         htxt, me_t, me_h= prep(tab)
-        me_thw          = odict(when_resize(ag)['ctrls'])['htxt']
-        return  {'ctrls':
+        me_thw          = odict(when_resize(ag)['ctrls'])['htxt']   if htxt_vi else {}
+        htxt_y          = me_thw['t']                               if htxt_vi else 0
+        htxt_h          = me_thw['h']                               if htxt_vi else 0
+        htxt_w          = me_thw['w']                               if htxt_vi else 0
+        pass;                  #log('vi={}',(vi))
+        upds    =  {'ctrls':
                     [('imge' ,dict(vis=(tab=='keys')        ))
-                    ,('htxt' ,dict(val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
+                    ,('edtr' ,dict(vis=(tab=='opts')        ))
+#                   ,('htxt' ,dict(vis=(tab!='opts'), val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
+                    ,('htxt' ,dict(vis=(tab!='opts'), val=htxt     ,y=htxt_y,h=htxt_h,w=htxt_w ))
+#                   ,('htxt' ,dict(vis=vi           , val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
+#                   ,('htxt' ,dict(vis=False        , val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
                     ,('porg' ,dict(vis=(tab=='tips')        ))
                     ,('prps' ,dict(vis=(tab=='opts')        ))
                     ,('keys' ,dict(val=(tab=='keys')        ))
@@ -752,11 +835,14 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                     ,('tree' ,dict(val=(tab=='tree')        ))
                     ,('opts' ,dict(val=(tab=='opts')        ))
                     ]
-                 ,'fid':'htxt'}
+                 ,'fid':('edtr' if tab=='opts' else 'htxt')}
+        pass;                  #log('upds={}',pf(upds))
+        return upds
        #def acts
 
     htxt, me_t, me_h    = prep(tab)
-    DlgAgent( form  =dict( cap      =_('Help for "Find in Files"')
+    ag  = DlgAgent(
+              form  =dict( cap      =_('Help for "Find in Files"')
                           ,w        = GAP+DW+GAP
                           ,h        = GAP+DH+GAP
                           ,resize   = True
@@ -764,7 +850,9 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                           )
             , ctrls = 
                 [('imge',dict(tp='im'   ,t=GAP ,h=PH    ,l=GAP          ,w=PW   ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
-                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'        ,val=htxt                       ))
+                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'        ,vis=(tab!='opts')  ,val=htxt   ))
+                ,('edtr',dict(tp='edr'  ,t=GAP ,h=DH-28 ,l=GAP          ,w=DW   ,a='tBlR'   ,border='1'                 ,vis=(tab=='opts')              ))
+                
                 ,('porg',dict(tp='llb'  ,tid='-'        ,l=GAP          ,w=180  ,a='TB'     ,cap=_('Reg.ex. on python.org')
                                                                                             ,url=RE_DOC_REF             ,vis=(tab=='tips')              ))
                 ,('prps',dict(tp='bt'   ,tid='-'        ,l=GAP          ,w=130  ,a='TB'     ,cap=_('&Edit options…')    ,vis=(tab=='opts')  ,call=acts  ))# &e
@@ -774,9 +862,17 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                 ,('opts',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-180   ,w=80   ,a='TB'     ,cap=_('&Opts')             ,val=(tab=='opts')  ,call=acts  ))# &o
                 ,('-'   ,dict(tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,a='LRTB'   ,cap=_('&Close')                                ,call=acts  ))# &c
             ]
-            , fid   = 'htxt'
+            , fid   = ('edtr' if tab=='opts' else 'htxt')
                                #,options={'gen_repro_to_file':'repro_dlg_help.py'}
-        ).show()    #NOTE: dlg_valign
+        )
+    oed = app.Editor(app.dlg_proc(ag.id_dlg, app.DLG_CTL_HANDLE, name='edtr'))
+    oed.set_text_all(OPTS_JSON)
+#   oed.set_text_all(OPTS_JSON+'\n')
+    oed.set_prop(app.PROP_RO            , True)
+    oed.set_prop(app.PROP_GUTTER_ALL    , False)
+    oed.set_prop(app.PROP_LEXER_FILE    , 'JSON')
+    pass;                      #log('OPTS_JSON={}',(OPTS_JSON))
+    ag.show()    #NOTE: dlg_valign
     return stores
    #def dlg_help
 
@@ -1736,7 +1832,7 @@ class FifD:
        #def lock_act
        
     def do_menu(self, aid, ag):
-        pass;                   log('',())
+        pass;                  #log('',())
         def wnen_menu(ag, tag):
             if False:pass
             elif tag=='!fnd-main':  return self.do_work(aid,    ag, btn_m=   '!fnd')
@@ -1761,8 +1857,9 @@ class FifD:
             elif tag=='pres-1':     return self.do_pres('prs1', ag)
             elif tag=='pres-2':     return self.do_pres('prs2', ag)
             elif tag=='pres-3':     return self.do_pres('prs3', ag)
-            elif tag=='pres-cfg':   return self.do_pres('????', ag)
-            elif tag=='pres-save':  return self.do_pres('????', ag)
+#           elif tag=='pres-cfg':   return self.do_pres('????', ag)
+#           elif tag=='pres-save':  return self.do_pres('????', ag)
+            elif tag=='cust-main':  return self.do_more(aid,    ag)
 
             elif tag=='pres-tabs':  self.fold_s     = IN_OPEN_FILES
             elif tag=='pres-proj':  self.fold_s     = IN_PROJ_FOLDS
@@ -1781,10 +1878,10 @@ class FifD:
            #def wnen_menu
         
         d       = dict
-        nm_its  = None
+        mn_its  = None
         if False:pass
         elif aid=='!fnd':
-            nm_its  = [
+            mn_its  = [
     d(tag='!fnd-main'   ,key='Enter'        ,cap=_('Find'))
    ,d(tag='!fnd-ntab'                       ,cap=_('Find and put report to new tab   [Shift+Click]'))
    ,d(tag='!fnd-apnd'                       ,cap=_('Find and append result to existing report   [Ctrl+Click]'))
@@ -1796,40 +1893,43 @@ class FifD:
    ,d(tag='!rep-noqu'                       ,cap=_('Find and replace (without question)')                   ,en=not self.wo_repl)
                     ]
         elif aid=='!rep':
-            nm_its  = [
+            mn_its  = [
     d(tag='!rep-noqu'                       ,cap=_('Find and replace (without question)   [Shift+Click]'))
                     ]
         elif aid=='!cnt':
-            nm_its  = [
-    d(tag='!cnt-name'                       ,cap=_('Find file names only   [Shift+Click]'))
+            mn_its  = [
+    d(tag='!cnt-main'   ,key='Alt+T'        ,cap=_('Count matches only'))
+   ,d(tag='!cnt-name'                       ,cap=_('Find file names only   [Shift+Click]'))
                     ]
         elif aid=='cfld':
-            nm_its  = [
+            mn_its  = [
     d(tag='cfld-main'   ,key='Alt+C'        ,cap=_('Use folder of current file')                            ,en=bool(ed.get_filename()))
    ,d(tag='cfld-file'                       ,cap=_('Prepare search in the current file   [Shift+Click]')    ,en=bool(ed.get_filename()))
    ,d(tag='cfld-tabs'                       ,cap=_('Prepare search in all tabs   [Ctrl+Click]'))
    ,d(tag='cfld-ctab'                       ,cap=_('Prepare search in the current tab   [Shift+Ctrl+Click]'))
                     ]
         elif aid=='brow':
-            nm_its  = [
+            mn_its  = [
     d(tag='brow-main'   ,key='Alt+B'        ,cap=_('Choose folder…'))
    ,d(tag='brow-file'                       ,cap=_('Choose file to find in it…   [Shift+Click]'))
                     ]
         elif aid=='dept':
-            nm_its  = [
+            mn_its  = [
     d(tag='dept-all'    ,key='Alt+L'        ,cap=_('Apply "All"'))
    ,d(tag='dept-only'   ,key='Alt+Y'        ,cap=_('Apply "In folder only"'))
    ,d(tag='dept-one'    ,key='Shift+Alt+1'  ,cap=_('Apply "1 level"'))
                     ]
         elif aid=='more':
-            nm_its  = [
-    d(tag='cust-excl'   ,cap=f(_('Show "{}"')           , self.caps['excl'])                     ,ch=not self.wo_excl)
-   ,d(tag='cust-repl'   ,cap=f(_('Show "{}" and "{}"')  , self.caps['repl'], self.caps['!rep'])  ,ch=not self.wo_repl)
+            mn_its  = [
+    d(tag='cust-main'   ,key='Alt+E'        ,cap=_('Show advanced options') if self.wo_adva else _('Hide advanced options'))
+   ,d(                                       cap='-')
+   ,d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl'])                   )
+   ,d(tag='cust-repl'   ,ch=not self.wo_repl,cap=f(_('Show "{}" and "{}"')  , self.caps['repl'], self.caps['!rep']))
                     ]
         elif aid=='pres':
             pset_l  = self.stores.get('pset', [])
             pset_n  = len(pset_l)
-            nm_its  = [
+            mn_its  = [
     d(tag='pres-nat' ,key='Alt+S'       ,en=pset_n>0   ,cap=f(_('Show preset list [{}]')                                            , pset_n))
    ,d(tag='pres-hist'                   ,en=pset_n>0   ,cap=f(_('Show preset list [{}] in applying history order   [Shift+Click]')  , pset_n))
    ,d(                                                  cap='-')
@@ -1845,9 +1945,9 @@ class FifD:
    ,d(tag='pres-3'   ,key='Alt+3'       ,en=pset_n>2   ,cap=_('Apply 3rd preset')+ (f(': "{}"',pset_l[2]['name'][:20]) if pset_n>2 else ''))
                     ]
 
-        if nm_its:
-            nm_its  = [upd_dict(it, d(cmd=wnen_menu)) for it in nm_its]
-            ag.show_menu(aid, nm_its)
+        if mn_its:
+            mn_its  = [upd_dict(it, d(cmd=wnen_menu)) for it in mn_its]
+            ag.show_menu(aid, mn_its)
         return []
        #def do_menu
        

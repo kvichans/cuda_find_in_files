@@ -1,3 +1,6 @@
+2.3.11 (2018-03-22)
+added: editor control with json-lexer for Opts in Help
+
 2.3.10 (2018-03-13)
 added: context menus for Preset, More, Find, Count, Replace, Browse, Current folder, In subfolders
 
