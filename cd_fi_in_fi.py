@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.11 2018-03-22'
+    '2.3.12 2018-05-03'
 ToDo: (see end of file)
 '''
 
@@ -279,13 +279,24 @@ class Command:
 
 def dlg_fif_opts():
     try:
-        from cuda_options_editor import dlg_opt_editor
+        import cuda_options_editor as op_ed
+#       from cuda_options_editor import dlg_opt_editor
     except:
         app.msg_status(_('To view/edit options install plugin cuda_options_editor'))
         return
-    FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
-    fif_opts    = json.loads(open(FIF_OPTS).read())
-    dlg_opt_editor('FiF options', fif_opts, subset='fif.')
+
+    try:
+        op_ed.OptEdD(
+          path_keys_info=os.path.dirname(__file__)+os.sep+'fif_opts_def.json'
+        , subset        ='fif-df.'
+        , how           =dict(only_for_ul=True, only_with_def=True)
+        ).show(_('"Find in file" options'))
+    except Exception as ex:
+        pass;                   log('ex={}',(ex))
+        FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
+        fif_opts    = json.loads(open(FIF_OPTS).read())
+        op_ed.dlg_opt_editor('FiF options', fif_opts, subset='fif.')
+
     reload_opts()
    #def dlg_fif_opts
 
@@ -851,7 +862,8 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
             , ctrls = 
                 [('imge',dict(tp='im'   ,t=GAP ,h=PH    ,l=GAP          ,w=PW   ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
                 ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'        ,vis=(tab!='opts')  ,val=htxt   ))
-                ,('edtr',dict(tp='edr'  ,t=GAP ,h=DH-28 ,l=GAP          ,w=DW   ,a='tBlR'   ,border='1'                 ,vis=(tab=='opts')              ))
+                ,('edtr',dict(tp='edr'  ,y=GAP ,h=DH-28 ,x=GAP          ,w=DW   ,a='tBlR'   ,border='1'                 ,vis=(tab=='opts')              ))
+#               ,('edtr',dict(tp='edr'  ,t=GAP ,h=DH-28 ,l=GAP          ,w=DW   ,a='tBlR'   ,border='1'                 ,vis=(tab=='opts')              ))
                 
                 ,('porg',dict(tp='llb'  ,tid='-'        ,l=GAP          ,w=180  ,a='TB'     ,cap=_('Reg.ex. on python.org')
                                                                                             ,url=RE_DOC_REF             ,vis=(tab=='tips')              ))
@@ -868,9 +880,13 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
     oed = app.Editor(app.dlg_proc(ag.id_dlg, app.DLG_CTL_HANDLE, name='edtr'))
     oed.set_text_all(OPTS_JSON)
 #   oed.set_text_all(OPTS_JSON+'\n')
-    oed.set_prop(app.PROP_RO            , True)
-    oed.set_prop(app.PROP_GUTTER_ALL    , False)
-    oed.set_prop(app.PROP_LEXER_FILE    , 'JSON')
+    oed.set_prop(app.PROP_RO                , True)
+    oed.set_prop(app.PROP_GUTTER_ALL        , False)
+    oed.set_prop(app.PROP_MINIMAP           , False)
+    oed.set_prop(app.PROP_MICROMAP          , False)
+    oed.set_prop(app.PROP_LAST_LINE_ON_TOP  , False)
+    oed.set_prop(app.PROP_MARGIN            , 2000)
+    oed.set_prop(app.PROP_LEXER_FILE        , 'JSON')
     pass;                      #log('OPTS_JSON={}',(OPTS_JSON))
     ag.show()    #NOTE: dlg_valign
     return stores
@@ -2233,4 +2249,5 @@ ToDo
 [ ][kv-kv][22feb18] Catch report bug - "cut lines"
 [+][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
 [+][kv-kv][12mar18] Rebuild help-pic
+[ ][kv-kv][12apr18] ? Call app_idle to enable ESC
 '''

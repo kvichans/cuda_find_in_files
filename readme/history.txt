@@ -1,3 +1,6 @@
+2.3.12 (2018-05-03)
+added: Call new dlg Options Editor
+
 2.3.11 (2018-03-22)
 added: editor control with json-lexer for Opts in Help
 
