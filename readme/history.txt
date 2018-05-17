@@ -1,3 +1,7 @@
+2.3.13 (2018-05-17)
+fixed: Rework local menu on "="
+fixed: Adapt layout for scaled OS
+
 2.3.12 (2018-05-03)
 added: Call new dlg Options Editor
 
