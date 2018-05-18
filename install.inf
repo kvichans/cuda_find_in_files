@@ -83,13 +83,13 @@ method=_
 section=commands
 caption=&Find in Files\Configure navigation with &double-click...
 method=dlg_nav_by_dclick
-;menu=0
+menu=op
 
 [item25]
 section=commands
 caption=&Find in Files\&View and edit options...
 method=dlg_fif_opts
-;menu=0
+menu=op
 
 [item30]
 section=commands
