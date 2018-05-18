@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.13 2018-05-17'
+    '2.3.14 2018-05-18'
 ToDo: (see end of file)
 '''
 
@@ -2234,4 +2234,5 @@ ToDo
 [+][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
 [+][kv-kv][12mar18] Rebuild help-pic
 [ ][kv-kv][12apr18] ? Call app_idle to enable ESC
+[ ][at-kv][18may18] ? As API-bag "Config presets" blocks checks. Try!
 '''

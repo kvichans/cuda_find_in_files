@@ -1,3 +1,6 @@
+2.3.14 (2018-05-18)
+added: Items in menu Options / Setting - plugins / Find in files
+
 2.3.13 (2018-05-17)
 fixed: Rework local menu on "="
 fixed: Adapt layout for scaled OS
