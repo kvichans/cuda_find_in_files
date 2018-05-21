@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.07 2018-02-21'
+    '2.3.15 2018-02-21'
 ToDo: (see end of file)
 '''
 
@@ -70,6 +70,7 @@ SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
 AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
 FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
 SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
+TAB_SIZE_IN_RPT = apx.get_opt('fif_lexer_auto_tab_size'     , 2)
 if 'sw'==app.__name__:
     FOLD_PREV_RES   = False
 
@@ -480,6 +481,16 @@ def report_to_tab(rpt_data:dict
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_type, indent=2))
     pass;                       DBG_DATA_TO_REPORT and rpt_ed.insert(0,rpt_ed.get_line_count()-1, json.dumps(rpt_data, indent=2))
 
+    pass;                      #log('apx.get_opt(tab_size, 0, apx.CONFIG_LEV_LEX_ONLY, ed_cfg=None,lexer=FIF_LEXER)={}',apx.get_opt('tab_size', 0, apx.CONFIG_LEV_LEX_ONLY, ed_cfg=None,lexer=FIF_LEXER))
+    need_tab_size   = TAB_SIZE_IN_RPT>0 and (
+        apx.get_opt('tab_size', 0,               apx.CONFIG_LEV_LEX_ONLY, ed_cfg=None,lexer=FIF_LEXER)==0
+            if apx.version(0)>='0.6.5' else
+        apx.get_opt('tab_size', 0,               apx.CONFIG_LEV_LEX,      ed_cfg=None,lexer=FIF_LEXER)==
+        apx.get_opt('tab_size', 0,               apx.CONFIG_LEV_DEF) )
+    pass;                      #log('TAB_SIZE_IN_RPT,need_tab_size={}',TAB_SIZE_IN_RPT,need_tab_size)
+    if need_tab_size:
+        apx.set_opt('tab_size', TAB_SIZE_IN_RPT, apx.CONFIG_LEV_LEX,      ed_cfg=None,lexer=FIF_LEXER)
+        apx.set_opt('tab_size', TAB_SIZE_IN_RPT, apx.CONFIG_LEV_FILE,     ed_cfg=rpt_ed)
     rpt_ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
 #   # AT-hack to update folding
 #   line0 = rpt_ed.get_text_line(0)
