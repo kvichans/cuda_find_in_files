@@ -1,5 +1,7 @@
-2.3.15 (2018-05-21)
+2.3.15 (2018-05-22)
 added: New option "fif_lexer_auto_tab_size" (def=2) to auto-set tab_size for report lexer if no such setting.
+added: Allow to call from menu "=" dialog to configure DoubleClicks in report.
+fixed: Not show options in Help. Allow to call OptionEditor from menu "=".
 
 2.3.14 (2018-05-18)
 added: Items in menu Options / Setting - plugins / Find in files

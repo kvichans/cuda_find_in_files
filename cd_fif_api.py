@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.15 2018-02-21'
+    '2.3.15 2018-05-21'
 ToDo: (see end of file)
 '''
 
@@ -59,24 +59,6 @@ ENCO_DETD       = _('detect')
 lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
 lexers_l        = list(map(lambda s: s.upper(), lexers_l))
-USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
-ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
-REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
-FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
-LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
-BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
-CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
-SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
-AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
-FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
-SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
-TAB_SIZE_IN_RPT = apx.get_opt('fif_lexer_auto_tab_size'     , 2)
-if 'sw'==app.__name__:
-    FOLD_PREV_RES   = False
-
-MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
-MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
-MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
 def fit_mark_style_for_attr(js:dict)->dict:
     """ Convert 
             {"color_back":"", "color_font":"", "font_bold":false, "font_italic":false
@@ -100,10 +82,6 @@ def fit_mark_style_for_attr(js:dict)->dict:
     if jsbr.get('top'   , ''):       kwargs['border_up']     = V_L.index(jsbr['top'   ])+1
     return kwargs
    #def fit_mark_style_for_attr
-MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
-MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
-MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
-
 def api_reload_opts():
     global                      LOG, FNDLOG, RPTLOG, NAVLOG, DBG_DATA_TO_REPORT
     pass;                       LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
@@ -113,7 +91,7 @@ def api_reload_opts():
     pass;                       DBG_DATA_TO_REPORT  =         apx.get_opt('fif_DBG_data_to_report', False)
 
     global lexers_l,FIF_LEXER,lexers_l,USE_SEL_ON_START,ESC_FULL_STOP,REPORT_FAIL,FOLD_PREV_RES,LEN_TRG_IN_TITLE
-    global BLOCKSIZE,CONTEXT_WIDTH,SKIP_FILE_SIZE,AUTO_SAVE,FOCUS_TO_RPT,SAVE_REQ_TO_RPT
+    global BLOCKSIZE,CONTEXT_WIDTH,SKIP_FILE_SIZE,AUTO_SAVE,FOCUS_TO_RPT,SAVE_REQ_TO_RPT,TAB_SIZE_IN_RPT
     global MARK_FIND_STYLE,MARK_TREPL_STYLE,MARK_FREPL_STYLE
     lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
     FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
@@ -129,6 +107,7 @@ def api_reload_opts():
     AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
     FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
     SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
+    TAB_SIZE_IN_RPT = apx.get_opt('fif_lexer_auto_tab_size'     , 2)
     MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
     MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
     MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
@@ -136,6 +115,29 @@ def api_reload_opts():
     MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
     MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
    #def api_reload_opts
+api_reload_opts()
+#USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
+#ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
+#REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
+#FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
+#LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
+#BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
+#CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
+#SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
+#AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
+#FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
+#SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
+#TAB_SIZE_IN_RPT = apx.get_opt('fif_lexer_auto_tab_size'     , 2)
+if 'sw'==app.__name__:
+    FOLD_PREV_RES   = False
+
+#MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
+#MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
+#MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
+#MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
+#MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
+#MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
+
 
 REQ_KEY = (' '*100)+'_req_info_='
 def report_extract_request(red):

@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.14 2018-05-18'
+    '2.3.15 2018-05-21'
 ToDo: (see end of file)
 '''
 
@@ -211,67 +211,7 @@ class Command:
        #def get_dcls
     
     def dlg_nav_by_dclick(self):
-        pass;                   LOG and log('ok',())
-        dcls    = Command.get_dcls()
-        godef   = apx.get_opt('mouse_goto_definition', 'a')
-        hint    = _('See "mouse_goto_definition" in default.json and user.json')
-        acts_l  = ["<no action>"
-                  ,'Navigate to same group'
-                  ,'Navigate to next group'
-                  ,'Navigate to prev group'
-                  ,'Navigate to next group, activate'
-                  ,'Navigate to prev group, activate'
-                  ]
-        sgns_l  = [''
-                  ,'same,stay'
-                  ,'next,stay'
-                  ,'prev,stay'
-                  ,'next,move'
-                  ,'prev,move'
-                  ]
-        aid,vals,*_t   = dlg_wrapper(_('Configure found result navigation by double-click'), 505,280,     #NOTE: dlg-dclick
-             [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=220  ,cap=              '>[double-click]:'                               ) #
-             ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=220  ,cap=        '>Shift+[double-click]:'                               ) #
-             ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=220  ,cap=         '>Ctrl+[double-click]:'                               ) #
-             ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=220  ,cap=   '>Shift+Ctrl+[double-click]:'                               ) #
-             ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
-             ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=220  ,cap=          '>Alt+[double-click]:'   ,en=godef!='a'  ,hint=hint  ) #
-             ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='a'  ,hint=hint  ) #
-             ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=220  ,cap=    '>Shift+Alt+[double-click]:'   ,en=godef!='sa' ,hint=hint  ) #
-             ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='sa' ,hint=hint  ) #
-             ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=220  ,cap=     '>Alt+Ctrl+[double-click]:'   ,en=godef!='ca' ,hint=hint  ) #
-             ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='ca' ,hint=hint  ) #
-             ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=220  ,cap='>Shift+Ctrl+Alt+[double-click]:'  ,en=godef!='sca',hint=hint  ) #
-             ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='sca',hint=hint  ) #
-             ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+330    ,w=80   ,cap=_('OK')                            ,def_bt=True                ) #
-             ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+415    ,w=80   ,cap=_('Cancel')                                                    )              
-             ],    dict(nnn=sgns_l.index(dcls.get('',   ''))
-                       ,snn=sgns_l.index(dcls.get('s',  ''))
-                       ,ncn=sgns_l.index(dcls.get('c',  ''))
-                       ,scn=sgns_l.index(dcls.get('sc', ''))
-                       ,nna=sgns_l.index(dcls.get('a',  ''))
-                       ,sna=sgns_l.index(dcls.get('sa', ''))
-                       ,nca=sgns_l.index(dcls.get('ca', ''))
-                       ,sca=sgns_l.index(dcls.get('sca',''))
-                       ), focus_cid='nnn')
-        pass;              #LOG and log('vals={}',vals)
-        if aid is None or aid=='-': return
-        for nnn in ('nnn', 'snn', 'ncn', 'scn', 'nna', 'sna', 'nca', 'sca'):
-            sca = nnn.replace('n', '')
-            if 0==vals[nnn]:
-                dcls.pop(sca, None)
-            else:
-                dcls[sca]   = sgns_l[vals[nnn]]
-        Command.dcls    = dcls
-        stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                  odict()
-        stores['dcls']  = dcls
-        open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
-       #def dlg_nav_by_dclick
+        dlg_nav_by_dclick()
 
     def dlg_fif_opts(self):
         return dlg_fif_opts()
@@ -496,7 +436,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
         pass;              #LOG and log('ps_mns={}',(ps_mns))
         pass;              #LOG and log('ps_its={}',(ps_its))
         ctrls   = \
-                 [('lprs',dict(tp='lb'      ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                      )) # &p
+                 [('lprs',dict(tp='lb'      ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                                                    )) # &p
                  ,('prss',dict(tp='lbx'     ,t=5+20,h=345   ,l=5        ,w=245  ,items=ps_mns       ,en=(len(pset_l)>0)  ,val=ps_ind    ,call=fill_what )) #
                   # Content
                  ,('lnam',dict(tp='lb'      ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name:')                                                        )) # &n
@@ -513,7 +453,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                  ,('!'   ,dict(tp='bt'      ,t=435          ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True                        ,call=save_close)) # &
                  ,('-'   ,dict(tp='bt'      ,t=460          ,l=DLG_W-5-100,w=100,cap=_('Cancel')                                        ,call=LMBD_HIDE ))
                  ]
-        DlgAgent(form   =dict(cap=_('Config presets'), w=DLG_W, h=490)
+        DlgAgent(form   =dict(cap=_('Configure presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
                 ,fid    ='prss'
 #                              ,options={'gen_repro_to_file':'repro_dlg_pres.py'}
@@ -569,7 +509,7 @@ In field "Replace with":
     \2  to insert second found group, ... 
 See full documentation by link at bottom.
  
-• "aA" - Option "Case sensative"
+• "aA" - Option "Case sensitive"
  
 • "w" - {word}
  
@@ -610,7 +550,7 @@ ESC stops any stage. When picking and finding, ESC stops only this stage, so nex
 —————————————————————————————————————————————— 
  
 • Use right click or Context keyboard button to see context menu over these elements
-    Preset
+    Presets
     Find/Count/Replace
     Current folder
     Browse
@@ -632,7 +572,7 @@ _KEYS_BODY  = _(r'''
  
 • "In subfolders" - {dept}
  
-• "Preset…" - {pset}
+• "Presets…" - {pset}
  
 • "More/Less…" - {more}
  
@@ -640,136 +580,6 @@ _KEYS_BODY  = _(r'''
 ''')
 _TREE_BODY  = _(r'''
 Option "Tree type" - {shtp}
-''')
-_OPTS_BODY  = _(r'''
-Extra options for "user.json" (needed restart after changing). 
-Default values:
-    // Use selection-text from current file when dialog opens
-    "fif_use_selection_on_start":false,
-    
-    // Copy options [.*], [aA], ["w"] from CudaText dialog to plugin's dialog
-    "fif_use_edfind_opt_on_start":false,
-    
-    // ESC stops all stages 
-    "fif_esc_full_stop":false,
-    
-    // Close dialog if search has found matches
-    "fif_hide_if_success":false,
-    // Save report after filling if tab has filename
-    "fif_auto_save_if_file":false,
-    // Activate tab with report after filling
-    "fif_focus_to_rpt":true,
-    
-    // Save all request details ("Find", "In folder", …) in first line of result file. 
-    // The info will be used in command "Repeat search for this report-tab"
-    "fif_save_request_to_rpt":false,
-    
-    // Length of substring (of field "Find") which appears in title of the search result
-    "fif_len_target_in_title":10,
-    
-    // Show report if nothing found
-    "fif_report_no_matches":false,
-    
-    // Option "Show context" appends N nearest lines to reported lines.
-    // So, 2*N+1 lines will be reported for each found line.
-    "fif_context_width":1,
-    // Or N lines before and M lines after for each found line.
-    // N or M can be set to 0
-    "fif_context_width_before":1,
-    "fif_context_width_after":1,
-    
-    // Style which marks found fragment in report
-    // Full form:
-    //    "fif_mark_style":{
-    //      "color_back":"", 
-    //      "color_font":"",
-    //      "font_bold":false, 
-    //      "font_italic":false,
-    //      "color_border":"", 
-    //      "borders":{"left":"","right":"","bottom":"","top":""}
-    //    },
-    //  Color values: "" - skip, "#RRGGBB" - hex-digits
-    //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
-    "fif_mark_style":{"borders":{"bottom":"dotted"}},
-    "fif_mark_true_replace_style":{"borders":{"bottom":"solid"}},
-    "fif_mark_false_replace_style":{"borders":{"bottom":"wave"},"color_border":"#777"},
-    
-    // Default encoding to read files
-    "fif_locale_encoding":"{def_enco}",
-    
-    // List of lexer names for report. First available lexer will be used.
-    "fif_lexers":["Search results"],
-    
-    // Skip too big files (0 - don't skip)
-    "fif_skip_file_size_more_Kb":0,
-    
-    // Size of buffer (at file start) to detect binary files
-    "fif_read_head_size(bytes)":1024,
-''')
-_OPTS_JSON  = _(r'''
-//Extra options for "user.json" (needed restart after changing).
-
-    // Use selection-text from current file when dialog opens
-    "fif_use_selection_on_start":false,
-    
-    // Copy options [.*], [aA], ["w"] from CudaText dialog to plugin's dialog
-    "fif_use_edfind_opt_on_start":false,
-    
-    // ESC stops all stages 
-    "fif_esc_full_stop":false,
-    
-    // Close dialog if search has found matches
-    "fif_hide_if_success":false,
-    // Save report after filling if tab has filename
-    "fif_auto_save_if_file":false,
-    // Activate tab with report after filling
-    "fif_focus_to_rpt":true,
-    
-    // Save all request details ("Find", "In folder", …) in first line of result file. 
-    // The info will be used in command "Repeat search for this report-tab"
-    "fif_save_request_to_rpt":false,
-    
-    // Length of substring (of field "Find") which appears in title of the search result
-    "fif_len_target_in_title":10,
-    
-    // Show report if nothing found
-    "fif_report_no_matches":false,
-    
-    // Option "Show context" appends N nearest lines to reported lines.
-    // So, 2*N+1 lines will be reported for each found line.
-    "fif_context_width":1,
-    // Or N lines before and M lines after for each found line.
-    // N or M can be set to 0
-    "fif_context_width_before":1,
-    "fif_context_width_after":1,
-    
-    // Style which marks found fragment in report
-    // Full form:
-    //    "fif_mark_style":{
-    //      "color_back":"", 
-    //      "color_font":"",
-    //      "font_bold":false, 
-    //      "font_italic":false,
-    //      "color_border":"", 
-    //      "borders":{"left":"","right":"","bottom":"","top":""}
-    //    },
-    //  Color values: "" - skip, "#RRGGBB" - hex-digits
-    //  Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave"
-    "fif_mark_style":{"borders":{"bottom":"dotted"}},
-    "fif_mark_true_replace_style":{"borders":{"bottom":"solid"}},
-    "fif_mark_false_replace_style":{"borders":{"bottom":"wave"},"color_border":"#777"},
-    
-    // Default encoding to read files
-    "fif_locale_encoding":"{def_enco}",
-    
-    // List of lexer names for report. First available lexer will be used.
-    "fif_lexers":["Search results"],
-    
-    // Skip too big files (0 - don't skip)
-    "fif_skip_file_size_more_Kb":0,
-    
-    // Size of buffer (at file start) to detect binary files
-    "fif_read_head_size(bytes)":1024,
 ''')
 
 def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h, stores=None):
@@ -788,31 +598,28 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                                           ,cntx=cntx_h.replace('\r', '\n')
                                           )
     TREE_BODY   =_TREE_BODY.strip().format(shtp=shtp_h.replace('\r', '\n'))
-    OPTS_BODY   =_OPTS_BODY.strip().replace('{def_enco}', DEF_LOC_ENCO)
-    OPTS_JSON   =_OPTS_JSON.strip().replace('{def_enco}', DEF_LOC_ENCO)
 #   pass;                      TIPS_BODY = 'TIPS_BODY'
 #   pass;                      KEYS_BODY = 'KEYS_BODY'
 #   pass;                      TREE_BODY = 'TREE_BODY'
-#   pass;                      OPTS_BODY = 'OPTS_BODY'
-    pass;                      #TIPS_BODY='tips';KEYS_BODY='keys';TREE_BODY='tree';OPTS_BODY='opts'
+    pass;                      #TIPS_BODY='tips';KEYS_BODY='keys';TREE_BODY='tree''
     PW, PH      = 730, 310
     DW, DH      = PW+10, PH+200
     hints_png   = os.path.dirname(__file__)+os.sep+r'images'+os.sep+f('fif-hints_{}x{}.png', PW, PH)
     tab                 = stores.get('tab', 'keys')
+    tab                 = 'keys' if tab=='opts' else tab    # From old dlg
 
     def prep(tab):
         htxt            = KEYS_BODY            if tab=='keys' else \
                           TIPS_BODY            if tab=='tips' else \
-                          TREE_BODY            if tab=='tree' else \
-                          OPTS_BODY            if tab=='opts' else ''
+                          TREE_BODY            if tab=='tree' else ''
         me_t            = GAP       +( PH+GAP  if tab=='keys' else 0)
         me_h            = DH-28     +(-PH-GAP  if tab=='keys' else 0)
         return htxt, me_t, me_h
        #def prep
        
     def when_resize(ag):
-        if tab=='opts':
-            return {}
+#       if tab=='opts':
+#           return {}
         f_wh    = ag.fattrs(attrs=('w', 'h'), live=ag.fattr('vis'))
         return {'ctrls':[('htxt',dict(
                                 w=f_wh['w']-10 
@@ -825,7 +632,7 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
         if aid=='-':                    return None
         if aid=='prps': dlg_fif_opts(); return {}
         stores['tab']   = tab = aid
-        htxt_vi         = (tab!='opts')
+        htxt_vi         = True#(tab!='opts')
         htxt, me_t, me_h= prep(tab)
         me_thw          = odict(when_resize(ag)['ctrls'])['htxt']   if htxt_vi else {}
         htxt_y          = me_thw['t']                               if htxt_vi else 0
@@ -834,19 +641,17 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
         pass;                  #log('vi={}',(vi))
         upds    =  {'ctrls':
                     [('imge' ,dict(vis=(tab=='keys')        ))
-                    ,('edtr' ,dict(vis=(tab=='opts')        ))
+#                   ,('edtr' ,dict(vis=(tab=='opts')        ))
 #                   ,('htxt' ,dict(vis=(tab!='opts'), val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
                     ,('htxt' ,dict(vis=(tab!='opts'), val=htxt     ,y=htxt_y,h=htxt_h,w=htxt_w ))
 #                   ,('htxt' ,dict(vis=vi           , val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
 #                   ,('htxt' ,dict(vis=False        , val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
                     ,('porg' ,dict(vis=(tab=='tips')        ))
-                    ,('prps' ,dict(vis=(tab=='opts')        ))
                     ,('keys' ,dict(val=(tab=='keys')        ))
                     ,('tips' ,dict(val=(tab=='tips')        ))
                     ,('tree' ,dict(val=(tab=='tree')        ))
-                    ,('opts' ,dict(val=(tab=='opts')        ))
                     ]
-                 ,'fid':('edtr' if tab=='opts' else 'htxt')}
+                 ,'fid':'htxt'}
         pass;                  #log('upds={}',pf(upds))
         return upds
        #def acts
@@ -861,36 +666,85 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                           )
             , ctrls = 
                 [('imge',dict(tp='im'   ,t=GAP ,h=PH    ,l=GAP          ,w=PW   ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
-                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'        ,vis=(tab!='opts')  ,val=htxt   ))
-                ,('edtr',dict(tp='edr'  ,y=GAP ,h=DH-28 ,x=GAP          ,w=DW   ,a='tBlR'   ,border='1'                 ,vis=(tab=='opts')              ))
-#               ,('edtr',dict(tp='edr'  ,t=GAP ,h=DH-28 ,l=GAP          ,w=DW   ,a='tBlR'   ,border='1'                 ,vis=(tab=='opts')              ))
+                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'                            ,val=htxt   ))
                 
                 ,('porg',dict(tp='llb'  ,tid='-'        ,l=GAP          ,w=180  ,a='TB'     ,cap=_('Reg.ex. on python.org')
                                                                                             ,url=RE_DOC_REF             ,vis=(tab=='tips')              ))
-                ,('prps',dict(tp='bt'   ,tid='-'        ,l=GAP          ,w=130  ,a='TB'     ,cap=_('&Edit options…')    ,vis=(tab=='opts')  ,call=acts  ))# &e
                 ,('keys',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-435   ,w=80   ,a='TB'     ,cap=_('&Keys')             ,val=(tab=='keys')  ,call=acts  ))# &k
                 ,('tips',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-350   ,w=80   ,a='TB'     ,cap=_('T&ips')             ,val=(tab=='tips')  ,call=acts  ))# &i
                 ,('tree',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-265   ,w=80   ,a='TB'     ,cap=_('&Tree')             ,val=(tab=='tree')  ,call=acts  ))# &t
-                ,('opts',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-180   ,w=80   ,a='TB'     ,cap=_('&Opts')             ,val=(tab=='opts')  ,call=acts  ))# &o
                 ,('-'   ,dict(tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,a='LRTB'   ,cap=_('&Close')                                ,call=acts  ))# &c
             ]
-            , fid   = ('edtr' if tab=='opts' else 'htxt')
+            , fid   = 'htxt'
                                #,options={'gen_repro_to_file':'repro_dlg_help.py'}
         )
-    oed = app.Editor(app.dlg_proc(ag.id_dlg, app.DLG_CTL_HANDLE, name='edtr'))
-    oed.set_text_all(OPTS_JSON)
-#   oed.set_text_all(OPTS_JSON+'\n')
-    oed.set_prop(app.PROP_RO                , True)
-    oed.set_prop(app.PROP_GUTTER_ALL        , False)
-    oed.set_prop(app.PROP_MINIMAP           , False)
-    oed.set_prop(app.PROP_MICROMAP          , False)
-    oed.set_prop(app.PROP_LAST_LINE_ON_TOP  , False)
-    oed.set_prop(app.PROP_MARGIN            , 2000)
-    oed.set_prop(app.PROP_LEXER_FILE        , 'JSON')
     pass;                      #log('OPTS_JSON={}',(OPTS_JSON))
     ag.show()    #NOTE: dlg_valign
     return stores
    #def dlg_help
+
+def dlg_nav_by_dclick():
+    pass;                      #LOG and log('ok',())
+    dcls    = Command.get_dcls()
+    godef   = apx.get_opt('mouse_goto_definition', 'a')
+    hint    = _('See "mouse_goto_definition" in default.json and user.json')
+    acts_l  = ["<no action>"
+              ,'Navigate to same group'
+              ,'Navigate to next group'
+              ,'Navigate to prev group'
+              ,'Navigate to next group, activate'
+              ,'Navigate to prev group, activate'
+              ]
+    sgns_l  = [''
+              ,'same,stay'
+              ,'next,stay'
+              ,'prev,stay'
+              ,'next,move'
+              ,'prev,move'
+              ]
+    aid,vals,*_t   = dlg_wrapper(_('Configure found result navigation by double-click'), 505,280,     #NOTE: dlg-dclick
+         [dict(           tp='lb'    ,tid='nnn' ,l=5        ,w=220  ,cap=              '>[double-click]:'                               ) #
+         ,dict(cid='nnn' ,tp='cb-ro' ,t=5       ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
+         ,dict(           tp='lb'    ,tid='snn' ,l=5        ,w=220  ,cap=        '>Shift+[double-click]:'                               ) #
+         ,dict(cid='snn' ,tp='cb-ro' ,t=5+ 30   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
+         ,dict(           tp='lb'    ,tid='ncn' ,l=5        ,w=220  ,cap=         '>Ctrl+[double-click]:'                               ) #
+         ,dict(cid='ncn' ,tp='cb-ro' ,t=5+ 60   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
+         ,dict(           tp='lb'    ,tid='scn' ,l=5        ,w=220  ,cap=   '>Shift+Ctrl+[double-click]:'                               ) #
+         ,dict(cid='scn' ,tp='cb-ro' ,t=5+ 90   ,l=5+220+5  ,w=270  ,items=acts_l                                                       ) #
+         ,dict(           tp='lb'    ,tid='nna' ,l=5        ,w=220  ,cap=          '>Alt+[double-click]:'   ,en=godef!='a'  ,hint=hint  ) #
+         ,dict(cid='nna' ,tp='cb-ro' ,t=5+120   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='a'  ,hint=hint  ) #
+         ,dict(           tp='lb'    ,tid='sna' ,l=5        ,w=220  ,cap=    '>Shift+Alt+[double-click]:'   ,en=godef!='sa' ,hint=hint  ) #
+         ,dict(cid='sna' ,tp='cb-ro' ,t=5+150   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='sa' ,hint=hint  ) #
+         ,dict(           tp='lb'    ,tid='nca' ,l=5        ,w=220  ,cap=     '>Alt+Ctrl+[double-click]:'   ,en=godef!='ca' ,hint=hint  ) #
+         ,dict(cid='nca' ,tp='cb-ro' ,t=5+180   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='ca' ,hint=hint  ) #
+         ,dict(           tp='lb'    ,tid='sca' ,l=5        ,w=220  ,cap='>Shift+Ctrl+Alt+[double-click]:'  ,en=godef!='sca',hint=hint  ) #
+         ,dict(cid='sca' ,tp='cb-ro' ,t=5+210   ,l=5+220+5  ,w=270  ,items=acts_l                           ,en=godef!='sca',hint=hint  ) #
+         ,dict(cid='!'   ,tp='bt'    ,t=5+240   ,l=5+330    ,w=80   ,cap=_('OK')                            ,def_bt=True                ) #
+         ,dict(cid='-'   ,tp='bt'    ,t=5+240   ,l=5+415    ,w=80   ,cap=_('Cancel')                                                    )              
+         ],    dict(nnn=sgns_l.index(dcls.get('',   ''))
+                   ,snn=sgns_l.index(dcls.get('s',  ''))
+                   ,ncn=sgns_l.index(dcls.get('c',  ''))
+                   ,scn=sgns_l.index(dcls.get('sc', ''))
+                   ,nna=sgns_l.index(dcls.get('a',  ''))
+                   ,sna=sgns_l.index(dcls.get('sa', ''))
+                   ,nca=sgns_l.index(dcls.get('ca', ''))
+                   ,sca=sgns_l.index(dcls.get('sca',''))
+                   ), focus_cid='nnn')
+    pass;                      #LOG and log('vals={}',vals)
+    if aid is None or aid=='-': return
+    for nnn in ('nnn', 'snn', 'ncn', 'scn', 'nna', 'sna', 'nca', 'sca'):
+        sca = nnn.replace('n', '')
+        if 0==vals[nnn]:
+            dcls.pop(sca, None)
+        else:
+            dcls[sca]   = sgns_l[vals[nnn]]
+    Command.dcls    = dcls
+    stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
+                if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+              odict()
+    stores['dcls']  = dcls
+    open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+   #def dlg_nav_by_dclick
 
 mask_h  = _('Space-separated file or folder masks.'
             '\rFolder mask starts with "/".'
@@ -900,7 +754,7 @@ mask_h  = _('Space-separated file or folder masks.'
 reex_h  = _('Regular expression'
             '\rFormat for found groups in Replace: \\1'
             )
-case_h  = _('Case sensative')
+case_h  = _('Case sensitive')
 word_h  = _('Option "Whole words". It is ignored when:'
             '\r  Regular expression (".*") is turned on,'
             '\r  "Find what" contains not only letters, digits and "_".'
@@ -995,7 +849,7 @@ coun_h  = _('Count matches only.'
             '\rNote: Alt+T works if button is hidden.'
             )
 pset_h  = _('Save options for future. Restore saved options.'
-            '\rShift+Click - Show preset list in applying history order.'
+            '\rShift+Click - Show presets list in applying history order.'
             '\rCtrl+Click   - Apply last used preset.'
             '\r '
             '\rNote: Alt+S works if button is hidden.'
@@ -1107,9 +961,10 @@ class FifD:
     def __init__(self, what='', opts={}):
         pass
         pass;                  #LOG and log('FifD.DEF_WD_TXTS={}',(FifD.DEF_WD_TXTS))
-        self.stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                        if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                       odict()
+        self.store(what='load')
+#       self.stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
+#                       if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+#                      odict()
         FifD.upgrade(self.stores)     # Upgrade types
     
         self.what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
@@ -1193,8 +1048,12 @@ class FifD:
             self.enco_s = ag.cval('enco')
        #def copy_vals
     
-    def store(self, save=True, set=''):
-        if save:
+    def store(self, what='save', set=''):
+        if what=='load':
+            self.stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
+                            if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+                           odict()
+        if what=='save':
             self.stores['wo_adva']  = self.wo_adva
             self.stores['wo_excl']  = self.wo_excl
             self.stores['wo_repl']  = self.wo_repl
@@ -1836,6 +1695,12 @@ class FifD:
             
             elif tag=='cust-excl':  self.wo_excl    = not self.wo_excl
             elif tag=='cust-repl':  self.wo_repl    = not self.wo_repl
+            
+            elif tag=='edit-opts':  dlg_fif_opts()
+            elif tag=='edit-dcls':
+                self.store(what='save')
+                dlg_nav_by_dclick()
+                self.store(what='load')
             else:   return []
             self.pre_cnts()
             return (dict(form =dict( cap  =self.get_fif_cap()
@@ -1852,8 +1717,8 @@ class FifD:
         coun_c  = self.caps['!cnt']
         repl_c  = self.caps['!rep']
         cfld_c  = self.caps['cfld']
-        brow_c  = self.caps['brow']
-        pres_c  = self.caps['pres']
+        brow_c  = self.caps['brow'].replace('.', '').replace('…', '')
+        pres_c  = self.caps['pres'].replace('.', '').replace('…', '')
         fold_c  = self.caps['fold']
         mn_coun = [
     d(tag='!cnt-main'   ,key='Alt+T'        ,cap=  _('Count matches only'))
@@ -1888,7 +1753,9 @@ class FifD:
    ,d(tag='dept-one'    ,key='Shift+Alt+1'  ,cap=_('Apply "1 level"'))
                     ]
         mn_cust = [
-    d(tag='cust-main'   ,key='Alt+E'        ,cap=_('Show advanced options')                                 ,ch=not self.wo_adva)
+    d(tag='cust-main'   ,key='Alt+E'        ,cap=_('Show advanc&ed options')                                ,ch=not self.wo_adva)
+   ,d(tag='edit-opts'                       ,cap=_('&View and edit endgine options…'))
+   ,d(tag='edit-dcls'                       ,cap=_('&Configure navigation with double-click in report…'))
    ,d(                                       cap='-')
    ,d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl']))
    ,d(tag='cust-repl'   ,ch=not self.wo_repl,cap=f(_('Show "{}" and "{}"')  , self.caps['repl']                 , repl_c))
@@ -1896,8 +1763,8 @@ class FifD:
         pset_l  = self.stores.get('pset', [])
         pset_n  = len(pset_l)
         mn_pres = [
-    d(tag='pres-nat' ,key='Alt+S'       ,en=pset_n>0   ,cap=f(_('Show preset list [{}]')                                            , pset_n))
-   ,d(tag='pres-hist'                   ,en=pset_n>0   ,cap=f(_('Show preset list [{}] in applying history order   [Shift+"{}"]')   , pset_n, pres_c))
+    d(tag='pres-nat' ,key='Alt+S'       ,en=pset_n>0   ,cap=f(_('Show presets list [{}]')                                            , pset_n))
+   ,d(tag='pres-hist'                   ,en=pset_n>0   ,cap=f(_('Show presets list [{}] in applying history order   [Shift+"{}"]')   , pset_n, pres_c))
    ,d(                                                  cap='-')
 #  ,d(tag='pres-cfg'                    ,en=pset_n>0   ,cap=_('Configure presets…'))
 #  ,d(tag='pres-save'                                  ,cap=_('Save as preset…'))
@@ -1915,13 +1782,13 @@ class FifD:
         if False:pass
         elif aid=='menu':
             pass;              #log('?menu',())
-            mn_its  = [ d(cap='&Find'   ,sub=mn_find)
-                      , d(cap='&Scope'  ,sub=mn_cfld)
-                      , d(cap='&Browse' ,sub=mn_brow)
-                      , d(cap='&Depth'  ,sub=mn_dept)
-                      , d(cap='&More'   ,sub=mn_cust)
-                      , d(cap='&Preset' ,sub=mn_pres)
-                    ]
+            mn_its  = [ d(cap='&Find'       ,sub=mn_find)
+                      , d(cap='&Scope'      ,sub=mn_cfld)
+                      , d(cap='&Browse'     ,sub=mn_brow)
+                      , d(cap='&Depth'      ,sub=mn_dept)
+                      , d(cap='&Presets'   ,sub=mn_pres)
+                      , d(cap='-')
+                    ] + mn_cust
         elif aid=='!fnd':
             mn_its  = mn_find
         elif aid=='!rep':
@@ -1978,8 +1845,8 @@ class FifD:
 ,('dep_',d(          tid='dept'                                 ))
 ,('dept',d(          t=m.gap2+140+M.EG5                         ))
 ,('cfld',d(          tid='fold'                                 ))
-,('----',d(          t=m.gap2+172+M.EG5                         ))
-,('more',d(          t=m.gap2+160+M.EG5 ,cap=c_more ,w=w_more   ))
+,('----',d(          t=m.gap2+175+M.EG5                         ))
+,('more',d(          t=m.gap2+163+M.EG5 ,cap=c_more ,w=w_more   ))
 ,('arp_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
 ,('tot_',d(          tid='skip'                     ,vis=w_adva ))
 ,('totb',d(          tid='skip'                     ,vis=w_adva ))
@@ -2001,7 +1868,7 @@ class FifD:
                                                     
 ,('!rep',d(          tid='repl'                     ,vis=w_repl ))
 ,('!cnt',d(          tid='incl'                     ,vis=w_adva ))
-,('menu',d(          t=m.gap2+160+M.EG5         ,w=(39 -7)      ))
+,('menu',d(          t=m.gap2+163+M.EG5         ,w=(39 -7)      ))
 ,('help',d(          tid='dept'                                 ))
   ] 
     # Start=Full cnts
@@ -2234,5 +2101,7 @@ ToDo
 [+][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
 [+][kv-kv][12mar18] Rebuild help-pic
 [ ][kv-kv][12apr18] ? Call app_idle to enable ESC
-[ ][at-kv][18may18] ? As API-bag "Config presets" blocks checks. Try!
+[ ][at-kv][18may18] ? As API-bag "Config presets" blocked checks. re-Try!
+[+][at-kv][18may18] Set tab_size to 2 in lexer if no such setting
+[+][kv-kv][21may18] Start and second pos of Less is diff
 '''

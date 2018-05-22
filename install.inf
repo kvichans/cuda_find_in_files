@@ -81,13 +81,13 @@ method=_
 
 [item24]
 section=commands
-caption=&Find in Files\Configure navigation with &double-click...
+caption=&Find in Files\Configure navigation with &double-click in report...
 method=dlg_nav_by_dclick
 menu=op
 
 [item25]
 section=commands
-caption=&Find in Files\&View and edit options...
+caption=&Find in Files\&View and edit endgine options...
 method=dlg_fif_opts
 menu=op
 
