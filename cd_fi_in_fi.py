@@ -222,7 +222,7 @@ def dlg_fif_opts():
         import cuda_options_editor as op_ed
 #       from cuda_options_editor import dlg_opt_editor
     except:
-        app.msg_status(_('To view/edit options install plugin cuda_options_editor'))
+        app.msg_box(_('To view/edit options install plugin "Options Editor"'),app.MB_OK)
         return
 
     try:
