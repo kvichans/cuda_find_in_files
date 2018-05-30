@@ -9,15 +9,9 @@ ToDo: (see end of file)
 import  re, os, sys, locale, json, collections, traceback, time
 from    fnmatch         import fnmatch
 
-try:
-    import  cudatext            as app
-    from    cudatext        import ed
-    import  cudax_lib           as apx
-except:
-    import  sw                  as app
-    from    sw              import ed
-    from . import cudax_lib     as apx
-
+import  cudatext            as app
+from    cudatext        import ed
+import  cudax_lib           as apx
 from    .cd_plug_lib        import *
 from    .chardet.universaldetector import UniversalDetector
 
@@ -174,8 +168,7 @@ def report_to_tab(rpt_data:dict
     def create_new(_title_ext='')->app.Editor:
         app.file_open('')
         new_ed  = ed
-        new_ed.set_prop(app.PROP_ENC,       CdSw.ENC_UTF8)
-#       new_ed.set_prop(app.PROP_ENC,       'UTF-8')
+        new_ed.set_prop(app.PROP_ENC,       'UTF-8')
         new_ed.set_prop(app.PROP_TAB_TITLE, _('Results')+_title_ext)  #??
         return new_ed
         
@@ -238,8 +231,7 @@ def report_to_tab(rpt_data:dict
     # Prepare tab
     if not rpt_type['join']:
         rpt_ed.set_text_all('')
-        CdSw.attr(rpt_ed, CdSw.MARKERS_DELETE_ALL)
-#       rpt_ed.attr(       app.MARKERS_DELETE_ALL)
+        rpt_ed.attr(       app.MARKERS_DELETE_ALL)
 
     # Fold prev res
     if rpt_type['join'] and FOLD_PREV_RES: #?and rpt_ed.get_prop(app.PROP_GUTTER_FOLD)
@@ -251,8 +243,7 @@ def report_to_tab(rpt_data:dict
 #   rpt_ed.set_prop(app.PROP_LEXER_FILE,'')  #?? optimized?
     def mark_fragment(rw:int, cl:int, ln:int, to_ed=rpt_ed, style=MARK_FIND_STYLE):
         pass;                  #RPTLOG and log('rw={}',rw)
-        CdSw.attr(to_ed, CdSw.MARKERS_ADD
-#       to_ed.attr(       app.MARKERS_ADD
+        to_ed.attr(       app.MARKERS_ADD
                 , x=cl, y=rw, len=ln
                 , **style
                 )
@@ -504,8 +495,7 @@ def report_to_tab(rpt_data:dict
         rpt_ed.lexer_scan(row4crt)
         
     pass;                      #RPTLOG and log('row4crt={}',row4crt)
-    CdSw.set_caret(rpt_ed, 0, row4crt)
-#   rpt_ed.set_caret(      0, row4crt)
+    rpt_ed.set_caret(      0, row4crt)
 
     if AUTO_SAVE and os.path.isfile(rpt_ed.get_filename()):
         rpt_ed.save()
@@ -541,8 +531,7 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
     if not op_ed:
         # Open it
         ed_grp  = ed.get_prop(app.PROP_INDEX_GROUP)
-        grps    = CdSw.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
-#       grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
+        grps    = apx.get_groups_count() # len({app.Editor(h).get_prop(app.PROP_INDEX_GROUP) for h in app.ed_handles()})
         op_grp  = -1                                    \
                      if 1==grps                     else\
                   -1                                    \
@@ -555,8 +544,7 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
                      if where[0:3]=='gr#'           else\
                   -1
         pass;                   NAVLOG and log('ed_grp, grps, op_grp={}',(ed_grp, grps, op_grp))
-        CdSw.file_open(path, op_grp)
-#       app.file_open(path, op_grp)
+        app.file_open(path, op_grp)
         op_ed   = ed
     op_ed.focus()
     pass;                       NAVLOG and log('ok op_ed.focus()',())
@@ -564,18 +552,14 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
     elif rw==-1:
         pass
     elif cl==-1 and how_act=='move':
-        CdSw.set_caret(op_ed,   0, rw)
-#       op_ed.set_caret(        0, rw)
+        op_ed.set_caret(        0, rw)
     elif cl==-1:
         l_ln= len(op_ed.get_text_line(rw))
-        CdSw.set_caret(op_ed,   0, rw,   l_ln,  rw)   # inverted sel to show line head if window is narrow 
-#       op_ed.set_caret(        0, rw,   l_ln,  rw)       # inverted sel to show line head if window is narrow 
+        op_ed.set_caret(        0, rw,   l_ln,  rw)       # inverted sel to show line head if window is narrow 
     elif ln==-1:
-        CdSw.set_caret(op_ed,   cl, rw)
-#       op_ed.set_caret(        cl, rw)
+        op_ed.set_caret(        cl, rw)
     else:
-        CdSw.set_caret(op_ed,   cl+ln,  rw,     cl, rw)
-#       op_ed.set_caret(        cl+ln,  rw,     cl, rw)
+        op_ed.set_caret(        cl+ln,  rw,     cl, rw)
     if rw!=-1:
         top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', -5, ed_cfg=op_ed)))
         op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
@@ -691,8 +675,7 @@ def jump_to(drct:str, what:str):
     if not last_rpt_tid:return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
     rpt_ed  = apx.get_tab_by_id(last_rpt_tid)
     if not rpt_ed:      return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
-    crts    = CdSw.get_carets(rpt_ed)
-#   crts    = rpt_ed.get_carets()
+    crts    = rpt_ed.get_carets()
     if len(crts)>1:     return app.msg_status(_("Command doesn't work with multi-carets"))
 #   last_row= crts[0][1]
     all_rows= rpt_ed.get_line_count()
@@ -718,14 +701,12 @@ def jump_to(drct:str, what:str):
     pass;                       NAVLOG and log('base_path,base_rw={}',(base_path,base_rw))
     
     def set_rpt_active_row(_row):
-        grp_tab = CdSw.ed_group(rpt_grp)
-#       grp_tab = app.ed_group(rpt_grp)
+        grp_tab = app.ed_group(rpt_grp)
         rpt_vis = grp_tab.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
         rpt_act =      ed.get_prop(app.PROP_TAB_ID) == rpt_ed.get_prop(app.PROP_TAB_ID)
         if  rpt_vis:
             rpt_ed.focus()
-        CdSw.set_caret(rpt_ed,  0, _row)
-#       rpt_ed.set_caret(       0, _row)
+        rpt_ed.set_caret(       0, _row)
         tid     = None
         if  rpt_vis \
         and not (rpt_ed.get_prop(app.PROP_LINE_TOP) <= _row <= ed.get_prop(app.PROP_LINE_BOTTOM)):
@@ -799,8 +780,7 @@ def nav_to_src(where:str, how_act='move'):
     """
     global last_rpt_tid
     pass;                   NAVLOG and log('where, how_act={}',(where, how_act))
-    crts    = CdSw.get_carets(ed)
-#   crts    = ed.get_carets()
+    crts    = ed.get_carets()
     if len(crts)>1:         return app.msg_status(_("Command doesn't work with multi-carets"))
     last_rpt_tid= ed.get_prop(app.PROP_TAB_ID)
         
@@ -1095,11 +1075,9 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
             if repl_s is not None and count:
                 # Change text in ted
                 pass;          #LOG and log('lines={}',(lines))
-                crts= CdSw.get_carets(ted)
-#               crts= ted.get_carets()
+                crts= ted.get_carets()
                 ted.set_text_all(c13.join(lines))
-                CdSw.set_caret(ted, *crts[0])
-#               ted.set_caret(      *crts[0])
+                ted.set_caret(      *crts[0])
             if 0<frst<=rsp_i['frgms']: break#for path
            #for path
         return rsp_l, rsp_i
@@ -1435,8 +1413,7 @@ class ProgressAndBreak:
         app.app_proc(app.PROC_SET_ESCAPE, '0')
 
     def set_progress(self, msg:str):
-        CdSw.msg_status(self.prefix+msg, process_messages=True)
-#       app.msg_status(self.prefix+msg, process_messages=True)
+        app.msg_status(self.prefix+msg, process_messages=True)
 
     def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
 #       was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')

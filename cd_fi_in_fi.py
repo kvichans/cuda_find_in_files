@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.15 2018-05-21'
+    '2.3.16 2018-05-30'
 ToDo: (see end of file)
 '''
 
@@ -34,8 +34,7 @@ VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
 
 MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
-CFG_JSON= CdSw.get_setting_dir()+os.sep+'cuda_find_in_files.json'
-#CFG_JSON= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
+CFG_JSON= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
 
 CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
@@ -307,7 +306,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
     ind_inpj= len(pset_l)+1
     ind_conf= len(pset_l)+2
     ind_save= len(pset_l)+3
-    ps_ind  = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(dlg_list), caption=_('Presets'))      #NOTE: dlg-menu-press
+    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list), caption=_('Presets'))      #NOTE: dlg-menu-press
     pass;                      #LOG and log('ps_ind={}',(ps_ind))
     if ps_ind is None:  return None
     if False:pass
@@ -974,7 +973,7 @@ class FifD:
         self.case01  = opts.get('case', self.stores.get('case', '0'))
         self.word01  = opts.get('word', self.stores.get('word', '0'))
         if USE_EDFIND_OPS:
-            ed_opt  = CdSw.app_proc(CdSw.PROC_GET_FIND_OPTIONS, '')
+            ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
             # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
             self.reex01  = '1' if 'r' in ed_opt else '0'
             self.case01  = '1' if 'c' in ed_opt else '0'
@@ -1216,7 +1215,7 @@ class FifD:
 
         if False:pass
         elif btn_m=='brow':     # BroDir
-            path        = CdSw.dlg_dir(os.path.expanduser(self.fold_s))
+            path        = app.dlg_dir(os.path.expanduser(self.fold_s))
             if not path: return self.do_focus(aid,ag)   #continue#while_fif
             self.fold_s = path
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
@@ -1754,7 +1753,7 @@ class FifD:
                     ]
         mn_cust = [
     d(tag='cust-main'   ,key='Alt+E'        ,cap=_('Show advanc&ed options')                                ,ch=not self.wo_adva)
-   ,d(tag='edit-opts'                       ,cap=_('&View and edit endgine options…'))
+   ,d(tag='edit-opts'                       ,cap=_('&View and edit engine options…'))
    ,d(tag='edit-dcls'                       ,cap=_('&Configure navigation with double-click in report…'))
    ,d(                                       cap='-')
    ,d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl']))
@@ -2104,4 +2103,5 @@ ToDo
 [ ][at-kv][18may18] ? As API-bag "Config presets" blocked checks. re-Try!
 [+][at-kv][18may18] Set tab_size to 2 in lexer if no such setting
 [+][kv-kv][21may18] Start and second pos of Less is diff
+[ ][kv-kv][24may18] Add statusbar
 '''

@@ -87,7 +87,7 @@ menu=op
 
 [item25]
 section=commands
-caption=&Find in Files\&View and edit endgine options...
+caption=&Find in Files\&View and edit engine options...
 method=dlg_fif_opts
 menu=op
 
