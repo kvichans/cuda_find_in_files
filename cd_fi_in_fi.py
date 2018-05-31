@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.16 2018-05-30'
+    '2.3.17 2018-05-30'
 ToDo: (see end of file)
 '''
 
@@ -40,8 +40,6 @@ CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
 USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
-#if 'sw'==app.__name__:
-#   USE_EDFIND_OPS  = False
 
 #GAP     = 5
 
@@ -908,7 +906,7 @@ class FifD:
 
     @staticmethod
     def upgrade(dct):
-        if 'totb' in dct:
+        if 'totb' in dct and type(dct['totb'])==str and re.match(r'^\d+$', dct['totb']):
             dct['totb']  = int(dct['totb'])
 
     @staticmethod
@@ -1410,6 +1408,7 @@ class FifD:
         btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
         btn_p,btn_m = btn_p.replace('!ctt', '!cnt'),btn_m.replace('!ctt', '!cnt')
         if btn_p not in ('!cnt', '!fnd', '!rep'):   return self.do_focus(aid,ag)
+        pass;                  #log('btn_p,btn_m={}',(btn_p,btn_m))
         
         w_excl      = not self.wo_excl
         self.excl_s = self.excl_s if w_excl else ''
@@ -1662,26 +1661,27 @@ class FifD:
             return []
  
         def wnen_menu(ag, tag):
+            pass;              #log('tag={}',(tag))
             if False:pass
-            elif tag=='!fnd-main':  return self.do_work(aid,    ag, btn_m=   '!fnd')
-            elif tag=='!fnd-ntab':  return self.do_work(aid,    ag, btn_m= 's/!fnd')
-            elif tag=='!fnd-apnd':  return self.do_work(aid,    ag, btn_m= 'c/!fnd')
-            elif tag=='!cnt-main':  return self.do_work(aid,    ag, btn_m=   '!cnt')
-            elif tag=='!cnt-name':  return self.do_work(aid,    ag, btn_m= 's/!cnt')
-            elif tag=='!rep-main':  return self.do_work(aid,    ag, btn_m=   '!rep')
-            elif tag=='!rep-noqu':  return self.do_work(aid,    ag, btn_m= 's/!rep')
-            elif tag=='cfld-main':  return self.do_fold(aid,    ag, btn_m=   'cfld')
-            elif tag=='cfld-file':  return self.do_fold(aid,    ag, btn_m= 's/cfld')
-            elif tag=='cfld-tabs':  return self.do_fold(aid,    ag, btn_m= 'c/cfld')
-            elif tag=='cfld-ctab':  return self.do_fold(aid,    ag, btn_m='sc/cfld')
-            elif tag=='brow-main':  return self.do_fold(aid,    ag, btn_m=   'brow')
-            elif tag=='brow-file':  return self.do_fold(aid,    ag, btn_m= 's/brow')
+            elif tag=='!fnd-main':  return self.do_work('!fnd', ag, btn_m=   '!fnd')
+            elif tag=='!fnd-ntab':  return self.do_work('!fnd', ag, btn_m= 's/!fnd')
+            elif tag=='!fnd-apnd':  return self.do_work('!fnd', ag, btn_m= 'c/!fnd')
+            elif tag=='!cnt-main':  return self.do_work('!cnt', ag, btn_m=   '!cnt')
+            elif tag=='!cnt-name':  return self.do_work('!cnt', ag, btn_m= 's/!cnt')
+            elif tag=='!rep-main':  return self.do_work('!rep', ag, btn_m=   '!rep')
+            elif tag=='!rep-noqu':  return self.do_work('!rep', ag, btn_m= 's/!rep')
+            elif tag=='cfld-main':  return self.do_fold('cfld', ag, btn_m=   'cfld')
+            elif tag=='cfld-file':  return self.do_fold('cfld', ag, btn_m= 's/cfld')
+            elif tag=='cfld-tabs':  return self.do_fold('cfld', ag, btn_m= 'c/cfld')
+            elif tag=='cfld-ctab':  return self.do_fold('cfld', ag, btn_m='sc/cfld')
+            elif tag=='brow-main':  return self.do_fold('brow', ag, btn_m=   'brow')
+            elif tag=='brow-file':  return self.do_fold('brow', ag, btn_m= 's/brow')
             elif tag=='dept-all':   return self.do_dept('depa', ag)
             elif tag=='dept-only':  return self.do_dept('depo', ag)
             elif tag=='dept-one':   return self.do_dept('dep1', ag)
-            elif tag=='pres-nat':   return self.do_pres(aid,    ag, btn_m=   'pres')
-            elif tag=='pres-hist':  return self.do_pres(aid,    ag, btn_m= 's/pres')
-            elif tag=='pres-last':  return self.do_pres(aid,    ag, btn_m= 'c/pres')
+            elif tag=='pres-nat':   return self.do_pres('pres', ag, btn_m=   'pres')
+            elif tag=='pres-hist':  return self.do_pres('pres', ag, btn_m= 's/pres')
+            elif tag=='pres-last':  return self.do_pres('pres', ag, btn_m= 'c/pres')
             elif tag=='pres-1':     return self.do_pres('prs1', ag)
             elif tag=='pres-2':     return self.do_pres('prs2', ag)
             elif tag=='pres-3':     return self.do_pres('prs3', ag)

@@ -680,14 +680,14 @@ def _os_scale(id_action, prop=None, index=-1, index2=-1, name=''):
         elif id_action==app.DLG_PROP_SET:                   scale_up(prop)
         elif id_action==app.DLG_CTL_PROP_SET and -1!=index: scale_up(prop)
         elif id_action==app.DLG_CTL_PROP_SET and ''!=name:  scale_up(prop)
-        elif id_action==app.DLG_PROP_GET:                              scale_dn(prop)
+        elif id_action==app.DLG_PROP_GET:                   scale_dn(prop)
         elif id_action==app.DLG_CTL_PROP_GET and -1!=index: scale_dn(prop)
         elif id_action==app.DLG_CTL_PROP_GET and ''!=name:  scale_dn(prop)
 
-        elif id_action==  'scale':                                     scale_up(prop)
-        elif id_action=='unscale':                                     scale_dn(prop)
+        elif id_action==  'scale':                          scale_up(prop)
+        elif id_action=='unscale':                          scale_dn(prop)
 #       pass;                   print('a={}, ok pr={}'.format(DLG_PROC_I2S[id_action], {k:prop[k] for k in prop if k in _SCALED_KEYS or k=='name'}))
-        return prop
+    return prop
    #def _os_scale
 
 gui_height_cache= { 'button'            :0
@@ -868,7 +868,12 @@ class BaseDlgAgent:
         BaseDlgAgent._form_acts('save', id_dlg=self.id_dlg, key4store=self.opts.get('form data key'))
         if callbk_on_exit:  callbk_on_exit(self)
         dlg_proc_wpr(self.id_dlg, app.DLG_FREE)
-        ed_caller.focus()
+        
+        ed_to_fcs   = ed_caller \
+                        if 'on_exit_focus_to_ed' not in self.opts else \
+                      self.opts['on_exit_focus_to_ed']
+        if ed_to_fcs:
+            ed_to_fcs.focus()
        #def show
         
     def fattr(self, attr, live=True, defv=None):
@@ -897,9 +902,13 @@ class BaseDlgAgent:
         pr  = dlg_proc_wpr(self.id_dlg
                         , app.DLG_CTL_PROP_GET
                         , name=name)            if live else    self.ctrls[name]
+        attr    = REDUCTIONS.get(attr, attr)
         if attr not in pr:  return defv
         rsp = pr[attr]
-        return self._take_val(name, rsp, defv)   if attr=='val' and live else    rsp
+        if not live:        return rsp
+        if attr=='val':     return self._take_val(name, rsp, defv)
+        return                     self._take_it_cl(name, attr, rsp, defv)
+#       return self._take_val(name, rsp, defv)   if attr=='val' and live else    rsp
        #def cattr
 
     def cattrs(self, name, attrs=None, live=True):
@@ -1027,6 +1036,55 @@ class BaseDlgAgent:
         return new_val
        #def _take_val
 
+    def _take_it_cl(self, name, attr, liv_val, defv=None):
+        tp      = self.ctrls[name]['type']
+        old_val = self.ctrls[name].get(attr, defv)
+        pass;                  #log('name, attr, isinstance(old_val, str)={}',(name, attr, isinstance(old_val, str)))
+        if isinstance(old_val, str):
+            # No need parsing - config was by string
+            return liv_val
+        new_val = liv_val
+        
+        if attr=='items':
+            if tp in ['listview', 'checklistview']:
+                # For listview, checklistview: "\t"-separated items.
+                #   first item is column headers: title1+"="+size1 + "\r" + title2+"="+size2 + "\r" +...
+                #   other items are data: cell1+"\r"+cell2+"\r"+...
+                # ([(hd,wd)], [[cells],[cells],])
+                header_rows = new_val.split('\t')
+                new_val =[[h.split('=')  for h in header_rows[0].split('\r')]
+                         ,[r.split('\r') for r in header_rows[1:]]
+                         ]
+            else:
+                # For combo, combo_ro, listbox, checkgroup, radiogroup, checklistbox: "\t"-separated lines
+                new_val     = new_val.split('\t')
+        
+        if attr=='columns':
+            # For listview, checklistview: 
+            #   "\t"-separated of 
+            #       "\r"-separated 
+            #           Name, Width, Min Width, Max Width, Alignment (str), Autosize('0'/'1'), Visible('0'/'1')
+            # [{nm:str, wd:num, mi:num, ma:num, al:str, au:bool, vi:bool}]
+            pass;              #log('new_val={}',repr(new_val))
+            new_val= [ci.split('\r')      for ci in new_val.split('\t')]
+#           new_val= [ci.split('\r')[:-1] for ci in new_val.split('\t')[:-1]]   # API bug
+            pass;              #log('new_val={}',repr(new_val))
+            int_sc = lambda s: _os_scale('unscale', {'w':int(s)})['w']
+            new_val= [dict(nm=       ci[0]
+#                         ,wd=int( ci[1])
+#                         ,mi=int( ci[2])
+#                         ,ma=int( ci[3])
+                          ,wd=int_sc(ci[1])
+                          ,mi=int_sc(ci[2])
+                          ,ma=int_sc(ci[3])
+                          ,au='1'==  ci[4]
+                          ,vi='1'==  ci[5]
+                          ) for ci in new_val]
+            pass;              #log('new_val={}',(new_val))
+        
+        return new_val
+       #def _take_it_cl
+
     def _prepare_it_vl(self, c_pr, cfg_ctrl, opts={}):
         tp      = cfg_ctrl['type']
 
@@ -1063,6 +1121,35 @@ class BaseDlgAgent:
                 # For combo, combo_ro, listbox, checkgroup, radiogroup, checklistbox: "\t"-separated lines
                 items   = '\t'.join(items)
             c_pr['items']   = items
+
+        if 'cols' in cfg_ctrl        and opts.get('prepare cols', True):
+            cols   = cfg_ctrl['cols']
+            cfg_ctrl['columns'] = cols
+            if isinstance(cols, str):
+                pass
+            else:
+                # For listview, checklistview: 
+                #   "\t"-separated of 
+                #       "\r"-separated 
+                #           Name, Width, Min Width, Max Width, Alignment (str), Autosize('0'/'1'), Visible('0'/'1')
+                pass;          #log('cols={}',(cols))
+                str_sc = lambda n: str(_os_scale('scale', {'w':n})['w'])
+                cols   = '\t'.join(['\r'.join([       cd[    'nm']
+#                                             ,str(   cd[    'wd']   )
+#                                             ,str(   cd.get('mi' ,0))
+#                                             ,str(   cd.get('ma' ,0))
+                                              ,str_sc(cd[    'wd']   )
+                                              ,str_sc(cd.get('mi' ,0))
+                                              ,str_sc(cd.get('ma' ,0))
+                                              ,       cd.get('al','')
+                                              ,'1' if cd.get('au',False) else '0'
+                                              ,'1' if cd.get('vi',True) else '0'
+                                              ])
+                                    for cd in cols]
+                                  )
+                pass;          #log('cols={}',repr(cols))
+            c_pr['columns'] = cols
+            pass;              #log('isinstance(cfg_ctrl[columns], str)={}',(isinstance(cfg_ctrl['columns'], str)))
 
         return c_pr
        #def _prepare_it_vl
@@ -1144,12 +1231,12 @@ class BaseDlgAgent:
     def _gen_repro_code(self, rerpo_fn):
         # Repro-code
         l       = '\n'
-        cattrs  = [  ('type', 'name', 'tag')
-                    ,('x', 'y', 'w', 'h', 'cap', 'hint')
+        cattrs  = [  ('type', 'name', 'tag', 'act')
+                    ,('x', 'y', 'w', 'h', 'w_min', 'h_min', 'w_max', 'h_max', 'cap', 'hint', 'p')
                     ,('en', 'vis', 'focused', 'tab_stop', 'tab_order'
                      ,'props', 'ex0', 'ex1', 'ex2', 'ex3', 'ex4', 'ex5', 'ex6', 'ex7', 'ex8', 'ex9'
                      ,'sp_l', 'sp_r', 'sp_t', 'sp_b', 'sp_a', 'a_l', 'a_r', 'a_t', 'a_b', 'align')
-                    ,('val', 'items')
+                    ,('val', 'items', 'columns')
                     ,('tp', 't', 'b', 'l', 'r', 'tid', 'a')
                     ]
         fattrs  = [  ('x', 'y', 'w', 'h', 'cap', 'tag')
@@ -1177,23 +1264,30 @@ class BaseDlgAgent:
         srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
         for idC in range(app.dlg_proc(self.id_dlg, app.DLG_CTL_COUNT)):
             prC = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=idC)
-#           if True:                                        prC.pop('act', None)
-            if ''==prC.get('hint', ''):                     prC.pop('hint', None)
-            if ''==prC.get('tag', ''):                      prC.pop('tag', None)
-            if ''==prC.get('items', None):                  prC.pop('items')
-            if prC['type'] in ('label','bevel'):            (prC.pop('tab_stop', None),prC.pop('tab_order', None))
-            if prC['type'] in ('label','bevel','button'):   prC.pop('val', None)
-            if not prC.get('focused', False):               prC.pop('focused', None)
-            if prC.get('vis', True):                        prC.pop('vis', None)
-            if prC.get('en', True):                         prC.pop('en', None)
+            if ''==prC.get('hint', ''):                 prC.pop('hint', None)
+            if ''==prC.get('tag', ''):                  prC.pop('tag', None)
+            if ''==prC.get('cap', ''):                  prC.pop('cap', None)
+            if ''==prC.get('items', None):              prC.pop('items')
+            if prC.get('tab_stop', None):               prC.pop('tab_stop')
+            if prC['type'] in ('label',):               prC.pop('tab_stop', None)
+            if prC['type'] in ('bevel',):               (prC.pop('tab_stop', None)
+                                                        ,prC.pop('tab_order', None))
+            if prC['type'] not in ('listview'
+                                  ,'checklistview'):    prC.pop('columns', None)
+            if prC['type'] in ('label'
+                              ,'bevel'
+                              ,'button'):               prC.pop('val', None)
+            if prC['type'] in ('button'):               prC.pop('act', None)
+            if not prC.get('act', False):               prC.pop('act', None)
+            if not prC.get('focused', False):           prC.pop('focused', None)
+            if prC.get('vis', True):                    prC.pop('vis', None)
+            if prC.get('en', True):                     prC.pop('en', None)
             name = prC['name']
-#           if not name:
-#               pass;           log('no name idC,prC={}',(idC,prC))
-#               pass;           continue
-            c_pr = self.ctrls[name]
+            c_pr = self.ctrls[name].copy()
             c_pr = self._prepare_it_vl(c_pr, c_pr)
             prC.update({k:v for k,v in c_pr.items() if k not in ('callback','call')})
             srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC['type'])
+            prC.pop('type', None)
             srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', out_attrs(prC, cattrs))
         prD     = dlg_proc_wpr(self.id_dlg, app.DLG_PROP_GET)
         prD.update(self.form)
@@ -1244,6 +1338,11 @@ class BaseDlgAgent:
     
    #class BaseDlgAgent
 
+ALI_CL  = app.ALIGN_CLIENT
+ALI_LF  = app.ALIGN_LEFT
+ALI_RT  = app.ALIGN_RIGHT
+ALI_TP  = app.ALIGN_TOP
+ALI_BT  = app.ALIGN_BOTTOM
 class DlgAgent(BaseDlgAgent):
     """ 
     Helper to use dlg_proc(). See wiki.freepascal.org/CudaText_API#dlg_proc
@@ -1398,7 +1497,7 @@ class DlgAgent(BaseDlgAgent):
                 fid     str
         """
         #NOTE: DlgAg init
-        self.ctrls  = odict(ctrls)
+        self.ctrls  = odict(ctrls)      if isinstance(ctrls, list) else ctrls
         self.form   = form.copy()       if form     else {}
 
         if 'checks'=='checks':
@@ -1416,7 +1515,7 @@ class DlgAgent(BaseDlgAgent):
                 self.ctrls[cid]['val']  = val
         
         # Create controls
-        for cid,cfg_ctrl in ctrls:
+        for cid,cfg_ctrl in self.ctrls.items():
             cfg_ctrl.pop('callback', None)
             cfg_ctrl.pop('on_change', None)
 #           cid     = cfg_ctrl.get('cid', cfg_ctrl.get('name'))
@@ -1634,14 +1733,14 @@ class DlgAgent(BaseDlgAgent):
         fm_h    = self.form['h']
         for cid,cnt in self.ctrls.items():
             anc     = cnt.get('a'  , '')
-            aid     = cnt.get('aid', None)
+            if not anc: continue
+            aid     = cnt.get('aid', cnt.get('p', ''))    # '' anchor to form
             trg_w,  \
             trg_h   = fm_w, fm_h
             if aid in self.ctrls:
                 prTrg   = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, name=aid)
                 trg_w,  \
                 trg_h   = prTrg['w'], prTrg['h']
-            if not anc: continue
             prOld   = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, name=cid)
 #           if not prOld:
 #               # While API bug: name isnot work
@@ -1653,6 +1752,12 @@ class DlgAgent(BaseDlgAgent):
 #                   continue#for cid,cnt
 #           pass;               prOld   = prOld if prOld else \
 #                     dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, index=self.ctrls[cid]['_idc'])    # While API bug: name isnot work if contorl is in panel
+            pass;               logb=cid in ('tolx', 'tofi')
+            pass;              #nat_prOld=app.dlg_proc(self.id_dlg, app.DLG_CTL_PROP_GET, name=cid)
+            pass;              #log('cid,nat-prOld={}',(cid,{k:v for k,v in nat_prOld.items() if k in ('x','y','w','h','_ready_h')})) if logb else 0
+            pass;              #log('cid,    prOld={}',(cid,{k:v for k,v in     prOld.items() if k in ('x','y','w','h','_ready_h')})) if logb else 0
+            pass;              #log('cid,anc,trg_w,trg_h,prOld={}',(cid,anc,trg_w,trg_h, {k:v for k,v in prOld.items() if k in ('x','y','w','h')})) \
+                               #    if logb else 0
             prAnc   = {}
             if '-' in anc:
                 # Center by horz
@@ -1660,10 +1765,17 @@ class DlgAgent(BaseDlgAgent):
                                   ,a_r=(aid, '-')))
             if 'L' in anc and 'R' in anc:
                 # Both left/right to form right
-                prAnc.update(dict( a_l=None
+                pass;          #log('+L +R') if logb else 0
+                prAnc.update(dict( a_l=None                                             # (aid, ']'), sp_l=trg_w-prOld['x']
                                   ,a_r=(aid, ']'), sp_r=trg_w-prOld['x']-prOld['w']))
+            if 'L' in anc and 'R' not in anc:
+                # Left to form right
+                pass;          #log('+L -R') if logb else 0
+                prAnc.update(dict( a_l=(aid, '['), sp_l=trg_w-prOld['x']
+                                  ,a_r=None))
             if 'l' in anc and 'R' in anc:
                 # Left to form left. Right to form right.
+                pass;          #log('+l +R') if logb else 0
                 prAnc.update(dict( a_l=(aid, '['), sp_l=      prOld['x']
                                   ,a_r=(aid, ']'), sp_r=trg_w-prOld['x']-prOld['w']))
             if '|' in anc:
@@ -1672,14 +1784,25 @@ class DlgAgent(BaseDlgAgent):
                                   ,a_b=(aid, '-')))
             if 'T' in anc and 'B' in anc:
                 # Both top/bottom to form bottom
-                prAnc.update(dict( a_t=None
+                pass;          #log('+T +B') if logb else 0
+                prAnc.update(dict( a_t=None      #, sp_t=trg_h-prOld['y']                # a_t=(aid, ']') - API bug
                                   ,a_b=(aid, ']'), sp_b=trg_h-prOld['y']-prOld['h']))
+            elif 'T' in anc and 'B' not in anc:
+                # Top to form bottom
+                pass;          #log('+T -B') if logb else 0
+                prAnc.update(dict( a_t=(aid, ']'), sp_t=trg_h-prOld['y']                # a_t=(aid, ']') - API bug
+                                  ,a_b=None))
             if 't' in anc and 'B' in anc:
                 # Top to form top. Bottom to form bottom.
+                pass;          #log('+t +B') if logb else 0
                 prAnc.update(dict( a_t=(aid, '['), sp_t=      prOld['y']
                                   ,a_b=(aid, ']'), sp_b=trg_h-prOld['y']-prOld['h']))
             if prAnc:
+                pass;          #log('aid,prAnc={}',(cid, prAnc)) if logb else 0
+                cnt.update(prAnc)
                 dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_SET, name=cid, prop=prAnc)
+#               pass;           pr_   = dlg_proc_wpr(self.id_dlg, app.DLG_CTL_PROP_GET, name=cid)
+#               pass;           log('cid,pr_={}',(cid, {k:v for k,v in pr_.items() if k in ('h','y', 'sp_t', 'sp_b', 'a_t', 'a_b')}))
        #def _prepare_anchors
 
     def _prep_pos_attrs(self, cnt, cid, ctrls4t=None):
@@ -1742,14 +1865,25 @@ class DlgAgent(BaseDlgAgent):
 #       r       = cnt.get('r', l+cnt.get('w', 0)) 
 #       prP     =  dict(x=l, y=t, w=r-l)
 #       prP.update(dict(h=cnt.get('h')))    if 0!=cnt.get('h', 0) else 0 
-        pass;                  #log('prP={}',(prP))
+        pass;                  #log('cid, prP={}',(cid, prP))
         return prP
        #def _prep_pos_attrs
 
     @staticmethod
     def _preprocessor(cnt, tp):
+        if 'ali' in cnt:
+            cnt['align'] = cnt.pop('ali')
+        if 'sp_lr' in cnt:
+            cnt['sp_l'] = cnt['sp_r']               = cnt.pop('sp_lr')
+        if 'sp_lrt' in cnt:
+            cnt['sp_l'] = cnt['sp_r'] = cnt['sp_t'] = cnt.pop('sp_lrt')
+        if 'sp_lrb' in cnt:
+            cnt['sp_l'] = cnt['sp_r'] = cnt['sp_b'] = cnt.pop('sp_lrb')
+
         if 'sto' in cnt:
             cnt['tab_stop'] = cnt.pop('sto')
+        if 'tor' in cnt:
+            cnt['tab_order'] = cnt.pop('tor')
             
         if 'props' in cnt:
             pass
@@ -1848,10 +1982,9 @@ class DlgAgent(BaseDlgAgent):
 #class DlgAgent
 
 
-########################################################################
-########################################################################
-########################################################################
-#pass;                           from cudatext import *
+######################################
+#NOTE: dlg_valign_consts
+######################################
 def dlg_valign_consts():
     pass;                      #log('ok')
     rsp     = False
@@ -1909,8 +2042,6 @@ def dlg_valign_consts():
         nonlocal hints
         hints   = {sp:nc+': '+str(fits[sp]) for sp, nc in ctrls_sp}
         return {'ctrls':[(cid ,dict(y=ag.cattr(cid, 'y')+sht ,hint=hints[sp] ))]}
-#       return {'ctrls':[(cid ,dict(y=ag.cattr(cid, 'y')+sht ,x=ag.cattr(cid, 'x') ,hint=hints[sp] ))]}
-#       return {'ctrls':[dict(cid=cid ,t=ag.cattr(cid, 't')+sht ,l=ag.cattr(cid, 'l') ,w=ag.cattr(cid, 'w') ,hint=hints[sp] )]}
        #def up_dn
 
     cs      = ctrls
@@ -1999,176 +2130,142 @@ def get_hotkeys_desc(cmd_id, ext_id=None, keys_js=None, def_ans=''):
     return desc
    #def get_hotkeys_desc
 
-#class CdSw:
-#   """ Proxy to use plugins both in CudaText and SynWrite"""
-#   
-#   ENC_UTF8    = str(app.EDENC_UTF8_NOBOM) if 'sw'==app.__name__ else 'UTF-8'
-#
-#   @staticmethod
-#   def ed_group(grp):
-#       if 'sw'==app.__name__:
-#           return ed                   ##!!
-#       else:
-#           return app.ed_group(grp)
-#
-#   @staticmethod
-#   def app_idle():
-#       if 'sw'==app.__name__:
-#           pass
-#       else:
-#           return app.app_idle()
-#
-#   @staticmethod
-#   def file_open(filename, group=-1):
-#       if 'sw'==app.__name__:
-#           return app.file_open(filename, group=group)
-#       else:
-#           return app.file_open(filename, group)
-#
-#   @staticmethod
-#   def get_groups_count():
-#       if 'sw'==app.__name__:
-#           dct = {
-#               app.GROUPING_ONE     : 1,
-#               app.GROUPING_2VERT   : 2,
-#               app.GROUPING_2HORZ   : 2,
-#               app.GROUPING_3VERT   : 3,
-#               app.GROUPING_3HORZ   : 3,
-#               app.GROUPING_1P2VERT : 3,
-#               app.GROUPING_1P2HORZ : 3,
-#               app.GROUPING_4VERT   : 4,
-#               app.GROUPING_4HORZ   : 4,
-#               app.GROUPING_4GRID   : 4,
-#               app.GROUPING_6GRID   : 6
-#           }
-#           gr_mode = app.get_app_prop(app.PROP_GROUP_MODE)
-#           return dct.get(gr_mode, 1)
-#       else:
-#           dct = {
-#               app.GROUPS_ONE      : 1,
-#               app.GROUPS_2VERT    : 2,
-#               app.GROUPS_2HORZ    : 2,
-#               app.GROUPS_3VERT    : 3,
-#               app.GROUPS_3HORZ    : 3,
-#               app.GROUPS_3PLUS    : 3,
-#               app.GROUPS_1P2VERT  : 3,
-#               app.GROUPS_1P2HORZ  : 3,
-#               app.GROUPS_4VERT    : 4,
-#               app.GROUPS_4HORZ    : 4,
-#               app.GROUPS_4GRID    : 4,
-#               app.GROUPS_6GRID    : 6
-#           }
-#           gr_mode = app.app_proc(app.PROC_GET_GROUPING, '')
-#           return dct.get(gr_mode, 1)
-#
-#   @staticmethod
-#   def get_carets(_ed):
-#       if 'sw'==app.__name__:
-#           x,y = _ed.get_caret_xy()
-#           return [(x,y,-1,-1)]        ##!!
-#       else:
-#           return _ed.get_carets()
-#
-#   MARKERS_ADD             = 1 if 'sw'==app.__name__ else app.MARKERS_ADD
-#   MARKERS_DELETE_ALL      = 2 if 'sw'==app.__name__ else app.MARKERS_DELETE_ALL
-#   @staticmethod
-#   def attr(_ed, id, **kwargs):
-#       if 'sw'==app.__name__:
-#           if id==CdSw.MARKERS_DELETE_ALL:
-#               return _ed.set_attr(app.ATTRIB_CLEAR_ALL, 0)
-#           x   = kwargs['x']
-#           y   = kwargs['y']+1 ##!!
-#           ln  = kwargs['len']
-#           _ed.set_sel(ed.xy_pos(x, y), ln)
-#           _ed.set_attr(app.ATTRIB_SET_UNDERLINE, 0)
-#           _ed.set_sel(ed.xy_pos(x, y), 0)
-#           return  ##!!
-#       else:
-#           return _ed.attr(id, **kwargs)             
-#
-#   PROC_GET_FIND_OPTIONS   = 22 if 'sw'==app.__name__ else app.PROC_GET_FIND_OPTIONS
-#   PROC_GET_LANG           = 40 if 'sw'==app.__name__ else app.PROC_GET_LANG
-#   @staticmethod
-#   def app_proc(pid, defv):
-#       if 'sw'!=app.__name__:
-#           return app.app_proc(pid, defv)
-#       if False:pass
-#       elif pid==CdSw.PROC_GET_FIND_OPTIONS:
-#           return ''
-#       elif pid==CdSw.PROC_GET_LANG:
-#           return 'en'
-#       return ''
-#
-#   @staticmethod
-#   def set_caret(_ed, posx, posy, endx=-1, endy=-1):
-#       if 'sw'==app.__name__:
-#          #_ed.set_caret_xy(x, y)
-#           if endx==-1:    # no sel
-#               return _ed.set_caret_xy(posx, posy)
-#           else:           # with sel
-#               pos = _ed.xy_pos(posx, posy)
-#               end = _ed.xy_pos(endx, endy)
-#               return _ed.set_sel(pos, end-pos)
-##               return _ed.set_caret_xy(posx, posy) ##!!
-#       else:
-#          #set_caret(posx, posy, endx=-1, endy=-1)
-#           return _ed.set_caret(posx, posy, endx, endy)
-#
-#   @staticmethod
-#   def dlg_dir(init_dir):
-#       if 'sw'==app.__name__:
-#           return app.dlg_folder('', init_dir)
-#       else:
-#           return app.dlg_dir(init_dir)
-#   
-#   MENU_LIST     = 0 if 'sw'==app.__name__ else app.MENU_LIST
-#   MENU_LIST_ALT = 1 if 'sw'==app.__name__ else app.MENU_LIST_ALT
-#   @staticmethod
-#   def dlg_menu(mid, text, focused=0, caption=''):
-#       if 'sw'==app.__name__:
-#           return app.dlg_menu(app.MENU_SIMPLE if mid==CdSw.MENU_LIST else app.MENU_DOUBLE, '', text)
-#       else:
-#           return app.dlg_menu(mid, text, focused=focused, caption=caption)
-#   
-#   @staticmethod
-#   def msg_status(msg, process_messages=False):
-#       if 'sw'==app.__name__:
-#           return app.msg_status(msg)
-#       else:
-#           return app.msg_status(msg, process_messages)
-#   
-#   @staticmethod
-#   def msg_status_alt(msg, secs):
-#       if 'sw'==app.__name__:
-#           return app.msg_status(msg)
-#       else:
-#           return app.msg_status_alt(msg, secs)
-#   
-#   @staticmethod
-#   def get_setting_dir():
-#       return  app.app_ini_dir()       if 'sw'==app.__name__ else \
-#               app.app_path(app.APP_DIR_SETTINGS)
-#  #class CudSyn
-#
-#def gen_repro_code(idDlg, rerpo_fn):
-#   # Repro-code
-#   l       = chr(13)
-#   srp     =    ''
-#   srp    +=    'idd=dlg_proc(0, DLG_CREATE)'
-#   for idC in range(app.dlg_proc(idDlg, app.DLG_CTL_COUNT)):
-#       prC = dlg_proc_wpr(idDlg, app.DLG_CTL_PROP_GET, index=idC)
-#       prTg= json.loads(prC.pop('tag','{}'))
-#       prC.update(prTg)
-#       srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC.pop('type',None))
-#       srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', repr(prC))
-#   prD     = dlg_proc_wpr(idDlg, app.DLG_PROP_GET)
-#   srp    +=l+f('dlg_proc(idd, DLG_PROP_SET, prop={})', repr({'cap':prD['cap'], 'w':prD['w'], 'h':prD['h']}))
-#   srp    +=l+f('dlg_proc(idd, DLG_CTL_FOCUS, name="{}")', prD['focused'])
-#   srp    +=l+  'dlg_proc(idd, DLG_SHOW_MODAL)'
-#   srp    +=l+  'dlg_proc(idd, DLG_FREE)'
-#   open(rerpo_fn, 'w', encoding='UTF-8').write(srp)
-#   pass;                       log(r'exec(open(r"{}", encoding="UTF-8").read())', rerpo_fn)
-#  #def gen_repro_code
+######################################
+#NOTE: plugins history
+######################################
+PLING_HISTORY_JSON  = app.app_path(app.APP_DIR_SETTINGS)+os.sep+'plugin history.json'
+def get_hist(key_or_path, default=None, module_name='_auto_detect', to_file=PLING_HISTORY_JSON):
+    """ Read from "plugin history.json" one value by string key or path (list of keys).
+        Parameters
+            key_or_path     Key(s) to navigate in json tree
+                            Type: str or [str]
+            default         Value to return  if no suitable node in json tree
+            module_name     Start node to navigate.
+                            If it is '_auto_detect' then name of caller module is used.
+                            If it is None then it is skipped.
+            to_file         Name of file to read. APP_DIR_SETTING will be joined if no full path.
+        
+        Return              Found value or default
+            
+        Examples (caller module is 'plg')
+        1. If no "plugin history.json"
+                get_hist('k')                   returns None
+                get_hist(['p', 'k'], 0)         returns 0
+        2. If "plugin history.json" contains 
+                {"k":1, "plg":{"k":2, "p":{"m":3}, "t":[0,1]}, "q":{"n":4}}
+                get_hist('k', 0, None)          returns 1
+                get_hist('k', 0)                returns 0
+                get_hist('k', 0, 'plg')         returns 2
+                get_hist('k', 0, 'oth')         returns 0
+                get_hist(['p','m'], 0)          returns 3
+                get_hist(['p','t'], [])         returns [0,1]
+                get_hist('q', 0, None)          returns {'n':4}
+                get_hist(['q','n'], 0, None)    returns 4
+    """
+    to_file = to_file   if os.sep in to_file else   app.app_path(app.APP_DIR_SETTINGS)+os.sep+to_file
+    if not os.path.exists(to_file):
+        pass;                  #log('not exists',())
+        return default
+    data    = None
+    try:
+        data    = json.loads(open(to_file).read())
+    except:
+        pass;                   log('not load: {}',sys.exc_info())
+        return default
+    if module_name=='_auto_detect':
+        caller_globals  = inspect.stack()[1].frame.f_globals
+        module_name = inspect.getmodulename(caller_globals['__file__']) \
+                        if '__file__' in caller_globals else None
+    keys    = [key_or_path] if type(key_or_path)==str   else key_or_path
+    keys    = keys          if module_name is None      else [module_name]+keys
+    parents,\
+    key     = keys[:-1], keys[-1]
+    for parent in parents:
+        data= data.get(parent)
+        if type(data)!=dict:
+            pass;               log('not dict parent={}',(parent))
+            return default
+    return data.get(key, default)
+   #def get_hist
+
+def set_hist(key_or_path, value, module_name='_auto_detect', kill=False, to_file=PLING_HISTORY_JSON):
+    """ Write to "plugin history.json" one value by key or path (list of keys).
+        If any of node doesnot exist it will be added.
+        Or remove (if kill) one key+value pair (if suitable key exists).
+        Parameters
+            key_or_path     Key(s) to navigate in json tree
+                            Type: str or [str]
+            value           Value to set if suitable item in json tree exists
+            module_name     Start node to navigate.
+                            If it is '_auto_detect' then name of caller module is used.
+                            If it is None then it is skipped.
+            kill            Need to remove node in tree.
+                            if kill==True parm value is ignored
+            to_file         Name of file to write. APP_DIR_SETTING will be joined if no full path.
+        
+        Return              value (param)   if !kill and modification is successful
+                            value (killed)  if  kill and modification is successful
+                            None            if  kill and no path in tree (no changes)
+                            KeyError        if !kill and path has problem
+        Return  value
+            
+        Examples (caller module is 'plg')
+        1. If no "plugin history.json"  it will become
+            set_hist('k',0,None)        {"k":0}
+            set_hist('k',1)             {"plg":{"k":1}}
+            set_hist('k',1,'plg')       {"plg":{"k":1}}
+            set_hist('k',1,'oth')       {"oth":{"k":1}}
+            set_hist('k',[1,2])         {"plg":{"k":[1,2]}}
+            set_hist(['p','k'], 1)      {"plg":{"p":{"k":1}}}
+        
+        2. If "plugin history.json" contains    {"plg":{"k":1, "p":{"m":2}}}
+                                                it will contain
+            set_hist('k',0,None)                {"plg":{"k":1, "p":{"m":2}},"k":0}
+            set_hist('k',0)                     {"plg":{"k":0, "p":{"m":2}}}
+            set_hist('k',0,'plg')               {"plg":{"k":0, "p":{"m":2}}}
+            set_hist('n',3)                     {"plg":{"k":1, "p":{"m":2}, "n":3}}
+            set_hist(['p','m'], 4)              {"plg":{"k":1, "p":{"m":4}}}
+            set_hist('p',{'m':4})               {"plg":{"k":1, "p":{"m":4}}}
+            set_hist(['p','m','k'], 1)          KeyError (old m is not branch node)
+
+        3. If "plugin history.json" contains    {"plg":{"k":1, "p":{"m":2}}}
+                                                it will contain
+            set_hist('k',       kill=True)      {"plg":{       "p":{"m":2}}}
+            set_hist('p',       kill=True)      {"plg":{"k":1}}
+            set_hist(['p','m'], kill=True)      {"plg":{"k":1, "p":{}}}
+            set_hist('n',       kill=True)      {"plg":{"k":1, "p":{"m":2}}}    (nothing to kill)
+    """
+    to_file = to_file   if os.sep in to_file else   app.app_path(app.APP_DIR_SETTINGS)+os.sep+to_file
+    body    = json.loads(open(to_file).read(), object_pairs_hook=odict) \
+                if os.path.exists(to_file) and os.path.getsize(to_file) != 0 else \
+              odict()
+
+    if module_name=='_auto_detect':
+        caller_globals  = inspect.stack()[1].frame.f_globals
+        module_name = inspect.getmodulename(caller_globals['__file__']) \
+                        if '__file__' in caller_globals else None
+    keys    = [key_or_path] if type(key_or_path)==str   else key_or_path
+    keys    = keys          if module_name is None      else [module_name]+keys
+    parents,\
+    key     = keys[:-1], keys[-1]
+    data    = body
+    for parent in parents:
+        if kill and parent not in data:
+            return None
+        data= data.setdefault(parent, odict())
+        if type(data)!=odict:
+            raise KeyError()
+    if kill:
+        if key not in data:
+            return None
+        value       = data.pop(key)
+    else:
+        data[key]   =  value
+    open(to_file, 'w').write(json.dumps(body, indent=2))
+    return value
+   #def set_hist
+######################################
+######################################
 
 def get_translation(plug_file):
     ''' Part of i18n.
@@ -2202,6 +2299,12 @@ def get_translation(plug_file):
     return _
    #def get_translation
 
+_   = get_translation(__file__) # I18N
+
+
+######################################
+#NOTE: misc
+######################################
 def upd_dict(d1, d2):
     rsp = d1.copy()
     rsp.update(d2)
@@ -2216,7 +2319,6 @@ def deep_upd(dcts):
         return dcts
 
     dct1, *dcts = dcts
-#def deep_upd(dct1, *dcts):
     pass;                      #log('dct1, dcts={}',(dct1, dcts))
     rsp   = dct1.copy()
     for dct in dcts:
@@ -2234,7 +2336,15 @@ def deep_upd(dcts):
 
 def isint(what):    return isinstance(what, int)
    
-_   = get_translation(__file__) # I18N
+def ed_of_file_open(op_file):
+    if not app.file_open(op_file):
+        return None
+    for h in app.ed_handles(): 
+        op_ed   = app.Editor(h)
+        if op_ed.get_filename() and os.path.samefile(op_file, op_ed.get_filename()):
+            return op_ed
+    return None
+   #def ed_of_file_open
 
 if __name__ == '__main__' :     # Tests
     class C:
