@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.17 2018-05-30'
+    '2.3.18 2018-05-31'
 ToDo: (see end of file)
 '''
 
@@ -14,6 +14,7 @@ import  cudax_lib           as apx
 MIN_API_VER     = '1.0.178'
 MIN_API_VER     = '1.0.180' # panel group p
 MIN_API_VER     = '1.0.183' # on_change
+MIN_API_VER     = '1.0.216' # STATUSBAR_SET_AUTOSTRETCH
 MIN_API_VER_HLP = '1.0.232' # PROP_GUTTER_ALL
 
 from    .cd_plug_lib        import *
@@ -328,12 +329,12 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
         for i, k in enumerate(keys_l):
             if ps.get('_'+k, '')=='x':
                 ouvl_l[i]   = ps.get(k, ouvl_l[i])
-        app.msg_status(_('Options is restored from preset: ')+ps['name'])
+        msg_status(_('Options is restored from preset: ')+ps['name'])
         return ouvl_l
         
     elif ps_ind==ind_conf:
         # Config
-        if not pset_l:  return app.msg_status(_('No preset to config'))
+        if not pset_l:  return msg_status(_('No preset to config'))
 
         def save_close(cid, ag, data=''):
             if pset_l:
@@ -488,7 +489,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
         pset_l += [ps]
         stores_main.update(stores)
         open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
-        app.msg_status(_('Options is saved to preset: ')+ps['name'])
+        msg_status(_('Options is saved to preset: ')+ps['name'])
         return None
     
     return      ouvl_l
@@ -906,8 +907,8 @@ class FifD:
 
     @staticmethod
     def upgrade(dct):
-        if 'totb' in dct and type(dct['totb'])==str and re.match(r'^\d+$', dct['totb']):
-            dct['totb']  = int(dct['totb'])
+        if 'totb' in dct and type(dct['totb'])==str:
+            dct['totb']  = int(dct['totb']) if re.match(r'^\d+$', dct['totb']) else 0
 
     @staticmethod
     def get_totb_l(fxs):
@@ -923,7 +924,7 @@ class FifD:
     WIN_MAC     = (get_desktop_environment() in ('win', 'mac'))
     EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if WIN_MAC else [5*i for i in range(11)]
     DLG_W0,     \
-    DLG_H0      = (700, 335 + EG1 + EG10)
+    DLG_H0      = (700, 335 + EG1 + EG10 + 25)
     DEF_WD_TXTS = 330
     DEF_WD_BTNS = 100
 
@@ -937,7 +938,7 @@ class FifD:
 
     def show(self):
         self.pre_cnts()
-        DlgAgent(
+        self.ag = DlgAgent(
             form =dict(cap     = self.get_fif_cap()
                       ,resize  = True
                       ,w       = self.dlg_w
@@ -951,7 +952,17 @@ class FifD:
                                ,'gen_repro_to_file':apx.get_opt('fif_repro_to_file', '')
                               #,'gen_repro_to_file':'repro_dlg_fif.py'
                     }
-        ).show(callbk_on_exit=self.copy_vals)
+        )
+        statusbar   = self.ag.handle('stbr')
+        app.statusbar_proc(statusbar, app.STATUSBAR_ADD_CELL            , tag=1)
+        app.statusbar_proc(statusbar, app.STATUSBAR_SET_CELL_AUTOSTRETCH, tag=1, value=True)
+        use_statusbar(statusbar)
+        pass;                  #msg_status('ok')
+        def do_exit(ag):
+            self.copy_vals(ag)
+            use_statusbar(None)
+        self.ag.show(callbk_on_exit=do_exit)
+#       self.ag.show(callbk_on_exit=self.copy_vals)
         self.store()
        #def show
 
@@ -1122,6 +1133,7 @@ class FifD:
        #def do_focus
     
     def do_pres(self, aid, ag, btn_m=''):
+        msg_status('')
         if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus(aid,ag)
         btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
         
@@ -1162,7 +1174,7 @@ class FifD:
             self.shtp_s = ps['shtp'] if ps.get('_shtp', '')=='x' else self.shtp_s
             self.algn_s = ps['algn'] if ps.get('_algn', '')=='x' else self.algn_s
             self.cntx_s = ps['cntx'] if ps.get('_cntx', '')=='x' else self.cntx_s
-            app.msg_status(_('Options is restored from preset: ')+ps['name'])
+            msg_status(_('Options is restored from preset: ')+ps['name'])
 
         if btn_m=='pres' \
         or btn_m=='s/pres': # Shift+Preset - Show list in history order
@@ -1171,6 +1183,7 @@ class FifD:
             self.copy_vals(ag)
             onof        = {'0':'Off', '1':'On'}
 #           totb_i      = int(totb_s)
+            pass;              #log('={!r}',(self.totb_i))
             self.totb_i = self.totb_i if 0<self.totb_i<4+len(self.stores.get('tofx', [])) else 1   # "tab:" skiped
             totb_v      = self.totb_l[self.totb_i]
             ans     = dlg_press(self.stores, btn_m=='s/pres',
@@ -1206,6 +1219,7 @@ class FifD:
        #def do_pres
 
     def do_fold(self, aid, ag, btn_m=''):
+        msg_status('')
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','fold','dept'])
@@ -1257,6 +1271,7 @@ class FifD:
        #def do_fold
        
     def do_dept(self, aid, ag, data=''):
+        msg_status('')
         self.copy_vals(ag)
 #       ag.bind_do(['dept'])
         pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
@@ -1271,6 +1286,7 @@ class FifD:
        #def do_dept
     
     def do_more(self, aid, ag, data=''):
+        msg_status('')
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
@@ -1312,6 +1328,7 @@ class FifD:
        #def do_more
 
     def do_cntx(self, aid, ag, data=''):
+        msg_status('')
 #       ag.bind_do(['cntx'])
         self.copy_vals(ag)
         btn_p,btn_m = FifD.scam_pair(aid)
@@ -1342,6 +1359,7 @@ class FifD:
        #def do_cntx
 
     def do_totb(self, aid, ag, data=''):
+        msg_status('')
         pass;                  #LOG and log('totb props={}',(ag.cattrs('totb')))
         totb_i_pre  = self.totb_i
 #       ag.bind_do(['totb', 'fold'])
@@ -1382,6 +1400,7 @@ class FifD:
        #def do_totb
        
     def do_help(self, aid, ag, data=''):
+        msg_status('')
         self.stores['help.data'] = dlg_help(
             word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h
         ,   self.stores.get('help.data'))
@@ -1401,6 +1420,7 @@ class FifD:
        #def do_exit
     
     def do_work(self, aid, ag, btn_m=''):
+        msg_status('')
 #       ag.bind_do()
         self.copy_vals(ag)
 #       self.store() # in do_focus
@@ -1430,11 +1450,13 @@ class FifD:
         self.repl_s = self.repl_s if w_repl else ''
         
         if 0 != self.fold_s.count('"')%2:
-            app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['fold']), app.MB_OK+app.MB_ICONWARNING) 
+            msg_status(f(_('Fix quotes in the "{}" field'), self.caps['fold'])) 
+#           app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['fold']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'fold'}
             
         if not self.what_s:
-            app.msg_box(f(_('Fill the "{}" field'), self.caps['what']), app.MB_OK+app.MB_ICONWARNING)
+            msg_status( f(_('Fill the "{}" field'), self.caps['what']))
+#           app.msg_box(f(_('Fill the "{}" field'), self.caps['what']), app.MB_OK+app.MB_ICONWARNING)
             return {'fid':'what'}
         
 #       reex01  = ag.cval('reex')
@@ -1454,13 +1476,16 @@ class FifD:
                                  , self.caps['repl'], ex), app.MB_OK+app.MB_ICONWARNING) 
                     return {'fid':'repl'}
         if not self.incl_s:
-            app.msg_box(f(_('Fill the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
+            msg_status(f(_('Fill the "{}" field'), self.caps['incl'])) 
+#           app.msg_box(f(_('Fill the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'incl'}
         if 0 != self.incl_s.count('"')%2:
-            app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
+            msg_status(f(_('Fix quotes in the "{}" field'), self.caps['incl'])) 
+#           app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'incl'}
         if 0 != self.excl_s.count('"')%2:
-            app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
+            msg_status(f(_('Fix quotes in the "{}" field'), self.caps['excl'])) 
+#           app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'excl'}
 
         roots       = []
@@ -1574,12 +1599,12 @@ class FifD:
             ,progressor = self.progressor
             )
         if not rpt_data and not rpt_info: 
-            app.msg_status(_("Search stopped"))
+            msg_status(_("Search stopped"))
             self.lock_act(ag, 'unlock-saved')
             self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
         if 0==rpt_info['cllc_files']: 
-            app.msg_status(_("No files picked"))
+            msg_status(_("No files picked"))
             self.lock_act(ag, 'unlock-saved')
             self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
@@ -1654,6 +1679,7 @@ class FifD:
        #def lock_act
        
     def do_menu(self, aid, ag, data=''):
+        msg_status('')
         pass;                  #log('',())
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_m=='c/menu':     # [Ctrl+"="] - dlg_valign_consts
@@ -1930,6 +1956,8 @@ class FifD:
 ,('!ctt',d(tp='bt'  ,t=0                ,l=1000     ,w=0            ,sto=F  ,cap=_('&t')                                                            ,call=m.do_work                 ))# &t
 ,('loop',d(tp='bt'  ,t=0                ,l=1000     ,w=0            ,sto=F  ,cap=_('&v')                                                            ,call=m.do_more                 ))# &v
 ,('help',d(tp='bt'  ,tid='dept'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('&Help…')                            ,sto=w_adva                 ,call=m.do_help                 ))# &h
+                                                                                                                                                                                    
+,('stbr',d(tp='sb'                      ,l=0        ,r=M.DLG_W0     ,a='lR' ,ali=ALI_BT                                                                                             ))  # 
                 ]
         self.caps   = {cid:cnt['cap']             for cid,cnt           in cnts
                         if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
@@ -2104,4 +2132,5 @@ ToDo
 [+][at-kv][18may18] Set tab_size to 2 in lexer if no such setting
 [+][kv-kv][21may18] Start and second pos of Less is diff
 [ ][kv-kv][24may18] Add statusbar
+[ ][kv-kv][04jun18] Ctrl+F calls native dialog Find. Ctrl+R calls native dialog Replace
 '''

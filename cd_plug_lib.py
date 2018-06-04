@@ -896,6 +896,8 @@ class BaseDlgAgent:
         return pr   if not attrs else   {attr:pr.get(attr) for attr in attrs}
        #def fattrs
 
+    def handle(self, name): return app.dlg_proc(self.id_dlg, app.DLG_CTL_HANDLE, name=name)
+
     def cattr(self, name, attr, live=True, defv=None):
         """ Return one the control property """
         live= False if attr in ('type',) else live          # Unchangable

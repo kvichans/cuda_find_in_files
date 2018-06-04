@@ -29,6 +29,18 @@ pass;                           ##!! waits correction
 
 _   = get_translation(__file__) # I18N
 
+_statusbar       = None
+def use_statusbar(st):
+    global _statusbar
+    _statusbar   = st
+def msg_status(msg, process_messages=True):
+    if _statusbar:
+        app.statusbar_proc(_statusbar, app.STATUSBAR_SET_CELL_TEXT, tag=1, value=msg)
+        if process_messages:
+            app.app_idle()
+    else:
+        app.msg_status(msg, process_messages)
+
 RPT_FIND_SIGN   = _('+Search')
 RPT_REPL_SIGN   = _('+Replace')
 
@@ -1413,7 +1425,7 @@ class ProgressAndBreak:
         app.app_proc(app.PROC_SET_ESCAPE, '0')
 
     def set_progress(self, msg:str):
-        app.msg_status(self.prefix+msg, process_messages=True)
+        msg_status(self.prefix+msg, process_messages=True)
 
     def need_break(self, with_request=False, process_hint=_('Stop?'))->bool:
 #       was_esc = app.app_proc(app.PROC_GET_ESCAPE, '')
