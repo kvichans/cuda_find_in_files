@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.18 2018-05-31'
+    '2.3.19 2018-06-04c'
 ToDo: (see end of file)
 '''
 
@@ -10,6 +10,7 @@ import  re, os, sys, locale, json, collections, copy
 
 import  cudatext            as app
 from    cudatext        import ed
+from    cudatext_keys   import *
 import  cudax_lib           as apx
 MIN_API_VER     = '1.0.178'
 MIN_API_VER     = '1.0.180' # panel group p
@@ -354,6 +355,14 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
             if ps['name'] != new_name:
                 ps['name']  = new_name
             if False:pass
+            elif cid=='what':
+                pass;          #log('ps={}',(ps))
+                pass;          #log('what.val={}',(ag.cval('what')))
+                ps_vls  = ag.cval('what')[1]
+                pass;          #log('ps_vls={}',(ps_vls))
+                for i,k in enumerate(keys_l):
+                    ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
+                pass;          #log('ps={}',(ps))
             elif cid=='mvup' and ps_ind>0 \
             or   cid=='mvdn' and ps_ind<len(pset_l)-1:
                 mv_ind  = ps_ind + (-1 if cid=='mvup' else 1)
@@ -374,7 +383,8 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                 ps      = pset_l[ps_ind]                                                                        if pset_l else {}
                 pass;              #LOG and log('ps={}',(ps))
                 ps_mns  = [ps['name'] for ps in pset_l]
-                ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+                ps_its  = [f('{}:   {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+#               ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
                 ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
                 return dict(
                     ctrls=[('prss',dict(items=ps_mns, val=ps_ind)                   )
@@ -415,7 +425,8 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
             pass;              #LOG and log('ps_ind={}',(ps_ind))
             ps      = pset_l[ps_ind]                                                                        if pset_l else {}
             pass;              #LOG and log('ps={}',(ps))
-            ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+            ps_its  = [f('{}:   {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+#           ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
             ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
             return dict(
                 ctrls=[('what',dict(items=ps_its, val=(-1,ps_vls))  )
@@ -429,7 +440,8 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
         ps          = pset_l[ps_ind]                                                                        if pset_l else {}
         DLG_W       = 5*4+245+300
         ps_mns      = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
-        ps_its      = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+        ps_its      = [f('{}:   {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
+#       ps_its      = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
         ps_vls      = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
         pass;              #LOG and log('ps_mns={}',(ps_mns))
         pass;              #LOG and log('ps_its={}',(ps_its))
@@ -446,22 +458,23 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                  ,('delt',dict(tp='bt'      ,t=460          ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0)                 ,call=acts      )) # &t
                   #
                  ,('lwha',dict(tp='lb'      ,t=5            ,l=260      ,w=300  ,cap=_('&What to restore:')                                             )) # &w
-                 ,('what',dict(tp='ch-lbx'  ,t=5+20,h=400   ,l=260      ,w=300  ,items=ps_its       ,en=F               ,val=(-1,ps_vls)                ))
+                 ,('what',dict(tp='ch-lbx'  ,t=5+20,h=400   ,l=260      ,w=300  ,items=ps_its       ,en=T               ,val=(-1,ps_vls),call=acts      ))
                   #
-                 ,('!'   ,dict(tp='bt'      ,t=435          ,l=DLG_W-5-100,w=100,cap=_('OK')        ,def_bt=True                        ,call=save_close)) # &
+                 ,('!'   ,dict(tp='bt'      ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Save')      ,def_bt=True                        ,call=save_close)) # &
                  ,('-'   ,dict(tp='bt'      ,t=460          ,l=DLG_W-5-100,w=100,cap=_('Cancel')                                        ,call=LMBD_HIDE ))
                  ]
         DlgAgent(form   =dict(cap=_('Configure presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
                 ,fid    ='prss'
-#                              ,options={'gen_repro_to_file':'repro_dlg_pres.py'}
+                              #,options={'gen_repro_to_file':'repro_dlg_pres.py'}
         ).show()
         return None
         
     elif ps_ind==ind_save:
         # Save
         pass;                  #LOG and log('ps_ind={}',(ps_ind))
-        items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
+        items   = [f('{}:   {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
+#       items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
         btn,vals,*_t   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
              [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
              ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
@@ -469,7 +482,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
              ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items                )
              ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('OK')    ,def_bt=True) # &
              ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Cancel')            )
-             ],    dict(name=f(_('#{}: {} in {}'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
+             ],    dict(name=f(_('#{}: "{}" in "{}"'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
                        ,what=(0,['1']*len(keys_l))), focus_cid='name')
         pass;                  #LOG and log('vals={}',vals)
         if btn is None or btn=='-': return None
@@ -506,8 +519,6 @@ In field "Replace with":
     \1  to insert first found group,
     \2  to insert second found group, ... 
 See full documentation by link at bottom.
- 
-• "aA" - Option "Case sensitive"
  
 • "w" - {word}
  
@@ -572,6 +583,8 @@ _KEYS_BODY  = _(r'''
  
 • "Presets…" - {pset}
  
+• "=" - {menu}
+ 
 • "More/Less…" - {more}
  
 • "Context" - {cntx}
@@ -580,7 +593,7 @@ _TREE_BODY  = _(r'''
 Option "Tree type" - {shtp}
 ''')
 
-def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h, stores=None):
+def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,menu_h, stores=None):
     if app.app_api_version()<MIN_API_VER_HLP: return app.msg_status(_('Need update application'))
     stores      = {} if stores is None else stores
     TIPS_BODY   =_TIPS_BODY.strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES)
@@ -593,6 +606,7 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                                           ,dept=dept_h.replace('\r', '\n')
                                           ,pset=pset_h.replace('\r', '\n')
                                           ,more=more_h.replace('\r', '\n')
+                                          ,menu=menu_h.replace('\r', '\n')
                                           ,cntx=cntx_h.replace('\r', '\n')
                                           )
     TREE_BODY   =_TREE_BODY.strip().format(shtp=shtp_h.replace('\r', '\n'))
@@ -744,6 +758,8 @@ def dlg_nav_by_dclick():
     open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
    #def dlg_nav_by_dclick
 
+DEF_STATUS_MSG  = _('"Enter" to start search')
+
 mask_h  = _('Space-separated file or folder masks.'
             '\rFolder mask starts with "/".'
             '\rDouble-quote mask, which needs space-char.'
@@ -758,7 +774,7 @@ word_h  = _('Option "Whole words". It is ignored when:'
             '\r  "Find what" contains not only letters, digits and "_".'
             )
 brow_h  = _('Choose folder.'
-            '\rShift+Click - Choose file to find in it.'
+            '\rShift+Click or Ctrl+B - Choose file to find in it.'
             )
 fold_h  = f(_('Start folder(s).'
             '\rSpace-separated folders.'
@@ -769,14 +785,18 @@ fold_h  = f(_('Start folder(s).'
             '\r{} to search in project folders (in short <p>).'
             ), IN_OPEN_FILES, IN_PROJ_FOLDS)
 dept_h  = _('Which subfolders will be searched.'
-            '\rAlt+L - Apply "All".'
-            '\rAlt+Y - Apply "In folder only".'
-            '\rAlt+! - Apply "1 level".'
+            '\rAlt+Y or Ctrl+Num0 - Apply "In folder only".'
+            '\rAlt+! or Ctrl+Num1 - Apply "1 level".'
+            '\rAlt+L or Ctrl+Num9 - Apply "All" folders.'
             )
 cfld_h  = _('Use folder of current file.'
-            '\rShift+Click - Prepare search in the current file.'
+            '\rShift+Click or Ctrl+Shift+C - Prepare search in the current file.'
             '\rCtrl+Click   - Prepare search in all tabs.'
             '\rShift+Ctrl+Click - Prepare search in the current tab.'
+            )
+menu_h  = _('Local menu'
+            '\rCtrl+E       - View and edit engine options…'
+            '\rCtrl+Click - Adjust vertical alignments…'
             )
 more_h  = _('Show/Hide advanced options'
             '\rCtrl+Click   - Show/Hide "Not in files".'
@@ -787,8 +807,6 @@ more_h  = _('Show/Hide advanced options'
             '\r   visible  "Not in files", hidden  "Replace"'
             '\r   visible  "Not in files", visible   "Replace"'
             '\r   hidden "Not in files", visible   "Replace"'
-            )
-cust_h  = _('Adjust visibility of "Not in files" and "Replace"'
             )
 frst_h  = _('M[, F]'
             '\rStop after M fragments will be found.'
@@ -827,9 +845,10 @@ shtp_h  = f(_(  'Format of the reported tree structure.'
             '\r  In folder={}'
             '\ronly Compact options are used.'
            ),IN_OPEN_FILES)
+#NOTE: hints
 cntx_c  = _('Conte&xt -{}+{}')
-cntx_h  = _('Show result line and both its nearest lines, above and below result'
-            '\rCtrl+Click  - Set count of above and below lines.')
+cntx_h  = _('Show result line and both its nearest lines, above and below result.'
+            '\rCtrl+Click or Ctrl+Shift+X - Set count of above and below lines.')
 algn_h  = _("Align columns (filenames/numbers) by widest cell width")
 find_h  = f(_('Start search.'
             '\rShift+Click  - Put report to new tab.'
@@ -842,18 +861,18 @@ repl_h  = _('Start search and replacement.'
             '\r   "Do you want to replace…?"'
             )
 coun_h  = _('Count matches only.'
-            '\rShift+Click  - Find file names only.'
+            '\rShift+Click or Ctrl+T - Find file names only.'
             '\r '
-            '\rNote: Alt+T works if button is hidden.'
+            '\rNote: Alt+T and Ctrl+T works if button is hidden.'
             )
 pset_h  = _('Save options for future. Restore saved options.'
             '\rShift+Click - Show presets list in applying history order.'
             '\rCtrl+Click   - Apply last used preset.'
             '\r '
             '\rNote: Alt+S works if button is hidden.'
-            '\rAlt+1 - Apply first preset.'
-            '\rAlt+2 - Apply second preset.'
-            '\rAlt+3 - Apply third preset.'
+            '\rCtrl+1 - Apply first preset.'
+            '\rCtrl+2 - Apply second preset.'
+            '\rCtrl+3 - Apply third preset.'
             )
     
 enco_h  = f(_('In which encodings try to read files.'
@@ -937,13 +956,37 @@ class FifD:
     TBN_L       = CMB_L+TXT_W+GAP
 
     def show(self):
+        def do_key_down(idd, idc, data=''):
+            pass;              #log('idc, data={}',(idc, data))
+            scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
+            ag      = self.ag
+            upd     = {}
+#           if (scam,idc)==('c',ord('F')):                                                            # Ctrl+F
+#               ag.opts['on_exit_focus_to_ed'] = None
+#               ag.hide()
+#               ed.cmd(cmds.cmd_DialogFind)
+#               return
+            if 0:pass           #NOTE: do_key_down
+            elif scam== 'c' and idc==VK_NUMPAD0:            upd=self.do_dept('depo', ag)                    # Ctrl+Num0
+            elif scam== 'c' and idc==VK_NUMPAD1:            upd=self.do_dept('dep1', ag)                    # Ctrl+Num1
+            elif scam== 'c' and idc==VK_NUMPAD9:            upd=self.do_dept('depa', ag)                    # Ctrl+Num9
+            elif scam=='sc' and idc==ord('C'):              upd=self.do_fold('cfld', ag, btn_m='s/cfld')    # Ctrl+Shift+C
+            elif scam== 'c' and idc==ord('B'):              upd=self.do_fold('brow', ag, btn_m='s/brow')    # Ctrl+B
+            elif scam== 'c' and idc==ord('T'):              upd=self.do_work('!cnt', ag, btn_m='s/!cnt')    # Ctrl+T
+            elif scam=='sc' and idc==ord('X'):              upd=self.do_cntx('cntx', ag, btn_m='c/cntx')    # Ctrl+Shift+X
+            elif scam== 'c' and ord('1')<=idc<=ord('3'):    upd=self.do_pres('prs'+chr(idc), ag)            # Ctrl+1..Ctrl+3
+            elif scam== 'c' and idc==ord('E'):              dlg_fif_opts()                                  # Ctrl+E
+            else:                                           return 
+            ag._update_on_call(upd)
+            return False
         self.pre_cnts()
         self.ag = DlgAgent(
             form =dict(cap     = self.get_fif_cap()
                       ,resize  = True
                       ,w       = self.dlg_w
                       ,h       = self.dlg_h,   h_max   = self.dlg_h
-                     ,on_close_query = lambda idd, idc, data: not self.is_working_stop()
+                     ,on_key_down   = do_key_down
+                     ,on_close_query= lambda idd, idc, data: not self.is_working_stop()
                       )
         ,   ctrls=self.get_fif_cnts()
         ,   vals =self.get_fif_vals()
@@ -957,6 +1000,7 @@ class FifD:
         app.statusbar_proc(statusbar, app.STATUSBAR_ADD_CELL            , tag=1)
         app.statusbar_proc(statusbar, app.STATUSBAR_SET_CELL_AUTOSTRETCH, tag=1, value=True)
         use_statusbar(statusbar)
+        msg_status(DEF_STATUS_MSG)
         pass;                  #msg_status('ok')
         def do_exit(ag):
             self.copy_vals(ag)
@@ -1133,7 +1177,7 @@ class FifD:
        #def do_focus
     
     def do_pres(self, aid, ag, btn_m=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
         if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus(aid,ag)
         btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
         
@@ -1193,8 +1237,10 @@ class FifD:
                         self.skip_s,self.sort_s,self.frst_s,self.enco_s,
                         totb_v,     self.join_s,self.shtp_s,self.algn_s,self.cntx_s),
                        (onof[self.reex01],onof[self.case01],onof[self.word01],
-                        '"'+self.incl_s+'"','"'+self.excl_s+'"',
-                        '"'+self.fold_s+'"',DEPT_L[self.dept_n],
+#                       '"'+self.incl_s+'"','"'+self.excl_s+'"',
+#                       '"'+self.fold_s+'"',DEPT_L[self.dept_n],
+                        self.incl_s,self.excl_s,
+                        self.fold_s,DEPT_L[self.dept_n],
                         SKIP_L[int(self.skip_s)],SORT_L[int(self.sort_s)],self.frst_s,ENCO_L[int(self.enco_s)],
                         totb_v,onof[self.join_s],SHTP_L[int(self.shtp_s)],onof[self.algn_s],onof[self.cntx_s])
                         )
@@ -1219,7 +1265,7 @@ class FifD:
        #def do_pres
 
     def do_fold(self, aid, ag, btn_m=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','fold','dept'])
@@ -1242,6 +1288,7 @@ class FifD:
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
                           self.fold_s
+            self.dept_n = 1
         elif btn_m=='cfld' and ed.get_filename():
             self.fold_s = os.path.dirname(ed.get_filename())
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
@@ -1271,14 +1318,15 @@ class FifD:
        #def do_fold
        
     def do_dept(self, aid, ag, data=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
+        pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
         self.copy_vals(ag)
 #       ag.bind_do(['dept'])
-        pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
         self.dept_n = 0 if aid=='depa' else \
                       1 if aid=='depo' else \
                       2 if aid=='dep1' else \
                       self.dept_n
+        pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
 #       self.store() # in do_focus
         return (dict(vals={'dept':self.dept_n})
                ,self.do_focus(aid,ag)
@@ -1286,7 +1334,7 @@ class FifD:
        #def do_dept
     
     def do_more(self, aid, ag, data=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
@@ -1327,12 +1375,12 @@ class FifD:
                )
        #def do_more
 
-    def do_cntx(self, aid, ag, data=''):
-        msg_status('')
+    def do_cntx(self, aid, ag, btn_m=''):
+        msg_status(DEF_STATUS_MSG)
 #       ag.bind_do(['cntx'])
         self.copy_vals(ag)
-        btn_p,btn_m = FifD.scam_pair(aid)
-        if btn_m=='c/cntx' and self.cntx_s=='1':    # '1'? so 
+        btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+        if btn_m=='c/cntx': #and self.cntx_s=='1':    # '1'? so 
             sBf = str(apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1)))
             sAf = str(apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1)))
             ans   = app.dlg_input_ex(2, _('Report context settings')
@@ -1359,7 +1407,7 @@ class FifD:
        #def do_cntx
 
     def do_totb(self, aid, ag, data=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
         pass;                  #LOG and log('totb props={}',(ag.cattrs('totb')))
         totb_i_pre  = self.totb_i
 #       ag.bind_do(['totb', 'fold'])
@@ -1400,9 +1448,9 @@ class FifD:
        #def do_totb
        
     def do_help(self, aid, ag, data=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
         self.stores['help.data'] = dlg_help(
-            word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,cust_h
+            word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,menu_h
         ,   self.stores.get('help.data'))
         open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         ag.activate()
@@ -1420,7 +1468,7 @@ class FifD:
        #def do_exit
     
     def do_work(self, aid, ag, btn_m=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
 #       ag.bind_do()
         self.copy_vals(ag)
 #       self.store() # in do_focus
@@ -1679,7 +1727,7 @@ class FifD:
        #def lock_act
        
     def do_menu(self, aid, ag, data=''):
-        msg_status('')
+        msg_status(DEF_STATUS_MSG)
         pass;                  #log('',())
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_m=='c/menu':     # [Ctrl+"="] - dlg_valign_consts
@@ -1747,7 +1795,7 @@ class FifD:
         fold_c  = self.caps['fold']
         mn_coun = [
     d(tag='!cnt-main'   ,key='Alt+T'        ,cap=  _('Count matches only'))
-   ,d(tag='!cnt-name'                       ,cap=f(_('Find file names only   [Shift+"{}"]')                     , coun_c))
+   ,d(tag='!cnt-name'   ,key='Ctrl+T'       ,cap=f(_('Find file names only   [Shift+"{}"]')                     , coun_c))
                     ]
         mn_repl = [
     d(tag='!rep-main'   ,key='Alt+P'        ,cap=  _('Find and replace')                                                    ,en=not self.wo_repl)
@@ -1762,24 +1810,24 @@ class FifD:
     d(                                       cap='-')
                     ] +mn_repl
         mn_cfld = [
-    d(tag='cfld-main'   ,key='Alt+C'        ,cap=  _('Use folder of current file')                            ,en=bool(ed.get_filename()))
+    d(tag='cfld-main'   ,key='Alt+C'        ,cap=  _('Use folder of current file')                                          ,en=bool(ed.get_filename()))
+   ,d(tag='cfld-file'   ,key='Ctrl+Shift+C' ,cap=f(_('Prepare search in the current file   [Shift+"{}"]')       , cfld_c)   ,en=bool(ed.get_filename()))
    ,d(                                       cap='-')
-   ,d(tag='cfld-file'                       ,cap=f(_('Prepare search in the current file   [Shift+"{}"]')       , cfld_c)   ,en=bool(ed.get_filename()))
    ,d(tag='cfld-tabs'                       ,cap=f(_('Prepare search in all tabs   [Ctrl+"{}"]')                , cfld_c))
    ,d(tag='cfld-ctab'                       ,cap=f(_('Prepare search in the current tab   [Shift+Ctrl+"{}"]')   , cfld_c))
                     ]
         mn_brow = [
     d(tag='brow-main'   ,key='Alt+B'        ,cap=  _('Choose folder…'))
-   ,d(tag='brow-file'                       ,cap=f(_('Choose file to find in it…   [Shift+"{}"]')               , brow_c))
+   ,d(tag='brow-file'   ,key='Ctrl+B'       ,cap=f(_('Choose file to find in it…   [Shift+"{}"]')               , brow_c))
                     ]
         mn_dept = [
-    d(tag='dept-all'    ,key='Alt+L'        ,cap=_('Apply "All"'))
-   ,d(tag='dept-only'   ,key='Alt+Y'        ,cap=_('Apply "In folder only"'))
-   ,d(tag='dept-one'    ,key='Shift+Alt+1'  ,cap=_('Apply "1 level"'))
+    d(tag='dept-only'   ,key='Alt+Y'        ,cap=_('Apply "In folder only"'))
+   ,d(tag='dept-one'    ,key='Alt+Shift+1'  ,cap=_('Apply "1 level"'))
+   ,d(tag='dept-all'    ,key='Alt+L'        ,cap=_('Apply "All"'))
                     ]
         mn_cust = [
     d(tag='cust-main'   ,key='Alt+E'        ,cap=_('Show advanc&ed options')                                ,ch=not self.wo_adva)
-   ,d(tag='edit-opts'                       ,cap=_('&View and edit engine options…'))
+   ,d(tag='edit-opts'   ,key='Ctrl+E'       ,cap=_('&View and edit engine options…'))
    ,d(tag='edit-dcls'                       ,cap=_('&Configure navigation with double-click in report…'))
    ,d(                                       cap='-')
    ,d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl']))
@@ -1798,9 +1846,9 @@ class FifD:
    ,d(tag='pres-proj'                                  ,cap=f(_('Fill "{}" to find in project folders')         , fold_c))
    ,d(                                                  cap='-')
    ,d(tag='pres-last'                   ,en=pset_n>0   ,cap=f(_('Apply last used preset   [Ctrl+"{}"]')         , pres_c))
-   ,d(tag='pres-1'   ,key='Alt+1'       ,en=pset_n>0   ,cap=  _('Apply 1st preset')+ (f(': "{}"',pset_l[0]['name'][:20]) if pset_n>0 else ''))
-   ,d(tag='pres-2'   ,key='Alt+2'       ,en=pset_n>1   ,cap=  _('Apply 2nd preset')+ (f(': "{}"',pset_l[1]['name'][:20]) if pset_n>1 else ''))
-   ,d(tag='pres-3'   ,key='Alt+3'       ,en=pset_n>2   ,cap=  _('Apply 3rd preset')+ (f(': "{}"',pset_l[2]['name'][:20]) if pset_n>2 else ''))
+   ,d(tag='pres-1'   ,key='Ctrl+1'      ,en=pset_n>0   ,cap=  _('Apply 1st preset')+ (f(': "{}"',pset_l[0]['name'][:20]) if pset_n>0 else ''))
+   ,d(tag='pres-2'   ,key='Ctrl+2'      ,en=pset_n>1   ,cap=  _('Apply 2nd preset')+ (f(': "{}"',pset_l[1]['name'][:20]) if pset_n>1 else ''))
+   ,d(tag='pres-3'   ,key='Ctrl+3'      ,en=pset_n>2   ,cap=  _('Apply 3rd preset')+ (f(': "{}"',pset_l[2]['name'][:20]) if pset_n>2 else ''))
                     ]
 
         mn_its  = None
@@ -1811,7 +1859,7 @@ class FifD:
                       , d(cap='&Scope'      ,sub=mn_cfld)
                       , d(cap='&Browse'     ,sub=mn_brow)
                       , d(cap='&Depth'      ,sub=mn_dept)
-                      , d(cap='&Presets'   ,sub=mn_pres)
+                      , d(cap='&Presets'    ,sub=mn_pres)
                       , d(cap='-')
                     ] + mn_cust
         elif aid=='!fnd':
@@ -1928,7 +1976,7 @@ class FifD:
 ,('cfld',d(tp='bt'  ,tid='fold'         ,l=5            ,w=39*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
                                                                                                                                                                                     
 ,('----',d(tp='clr' ,t=m.gap2+175+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                                            ))#
-,('menu',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5            ,w=(39 -7)          ,cap=_('&=')                    ,hint=cust_h,sto=w_adva                 ,call=m.do_menu                 ))# &=
+,('menu',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5            ,w=(39 -7)          ,cap=_('&=')                    ,hint=menu_h,sto=w_adva                 ,call=m.do_menu                 ))# &=
 ,('more',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5+39 -7      ,w=w_more           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ,menu=m.do_menu ))# &e
                                                                                                                                                                                     
 ,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=39*3+20      ,w=150-10           ,cap=_('Adv. report options')               ,vis=w_adva                                                 ))# 

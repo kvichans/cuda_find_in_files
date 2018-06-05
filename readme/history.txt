@@ -1,3 +1,18 @@
+2.3.19 (2018-06-04)
+fixed: Allow to change checks in dlg Configure presets
+added: Hotkeys 
+	- Ctrl+1	Apply 1st preset 
+	- Ctrl+2	Apply 2nd preset 
+	- Ctrl+3	Apply 3rd preset 
+	- Ctrl+B	Choose file to find
+	- Ctrl+Num0	Apply "In folder only"
+	- Ctrl+Num1	Apply "1 level"
+	- Ctrl+Num9	Apply "All" folders
+	- Ctrl+Shift+C	Prepare search in the current file
+	- Ctrl+Shift+X	Set count of above and below lines
+	- Ctrl+T 	Find file names only
+	- Ctrl+E 	View and edit engine options
+
 2.3.18 (2018-05-31)
 added: dialog statusbar
 
