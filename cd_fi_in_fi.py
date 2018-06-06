@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.19 2018-06-04c'
+    '3.0.01 2018-06-06'
 ToDo: (see end of file)
 '''
 
@@ -21,7 +21,8 @@ MIN_API_VER_HLP = '1.0.232' # PROP_GUTTER_ALL
 from    .cd_plug_lib        import *
 from    .cd_fif_api         import *
 
-odict = collections.OrderedDict
+odict   = collections.OrderedDict
+d       = dict
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
@@ -109,7 +110,7 @@ def desc_fif_val(fifkey, val=None):
     if False:pass
     elif fifkey in ('incl','excl','fold','frst'):   return val
     elif fifkey in ('reex','case','word'
-                   ,'join','algn','cntx'):          return _('On') if val=='1' else _('Off')
+                   ,'send','join','algn','cntx'):   return _('On') if val=='1' else _('Off')
     elif fifkey=='totb':    return totb_l[int(val)] if val in ('0', '1') else val
     val = int(val)
     if False:pass
@@ -247,6 +248,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
               ,'incl','excl'
               ,'fold','dept'
               ,'skip','sort','frst','enco'
+                     ,'send'
                      ,'totb','join','shtp','algn','cntx']
     invl_l  = invl_l[:]#   invl_l  = [v for v in invl_l]
     ouvl_l  = [v for v in invl_l]
@@ -691,7 +693,7 @@ def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,d
                                #,options={'gen_repro_to_file':'repro_dlg_help.py'}
         )
     pass;                      #log('OPTS_JSON={}',(OPTS_JSON))
-    ag.show()    #NOTE: dlg_valign
+    ag.show()    #NOTE: dlg_help
     return stores
    #def dlg_help
 
@@ -758,7 +760,7 @@ def dlg_nav_by_dclick():
     open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
    #def dlg_nav_by_dclick
 
-DEF_STATUS_MSG  = _('"Enter" to start search')
+DEF_STATUS_MSG  = '' #_('"Enter" to start search')
 
 mask_h  = _('Space-separated file or folder masks.'
             '\rFolder mask starts with "/".'
@@ -943,7 +945,7 @@ class FifD:
     WIN_MAC     = (get_desktop_environment() in ('win', 'mac'))
     EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if WIN_MAC else [5*i for i in range(11)]
     DLG_W0,     \
-    DLG_H0      = (700, 335 + EG1 + EG10 + 25)
+    DLG_H0      = (700, 335 + EG1 + EG10)
     DEF_WD_TXTS = 330
     DEF_WD_BTNS = 100
 
@@ -954,19 +956,37 @@ class FifD:
     TL2_L       = LBL_L+250-85
 #   TL2_L       = LBL_L+220-85
     TBN_L       = CMB_L+TXT_W+GAP
+    
+    RSLT_W      = 300       # Min width of 'rslt' and 'srcf'
 
     def show(self):
         def do_key_down(idd, idc, data=''):
-            pass;              #log('idc, data={}',(idc, data))
             scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
+            pass;              #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
             ag      = self.ag
-            upd     = {}
-#           if (scam,idc)==('c',ord('F')):                                                            # Ctrl+F
+            if (scam,idc)==('sca',VK_ENTER):                                                                # Alt+Ctrl+Shift+Enter
+                pass;           log('ag.hide()',())
+                ag.hide()
+                return 
+#           if (scam,idc)==('c',ord('F')):                                                                  # Ctrl+F
 #               ag.opts['on_exit_focus_to_ed'] = None
 #               ag.hide()
 #               ed.cmd(cmds.cmd_DialogFind)
 #               return
+            pass;              #log('send.val={}',(ag.cval('send')))
+            upd     = {}
             if 0:pass           #NOTE: do_key_down
+            elif scam=='c'  and idc==VK_ENTER \
+                            and '0'==self.send_s:           upd={'fid':'rslt'}                              # Ctrl+Enter
+            elif scam==''   and idc==VK_TAB \
+                            and ag.fattr('fid')=='rslt':    upd={'fid':'srcf'}                              # Tab in rslt
+            elif scam=='s'  and idc==VK_TAB \
+                            and ag.fattr('fid')=='srcf':    upd={'fid':'what'}                              # Shift+Tab in srcf
+            elif scam==''   and idc==VK_TAB \
+                            and ag.fattr('fid')=='srcf':    upd={'fid':'what'}                              # Tab in srcf
+#           elif scam==''   and idc in (VK_UP, VK_DOWN) \
+#                           and ag.fattr('fid')=='rslt':        self.do_click('rslt',ag);return             # Up or Down in rslt
+            elif scam=='sa' and idc==186:                   upd=self.do_send('sen_', ag)                    # Alt+:
             elif scam== 'c' and idc==VK_NUMPAD0:            upd=self.do_dept('depo', ag)                    # Ctrl+Num0
             elif scam== 'c' and idc==VK_NUMPAD1:            upd=self.do_dept('dep1', ag)                    # Ctrl+Num1
             elif scam== 'c' and idc==VK_NUMPAD9:            upd=self.do_dept('depa', ag)                    # Ctrl+Num9
@@ -977,6 +997,7 @@ class FifD:
             elif scam== 'c' and ord('1')<=idc<=ord('3'):    upd=self.do_pres('prs'+chr(idc), ag)            # Ctrl+1..Ctrl+3
             elif scam== 'c' and idc==ord('E'):              dlg_fif_opts()                                  # Ctrl+E
             else:                                           return 
+            pass;              #log('upd={}',(upd))
             ag._update_on_call(upd)
             return False
         self.pre_cnts()
@@ -984,7 +1005,7 @@ class FifD:
             form =dict(cap     = self.get_fif_cap()
                       ,resize  = True
                       ,w       = self.dlg_w
-                      ,h       = self.dlg_h,   h_max   = self.dlg_h
+                      ,h       = self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
                      ,on_key_down   = do_key_down
                      ,on_close_query= lambda idd, idc, data: not self.is_working_stop()
                       )
@@ -996,16 +1017,53 @@ class FifD:
                               #,'gen_repro_to_file':'repro_dlg_fif.py'
                     }
         )
+        self.rslt = app.Editor(self.ag.handle('rslt'))              #NOTE: app.Editor
+        self.rslt.set_prop(app.PROP_GUTTER_ALL          , False)
+        self.rslt.set_prop(app.PROP_MINIMAP             , False)
+        self.rslt.set_prop(app.PROP_MICROMAP            , False)
+        self.rslt.set_prop(app.PROP_LAST_LINE_ON_TOP    , False)
+        self.rslt.set_prop(app.PROP_MARGIN              , 2000)
+        self.rslt.set_prop(app.PROP_LEXER_FILE          , 'FIF')  ##!!
+        self.rslt.set_prop(app.PROP_TAB_SIZE            , 1)
+#       pass;                   self.rslt.set_text_all(
+#r'''+Search for "dlg_proc" in "*.py" from "C:\Programs\CudaText\py" (35 matches in 3(7) files)
+#	<C:\Programs\CudaText\py\cudatext.py>: #8
+#		<(891)>: def _dlg_proc_wait(id_dialog):
+#		<(895)>:         d = ct.dlg_proc(id_dialog, DLG_PROP_GET, '', -1, -1, '')
+#		<(900)>: def _dlg_proc_callback_proxy(id_dlg, id_ctl, data='', info=''):
+#		<(909)>:         prop[callback_name] = 'module={};func=_dlg_proc_callback_proxy;info="{}";'.format(__name__, sid_callback)
+#		<(911)>: def dlg_proc(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
+#		<(912)>:     #print('#dlg_proc id_action='+str(id_action)+' prop='+repr(prop))
+#		<(925)>:     res = ct.dlg_proc(id_dialog, id_action, to_str(prop), index, index2, name)
+#		<(927)>:         _dlg_proc_wait(id_dialog)
+#	<C:\Programs\CudaText\py\cudatext.kv.py>: #19
+#		<(801)>: def _dlg_proc_wait(id_dialog):
+#		<(805)>:         d = ct.dlg_proc(id_dialog, DLG_PROP_GET, '', -1, -1, '')
+#		<(810)>: def _dlg_proc_callback_proxy(id_dlg, id_ctl, data='', info=''):
+#		<(819)>:         prop[callback_name] = 'module={};func=_dlg_proc_callback_proxy;info="{}";'.format(__name__, sid_callback)
+#''')
+        self.rslt.set_prop(app.PROP_RO                  , True)
+        
+        self.srcf = app.Editor(self.ag.handle('srcf'))
+        self.srcf.set_prop(app.PROP_GUTTER_ALL          , False)
+        self.srcf.set_prop(app.PROP_MINIMAP             , False)
+        self.srcf.set_prop(app.PROP_MICROMAP            , False)
+        self.srcf.set_prop(app.PROP_LAST_LINE_ON_TOP    , False)
+        self.srcf.set_prop(app.PROP_MARGIN              , 2000)
+        self.srcf.set_prop(app.PROP_GUTTER_ALL          , True)
+        self.srcf.set_prop(app.PROP_GUTTER_NUM          , True)
+        self.srcf.set_prop(app.PROP_GUTTER_STATES       , False)
+        self.srcf.set_prop(app.PROP_GUTTER_FOLD         , False)
+        self.srcf.set_prop(app.PROP_GUTTER_BM           , False)
+#       self.srcf.set_prop(app.PROP_LEXER_FILE          , 'FIF')  ##!!
+        self.srcf._loaded_file  = None
         statusbar   = self.ag.handle('stbr')
         app.statusbar_proc(statusbar, app.STATUSBAR_ADD_CELL            , tag=1)
         app.statusbar_proc(statusbar, app.STATUSBAR_SET_CELL_AUTOSTRETCH, tag=1, value=True)
         use_statusbar(statusbar)
         msg_status(DEF_STATUS_MSG)
         pass;                  #msg_status('ok')
-        def do_exit(ag):
-            self.copy_vals(ag)
-            use_statusbar(None)
-        self.ag.show(callbk_on_exit=do_exit)
+        self.ag.show(callbk_on_exit=lambda ag: self.do_exit('', ag))
 #       self.ag.show(callbk_on_exit=self.copy_vals)
         self.store()
        #def show
@@ -1035,6 +1093,7 @@ class FifD:
         self.excl_s  = opts.get('excl', self.stores.get('excl',  [''])[0])
         self.fold_s  = opts.get('fold', self.stores.get('fold',  [''])[0])
         self.dept_n  = opts.get('dept', self.stores.get('dept',  0)-1)+1
+        self.send_s  = opts.get('send', self.stores.get('send', '1'))
         self.join_s  = opts.get('join', self.stores.get('join', '0'))
         self.totb_i  = opts.get('totb', self.stores.get('totb',  0 ));  self.totb_i =  1  if self.totb_i== 0  else self.totb_i
         self.shtp_s  = opts.get('shtp', self.stores.get('shtp', '0'))
@@ -1048,6 +1107,8 @@ class FifD:
         self.wo_excl= self.stores.get('wo_excl', True)
         self.wo_repl= self.stores.get('wo_repl', True)
         self.wo_adva= self.stores.get('wo_adva', True)
+
+        self.rslt_w = self.stores.get('rslt_w', True)
 
         self.caps    = None     # Will be filled in get_fif_cnts
 
@@ -1088,6 +1149,9 @@ class FifD:
         self.dept_n     = ag.cval('dept')
         if not self.wo_repl:     
             self.repl_s = ag.cval('repl')
+        self.send_s     = ag.cval('send')
+        if '0'==self.send_s:
+            self.rslt_w = ag.cattr('rslt', 'w')
         if not self.wo_adva:     
             self.join_s = ag.cval('join')
             self.totb_i = ag.cval('totb')
@@ -1118,6 +1182,7 @@ class FifD:
             self.stores['fold']     = add_to_history(self.fold_s, self.stores.get('fold', []), MAX_HIST, unicase=(os.name=='nt'))
             self.stores['dept']     = self.dept_n
             self.stores['repl']     = add_to_history(self.repl_s, self.stores.get('repl', []), MAX_HIST, unicase=False)
+            self.stores['send']     = self.send_s
             self.stores['join']     = self.join_s
             self.stores['totb']     = 1 if self.totb_i==0 else self.totb_i
             self.stores['shtp']     = self.shtp_s
@@ -1127,6 +1192,7 @@ class FifD:
             self.stores['sort']     = self.sort_s
             self.stores['frst']     = self.frst_s
             self.stores['enco']     = self.enco_s
+            self.stores['rslt_w']   = self.rslt_w
             open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
        #def store
     
@@ -1145,7 +1211,9 @@ class FifD:
         self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
         self.gap3   = (GAP-132 if self.wo_adva else GAP)+self.gap2 -GAP
         self.dlg_w,\
-        self.dlg_h  = (self.TBN_L + FifD.BTN_W + GAP
+        self.dlg_h,\
+        self.dlg_h0 = (self.TBN_L + FifD.BTN_W + GAP
+                      ,FifD.DLG_H0 + self.gap3 - (15 + FifD.EG4 if self.wo_adva else 15)+5 + (0 if '1'==self.send_s else 200) + 25
                       ,FifD.DLG_H0 + self.gap3 - (15 + FifD.EG4 if self.wo_adva else 15)+5)
         pass;                  #LOG and log('gap2={}',(self.gap2))
         pass;                  #LOG and log('dlg_w, dlg_h={}',(self.dlg_w, self.dlg_h))
@@ -1153,22 +1221,26 @@ class FifD:
        #def pre_cnts
 
     def get_fif_cap(self):
-        return f(_('Find in Files{} ({})')
-               , '' if not self.wo_adva else  ' [' + (''
-                                +   (_(SHTP_L[int(self.shtp_s)]+', ')                   )
-                                +   (_('Append, ')                if self.join_s=='1' else '')
-                                +   (_('Context, ')               if self.cntx_s=='1' else '')
-                                +   (_('Sorted, ')                if self.sort_s!='0' else '')
-                                +   (_('First ')+self.frst_s+', ' if self.frst_s!='0' else '')
-                                ).rstrip(', ') + ']'
-               , VERSION_V)
+        info        = ''
+        if self.wo_adva:
+            send    = '1'==self.send_s
+            totb_it = self.totb_l[self.totb_i]
+            info    = []
+            info   += [(_('Sorted')             )]  if          self.sort_s!='0' else []
+            info   += [(_('First ')+self.frst_s )]  if          self.frst_s!='0' else []
+            info   += [(_('Send to ')+totb_it   )]  if send                      else []
+            info   += [(SHTP_L[int(self.shtp_s)])]  if send                      else []
+            info   += [(_('Append')             )]  if send and self.join_s=='1' else []
+            info   += [(_('Aligned')            )]  if send and self.algn_s=='1' else []
+            info   += [(_('Context')            )]  if send and self.cntx_s=='1' else []
+            info    = ' [' + ', '.join(info) + ']'    if info else ''
+        return f(_('Find in Files{} ({})'), info, VERSION_V)
 
     def do_focus(self,aid,ag, store=True):
         self.store() if store else None
         aid_ed  = ag.cattr(aid, 'type') in ('edit', 'combo')
         fid     = ag.fattr('focused')
         fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo') if fid else None
-#       fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo')
         fid     = aid    if aid_ed                                  else \
                   fid    if fid_ed                                  else \
                   'what' if aid in ('brow', 'cfld')                 else \
@@ -1214,6 +1286,7 @@ class FifD:
             self.frst_s = ps['frst'] if ps.get('_frst', '')=='x' else self.frst_s
             self.enco_s = ps['enco'] if ps.get('_enco', '')=='x' else self.enco_s
             self.totb_i = ps['totb'] if ps.get('_totb', '')=='x' else self.totb_i
+            self.send_s = ps['send'] if ps.get('_send', '')=='x' else self.send_s
             self.join_s = ps['join'] if ps.get('_join', '')=='x' else self.join_s
             self.shtp_s = ps['shtp'] if ps.get('_shtp', '')=='x' else self.shtp_s
             self.algn_s = ps['algn'] if ps.get('_algn', '')=='x' else self.algn_s
@@ -1235,6 +1308,7 @@ class FifD:
                         self.incl_s,self.excl_s,
                         self.fold_s,self.dept_n,
                         self.skip_s,self.sort_s,self.frst_s,self.enco_s,
+                        self.send_s,
                         totb_v,     self.join_s,self.shtp_s,self.algn_s,self.cntx_s),
                        (onof[self.reex01],onof[self.case01],onof[self.word01],
 #                       '"'+self.incl_s+'"','"'+self.excl_s+'"',
@@ -1242,6 +1316,7 @@ class FifD:
                         self.incl_s,self.excl_s,
                         self.fold_s,DEPT_L[self.dept_n],
                         SKIP_L[int(self.skip_s)],SORT_L[int(self.sort_s)],self.frst_s,ENCO_L[int(self.enco_s)],
+                        onof[self.send_s],
                         totb_v,onof[self.join_s],SHTP_L[int(self.shtp_s)],onof[self.algn_s],onof[self.cntx_s])
                         )
             ag.activate()
@@ -1251,6 +1326,7 @@ class FifD:
                         self.incl_s,self.excl_s,
                         self.fold_s,self.dept_n,
                         self.skip_s,self.sort_s,self.frst_s,self.enco_s,
+                        self.send_s,
                         totb_v,     self.join_s,self.shtp_s,self.algn_s,self.cntx_s)  = ans
             self.totb_i = self.totb_l.index(totb_v) if totb_v in self.totb_l   else \
                           totb_v                    if totb_v in ('0', '1')    else \
@@ -1366,7 +1442,7 @@ class FifD:
         self.pre_cnts()
         pass;                  #LOG and log('dlg_h={}',(dlg_h))
         return (dict(form =dict( cap  =self.get_fif_cap()
-                                ,h    =self.dlg_h ,h_min=self.dlg_h ,h_max=self.dlg_h
+                                ,h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
                                 )
                     ,vals =self.get_fif_vals()
 #                   ,ctrls=self.get_fif_cnts())
@@ -1374,6 +1450,21 @@ class FifD:
                ,self.do_focus(aid,ag)
                )
        #def do_more
+
+    def do_send(self, aid, ag, btn_m=''):
+        msg_status(DEF_STATUS_MSG)
+        self.copy_vals(ag)
+        if aid=='sen_':
+            self.send_s = {'0':'1', '1':'0'}[self.send_s]
+        self.pre_cnts()
+        return (dict(form =dict( cap  =self.get_fif_cap()
+                                ,h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
+                                )
+                    ,vals =dict(send=self.send_s)
+                    ,ctrls=self.get_fif_cnts('vis+pos'))
+               ,self.do_focus(aid,ag)
+               )
+       #def do_send
 
     def do_cntx(self, aid, ag, btn_m=''):
         msg_status(DEF_STATUS_MSG)
@@ -1458,14 +1549,39 @@ class FifD:
        #def do_help
     
     def do_exit(self, aid, ag, data=''):
-        if self.progressor:    return False
+        scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+        pass;                  #log('###aid,scam={}',(aid,scam))
+        if self.progressor and 'c'!=scam:
+            return False
 #       ag.bind_do()
         self.copy_vals(ag)
         pass;                   LOG and log('self.totb_i={}',(self.totb_i))
         self.store()
 #       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
+        use_statusbar(None)
         return None
        #def do_exit
+    
+    def do_click(self, aid, ag, btn_m=''):  #NOTE: do_click
+        pass;                  #log('aid={}',(aid))
+        if aid=='rslt':
+            row     = self.rslt.get_carets()[0][1]
+            path,rw,\
+            cl, ln  = get_data4nav(self.rslt, row)
+            pass;              #log('row, path,rw,cl,ln={}',(row,path,rw, cl, ln))
+            if not path:    return []
+            if  self.srcf._loaded_file != path:
+                self.srcf._loaded_file  = path
+                self.srcf.set_prop(app.PROP_RO, False)
+                self.srcf.set_text_all(open(path).read()) 
+                self.srcf.set_prop(app.PROP_LEXER_FILE, app.lexer_proc(app.LEXER_DETECT, path))
+                self.srcf.set_prop(app.PROP_RO, True)
+                pass;          #log('ok load path={}',(path))
+            nav_to_frag(self.srcf, rw, cl, ln)
+#           self.srcf.set_caret(        0, rw)
+#           self.srcf.set_prop(app.PROP_LINE_TOP, str(max(0, rw - 5)))
+        return []
+       #def do_click
     
     def do_work(self, aid, ag, btn_m=''):
         msg_status(DEF_STATUS_MSG)
@@ -1480,6 +1596,8 @@ class FifD:
         
         w_excl      = not self.wo_excl
         self.excl_s = self.excl_s if w_excl else ''
+
+        w_rslt  = '0'==self.send_s
         
         if btn_m=='!rep' \
         and app.ID_OK != app.msg_box(
@@ -1575,18 +1693,6 @@ class FifD:
                          ,IN_OPEN_FILES, self.caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'shtp'}
 
-#       case01  = ag.cval('case')
-#       word01  = ag.cval('word')
-#       dept_n  = ag.cval('dept')
-#       join_s  = ag.cval('join', '0')
-#       totb_i  = ag.cval('totb',  1 )
-#       cntx_s  = ag.cval('cntx', '0')
-#       algn_s  = ag.cval('algn', '0')
-#       skip_s  = ag.cval('skip', '0')
-#       sort_s  = ag.cval('sort', '0')
-#       frst_s  = ag.cval('frst', '0')
-#       enco_s  = ag.cval('enco', '0')
-
         # Block action buttons
         self.lock_act(ag, 'lock-save')
         
@@ -1629,6 +1735,13 @@ class FifD:
                       TOTB_USED_TAB
         pass;               LOG#and log('totb_i,totb_it,totb_v={}',(totb_i,totb_it,totb_v))
         how_rpt     = dict(
+             rpt_to_ed = self.rslt
+            ,sprd   =    False
+            ,shtp   =    SHTP_SHRTS_RCL
+            ,cntx   =    False
+            ,algn   =    True
+            ,join   =    False
+                    ) if w_rslt else dict(
              totb   =    totb_v
             ,sprd   =              self.sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
             ,shtp   =    shtp_v if self.sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
@@ -1638,7 +1751,9 @@ class FifD:
             )
     #   totb_s  = '1' if totb_s=='0' else totb_s
         ################################
+        pass;                  #v=[].get('k')       # Err as while search
         self.progressor = ProgressAndBreak()
+        pass;                  #v=[].get('k')       # Err as while search
         rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
              how_walk   = how_walk
             ,what_find  = what_find
@@ -1664,7 +1779,7 @@ class FifD:
         msg_rpt = f(_('No matches found (in {} file(s))'), clfls) \
                     if 0==frfls else \
                   f(_('Found {} match(es) in {}({}) file(s)'), frgms, frfls, clfls)
-        self.progressor.set_progress(msg_rpt)
+    #   self.progressor.set_progress(msg_rpt)
         if 0==frgms and not REPORT_FAIL:    
             self.lock_act(ag, 'unlock-saved')
             self.progressor = None
@@ -1689,7 +1804,7 @@ class FifD:
            ,progressor  = self.progressor
            ,req_opts    = req_opts
            )
-        self.progressor.set_progress(msg_rpt)
+    #   self.progressor.set_progress(msg_rpt)
         self.progressor = None
         ################################
         if 0<frgms and CLOSE_AFTER_GOOD:
@@ -1777,7 +1892,7 @@ class FifD:
             else:   return []
             self.pre_cnts()
             return (dict(form =dict( cap  =self.get_fif_cap()
-                                    ,h    =self.dlg_h ,h_min=self.dlg_h ,h_max=self.dlg_h
+                                    ,h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
                                     )
                         ,vals =self.get_fif_vals()
                         ,ctrls=self.get_fif_cnts('vis+pos'))
@@ -1785,7 +1900,6 @@ class FifD:
                    )
            #def wnen_menu
         
-        d       = dict
         find_c  = self.caps['!fnd']
         coun_c  = self.caps['!cnt']
         repl_c  = self.caps['!rep']
@@ -1897,11 +2011,13 @@ class FifD:
         w_excl  = not self.wo_excl
         w_repl  = not self.wo_repl
         w_adva  = not self.wo_adva
+        w_rslt  = '0'==self.send_s
         ad01    = 0             if self.wo_adva else 1
         ad1_1   = -1            if self.wo_adva else 1
         c_more  = _('Mor&e >>') if self.wo_adva else _('L&ess <<')
         w_more  = 39*2+7
 #       w_more  = 39*3          if self.wo_adva else 39*2+7
+        pass;                  #log('mask_h={}',(mask_h))
         d       = dict
         if how=='vis+pos':  return [
  ('pres',d(          tid='incl'         ,w=39*3*ad01            ))
@@ -1918,16 +2034,21 @@ class FifD:
 ,('dep_',d(          tid='dept'                                 ))
 ,('dept',d(          t=m.gap2+140+M.EG5                         ))
 ,('cfld',d(          tid='fold'                                 ))
-,('----',d(          t=m.gap2+175+M.EG5                         ))
+,('---=',d(          t=m.gap2+175+M.EG5                         ))
 ,('more',d(          t=m.gap2+163+M.EG5 ,cap=c_more ,w=w_more   ))
 ,('arp_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
-,('tot_',d(          tid='skip'                     ,vis=w_adva ))
-,('totb',d(          tid='skip'                     ,vis=w_adva ))
-,('join',d(          tid='sort'                     ,vis=w_adva ))
-,('sht_',d(          tid='frst'                     ,vis=w_adva ))
-,('shtp',d(          tid='frst'                     ,vis=w_adva ))
-,('algn',d(          tid='enco'                     ,vis=w_adva ))
-,('cntx',d(          tid='enco'                     ,vis=w_adva ))
+,('send',d(          tid='skip'                     ,vis=w_adva ))
+,('sen_',d(          tid='skip'                     ,vis=w_adva ))
+
+,('---r',d(          y=m.dlg_h0-3                   ,vis=w_adva and w_rslt      ))
+,('totb',d(          tid='skip'                     ,vis=w_adva ,en=not w_rslt  ))
+,('join',d(          tid='sort'                     ,vis=w_adva ,en=not w_rslt  ))
+,('sht_',d(          tid='frst'                     ,vis=w_adva ,en=not w_rslt  ))
+,('shtp',d(          tid='frst'                     ,vis=w_adva ,en=not w_rslt  ))
+,('algn',d(          tid='enco'                     ,vis=w_adva ,en=not w_rslt  ))
+,('cntx',d(          tid='enco'                     ,vis=w_adva ,en=not w_rslt  ))
+,('pb'  ,d(                                          vis=w_rslt ))
+,('pt'  ,d(                             h=m.dlg_h0  ,_vis=w_rslt ))
                                                     
 ,('ase_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
 ,('ski_',d(          tid='skip'                     ,vis=w_adva ))
@@ -1948,65 +2069,77 @@ class FifD:
         nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
         nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))
         cntx_cs = f(cntx_c, nBf, nAf)
-        cnts    = [                                                                                                                                                                   #  gmqz
- ('prs1',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&1')                                                            ,call=m.do_pres                 ))# &1
-,('prs2',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&2')                                                            ,call=m.do_pres                 ))# &2
-,('prs3',d(tp='bt'  ,t  =0              ,l=1000         ,w=0        ,sto=F  ,cap=_('&3')                                                            ,call=m.do_pres                 ))# &3
-,('pres',d(tp='bt'  ,tid='incl'         ,l=5            ,w=39*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h                            ,call=m.do_pres ,menu=m.do_menu ))# &s
-,('reex',d(tp='ch-b',tid='what'         ,l=5+38*0       ,w=39               ,cap='.&*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
-,('case',d(tp='ch-b',tid='what'         ,l=5+38*1       ,w=39               ,cap='&aA'                      ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
-,('word',d(tp='ch-b',tid='what'         ,l=5+38*2       ,w=39               ,cap='"&w"'                     ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
+        cnts    = [0                                                      #  gjmqz ?&m
+,('depa',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
+,('depo',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
+,('dep1',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
+,('prs1',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&1')    ,call=m.do_pres ))# &1
+,('prs2',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&2')    ,call=m.do_pres ))# &2
+,('prs3',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&3')    ,call=m.do_pres ))# &3
+,('!ctt',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
+,('loop',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
+
+,('pt'  ,d(tp='pn'          ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
+
+,('pres',d(tp='bt'  ,p='pt' ,tid='incl'         ,l=5            ,w=39*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h                            ,call=m.do_pres ,menu=m.do_menu ))# &s
+,('reex',d(tp='ch-b',p='pt' ,tid='what'         ,l=5+38*0       ,w=39               ,cap='.&*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
+,('case',d(tp='ch-b',p='pt' ,tid='what'         ,l=5+38*1       ,w=39               ,cap='&aA'                      ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
+,('word',d(tp='ch-b',p='pt' ,tid='what'         ,l=5+38*2       ,w=39               ,cap='"&w"'                     ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
                                                                                                                                                                                     
-,('wha_',d(tp='lb'  ,tid='what'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                              ))# &f
-,('what',d(tp='cb'  ,t  =5              ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                         ,bind='what_s'                                  ))# 
-,('rep_',d(tp='lb'  ,tid='repl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')                ,vis=w_repl                                                 ))# &r
-,('repl',d(tp='cb'  ,t  =5+    28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                             ,vis=w_repl ,bind='repl_s'                                  ))# 
-,('inc_',d(tp='lb'  ,tid='incl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')       ,hint=mask_h                                                            ))# &i
-,('incl',d(tp='cb'  ,t=m.gap1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                         ,bind='incl_s'                                  ))# 
-,('exc_',d(tp='lb'  ,tid='excl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:')     ,hint=mask_h,vis=w_excl                                                 ))# 
-,('excl',d(tp='cb'  ,t=m.gap1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                             ,vis=w_excl ,bind='excl_s'                                  ))# 
-,('fol_',d(tp='lb'  ,tid='fold'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')      ,hint=fold_h                                                            ))# &n
-,('fold',d(tp='cb'  ,t=m.gap2+112+M.EG4 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.fold_l                                         ,bind='fold_s'                                  ))# 
-,('brow',d(tp='bt'  ,tid='fold'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')              ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
-,('dep_',d(tp='lb'  ,tid='dept'         ,l=M.LBL_L      ,w=100  -5          ,cap='>'+_('In s&ubfolders:')   ,hint=dept_h                                                            ))# &u
-,('dept',d(tp='cb-r',t=m.gap2+140+M.EG5 ,l=M.CMB_L      ,w=135              ,items=DEPT_L                                           ,bind='dept_n'                  ,menu=m.do_menu ))# 
-,('depa',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&l')                                                            ,call=m.do_dept                 ))# &l
-,('depo',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&y')                                                            ,call=m.do_dept                 ))# &y
-,('dep1',d(tp='bt'  ,t=0                ,l=1000         ,w=0        ,sto=F  ,cap=_('&!')                                                            ,call=m.do_dept                 ))# &!
-,('cfld',d(tp='bt'  ,tid='fold'         ,l=5            ,w=39*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
+,('wha_',d(tp='lb'  ,p='pt' ,tid='what'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                              ))# &f
+,('what',d(tp='cb'  ,p='pt' ,t  =5              ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                         ,bind='what_s'                                  ))# 
+,('rep_',d(tp='lb'  ,p='pt' ,tid='repl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')                ,vis=w_repl                                                 ))# &r
+,('repl',d(tp='cb'  ,p='pt' ,t  =5+    28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                             ,vis=w_repl ,bind='repl_s'                                  ))# 
+,('inc_',d(tp='lb'  ,p='pt' ,tid='incl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')       ,hint=mask_h                                                            ))# &i
+,('incl',d(tp='cb'  ,p='pt' ,t=m.gap1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                         ,bind='incl_s'                                  ))# 
+,('exc_',d(tp='lb'  ,p='pt' ,tid='excl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:')     ,hint=mask_h,vis=w_excl                                                 ))# 
+,('excl',d(tp='cb'  ,p='pt' ,t=m.gap1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                             ,vis=w_excl ,bind='excl_s'                                  ))# 
+,('fol_',d(tp='lb'  ,p='pt' ,tid='fold'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')      ,hint=fold_h                                                            ))# &n
+,('fold',d(tp='cb'  ,p='pt' ,t=m.gap2+112+M.EG4 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.fold_l                                         ,bind='fold_s'                                  ))# 
+,('brow',d(tp='bt'  ,p='pt' ,tid='fold'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')              ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
+,('dep_',d(tp='lb'  ,p='pt' ,tid='dept'         ,l=M.LBL_L      ,w=100  -5          ,cap='>'+_('In s&ubfolders:')   ,hint=dept_h                                                            ))# &u
+,('dept',d(tp='cb-r',p='pt' ,t=m.gap2+140+M.EG5 ,l=M.CMB_L      ,w=135              ,items=DEPT_L                                           ,bind='dept_n'                  ,menu=m.do_menu ))# 
+,('cfld',d(tp='bt'  ,p='pt' ,tid='fold'         ,l=5            ,w=39*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
                                                                                                                                                                                     
-,('----',d(tp='clr' ,t=m.gap2+175+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                                            ))#
-,('menu',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5            ,w=(39 -7)          ,cap=_('&=')                    ,hint=menu_h,sto=w_adva                 ,call=m.do_menu                 ))# &=
-,('more',d(tp='bt'  ,t=m.gap2+163+M.EG5 ,l=5+39 -7      ,w=w_more           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ,menu=m.do_menu ))# &e
+,('---=',d(tp='clr' ,p='pt' ,t=m.gap2+175+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                                            ))#
+,('menu',d(tp='bt'  ,p='pt' ,t=m.gap2+163+M.EG5 ,l=5            ,w=(39 -7)          ,cap=_('&=')                    ,hint=menu_h,sto=w_adva                 ,call=m.do_menu                 ))# &=
+,('more',d(tp='bt'  ,p='pt' ,t=m.gap2+163+M.EG5 ,l=5+39 -7      ,w=w_more           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ,menu=m.do_menu ))# &e
                                                                                                                                                                                     
-,('arp_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=39*3+20      ,w=150-10           ,cap=_('Adv. report options')               ,vis=w_adva                                                 ))# 
-,('tot_',d(tp='lb'  ,tid='skip'         ,l=5            ,w=39*3             ,cap='>'+_('Show in&:')                     ,vis=w_adva                                                 ))# &:
-,('totb',d(tp='cb-r',tid='skip'         ,l=39*3+10      ,w=150              ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb                 ))# 
-,('join',d(tp='ch'  ,tid='sort'         ,l=39*3+10      ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                                  ))# &d
-,('sht_',d(tp='lb'  ,tid='frst'         ,l=5            ,w=39*3             ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                                 ))# &/
-,('shtp',d(tp='cb-r',tid='frst'         ,l=39*3+10      ,w=150              ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                                  ))# 
-,('algn',d(tp='ch'  ,tid='enco'         ,l=39*3+10      ,w=80               ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                                  ))# &|
-,('cntx',d(tp='ch'  ,tid='enco'         ,l=39*3+80      ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx                 ))# &x
+,('arp_',d(tp='lb'  ,p='pt' ,t=m.gap2+190+M.EG5 ,l=39*3+20      ,w=150-10           ,cap=_('Adv. report options')               ,vis=w_adva                                                 ))# 
+,('send',d(tp='ch'  ,p='pt' ,tid='skip'         ,l=35           ,w=39*2             ,cap=_('Send')                              ,vis=w_adva                 ,call=m.do_send                 ))# &:
+,('sen_',d(tp='lb'  ,p='pt' ,tid='skip'         ,l=5+39*2       ,w=39*1             ,cap='>'+_('to&:')                          ,vis=w_adva                                                 ))# &:
+,('totb',d(tp='cb-r',p='pt' ,tid='skip'         ,l=39*3+10      ,w=150              ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ,en=not w_rslt  ))# 
+,('join',d(tp='ch'  ,p='pt' ,tid='sort'         ,l=39*3+10      ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ,en=not w_rslt  ))# &d
+,('sht_',d(tp='lb'  ,p='pt' ,tid='frst'         ,l=5            ,w=39*3             ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ,en=not w_rslt  ))# &/
+,('shtp',d(tp='cb-r',p='pt' ,tid='frst'         ,l=39*3+10      ,w=150              ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ,en=not w_rslt  ))# 
+,('algn',d(tp='ch'  ,p='pt' ,tid='enco'         ,l=39*3+10      ,w=80               ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ,en=not w_rslt  ))# &|
+,('cntx',d(tp='ch'  ,p='pt' ,tid='enco'         ,l=39*3+80      ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ,en=not w_rslt  ))# &x
                                                                                                                                                                                     
-,('ase_',d(tp='lb'  ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+110  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                                 ))# 
-,('ski_',d(tp='lb'  ,tid='skip'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva                                                 ))# &k
-,('skip',d(tp='cb-r',t=m.gap2+210+M.EG6 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SKIP_L                               ,vis=w_adva ,bind='skip_s'                                  ))# 
-,('sor_',d(tp='lb'  ,tid='sort'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&ort file list:')              ,vis=w_adva                                                 ))# &o
-,('sort',d(tp='cb-r',t=m.gap2+237+M.EG7 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SORT_L                               ,vis=w_adva ,bind='sort_s'                                  ))# 
-,('frs_',d(tp='lb'  ,tid='frst'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Firsts (&0=all):')  ,hint=frst_h,vis=w_adva                                                 ))# &0
-,('frst',d(tp='ed'  ,t=m.gap2+264+M.EG8 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP                                                  ,vis=w_adva ,bind='frst_s'                                  ))# 
-,('enc_',d(tp='lb'  ,tid='enco'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Encodings &\\:')    ,hint=enco_h,vis=w_adva                                                 ))# \
-,('enco',d(tp='cb-r',t=m.gap2+291+M.EG9 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=ENCO_L                               ,vis=w_adva ,bind='enco_s'                                  ))# 
+,('ase_',d(tp='lb'  ,p='pt' ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+110  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                                 ))# 
+,('ski_',d(tp='lb'  ,p='pt' ,tid='skip'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva                                                 ))# &k
+,('skip',d(tp='cb-r',p='pt' ,t=m.gap2+210+M.EG6 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SKIP_L                               ,vis=w_adva ,bind='skip_s'                                  ))# 
+,('sor_',d(tp='lb'  ,p='pt' ,tid='sort'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&ort file list:')              ,vis=w_adva                                                 ))# &o
+,('sort',d(tp='cb-r',p='pt' ,t=m.gap2+237+M.EG7 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SORT_L                               ,vis=w_adva ,bind='sort_s'                                  ))# 
+,('frs_',d(tp='lb'  ,p='pt' ,tid='frst'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Firsts (&0=all):')  ,hint=frst_h,vis=w_adva                                                 ))# &0
+,('frst',d(tp='ed'  ,p='pt' ,t=m.gap2+264+M.EG8 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP                                                  ,vis=w_adva ,bind='frst_s'                                  ))# 
+,('enc_',d(tp='lb'  ,p='pt' ,tid='enco'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Encodings &\\:')    ,hint=enco_h,vis=w_adva                                                 ))# \
+,('enco',d(tp='cb-r',p='pt' ,t=m.gap2+291+M.EG9 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=ENCO_L                               ,vis=w_adva ,bind='enco_s'                                  ))# 
                                                                                                                                                                                     
-,('!fnd',d(tp='bt'  ,tid='what'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
-,('!rep',d(tp='bt'  ,tid='repl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
-,('!cnt',d(tp='bt'  ,tid='incl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva                 ,call=m.do_work ,menu=m.do_menu ))# &t
-,('!ctt',d(tp='bt'  ,t=0                ,l=1000     ,w=0            ,sto=F  ,cap=_('&t')                                                            ,call=m.do_work                 ))# &t
-,('loop',d(tp='bt'  ,t=0                ,l=1000     ,w=0            ,sto=F  ,cap=_('&v')                                                            ,call=m.do_more                 ))# &v
-,('help',d(tp='bt'  ,tid='dept'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('&Help…')                            ,sto=w_adva                 ,call=m.do_help                 ))# &h
+,('!fnd',d(tp='bt'  ,p='pt' ,tid='what'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
+,('!rep',d(tp='bt'  ,p='pt' ,tid='repl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
+,('!cnt',d(tp='bt'  ,p='pt' ,tid='incl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva                 ,call=m.do_work ,menu=m.do_menu ))# &t
+,('help',d(tp='bt'  ,p='pt' ,tid='dept'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('&Help…')                            ,sto=w_adva                 ,call=m.do_help                 ))# &h
                                                                                                                                                                                     
-,('stbr',d(tp='sb'                      ,l=0        ,r=M.DLG_W0     ,a='lR' ,ali=ALI_BT                                                                                             ))  # 
-                ]
+,('---r',d(tp='clr' ,p='pt' ,y=m.dlg_h0-3       ,x=0        ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))    ,vis=w_adva and w_rslt                                      ))#
+
+,('pb'  ,d(tp='pn'          ,ali=ALI_CL         ,vis=w_rslt                                                 ))
+,('rslt',d(tp='edr' ,p='pb' ,ali=ALI_LF         ,vis=w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1' ,on_caret=m.do_click))
+,('sptr',d(tp='sp'  ,p='pb' ,ali=ALI_LF         ,vis=w_rslt     ,x=m.rslt_w+5                               ))
+,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL         ,vis=w_rslt                     ,w_min=M.RSLT_W ,border='1' ))
+                                                                                                                                                                                    
+,('stbr',d(tp='sb'          ,ali=ALI_BT         ))  # 
+#,('stbr',d(tp='sb'                      ,l=0        ,r=M.DLG_W0     ,a='lR' ,ali=ALI_BT))  # 
+                ][1:]
         self.caps   = {cid:cnt['cap']             for cid,cnt           in cnts
                         if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
         self.caps.update({cid:cnts[icnt-1][1]['cap'] for (icnt,(cid,cnt)) in enumerate(cnts)
@@ -2029,7 +2162,8 @@ class FifD:
         if not self.wo_repl:
             vals.update(dict( repl=self.repl_s))
         if not self.wo_adva:
-            vals.update(dict( join=self.join_s
+            vals.update(dict( send=self.send_s
+                             ,join=self.join_s
                              ,totb=self.totb_i
                              ,shtp=self.shtp_s
                              ,cntx=self.cntx_s

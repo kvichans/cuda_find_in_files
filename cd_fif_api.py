@@ -122,28 +122,8 @@ def api_reload_opts():
     MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
    #def api_reload_opts
 api_reload_opts()
-#USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
-#ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
-#REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
-#FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
-#LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
-#BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
-#CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
-#SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
-#AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
-#FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
-#SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
-#TAB_SIZE_IN_RPT = apx.get_opt('fif_lexer_auto_tab_size'     , 2)
 if 'sw'==app.__name__:
     FOLD_PREV_RES   = False
-
-#MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
-#MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
-#MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
-#MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
-#MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
-#MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
-
 
 REQ_KEY = (' '*100)+'_req_info_='
 def report_extract_request(red):
@@ -176,7 +156,8 @@ def report_to_tab(rpt_data:dict
     
     global last_ed_num, last_rpt_tid
     # Choose/Create tab for report
-    rpt_ed  = None
+    rpt_ed  = rpt_type.get('rpt_to_ed')
+    if 'rpt_to_ed' in rpt_type: rpt_ed.set_prop(app.PROP_RO, False)
     def create_new(_title_ext='')->app.Editor:
         app.file_open('')
         new_ed  = ed
@@ -186,6 +167,7 @@ def report_to_tab(rpt_data:dict
         
     title_ext   = f(' ({})', what_find['find'][:LEN_TRG_IN_TITLE])
     if False:pass
+    elif rpt_ed:    pass
     elif rpt_type['totb']==TOTB_NEW_TAB:
         pass;                   RPTLOG and log('!new',)
         rpt_ed  = create_new(title_ext)
@@ -509,9 +491,10 @@ def report_to_tab(rpt_data:dict
     pass;                      #RPTLOG and log('row4crt={}',row4crt)
     rpt_ed.set_caret(      0, row4crt)
 
-    if AUTO_SAVE and os.path.isfile(rpt_ed.get_filename()):
+    if AUTO_SAVE and rpt_ed.get_filename() and os.path.isfile(rpt_ed.get_filename()):
         rpt_ed.save()
     pass;                       LOG and log('==) stoped={}',(rpt_stop))
+    if 'rpt_to_ed' in rpt_type: rpt_ed.set_prop(app.PROP_RO, True)
    #def report_to_tab
 
 ############################################
@@ -560,6 +543,17 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
         op_ed   = ed
     op_ed.focus()
     pass;                       NAVLOG and log('ok op_ed.focus()',())
+    nav_to_frag(op_ed, rw, cl, ln, how_act, indent_vert=apx.get_opt('find_indent_vert', -5, ed_cfg=op_ed))
+
+    if how_act=='move' or the_ed_grp == ed.get_prop(app.PROP_INDEX_GROUP):
+        op_ed.focus()
+    else:
+        the_ed  = apx.get_tab_by_id(the_ed_id)
+        the_ed.focus()
+    return True
+   #def _open_and_nav
+
+def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
     if False:pass
     elif rw==-1:
         pass
@@ -573,16 +567,9 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
     else:
         op_ed.set_caret(        cl+ln,  rw,     cl, rw)
     if rw!=-1:
-        top_row = max(0, rw - max(5, apx.get_opt('find_indent_vert', -5, ed_cfg=op_ed)))
+        top_row = max(0, rw - max(5, indent_vert))
         op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
-
-    if how_act=='move' or the_ed_grp == ed.get_prop(app.PROP_INDEX_GROUP):
-        op_ed.focus()
-    else:
-        the_ed  = apx.get_tab_by_id(the_ed_id)
-        the_ed.focus()
-    return True
-   #def _open_and_nav
+   #def nav_to_frag
 
 reSP    = re.compile(  r'(?P<S>\t+)'        # Shift !
                       r'<(?P<P>[^>]+)>')    # Path  !
@@ -656,7 +643,7 @@ def _build_path(ted, path:str, row:int, shft:str)->str:
     return path
    #def _build_path
 
-def _get_data4nav(ted, row:int):
+def get_data4nav(ted, row:int):
     line    = ted.get_text_line(row)
     full,   \
     shft,   \
@@ -679,7 +666,7 @@ def _get_data4nav(ted, row:int):
         return (path, rw, cl, ln)
 #       return _open_and_nav(where, how_act, path, rw, cl, ln)
 #   return  [None]*4
-   #def _get_data4nav
+   #def get_data4nav
 
 def jump_to(drct:str, what:str):
     global last_rpt_tid
@@ -704,7 +691,7 @@ def jump_to(drct:str, what:str):
         base_rw     = 0
     else:
         path,rw,\
-        cl, ln  = _get_data4nav(rpt_ed, base_row)
+        cl, ln  = get_data4nav(rpt_ed, base_row)
         if not path \
         or not (os.path.isfile(path) or path.startswith('tab:')):
             return app.msg_status(f(_('Line "{}":{} has no data for navigation'), rpt_ed.get_prop(app.PROP_TAB_TITLE, ''), 1+base_row))
@@ -739,7 +726,7 @@ def jump_to(drct:str, what:str):
         or line.startswith(RPT_FIND_SIGN):      return app.msg_status(_('No data to jump'))
         
         path,rw,\
-        cl, ln  = _get_data4nav(rpt_ed, row)
+        cl, ln  = get_data4nav(rpt_ed, row)
         pass;                   NAVLOG and log('path,rw={}',(path,rw))
         if not path \
         or not (os.path.isfile(path) or path.startswith('tab:')):
@@ -797,11 +784,11 @@ def nav_to_src(where:str, how_act='move'):
     last_rpt_tid= ed.get_prop(app.PROP_TAB_ID)
         
     row     = crts[0][1]
-    pass;                   _t = _get_data4nav(ed, row)
-    pass;                   NAVLOG and log('_get_data4nav(ed, row)={}',(_t))
+    pass;                   _t = get_data4nav(ed, row)
+    pass;                   NAVLOG and log('get_data4nav(ed, row)={}',(_t))
     pass;                   path,rw,cl,ln  = _t
 #   path,rw,\
-#   cl, ln  = _get_data4nav(ed, row)
+#   cl, ln  = get_data4nav(ed, row)
     if path and (os.path.isfile(path) or path.startswith('tab:')):
         return _open_and_nav(where, how_act, path, rw, cl, ln)
     app.msg_status(f(_("Line {} has no data for navigation"), 1+row))

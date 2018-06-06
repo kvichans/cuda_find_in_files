@@ -854,6 +854,7 @@ class BaseDlgAgent:
        #def activate
     
     def hide(self):
+        pass;                  #log('DLG_HIDE self.id_dlg={}',(self.id_dlg))
         app.dlg_proc(self.id_dlg, app.DLG_HIDE)
        #def hide
     
@@ -947,6 +948,7 @@ class BaseDlgAgent:
         self.opts   = options if options else {}
         
         self.id_dlg = dlg_proc_wpr(0, app.DLG_CREATE)
+        pass;                  #log('DLG_CREATE self.id_dlg={}',(self.id_dlg))
         self.ctrls  = None                      # Conf-attrs of all controls by name (may be with 'val')
         self.form   = None                      # Conf-attrs of form
 #       self.callof = self.opts.get('callof')   # Object for callbacks
@@ -1287,7 +1289,7 @@ class BaseDlgAgent:
             name = prC['name']
             c_pr = self.ctrls[name].copy()
             c_pr = self._prepare_it_vl(c_pr, c_pr)
-            prC.update({k:v for k,v in c_pr.items() if k not in ('callback','call')})
+            prC.update({k:v for k,v in c_pr.items() if k not in ('callback','call','menu')})
             srp+=l+f('idc=dlg_proc(idd, DLG_CTL_ADD,"{}")', prC['type'])
             prC.pop('type', None)
             srp+=l+f('dlg_proc(idd, DLG_CTL_PROP_SET, index=idc, prop={})', out_attrs(prC, cattrs))

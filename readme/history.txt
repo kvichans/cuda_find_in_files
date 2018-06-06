@@ -1,3 +1,6 @@
+3.0.01 (2018-06-06)
+added: in-dialog editors for Results and Source
+
 2.3.19 (2018-06-04)
 fixed: Allow to change checks in dlg Configure presets
 added: Hotkeys 
