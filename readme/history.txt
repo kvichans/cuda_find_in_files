@@ -1,3 +1,20 @@
+3.1.04 (2018-06-25)
+added: command in menu to set encoding for Source
+added: save text and caret row in Results between runtime calls
+added: skip some caret events on Results to show Source only for last of caret position
+added: save active control into sub-dialogs "Extra report options" and "Extra search options"
+added: vert/horz layout for Rslt/Src
+
+3.1.03 (2018-06-22)
+added: menu commands =/Layout/* to save/restore dialog and splitter positions
+added: hide editors if report to tab/file
+added: call core dialog Find/Replace by Ctrl+F/Ctrl+R
+added: restore focused control in sub-dialog
+
+3.1.01 (2018-06-07)
+reworked: layout, new dlgs for extra options, no buttons More/Less/Presets
+added: auto-run search at start if need find in tab/tabs
+
 3.0.01 (2018-06-06)
 added: in-dialog editors for Results and Source
 

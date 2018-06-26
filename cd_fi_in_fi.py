@@ -2,27 +2,33 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.0.01 2018-06-06'
+    '3.1.04 2018-06-25'
 ToDo: (see end of file)
 '''
 
-import  re, os, sys, locale, json, collections, copy
+import  re, os, sys, time, itertools, locale, json, collections, copy
 
 import  cudatext            as app
 from    cudatext        import ed
+import  cudatext_cmd        as cmds
 from    cudatext_keys   import *
 import  cudax_lib           as apx
+
+from    .cd_plug_lib        import *
+from    .cd_fif_api         import *
+from    .chardet.universaldetector import UniversalDetector
+from    .encodings          import *
+
+odict   = collections.OrderedDict
+d       = dict
+def first_true(iterable, default=False, pred=None):return next(filter(pred, iterable), default) # 10.1.2. Itertools Recipes
+
 MIN_API_VER     = '1.0.178'
 MIN_API_VER     = '1.0.180' # panel group p
 MIN_API_VER     = '1.0.183' # on_change
 MIN_API_VER     = '1.0.216' # STATUSBAR_SET_AUTOSTRETCH
+MIN_API_VER     = '1.0.246' # events for control 'editor'
 MIN_API_VER_HLP = '1.0.232' # PROP_GUTTER_ALL
-
-from    .cd_plug_lib        import *
-from    .cd_fif_api         import *
-
-odict   = collections.OrderedDict
-d       = dict
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
@@ -44,16 +50,14 @@ USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
 loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
 
-#GAP     = 5
-
 totb_l          = [TOTB_NEW_TAB, TOTB_USED_TAB]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
                   ,SHTP_MIDDL_R, SHTP_MIDDL_RCL
                   ,SHTP_SPARS_R, SHTP_SPARS_RCL
                   ,SHTP_SHRTS_R, SHTP_SHRTS_RCL
                   ]
-dept_l          = [_('All'), _('In folder only'), _('1 level'), _('2 levels'), _('3 levels'), _('4 levels'), _('5 levels')]
-skip_l          = [_("Don't skip"), _('Hidden'), _('Binary'), _('Hidden, Binary')]
+dept_l          = [_('+All'), _('Only'), _('+1 level'), _('+2 levels'), _('+3 levels'), _('+4 levels'), _('+5 levels')]
+skip_l          = [_("Don't skip"), _('-Hidden'), _('-Binary'), _('-Hidden, -Binary')]
 sort_l          = [_("Don't sort"), _('By date, from newest'), _('By date, from oldest')]
 enco_l          = ['{}, UTF-8, '+ENCO_DETD 
                   ,'UTF-8, {}, '+ENCO_DETD 
@@ -103,24 +107,6 @@ def reload_opts():
                       ]
     enco_l          = [f(enco, loc_enco) for enco in enco_l]
    #def reload_opts()
-
-def desc_fif_val(fifkey, val=None):
-    pass;                      #LOG and log('fifkey, val={}',(fifkey, val))
-    if val is None: return ''
-    if False:pass
-    elif fifkey in ('incl','excl','fold','frst'):   return val
-    elif fifkey in ('reex','case','word'
-                   ,'send','join','algn','cntx'):   return _('On') if val=='1' else _('Off')
-    elif fifkey=='totb':    return totb_l[int(val)] if val in ('0', '1') else val
-    val = int(val)
-    if False:pass
-    elif fifkey=='dept':    return dept_l[val] if 0<=val<len(dept_l) else ''
-    elif fifkey=='skip':    return skip_l[val] if 0<=val<len(skip_l) else ''
-    elif fifkey=='sort':    return sort_l[val] if 0<=val<len(sort_l) else ''
-    elif fifkey=='enco':    return enco_l[val] if 0<=val<len(enco_l) else ''
-    elif fifkey=='shtp':    return shtp_l[val] if 0<=val<len(shtp_l) else ''
-   #def desc_fif_val
-
 
 class Command:
 #   def undo_by_report(self):
@@ -240,103 +226,47 @@ def dlg_fif_opts():
     reload_opts()
    #def dlg_fif_opts
 
-def dlg_press(stores_main, hist_order, invl_l, desc_l):
-    stores  = copy.deepcopy(stores_main)
-    pset_l  = stores.setdefault('pset', [])
-    stores.setdefault('pset_nnus', 0)
+class PresetD:
     keys_l  = ['reex','case','word'
               ,'incl','excl'
               ,'fold','dept'
               ,'skip','sort','frst','enco'
                      ,'send'
                      ,'totb','join','shtp','algn','cntx']
-    invl_l  = invl_l[:]#   invl_l  = [v for v in invl_l]
-    ouvl_l  = [v for v in invl_l]
     caps_l  = ['.*','aA','"w"'
               ,'In files','Not in files'
               ,'In folder','Subfolders'
               ,'Skip files','Sort file list','Firsts','Encodings'
-              ,'Show in','Append results','Tree type','Align','Show context']
-    def upgrd(ps:list)->list:
-        if '_aa_' not in ps:  
-            for k in ps:
-                if k[0]=='_' and ps[k]=='_':
-                    ps[k]   = '-'
-            return ps
-        _aa  = ps.pop('_aa_', '')
-        _if  = ps.pop('_if_', '')
-        _fo  = ps.pop('_fo_', '')
-        _fn  = ps.pop('_fn_', '')
-        _rp  = ps.pop('_rp_', '')
-        ps['_reex'] = 'x' if _aa else '-'
-        ps['_case'] = 'x' if _aa else '-'
-        ps['_word'] = 'x' if _aa else '-'
-        ps['_incl'] = 'x' if _if else '-'
-        ps['_excl'] = 'x' if _if else '-'
-        ps['_fold'] = 'x' if _if else '-'
-        ps['_dept'] = 'x' if _if else '-'
-        ps['_skip'] = 'x' if _fn else '-'
-        ps['_sort'] = 'x' if _fn else '-'
-        ps['_frst'] = 'x' if _fn else '-'
-        ps['_enco'] = 'x' if _fn else '-'
-        ps['_totb'] = 'x' if _rp else '-'
-        ps['_join'] = 'x' if _rp else '-'
-        ps['_shtp'] = 'x' if _rp else '-'
-        ps['_algn'] = 'x' if _rp else '-'
-        ps['_cntx'] = 'x' if _rp else '-'
-        return ps
-       #def upgrd
-    for ps in pset_l:
-        upgrd(ps)
-    if hist_order:
-        pset_l  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)
+                     ,'[Report] Send to tab/file'
+                     ,'[Report] Show in','[Report] Append results','[Report] Tree type','[Report] Align','[Report] Show context']
+    yn01    = {'0':_('No'), '1':_('Yes'), _('No'):'0', _('Yes'):'1'}
+    
+    @staticmethod
+    def desc_fif_val(fifkey, val=None):
+        pass;                      #LOG and log('fifkey, val={}',(fifkey, val))
+        if val is None: return ''
+        if False:pass
+        elif fifkey in ('incl','excl','fold','frst'):   return val
+        elif fifkey in ('reex','case','word'
+                       ,'send','join','algn','cntx'):   return PresetD.yn01[val] #_('Yes') if val=='1' else _('No')
+        elif fifkey=='totb':    return totb_l[int(val)] if val in ('0', '1') else val
+        pass;                      #log('fifkey, val={}',(fifkey, val))
+        val = int(val)
+        if False:pass
+        elif fifkey=='dept':    return dept_l[val] if 0<=val<len(dept_l) else ''
+        elif fifkey=='skip':    return skip_l[val] if 0<=val<len(skip_l) else ''
+        elif fifkey=='sort':    return sort_l[val] if 0<=val<len(sort_l) else ''
+        elif fifkey=='enco':    return enco_l[val] if 0<=val<len(enco_l) else ''
+        elif fifkey=='shtp':    return shtp_l[val] if 0<=val<len(shtp_l) else ''
+       #def desc_fif_val
 
-    dlg_list= [f(_('Restore: {}\t[{}{}{}].*aAw, [{}{}]In files, [{}{}]In folders, [{}{}{}{}]Adv. search, [{}{}{}{}{}]Adv. report')
-                ,ps['name']
-                ,ps['_reex'],ps['_case'],ps['_word']
-                ,ps['_incl'],ps['_excl']
-                ,ps['_fold'],ps['_dept']
-                ,ps['_skip'],ps['_sort'],ps['_frst'],ps['_enco']
-                ,ps['_totb'],ps['_join'],ps['_shtp'],ps['_algn'],ps['_cntx']
-                ) 
-                for ps in pset_l] \
-            + [f(_('In folder={}\tFind in all opened documents'), IN_OPEN_FILES)
-              ,f(_('In project={}\tFind in all project folders'), IN_PROJ_FOLDS)
-              ,_('Configure presets…\tChange, Move up/down, Delete')
-              ,_('Save as preset…\tSelect options to save')]
-    ind_inop= len(pset_l)
-    ind_inpj= len(pset_l)+1
-    ind_conf= len(pset_l)+2
-    ind_save= len(pset_l)+3
-    ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list), caption=_('Presets'))      #NOTE: dlg-menu-press
-    pass;                      #LOG and log('ps_ind={}',(ps_ind))
-    if ps_ind is None:  return None
-    if False:pass
-    elif ps_ind==ind_inop:
-        # To find in open files
-        ouvl_l[keys_l.index('fold')]    = IN_OPEN_FILES
-        return ouvl_l
-        
-    elif ps_ind==ind_inpj:
-        # To find in project folders
-        ouvl_l[keys_l.index('fold')]    = IN_PROJ_FOLDS
-        return ouvl_l
-        
-    elif ps_ind<len(pset_l):
-        # Restore
-        ps      = pset_l[ps_ind]
-        stores['pset_nnus'] += 1
-        ps['nnus'] = stores['pset_nnus']
-        stores_main.update(stores)
-        open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
-        for i, k in enumerate(keys_l):
-            if ps.get('_'+k, '')=='x':
-                ouvl_l[i]   = ps.get(k, ouvl_l[i])
-        msg_status(_('Options is restored from preset: ')+ps['name'])
-        return ouvl_l
-        
-    elif ps_ind==ind_conf:
-        # Config
+    def __init__(self, fif):
+        self.fif    = fif
+       #def PresetD.__init__
+
+    def config(self):
+        M,m     = PresetD,self
+        pset_l  = copy.deepcopy(m.fif.stores.get('pset', []))
         if not pset_l:  return msg_status(_('No preset to config'))
 
         def save_close(cid, ag, data=''):
@@ -344,8 +274,10 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                 ps_ind      = ag.cval('prss')
                 ps          = pset_l[ps_ind]
                 ps['name']  = ag.cval('name')
-            stores_main.update(stores)
-            open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
+            m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
+            open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
+#           stores_main.update(stores)
+#           open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
             return None
             
         def acts(cid, ag, data=''):
@@ -362,7 +294,7 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                 pass;          #log('what.val={}',(ag.cval('what')))
                 ps_vls  = ag.cval('what')[1]
                 pass;          #log('ps_vls={}',(ps_vls))
-                for i,k in enumerate(keys_l):
+                for i,k in enumerate(M.keys_l):
                     ps['_'+k]   = 'x' if ps_vls[i]=='1' else '-'
                 pass;          #log('ps={}',(ps))
             elif cid=='mvup' and ps_ind>0 \
@@ -382,16 +314,17 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
             elif cid=='delt':
                 pset_l.pop(ps_ind)
                 ps_ind  = min(ps_ind, len(pset_l)-1)
-                ps      = pset_l[ps_ind]                                                                        if pset_l else {}
+                ps      = pset_l[ps_ind]                                                            if pset_l else {}
                 pass;              #LOG and log('ps={}',(ps))
                 ps_mns  = [ps['name'] for ps in pset_l]
-                ps_its  = [f('{}:   {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-#               ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-                ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+                ps_its  = [f('{}', M.caps_l[i]                  ) for i, k in enumerate(M.keys_l)]  if pset_l else [' ']
+                ps_vas  = [f('{}', M.desc_fif_val(k, ps.get(k)) ) for i, k in enumerate(M.keys_l)]  if pset_l else [' ']
+                ps_vls  = [('1' if ps['_'+k]=='x' else '0'      ) for    k in           M.keys_l ]  if pset_l else ['0']
                 return dict(
                     ctrls=[('prss',dict(items=ps_mns, val=ps_ind)                   )
                           ,('name',dict(              val=ps['name'])               )
                           ,('what',dict(items=ps_its, val=(-1,ps_vls))              )
+                          ,('vals',dict(items=ps_vas, val=(-1,ps_vls))  )
                           ,('mvup',dict(en=len(pset_l)>0 and ps_ind>0)              )
                           ,('mvdn',dict(en=len(pset_l)>0 and ps_ind<(len(pset_l)-1)))
                           ,('clon',dict(en=len(pset_l)>0)                           )
@@ -425,13 +358,14 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                     ps_mns      = [ps['name'] for ps in pset_l]
                     prss_nms    = [('prss',dict(items=ps_mns, val=ps_ind))]
             pass;              #LOG and log('ps_ind={}',(ps_ind))
-            ps      = pset_l[ps_ind]                                                                        if pset_l else {}
+            ps      = pset_l[ps_ind]                                                            if pset_l else {}
             pass;              #LOG and log('ps={}',(ps))
-            ps_its  = [f('{}:   {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-#           ps_its  = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-            ps_vls  = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+            ps_its  = [f('{}', M.caps_l[i]                  ) for i, k in enumerate(M.keys_l)]  if pset_l else [' ']
+            ps_vas  = [f('{}', M.desc_fif_val(k, ps.get(k)) ) for i, k in enumerate(M.keys_l)]  if pset_l else [' ']
+            ps_vls  = [('1' if ps['_'+k]=='x' else '0'      ) for    k in           M.keys_l ]  if pset_l else ['0']
             return dict(
                 ctrls=[('what',dict(items=ps_its, val=(-1,ps_vls))  )
+                      ,('vals',dict(items=ps_vas, val=(-1,ps_vls))  )
                       ,('name',dict(              val=ps['name'])   )
                       ,('mvup',dict(en=ps_ind>0)                    )
                       ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))      )
@@ -439,62 +373,84 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                ,fid='prss')
 
         ps_ind      = 0
-        ps          = pset_l[ps_ind]                                                                        if pset_l else {}
-        DLG_W       = 5*4+245+300
-        ps_mns      = [ps['name'] for ps in pset_l]                                                         if pset_l else [' ']
-        ps_its      = [f('{}:   {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-#       ps_its      = [f('{} -- {}', caps_l[i], desc_fif_val(k, ps.get(k))) for i, k in enumerate(keys_l)]  if pset_l else [' ']
-        ps_vls      = [('1' if ps['_'+k]=='x' else '0')                     for    k in           keys_l ]  if pset_l else ['0']
+        ps          = pset_l[ps_ind]                                                            if pset_l else {}
+        DLG_W       = 5*4+245+400
+        ps_mns      = [ps['name'] for ps in pset_l]                                             if pset_l else [' ']
+        ps_its      = [f('{}', M.caps_l[i]                  ) for i, k in enumerate(M.keys_l)]  if pset_l else [' ']
+        ps_vas      = [f('{}', M.desc_fif_val(k, ps.get(k)) ) for i, k in enumerate(M.keys_l)]  if pset_l else [' ']
+        ps_vls      = [('1' if ps['_'+k]=='x' else '0'      ) for    k in           M.keys_l ]  if pset_l else ['0']
         pass;              #LOG and log('ps_mns={}',(ps_mns))
         pass;              #LOG and log('ps_its={}',(ps_its))
         ctrls   = \
-                 [('lprs',dict(tp='lb'      ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                                                    )) # &p
-                 ,('prss',dict(tp='lbx'     ,t=5+20,h=345   ,l=5        ,w=245  ,items=ps_mns       ,en=(len(pset_l)>0)  ,val=ps_ind    ,call=fill_what )) #
+                 [('lprs',dict(tp='lb'  ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                                                    )) # &p
+                 ,('prss',dict(tp='lbx' ,t=5+20,h=345   ,l=5        ,w=245  ,items=ps_mns       ,en=(len(pset_l)>0)  ,val=ps_ind    ,call=fill_what )) #
                   # Content
-                 ,('lnam',dict(tp='lb'      ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name:')                                                        )) # &n
-                 ,('name',dict(tp='ed'      ,t=5+20+345+30  ,l=5        ,w=245                      ,en=(len(pset_l)>0)  ,val=ps.get('name', '')        )) # 
+                 ,('lnam',dict(tp='lb'  ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name:')                                                        )) # &n
+                 ,('name',dict(tp='ed'  ,t=5+20+345+30  ,l=5        ,w=245                      ,en=(len(pset_l)>0)  ,val=ps.get('name', '')        )) # 
                   # Acts
-                 ,('mvup',dict(tp='bt'      ,t=435          ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) and ps_ind>0    ,call=acts      )) # &u
-                 ,('mvdn',dict(tp='bt'      ,t=460          ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1)                 ,call=acts      )) # &d
-                 ,('clon',dict(tp='bt'      ,t=435          ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0)                 ,call=acts      )) # &e
-                 ,('delt',dict(tp='bt'      ,t=460          ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0)                 ,call=acts      )) # &t
+                 ,('mvup',dict(tp='bt'  ,t=435          ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) and ps_ind>0    ,call=acts      )) # &u
+                 ,('mvdn',dict(tp='bt'  ,t=460          ,l=5        ,w=120  ,cap=_('Move &down'),en=(len(pset_l)>1)                 ,call=acts      )) # &d
+                 ,('clon',dict(tp='bt'  ,t=435          ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0)                 ,call=acts      )) # &e
+                 ,('delt',dict(tp='bt'  ,t=460          ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0)                 ,call=acts      )) # &t
                   #
-                 ,('lwha',dict(tp='lb'      ,t=5            ,l=260      ,w=300  ,cap=_('&What to restore:')                                             )) # &w
-                 ,('what',dict(tp='ch-lbx'  ,t=5+20,h=400   ,l=260      ,w=300  ,items=ps_its       ,en=T               ,val=(-1,ps_vls),call=acts      ))
+                 ,('lwha',dict(tp='lb'  ,t=5            ,l=260      ,w=180  ,cap=_('&What to restore:')                                             )) # &w
+                 ,('what',dict(tp='clx' ,t=5+20,h=400   ,l=260      ,w=180  ,items=ps_its       ,en=T               ,val=(-1,ps_vls),call=acts      ))
+                 ,('lval',dict(tp='lb'  ,t=5            ,l=260+180+1,w=220-1,cap=_('With values:')                                                  )) # &
+                 ,('vals',dict(tp='clx' ,t=5+20,h=400   ,l=260+180+1,w=220-1,items=ps_vas       ,en=F               ,val=(-1,ps_vls)                ))
                   #
-                 ,('!'   ,dict(tp='bt'      ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Save')      ,def_bt=True                        ,call=save_close)) # &
-                 ,('-'   ,dict(tp='bt'      ,t=460          ,l=DLG_W-5-100,w=100,cap=_('Cancel')                                        ,call=LMBD_HIDE ))
+                 ,('!'   ,dict(tp='bt'  ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Save')      ,def_bt=True                        ,call=save_close)) # &
+                 ,('-'   ,dict(tp='bt'  ,t=460          ,l=DLG_W-5-100,w=100,cap=_('Cancel')                                        ,call=LMBD_HIDE ))
                  ]
         DlgAgent(form   =dict(cap=_('Configure presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
                 ,fid    ='prss'
-                              #,options={'gen_repro_to_file':'repro_dlg_pres.py'}
+                              #,options={'gen_repro_to_file':'repro_prs_config.py'}
         ).show()
         return None
-        
-    elif ps_ind==ind_save:
-        # Save
-        pass;                  #LOG and log('ps_ind={}',(ps_ind))
-        items   = [f('{}:   {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
-#       items   = [f('{} -- {}', caps_l[i], desc_l[i]) for i, k in enumerate(keys_l)]
-        btn,vals,*_t   = dlg_wrapper(_('Save preset'), GAP+300+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
-             [dict(           tp='lb'    ,t=GAP             ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
-             ,dict(cid='name',tp='ed'    ,t=GAP+20          ,l=GAP          ,w=300                              ) # 
-             ,dict(           tp='lb'    ,t=GAP+55          ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
-             ,dict(cid='what',tp='ch-lbx',t=GAP+75,h=390    ,l=GAP          ,w=300  ,items=items                )
-             ,dict(cid='!'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-170  ,w=80   ,cap=_('OK')    ,def_bt=True) # &
-             ,dict(cid='-'   ,tp='bt'    ,t=GAP+500-28      ,l=GAP+300-80   ,w=80   ,cap=_('Cancel')            )
-             ],    dict(name=f(_('#{}: "{}" in "{}"'), 1+len(pset_l), desc_l[keys_l.index('incl')], desc_l[keys_l.index('fold')])
-                       ,what=(0,['1']*len(keys_l))), focus_cid='name')
+       #def config
+
+    def save(self):
+        M,m     = PresetD,self
+        m.fif.copy_vals(m.fif.ag)
+        pset_l  = m.fif.stores.get('pset', [])
+        totb_i  = m.fif.totb_i if 0<m.fif.totb_i<4+len(m.fif.stores.get('tofx', [])) else 1   # "tab:" skiped
+        totb_v  = m.fif.totb_l[totb_i]
+        invl_l  = (m.fif.reex01,m.fif.case01,m.fif.word01,
+                   m.fif.incl_s,m.fif.excl_s,
+                   m.fif.fold_s,m.fif.dept_n,
+                   m.fif.skip_s,m.fif.sort_s,m.fif.frst_s,m.fif.enco_s,
+                   m.fif.send_s,
+                   totb_v,m.fif.join_s,m.fif.shtp_s,m.fif.algn_s,m.fif.cntx_s)
+
+        ps_its  = [f('{}', M.caps_l[i]                  ) for i, k in enumerate(M.keys_l)]
+        ps_vas  = [f('{}', M.desc_fif_val(k, invl_l[i]) ) for i, k in enumerate(M.keys_l)]
+        send_i  = M.keys_l.index('send')
+        what_vs = ['1']*len(M.keys_l) 
+        if m.fif.send_s=='0':
+            what_vs[send_i+1:]   = ['0']*(len(what_vs)-send_i-1)
+        if not  m.fif.incl_s:   what_vs[M.keys_l.index('incl')]   = '0'
+        if not  m.fif.excl_s:   what_vs[M.keys_l.index('excl')]   = '0'
+        if not  m.fif.fold_s:   what_vs[M.keys_l.index('fold')]   = '0'
+        if '0'==m.fif.frst_s:   what_vs[M.keys_l.index('frst')]   = '0'
+        btn,vals,*_t   = dlg_wrapper(_('Save preset'), GAP+400+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
+             [dict(           tp='lb'   ,t=GAP              ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
+             ,dict(cid='name',tp='ed'   ,t=GAP+20           ,l=GAP          ,w=400                              ) # 
+             ,dict(           tp='lb'   ,t=GAP+55           ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
+             ,dict(cid='what',tp='clx'  ,t=GAP+75,h=390     ,l=GAP          ,w=180  ,items=ps_its               )
+             ,dict(           tp='lb'   ,t=GAP+55           ,l=GAP+180+1    ,w=220-1,cap=_('With values:')      ) # &
+             ,dict(cid='vals',tp='clx'  ,t=GAP+75,h=390     ,l=GAP+180+1    ,w=220-1,items=ps_vas   ,en=F       )
+             ,dict(cid='!'   ,tp='bt'   ,t=GAP+500-28       ,l=GAP+400-170  ,w=80   ,cap=_('OK')    ,def_bt=True) # &
+             ,dict(cid='-'   ,tp='bt'   ,t=GAP+500-28       ,l=GAP+400-80   ,w=80   ,cap=_('Cancel')            )
+             ],    dict(name=f(_('#{}: "{}" in "{}"'), 1+len(pset_l), m.fif.incl_s, m.fif.fold_s)
+                       ,what=(0 ,what_vs)
+                       ,vals=(-1,what_vs)), focus_cid='name')
         pass;                  #LOG and log('vals={}',vals)
         if btn is None or btn=='-': return None
         ps_name = vals['name']
         sl,vals = vals['what']
         pass;                  #LOG and log('vals={}',vals)
         ps      = odict([('name',ps_name)])
-        stores['pset_nnus'] += 1
-        ps['nnus'] = stores['pset_nnus']
-        for i, k in enumerate(keys_l):
+        for i, k in enumerate(M.keys_l):
             if vals[i]=='1':
                 ps['_'+k] = 'x'
                 ps[    k] = invl_l[i]
@@ -502,13 +458,112 @@ def dlg_press(stores_main, hist_order, invl_l, desc_l):
                 ps['_'+k] = '-'
         pass;                  #LOG and log('ps={}',(ps))
         pset_l += [ps]
-        stores_main.update(stores)
-        open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
+        m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
+        open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
         msg_status(_('Options is saved to preset: ')+ps['name'])
         return None
-    
-    return      ouvl_l
-   #def dlg_press
+       #def save
+
+    def _restore(self, ps):
+        M,m     = PresetD,self
+        for i, k in enumerate(M.keys_l):
+            if ps.get('_'+k, '')!='x':  continue
+            if 0:pass
+            elif k=='reex':     m.fif.reex01 = ps[k]
+            elif k=='case':     m.fif.case01 = ps[k]
+            elif k=='word':     m.fif.word01 = ps[k]
+            elif k=='incl':     m.fif.incl_s = ps[k]
+            elif k=='excl':     m.fif.excl_s = ps[k]
+            elif k=='fold':     m.fif.fold_s = ps[k]
+            elif k=='dept':     m.fif.dept_n = ps[k]
+            elif k=='skip':     m.fif.skip_s = ps[k]
+            elif k=='sort':     m.fif.sort_s = ps[k]
+            elif k=='frst':     m.fif.frst_s = ps[k]
+            elif k=='enco':     m.fif.enco_s = ps[k]
+            elif k=='send':     m.fif.send_s = ps[k]
+            elif k=='join':     m.fif.join_s = ps[k]
+            elif k=='shtp':     m.fif.shtp_s = ps[k]
+            elif k=='algn':     m.fif.algn_s = ps[k]
+            elif k=='cntx':     m.fif.cntx_s = ps[k]
+            elif k=='totb':
+                totb_v       = ps[k]
+                m.fif.totb_i = m.fif.totb_l.index(totb_v) if totb_v in m.fif.totb_l else \
+                               totb_v                     if totb_v in (0, 1)       else \
+                               1
+       #def _restore
+
+    def menu4rest(self):
+        M,m     = PresetD,self
+        m.fif.copy_vals(m.fif.ag)
+        pset_l  = m.fif.stores.get('pset', [])
+        if not pset_l:      return None
+        for ps in pset_l:
+            M.upgrd(ps)
+        dlg_list= [f(_('Restore: {}\t[{}{}{}].*aAw, [{}{}]In files, [{}{}]In folders, [{}{}{}{}]Adv. search, [{}{}{}{}{}]Adv. report')
+                    ,ps['name']
+                    ,ps['_reex'],ps['_case'],ps['_word']
+                    ,ps['_incl'],ps['_excl']
+                    ,ps['_fold'],ps['_dept']
+                    ,ps['_skip'],ps['_sort'],ps['_frst'],ps['_enco']
+                    ,ps['_totb'],ps['_join'],ps['_shtp'],ps['_algn'],ps['_cntx']
+                    ) 
+                    for ps in pset_l]
+        ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list), caption=_('Presets'))      #NOTE: dlg-menu-press
+        if ps_ind is None:  return None
+        # Restore
+        ps      = pset_l[ps_ind]
+        m._restore(ps)
+        m.fif.store()
+        msg_status(_('Options is restored from preset: ')+ps['name'])
+        return True
+       #def menu4rest
+
+    def ind4rest(self, ps_ind):
+        M,m     = PresetD,self
+        m.fif.copy_vals(m.fif.ag)
+        pset_l  = m.fif.stores.get('pset', [])
+        if ps_ind>=len(pset_l):     return None
+        ps      = M.upgrd(pset_l[ps_ind])
+        m._restore(ps)
+        m.fif.store()
+        msg_status(_('Options is restored from preset: ')+ps['name'])
+        return True
+       #def ind4rest
+
+    @staticmethod
+    def upgrd(ps:list)->list:
+        if 'send' not in ps:  
+            ps['send']  = '1'
+            ps['_send'] = 'x'
+        if '_aa_' not in ps:  
+            for k in ps:
+                if k[0]=='_' and ps[k]=='_':
+                    ps[k]   = '-'
+            return ps
+        _aa  = ps.pop('_aa_', '')
+        _if  = ps.pop('_if_', '')
+        _fo  = ps.pop('_fo_', '')
+        _fn  = ps.pop('_fn_', '')
+        _rp  = ps.pop('_rp_', '')
+        ps['_reex'] = 'x' if _aa else '-'
+        ps['_case'] = 'x' if _aa else '-'
+        ps['_word'] = 'x' if _aa else '-'
+        ps['_incl'] = 'x' if _if else '-'
+        ps['_excl'] = 'x' if _if else '-'
+        ps['_fold'] = 'x' if _if else '-'
+        ps['_dept'] = 'x' if _if else '-'
+        ps['_skip'] = 'x' if _fn else '-'
+        ps['_sort'] = 'x' if _fn else '-'
+        ps['_frst'] = 'x' if _fn else '-'
+        ps['_enco'] = 'x' if _fn else '-'
+        ps['_totb'] = 'x' if _rp else '-'
+        ps['_join'] = 'x' if _rp else '-'
+        ps['_shtp'] = 'x' if _rp else '-'
+        ps['_algn'] = 'x' if _rp else '-'
+        ps['_cntx'] = 'x' if _rp else '-'
+        return ps
+       #def upgrd
+   #class PresetD
 
 RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
 _TIPS_BODY  = _(r'''
@@ -535,7 +590,8 @@ Note:
     *       matches all names, 
     *.*     doesn't match all.
  
-• Values in fields "In files" and "Not in files" can filter subfolder names if they start with "/".
+• Values in fields "In files" and "Not in files" can filter subfolder names 
+if they start with "/".
 Example.
     In files:       /a*  *.txt
     Not in files:   /ab*
@@ -545,9 +601,12 @@ Example.
     and in all subfolders a* except ab*.
  
 • Set special value "{tags}" for field "In folder" to search in opened documents.
-Preset "In folder={tags}" helps to do this.
 Fields "In files" and "Not in files" will be to filter tab titles.
 To search in all tabs, use mask "*" in field "In files".
+See: commands in menu/Scope.
+ 
+• Set special value "{proj}" for field "In folder" to search in project files.
+See: commands in menu/Scope.
  
 —————————————————————————————————————————————— 
  
@@ -556,24 +615,22 @@ Search has three stages:
     picking files, 
     finding fragments, 
     reporting.
-ESC stops any stage. When picking and finding, ESC stops only this stage, so next stage begins.
+ESC stops any stage. 
+When picking and finding, ESC stops only this stage, so next stage begins.
  
 —————————————————————————————————————————————— 
  
-• Use right click or Context keyboard button to see context menu over these elements
-    Presets
-    Find/Count/Replace
+• Use right click or Context keyboard button 
+to see context menu over these elements
+    Find/Replace
     Current folder
     Browse
     In subfolders combobox
-    More/Less
 ''')
 _KEYS_BODY  = _(r'''
 • "Find" - {find}
  
 • "Replace" - {repl}
- 
-• "Count" - {coun}
  
 • "Current folder" - {cfld}
  
@@ -583,13 +640,14 @@ _KEYS_BODY  = _(r'''
  
 • "In subfolders" - {dept}
  
-• "Presets…" - {pset}
- 
 • "=" - {menu}
  
-• "More/Less…" - {more}
- 
-• "Context" - {cntx}
+• Ctrl+Enter moves focus to Results (if it is shown and not focused).
+• Ctrl+Enter on focused Results closes dialog and opens found fragment.
+• Enter on focused Source closes dialog and opens selected fragment.
+
+• Ctrl+F calls appication dialog Find.'
+• Ctrl+R calls appication dialog Replace.'
 ''')
 _TREE_BODY  = _(r'''
 Option "Tree type" - {shtp}
@@ -598,18 +656,18 @@ Option "Tree type" - {shtp}
 def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,menu_h, stores=None):
     if app.app_api_version()<MIN_API_VER_HLP: return app.msg_status(_('Need update application'))
     stores      = {} if stores is None else stores
-    TIPS_BODY   =_TIPS_BODY.strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES)
+    TIPS_BODY   =_TIPS_BODY.strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES, proj=IN_PROJ_FOLDS)
     KEYS_BODY   =_KEYS_BODY.strip().format(find=find_h.replace('\r', '\n')
                                           ,repl=repl_h.replace('\r', '\n')
-                                          ,coun=coun_h.replace('\r', '\n')
+#                                         ,coun=coun_h.replace('\r', '\n')
                                           ,cfld=cfld_h.replace('\r', '\n')
                                           ,fold=fold_h.replace('\r', '\n')
                                           ,brow=brow_h.replace('\r', '\n')
                                           ,dept=dept_h.replace('\r', '\n')
-                                          ,pset=pset_h.replace('\r', '\n')
-                                          ,more=more_h.replace('\r', '\n')
+#                                         ,pset=pset_h.replace('\r', '\n')
+#                                         ,more=more_h.replace('\r', '\n')
                                           ,menu=menu_h.replace('\r', '\n')
-                                          ,cntx=cntx_h.replace('\r', '\n')
+#                                         ,cntx=cntx_h.replace('\r', '\n')
                                           )
     TREE_BODY   =_TREE_BODY.strip().format(shtp=shtp_h.replace('\r', '\n'))
 #   pass;                      TIPS_BODY = 'TIPS_BODY'
@@ -787,17 +845,19 @@ fold_h  = f(_('Start folder(s).'
             '\r{} to search in project folders (in short <p>).'
             ), IN_OPEN_FILES, IN_PROJ_FOLDS)
 dept_h  = _('Which subfolders will be searched.'
-            '\rAlt+Y or Ctrl+Num0 - Apply "In folder only".'
-            '\rAlt+! or Ctrl+Num1 - Apply "1 level".'
-            '\rAlt+L or Ctrl+Num9 - Apply "All" folders.'
+            '\rAlt+Y or Ctrl+Num0 - Apply "Only".'
+            '\rAlt+! or Ctrl+Num1 - Apply "+1 level".'
+            '\rAlt+L or Ctrl+Num9 - Apply "+All" subfolders.'
             )
 cfld_h  = _('Use folder of current file.'
             '\rShift+Click or Ctrl+Shift+C - Prepare search in the current file.'
             '\rCtrl+Click   - Prepare search in all tabs.'
             '\rShift+Ctrl+Click - Prepare search in the current tab.'
             )
+mofi_h  = _('Extra search options')
+send_h  = _('Output report to tab/file')
+morp_h  = _('Extra tab/file report options')
 menu_h  = _('Local menu'
-            '\rCtrl+E       - View and edit engine options…'
             '\rCtrl+Click - Adjust vertical alignments…'
             )
 more_h  = _('Show/Hide advanced options'
@@ -843,9 +903,10 @@ shtp_h  = f(_(  'Format of the reported tree structure.'
             '\r            <(row[:col:len])>: line with ONE marked fragment'
             '\rFor '
             '\r  sorted files'
-            '\rand'
+            '\rand for search in tabs'
             '\r  In folder={}'
             '\ronly Compact options are used.'
+            '\rWhen a conflict occurs, "Tree type" is automatically changed.'
            ),IN_OPEN_FILES)
 #NOTE: hints
 cntx_c  = _('Conte&xt -{}+{}')
@@ -920,6 +981,7 @@ def dlg_fif(what='', opts={}):
     return FifD(what, opts).show()
 
 class FifD:
+    status_s  = ''
     
     @staticmethod
     def scam_pair(aid):
@@ -945,69 +1007,35 @@ class FifD:
     WIN_MAC     = (get_desktop_environment() in ('win', 'mac'))
     EG0,EG1,EG2,EG3,EG4,EG5,EG6,EG7,EG8,EG9,EG10 = [0]*11 if WIN_MAC else [5*i for i in range(11)]
     DLG_W0,     \
-    DLG_H0      = (700, 335 + EG1 + EG10)
+    DLG_H0      = (700, 140)
     DEF_WD_TXTS = 330
-    DEF_WD_BTNS = 100
+    DEF_WD_BTNS = 110
 
     TXT_W       = DEF_WD_TXTS
     BTN_W       = DEF_WD_BTNS
-    LBL_L       = GAP+38*3+GAP+25
+    LBL_L       = GAP+38*3+GAP#+25
     CMB_L       = LBL_L+100
     TL2_L       = LBL_L+250-85
-#   TL2_L       = LBL_L+220-85
     TBN_L       = CMB_L+TXT_W+GAP
     
-    RSLT_W      = 300       # Min width of 'rslt' and 'srcf'
+    RSLT_W      = 300       # Min width of 'rslt'
+    RSLT_H      =  60       # Min heght of 'rslt'
+    SRCF_W      = 300       # Min width of 'srcf'
+    SRCF_H      = 100       # Min heght of 'srcf'
 
+    rslt_body   = _('...waiting results...')
+    rslt_body_r = -1
     def show(self):
-        def do_key_down(idd, idc, data=''):
-            scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
-            pass;              #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
-            ag      = self.ag
-            if (scam,idc)==('sca',VK_ENTER):                                                                # Alt+Ctrl+Shift+Enter
-                pass;           log('ag.hide()',())
-                ag.hide()
-                return 
-#           if (scam,idc)==('c',ord('F')):                                                                  # Ctrl+F
-#               ag.opts['on_exit_focus_to_ed'] = None
-#               ag.hide()
-#               ed.cmd(cmds.cmd_DialogFind)
-#               return
-            pass;              #log('send.val={}',(ag.cval('send')))
-            upd     = {}
-            if 0:pass           #NOTE: do_key_down
-            elif scam=='c'  and idc==VK_ENTER \
-                            and '0'==self.send_s:           upd={'fid':'rslt'}                              # Ctrl+Enter
-            elif scam==''   and idc==VK_TAB \
-                            and ag.fattr('fid')=='rslt':    upd={'fid':'srcf'}                              # Tab in rslt
-            elif scam=='s'  and idc==VK_TAB \
-                            and ag.fattr('fid')=='srcf':    upd={'fid':'what'}                              # Shift+Tab in srcf
-            elif scam==''   and idc==VK_TAB \
-                            and ag.fattr('fid')=='srcf':    upd={'fid':'what'}                              # Tab in srcf
-#           elif scam==''   and idc in (VK_UP, VK_DOWN) \
-#                           and ag.fattr('fid')=='rslt':        self.do_click('rslt',ag);return             # Up or Down in rslt
-            elif scam=='sa' and idc==186:                   upd=self.do_send('sen_', ag)                    # Alt+:
-            elif scam== 'c' and idc==VK_NUMPAD0:            upd=self.do_dept('depo', ag)                    # Ctrl+Num0
-            elif scam== 'c' and idc==VK_NUMPAD1:            upd=self.do_dept('dep1', ag)                    # Ctrl+Num1
-            elif scam== 'c' and idc==VK_NUMPAD9:            upd=self.do_dept('depa', ag)                    # Ctrl+Num9
-            elif scam=='sc' and idc==ord('C'):              upd=self.do_fold('cfld', ag, btn_m='s/cfld')    # Ctrl+Shift+C
-            elif scam== 'c' and idc==ord('B'):              upd=self.do_fold('brow', ag, btn_m='s/brow')    # Ctrl+B
-            elif scam== 'c' and idc==ord('T'):              upd=self.do_work('!cnt', ag, btn_m='s/!cnt')    # Ctrl+T
-            elif scam=='sc' and idc==ord('X'):              upd=self.do_cntx('cntx', ag, btn_m='c/cntx')    # Ctrl+Shift+X
-            elif scam== 'c' and ord('1')<=idc<=ord('3'):    upd=self.do_pres('prs'+chr(idc), ag)            # Ctrl+1..Ctrl+3
-            elif scam== 'c' and idc==ord('E'):              dlg_fif_opts()                                  # Ctrl+E
-            else:                                           return 
-            pass;              #log('upd={}',(upd))
-            ag._update_on_call(upd)
-            return False
+        M,m     = FifD,self
         self.pre_cnts()
         self.ag = DlgAgent(
             form =dict(cap     = self.get_fif_cap()
                       ,resize  = True
                       ,w       = self.dlg_w
                       ,h       = self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
-                     ,on_key_down   = do_key_down
-                     ,on_close_query= lambda idd, idc, data: not self.is_working_stop()
+                      ,on_resize     = m.do_resize
+                      ,on_key_down   = m.do_key_down
+                      ,on_close_query= lambda idd, idc, data: not self.is_working_stop()
                       )
         ,   ctrls=self.get_fif_cnts()
         ,   vals =self.get_fif_vals()
@@ -1018,30 +1046,17 @@ class FifD:
                     }
         )
         self.rslt = app.Editor(self.ag.handle('rslt'))              #NOTE: app.Editor
-        self.rslt.set_prop(app.PROP_GUTTER_ALL          , False)
+        self.rslt.set_prop(app.PROP_GUTTER_ALL          , True)
+        self.rslt.set_prop(app.PROP_GUTTER_NUM          , False)
+        self.rslt.set_prop(app.PROP_GUTTER_STATES       , False)
+        self.rslt.set_prop(app.PROP_GUTTER_FOLD         , True)
+        self.rslt.set_prop(app.PROP_GUTTER_BM           , False)
         self.rslt.set_prop(app.PROP_MINIMAP             , False)
         self.rslt.set_prop(app.PROP_MICROMAP            , False)
         self.rslt.set_prop(app.PROP_LAST_LINE_ON_TOP    , False)
         self.rslt.set_prop(app.PROP_MARGIN              , 2000)
-        self.rslt.set_prop(app.PROP_LEXER_FILE          , 'FIF')  ##!!
+        self.rslt.set_prop(app.PROP_LEXER_FILE          , FIF_LEXER)  ##!!
         self.rslt.set_prop(app.PROP_TAB_SIZE            , 1)
-#       pass;                   self.rslt.set_text_all(
-#r'''+Search for "dlg_proc" in "*.py" from "C:\Programs\CudaText\py" (35 matches in 3(7) files)
-#	<C:\Programs\CudaText\py\cudatext.py>: #8
-#		<(891)>: def _dlg_proc_wait(id_dialog):
-#		<(895)>:         d = ct.dlg_proc(id_dialog, DLG_PROP_GET, '', -1, -1, '')
-#		<(900)>: def _dlg_proc_callback_proxy(id_dlg, id_ctl, data='', info=''):
-#		<(909)>:         prop[callback_name] = 'module={};func=_dlg_proc_callback_proxy;info="{}";'.format(__name__, sid_callback)
-#		<(911)>: def dlg_proc(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
-#		<(912)>:     #print('#dlg_proc id_action='+str(id_action)+' prop='+repr(prop))
-#		<(925)>:     res = ct.dlg_proc(id_dialog, id_action, to_str(prop), index, index2, name)
-#		<(927)>:         _dlg_proc_wait(id_dialog)
-#	<C:\Programs\CudaText\py\cudatext.kv.py>: #19
-#		<(801)>: def _dlg_proc_wait(id_dialog):
-#		<(805)>:         d = ct.dlg_proc(id_dialog, DLG_PROP_GET, '', -1, -1, '')
-#		<(810)>: def _dlg_proc_callback_proxy(id_dlg, id_ctl, data='', info=''):
-#		<(819)>:         prop[callback_name] = 'module={};func=_dlg_proc_callback_proxy;info="{}";'.format(__name__, sid_callback)
-#''')
         self.rslt.set_prop(app.PROP_RO                  , True)
         
         self.srcf = app.Editor(self.ag.handle('srcf'))
@@ -1055,26 +1070,36 @@ class FifD:
         self.srcf.set_prop(app.PROP_GUTTER_STATES       , False)
         self.srcf.set_prop(app.PROP_GUTTER_FOLD         , False)
         self.srcf.set_prop(app.PROP_GUTTER_BM           , False)
-#       self.srcf.set_prop(app.PROP_LEXER_FILE          , 'FIF')  ##!!
+        self.srcf.set_text_all(_('...waiting source...'))
+        self.srcf.set_prop(app.PROP_RO                  , True)
         self.srcf._loaded_file  = None
         statusbar   = self.ag.handle('stbr')
         app.statusbar_proc(statusbar, app.STATUSBAR_ADD_CELL            , tag=1)
         app.statusbar_proc(statusbar, app.STATUSBAR_SET_CELL_AUTOSTRETCH, tag=1, value=True)
         use_statusbar(statusbar)
-        msg_status(DEF_STATUS_MSG)
+        self.upd_def_status(True)
+#       msg_status(self.status_s) #DEF_STATUS_MSG)
         pass;                  #msg_status('ok')
+        if '0'==self.send_s and self.ag.cval('what') and self.ag.cval('fold')==IN_OPEN_FILES:
+            # Run search at start
+            self.do_work('!fnd', self.ag)
+            self.ag.update(focused='rslt')
+        elif '0'==self.send_s and M.rslt_body:
+            self.rslt.set_prop(app.PROP_RO                  , False)
+            self.rslt.set_text_all(M.rslt_body)
+            if -1!=M.rslt_body_r:
+                self.rslt.set_caret(0, M.rslt_body_r) 
+                self.do_rslt_click('rslt', self.ag)
+            self.rslt.set_prop(app.PROP_RO                  , True)
         self.ag.show(callbk_on_exit=lambda ag: self.do_exit('', ag))
-#       self.ag.show(callbk_on_exit=self.copy_vals)
         self.store()
        #def show
 
     def __init__(self, what='', opts={}):
+        M,m     = FifD,self
         pass
         pass;                  #LOG and log('FifD.DEF_WD_TXTS={}',(FifD.DEF_WD_TXTS))
         self.store(what='load')
-#       self.stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-#                       if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-#                      odict()
         FifD.upgrade(self.stores)     # Upgrade types
     
         self.what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
@@ -1106,9 +1131,12 @@ class FifD:
 
         self.wo_excl= self.stores.get('wo_excl', True)
         self.wo_repl= self.stores.get('wo_repl', True)
-        self.wo_adva= self.stores.get('wo_adva', True)
 
-        self.rslt_w = self.stores.get('rslt_w', True)
+        self.rslt_va= self.stores.get('rslt_al', False)
+        self.rslt_w = self.stores.get('rslt_w', M.RSLT_W)   if not self.rslt_va else M.RSLT_W
+        self.rslt_h = self.stores.get('rslt_h', M.RSLT_H)   if     self.rslt_va else M.RSLT_H
+        
+        self.enc_srcf=self.stores.get('enc_srcf', '')
 
         self.caps    = None     # Will be filled in get_fif_cnts
 
@@ -1120,12 +1148,14 @@ class FifD:
         self.totb_l  = None     # Will be filled in pre_cnts
         self.gap1    = None     # Will be filled in pre_cnts
         self.gap2    = None     # Will be filled in pre_cnts
-        self.gap3    = None     # Will be filled in pre_cnts
         self.dlg_w   = None     # Will be filled in pre_cnts
         self.dlg_h   = None     # Will be filled in pre_cnts
 
+        self.ag         = None
         self.progressor = None  # For lock dlg-hiding while search
         self.locked_cids= None  # Locked controls while working
+
+#       self.upd_def_status()
        #def __init__
     
     def is_working_stop(self):
@@ -1150,27 +1180,18 @@ class FifD:
         if not self.wo_repl:     
             self.repl_s = ag.cval('repl')
         self.send_s     = ag.cval('send')
-        if '0'==self.send_s:
-            self.rslt_w = ag.cattr('rslt', 'w')
-        if not self.wo_adva:     
-            self.join_s = ag.cval('join')
-            self.totb_i = ag.cval('totb')
-            self.shtp_s = ag.cval('shtp')
-            self.cntx_s = ag.cval('cntx')
-            self.algn_s = ag.cval('algn')
-            self.skip_s = ag.cval('skip')
-            self.sort_s = ag.cval('sort')
-            self.frst_s = ag.cval('frst')
-            self.enco_s = ag.cval('enco')
+#       if '0'==self.send_s:
+#           self.rslt_w = ag.cattr('rslt', 'w')
+        self.rslt_w     = ag.cattr('rslt', 'w') if not self.rslt_va else self.rslt_w
+        self.rslt_h     = ag.cattr('rslt', 'h') if     self.rslt_va else self.rslt_h
        #def copy_vals
     
-    def store(self, what='save', set=''):
+    def store(self, what='save'):#, set=''):
         if what=='load':
             self.stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
                             if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
                            odict()
         if what=='save':
-            self.stores['wo_adva']  = self.wo_adva
             self.stores['wo_excl']  = self.wo_excl
             self.stores['wo_repl']  = self.wo_repl
             self.stores['reex']     = self.reex01
@@ -1193,10 +1214,12 @@ class FifD:
             self.stores['frst']     = self.frst_s
             self.stores['enco']     = self.enco_s
             self.stores['rslt_w']   = self.rslt_w
+            self.stores['rslt_h']   = self.rslt_h
             open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
        #def store
     
     def pre_cnts(self):
+        M,m     = FifD,self
         self.what_l = [s for s in self.stores.get('what', []) if s ]
         self.incl_l = [s for s in self.stores.get('incl', []) if s ]
         self.excl_l = [s for s in self.stores.get('excl', []) if s ]
@@ -1204,37 +1227,48 @@ class FifD:
         self.repl_l = [s for s in self.stores.get('repl', []) if s ]
         self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
         
+        w_rslt      = '0'==self.send_s
 #       self.wo_excl= self.stores.get('wo_excl', True)
 #       self.wo_repl= self.stores.get('wo_repl', True)
-#       self.wo_adva= self.stores.get('wo_adva', True)
         self.gap1   = (GAP- 28 if self.wo_repl else GAP)
         self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
-        self.gap3   = (GAP-132 if self.wo_adva else GAP)+self.gap2 -GAP
+        rslt_srcf_h =   0 if not w_rslt else max(100, M.RSLT_H+5+M.SRCF_H)
         self.dlg_w,\
         self.dlg_h,\
         self.dlg_h0 = (self.TBN_L + FifD.BTN_W + GAP
-                      ,FifD.DLG_H0 + self.gap3 - (15 + FifD.EG4 if self.wo_adva else 15)+5 + (0 if '1'==self.send_s else 200) + 25
-                      ,FifD.DLG_H0 + self.gap3 - (15 + FifD.EG4 if self.wo_adva else 15)+5)
-        pass;                  #LOG and log('gap2={}',(self.gap2))
-        pass;                  #LOG and log('dlg_w, dlg_h={}',(self.dlg_w, self.dlg_h))
+                      ,FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
+                      ,FifD.DLG_H0 + self.gap2 + 5
+                      )
+        pass;                  #log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
+        pass;                  #log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
         return self
        #def pre_cnts
 
-    def get_fif_cap(self):
-        info        = ''
-        if self.wo_adva:
-            send    = '1'==self.send_s
+    def upd_def_status(self, do_out=False):
+        info_fi     = []
+        info_fi    += [(SKIP_L[int(self.skip_s)]    )]  if self.skip_s!='0' else []
+        info_fi    += [(_('sorted')                 )]  if self.sort_s!='0' else []
+        info_fi    += [(_('first "')+self.frst_s+'"')]  if self.frst_s!='0' else []
+            
+        info_rp     = []
+        if '1'==self.send_s:
+            s100    = ' '*100       # See get_totb_l
             totb_it = self.totb_l[self.totb_i]
-            info    = []
-            info   += [(_('Sorted')             )]  if          self.sort_s!='0' else []
-            info   += [(_('First ')+self.frst_s )]  if          self.frst_s!='0' else []
-            info   += [(_('Send to ')+totb_it   )]  if send                      else []
-            info   += [(SHTP_L[int(self.shtp_s)])]  if send                      else []
-            info   += [(_('Append')             )]  if send and self.join_s=='1' else []
-            info   += [(_('Aligned')            )]  if send and self.algn_s=='1' else []
-            info   += [(_('Context')            )]  if send and self.cntx_s=='1' else []
-            info    = ' [' + ', '.join(info) + ']'    if info else ''
-        return f(_('Find in Files{} ({})'), info, VERSION_V)
+            totb_it = totb_it if totb_it[0]=='<'    else '"'+re.search(r'file:(.+)'+s100, totb_it).group(1)+'"'
+            totb_it = totb_it if self.join_s!='1'   else _('append to ')+totb_it
+            info_rp+= [(_('Report: ')+totb_it       )]  
+            info_rp+= [(SHTP_L[int(self.shtp_s)]    )]  
+            info_rp+= [(_('aligned')                )]  if self.algn_s=='1' else []
+            info_rp+= [(_('context')                )]  if self.cntx_s=='1' else []
+        
+        cap_fi  = ('Search: ' + ', '.join(info_fi)) if info_fi else ''
+        cap_rp  =               ', '.join(info_rp)  if info_rp else ''
+        self.status_s   = '; '.join([cap_fi, cap_rp]).strip('; ') if cap_fi or cap_rp else ''
+        msg_status(self.status_s) if do_out else 0
+       #def upd_def_status
+
+    def get_fif_cap(self):
+        return f(_('Find in Files ({})'), VERSION_V)
 
     def do_focus(self,aid,ag, store=True):
         self.store() if store else None
@@ -1249,99 +1283,34 @@ class FifD:
        #def do_focus
     
     def do_pres(self, aid, ag, btn_m=''):
-        msg_status(DEF_STATUS_MSG)
-        if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus(aid,ag)
+        msg_status(self.status_s) #DEF_STATUS_MSG)
+#       if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus('what',ag)
         btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
         
         self.what_s = ag.cval('what')
         if not self.wo_repl:     
             self.repl_s = ag.cval('repl')
         
-        if btn_p in ('prs1', 'prs2', 'prs3') \
-        or btn_m=='c/pres': # Ctrl+Preset - Apply last used preset
-            pset_l  = self.stores.setdefault('pset', [])
-            if not pset_l:
-                return self.do_focus(aid,ag)   #continue#while_fif
-            ps  = sorted(pset_l, key=lambda ps: ps.get('nnus', 0), reverse=True)[0] \
-                    if btn_m=='c/pres'                  else \
-                  pset_l[0] \
-                    if btn_p=='prs1'                    else \
-                  pset_l[1] \
-                    if btn_p=='prs2' and len(pset_l)>1  else \
-                  pset_l[2] \
-                    if btn_p=='prs3' and len(pset_l)>2  else \
-                  None
-            if not ps:
-                return self.do_focus(aid,ag)   #continue#while_fif
-            FifD.upgrade(ps)
-            self.reex01 = ps['reex'] if ps.get('_reex', '')=='x' else self.reex01
-            self.case01 = ps['case'] if ps.get('_case', '')=='x' else self.case01
-            self.word01 = ps['word'] if ps.get('_word', '')=='x' else self.word01
-            self.incl_s = ps['incl'] if ps.get('_incl', '')=='x' else self.incl_s
-            self.excl_s = ps['excl'] if ps.get('_excl', '')=='x' else self.excl_s
-            self.fold_s = ps['fold'] if ps.get('_fold', '')=='x' else self.fold_s
-            self.dept_n = ps['dept'] if ps.get('_dept', '')=='x' else self.dept_n
-            self.skip_s = ps['skip'] if ps.get('_skip', '')=='x' else self.skip_s
-            self.sort_s = ps['sort'] if ps.get('_sort', '')=='x' else self.sort_s
-            self.frst_s = ps['frst'] if ps.get('_frst', '')=='x' else self.frst_s
-            self.enco_s = ps['enco'] if ps.get('_enco', '')=='x' else self.enco_s
-            self.totb_i = ps['totb'] if ps.get('_totb', '')=='x' else self.totb_i
-            self.send_s = ps['send'] if ps.get('_send', '')=='x' else self.send_s
-            self.join_s = ps['join'] if ps.get('_join', '')=='x' else self.join_s
-            self.shtp_s = ps['shtp'] if ps.get('_shtp', '')=='x' else self.shtp_s
-            self.algn_s = ps['algn'] if ps.get('_algn', '')=='x' else self.algn_s
-            self.cntx_s = ps['cntx'] if ps.get('_cntx', '')=='x' else self.cntx_s
-            msg_status(_('Options is restored from preset: ')+ps['name'])
+        if btn_p == 'save':
+            PresetD(self).save()
+        if btn_p == 'conf':
+            PresetD(self).config()
+        if btn_p in ('prs1', 'prs2', 'prs3'):
+            PresetD(self).ind4rest(int(btn_p[3])-1)
 
-        if btn_m=='pres' \
-        or btn_m=='s/pres': # Shift+Preset - Show list in history order
-#           ag.bind_do(['totb'])
-#           ag.bind_do()
-            self.copy_vals(ag)
-            onof        = {'0':'Off', '1':'On'}
-#           totb_i      = int(totb_s)
-            pass;              #log('={!r}',(self.totb_i))
-            self.totb_i = self.totb_i if 0<self.totb_i<4+len(self.stores.get('tofx', [])) else 1   # "tab:" skiped
-            totb_v      = self.totb_l[self.totb_i]
-            ans     = dlg_press(self.stores, btn_m=='s/pres',
-                       (self.reex01,self.case01,self.word01,
-                        self.incl_s,self.excl_s,
-                        self.fold_s,self.dept_n,
-                        self.skip_s,self.sort_s,self.frst_s,self.enco_s,
-                        self.send_s,
-                        totb_v,     self.join_s,self.shtp_s,self.algn_s,self.cntx_s),
-                       (onof[self.reex01],onof[self.case01],onof[self.word01],
-#                       '"'+self.incl_s+'"','"'+self.excl_s+'"',
-#                       '"'+self.fold_s+'"',DEPT_L[self.dept_n],
-                        self.incl_s,self.excl_s,
-                        self.fold_s,DEPT_L[self.dept_n],
-                        SKIP_L[int(self.skip_s)],SORT_L[int(self.sort_s)],self.frst_s,ENCO_L[int(self.enco_s)],
-                        onof[self.send_s],
-                        totb_v,onof[self.join_s],SHTP_L[int(self.shtp_s)],onof[self.algn_s],onof[self.cntx_s])
-                        )
-            ag.activate()
-            if ans is None:
-                return self.do_focus(aid,ag)   #continue#while_fif
-            (           self.reex01,self.case01,self.word01,
-                        self.incl_s,self.excl_s,
-                        self.fold_s,self.dept_n,
-                        self.skip_s,self.sort_s,self.frst_s,self.enco_s,
-                        self.send_s,
-                        totb_v,     self.join_s,self.shtp_s,self.algn_s,self.cntx_s)  = ans
-            self.totb_i = self.totb_l.index(totb_v) if totb_v in self.totb_l   else \
-                          totb_v                    if totb_v in ('0', '1')    else \
-                          1
-        
+        if btn_m=='pres':
+            PresetD(self).menu4rest()
+
 #       self.store() # in do_focus
         return (dict(vals=self.get_fif_vals()
                     ,form={'cap':self.get_fif_cap()}
                     )
-               ,self.do_focus(aid,ag)
+               ,self.do_focus('what',ag)
                )
        #def do_pres
 
     def do_fold(self, aid, ag, btn_m=''):
-        msg_status(DEF_STATUS_MSG)
+        msg_status(self.status_s) #DEF_STATUS_MSG)
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','fold','dept'])
@@ -1394,7 +1363,7 @@ class FifD:
        #def do_fold
        
     def do_dept(self, aid, ag, data=''):
-        msg_status(DEF_STATUS_MSG)
+        msg_status(self.status_s) #DEF_STATUS_MSG)
         pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
         self.copy_vals(ag)
 #       ag.bind_do(['dept'])
@@ -1409,16 +1378,111 @@ class FifD:
                )
        #def do_dept
     
+    def do_mofi(self, aid, ag, data=''):
+        msg_status(self.status_s) #DEF_STATUS_MSG)
+        pass;                  #log('self.skip_s={}',(self.skip_s))
+        ag_mofi = DlgAgent(form   =dict(cap=_('Extra search options'), w=320, h=120)
+                ,ctrls  =[0
+                ,('ski_',d(tp='lb'  ,tid='skip' ,l=5    ,w=100-5,cap='>'+_('S&kip files:')                  ))# &k
+                ,('skip',d(tp='cb-r',t=5        ,l=5+100,w=200  ,items=SKIP_L                               ))# 
+                ,('sor_',d(tp='lb'  ,tid='sort' ,l=5    ,w=100-5,cap='>'+_('S&ort file list:')              ))# &o
+                ,('sort',d(tp='cb-r',t=5+27*1   ,l=5+100,w=200  ,items=SORT_L                               ))# 
+                ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=100-5,cap='>'+_('Firsts (&0=all):')  ,hint=frst_h))# &0
+                ,('frst',d(tp='ed'  ,t=5+27*2   ,l=5+100,w=200  ,bind='frst_s'                              ))# 
+                ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=100-5,cap='>'+_('Encodings &\\:')    ,hint=enco_h))# \
+                ,('enco',d(tp='cb-r',t=5+27*3   ,l=5+100,w=200  ,items=ENCO_L                               ))# 
+                        ][1:]
+                ,vals   = d(skip=self.skip_s
+                           ,sort=self.sort_s
+                           ,frst=self.frst_s
+                           ,enco=self.enco_s
+                           )
+                ,fid    = self.stores.get('mofi.fid', 'skip')
+                              #,options={'gen_repro_to_file':'repro_dlg_pres.py'}
+        )
+        ag_mofi.show(callbk_on_exit=lambda ag: self.stores.update({'mofi.fid':ag.fattr('fid')}))
+        self.skip_s = ag_mofi.cval('skip')
+        self.sort_s = ag_mofi.cval('sort')
+        self.frst_s = ag_mofi.cval('frst')
+        self.enco_s = ag_mofi.cval('enco')
+        pass;                  #log('self.skip_s={}',(self.skip_s))
+        self.upd_def_status(True)
+        return []#d(form=d(cap=self.get_fif_cap()))
+       #def do_mofi
+    
+    def do_morp(self, aid, ag, data=''):
+        msg_status(self.status_s) #DEF_STATUS_MSG)
+        M,m     = FifD,self
+        
+        self.copy_vals(ag)
+        if aid=='send':
+            if self.send_s=='1':
+                self.do_morp('morp', ag)
+            self.pre_cnts()
+            send_b  = '1'==self.send_s
+            self.upd_def_status(True)
+            self.pre_cnts() 
+            return d(ctrls=self.get_fif_cnts('vis+pos')
+                     ,form=d(#cap=  self.get_fif_cap()
+                             h    =self.dlg_h
+                            ,h_max=self.dlg_h if send_b else 0
+                            )
+                    ,fid='what')
+        
+        nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
+        nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))
+        cntx_cs = f(cntx_c, nBf, nAf)
+       
+        ag_morp = DlgAgent(form   =dict(cap=_('Extra report options'), w=310, h=200)
+                ,ctrls  =[0
+                ,('tot_',d(tp='lb'  ,t=  5      ,l=  5  ,w=100  ,cap=_('&Report to:')                               ))# &r
+                ,('totb',d(tp='cb-r',t= 23      ,l=  5  ,w=140  ,items=m.totb_l                     ,call=m.do_totb ))# 
+                ,('join',d(tp='ch'  ,tid='totb' ,l=170  ,w=140  ,cap=_('Appen&d results')                           ))# &d
+                ,('sht_',d(tp='lb'  ,t= 60      ,l=  5  ,w=100  ,cap=_('&Tree type:')       ,hint=shtp_h            ))# &t
+                ,('shtp',d(tp='cb-r',t= 78      ,l=  5  ,w=140  ,items=SHTP_L                                       ))# 
+                ,('algn',d(tp='ch'  ,tid='shtp' ,l=170  ,w= 80  ,cap=_('&Align (r:c:l)')    ,hint=algn_h            ))# &a
+                ,('cntx',d(tp='ch'  ,t=115      ,l=  5  ,w=140  ,cap=_('Add conte&xt lines'),hint=cntx_h            ))# &x
+                ,('cxb_',d(tp='lb'  ,tid='cxbf' ,l=  5  ,w= 80  ,cap='>'+_('&Before:')                              ))# &b
+                ,('cxbf',d(tp='sed' ,t=140      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
+                ,('cxa_',d(tp='lb'  ,tid='cxaf' ,l=  5  ,w= 80  ,cap='>'+_('A&fter:')                               ))# &f
+                ,('cxaf',d(tp='sed' ,t=165      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
+                        ][1:]
+                ,vals   = d(totb=self.totb_i
+                           ,join=self.join_s
+                           ,shtp=self.shtp_s
+                           ,algn=self.algn_s
+                           ,cntx=self.cntx_s
+                           ,cxbf=nBf
+                           ,cxaf=nAf
+                           )
+                ,fid    = self.stores.get('morp.fid', 'totb')
+                              #,options={'gen_repro_to_file':'repro_dlg_pres.py'}
+        )
+        ag_morp.show(callbk_on_exit=lambda ag: self.stores.update({'morp.fid':ag.fattr('fid')}))
+        self.totb_i = ag_morp.cval('totb')
+        self.join_s = ag_morp.cval('join')
+        self.shtp_s = ag_morp.cval('shtp')
+        self.cntx_s = ag_morp.cval('cntx')
+        self.algn_s = ag_morp.cval('algn')
+        nBf         = ag_morp.cval('cxbf')
+        nAf         = ag_morp.cval('cxaf')
+        apx.set_opt('fif_context_width_before', nBf)
+        apx.set_opt('fif_context_width_after' , nAf)
+        self.upd_def_status(True)
+        self.pre_cnts()
+        return d(form=d(#cap=self.get_fif_cap()
+                        h_max=self.dlg_h if '1'==self.send_s else 0
+                ))
+       #def do_morp
+    
     def do_more(self, aid, ag, data=''):
-        msg_status(DEF_STATUS_MSG)
+        msg_status(self.status_s) #DEF_STATUS_MSG)
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
         btn_p,btn_m = FifD.scam_pair(aid)
 
         if False:pass
-        elif btn_m=='more':
-            self.wo_adva    = not self.wo_adva
 
         elif btn_m=='c/more':     # [Ctrl+]More       = show/hide excl
             self.wo_excl    = not self.wo_excl
@@ -1438,114 +1502,68 @@ class FifD:
             return self.do_focus(aid,ag)
         
 #       self.store() # in do_focus
-#       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         self.pre_cnts()
         pass;                  #LOG and log('dlg_h={}',(dlg_h))
-        return (dict(form =dict( cap  =self.get_fif_cap()
-                                ,h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
+        return (dict(form =dict(#cap  =self.get_fif_cap()
+                                 h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
                                 )
                     ,vals =self.get_fif_vals()
-#                   ,ctrls=self.get_fif_cnts())
                     ,ctrls=self.get_fif_cnts('vis+pos'))
                ,self.do_focus(aid,ag)
                )
        #def do_more
 
-    def do_send(self, aid, ag, btn_m=''):
-        msg_status(DEF_STATUS_MSG)
-        self.copy_vals(ag)
-        if aid=='sen_':
-            self.send_s = {'0':'1', '1':'0'}[self.send_s]
-        self.pre_cnts()
-        return (dict(form =dict( cap  =self.get_fif_cap()
-                                ,h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
-                                )
-                    ,vals =dict(send=self.send_s)
-                    ,ctrls=self.get_fif_cnts('vis+pos'))
-               ,self.do_focus(aid,ag)
-               )
-       #def do_send
-
-    def do_cntx(self, aid, ag, btn_m=''):
-        msg_status(DEF_STATUS_MSG)
-#       ag.bind_do(['cntx'])
-        self.copy_vals(ag)
-        btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
-        if btn_m=='c/cntx': #and self.cntx_s=='1':    # '1'? so 
-            sBf = str(apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1)))
-            sAf = str(apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1)))
-            ans   = app.dlg_input_ex(2, _('Report context settings')
-                , _('Report with lines before') , sBf
-                , _('Report with lines after')  , sAf
-                )
-            pass;              #LOG and log('cntx ans={}',(ans))
-            if ans is None: 
-                return self.do_focus(aid,ag)
-            sBf,sAf = ans   #if ans is not None else     ('0', '0')
-            pass;              #LOG and log('cntx sBf,sAf={}',(sBf,sAf))
-            nBf = int(sBf) if sBf.isdigit() else 0
-            nAf = int(sAf) if sAf.isdigit() else 0
-            pass;              #LOG and log('cntx nBf,nAf={}',(nBf,nAf))
-            if nBf+nAf > 0:
-                apx.set_opt('fif_context_width_before', nBf)
-                apx.set_opt('fif_context_width_after' , nAf)
-            cntx_cs = f(cntx_c, nBf, nAf)
-            return (dict(ctrls=[('cntx', dict(cap=cntx_cs))])
-                   ,self.do_focus(aid,ag)
-                   )
-#       self.store() # in do_focus
-        return self.do_focus(aid,ag)
-       #def do_cntx
-
     def do_totb(self, aid, ag, data=''):
-        msg_status(DEF_STATUS_MSG)
         pass;                  #LOG and log('totb props={}',(ag.cattrs('totb')))
+        self.totb_i = ag.cval('totb')
+        pass;                   log('totb_i={}',(self.totb_i))
         totb_i_pre  = self.totb_i
-#       ag.bind_do(['totb', 'fold'])
-        self.copy_vals(ag)
+#       self.copy_vals(self.ag)
         totb_v      = self.totb_l[self.totb_i]
         pass;                   LOG and log('totb_i_pre,totb_i,totb_v={}',(totb_i_pre,self.totb_i,totb_v))
         fxs         = self.stores.get('tofx', [])
         if False:pass
         elif totb_v==_('[Clear fixed files]') and fxs:
-            if app.ID_YES == app.msg_box(
-                              f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), self.caps['totb'])
+            if app.ID_YES != app.msg_box(
+                              f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), 'Send report to')
+#                             f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), self.caps['totb'])
                             , app.MB_OKCANCEL+app.MB_ICONQUESTION):
-                self.stores['tofx']  = []
-                self.totb_i  = 1                                # == TOTB_USED_TAB
-            else:
                 self.totb_i  = totb_i_pre
                 return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
+            self.stores['tofx']  = []
+            self.totb_i  = 1                                    # == TOTB_USED_TAB
+        elif totb_v==_('[Clear fixed files]'): #  and not fxs
+            self.totb_i  = 1                                    # == TOTB_USED_TAB
         elif totb_v==_('[Add fixed file]'):
             fx      = app.dlg_file(True, '', os.path.expanduser(self.fold_s), '')
             if not fx or not os.path.isfile(fx):
-                totb_i  = totb_i_pre
-                return {'vals':{'totb':totb_i}}                 # Cancel, set prev state
+                self.totb_i  = totb_i_pre
+                return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
+            fxs     = self.stores.get('tofx', [])
+            if fx in fxs:
+                self.totb_i  = 4+fxs.index(fx)
             else:
-                fxs     = self.stores.get('tofx', [])
-                if fx in fxs:
-                    self.totb_i  = 4+fxs.index(fx)
-                else:
-                    self.stores['tofx'] = fxs + [fx]
-                    self.totb_i  = 4+len(self.stores['tofx'])-1 # skip: new,prev,clear,add,files-1
-        else:   return self.do_focus(aid,ag)
+                self.stores['tofx'] = fxs + [fx]
+                self.totb_i  = 4+len(self.stores['tofx'])-1     # skip: new,prev,clear,add,files-1
+        else:
+            return self.do_focus(aid,ag)
         
         self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
         pass;                   LOG and log('self.totb_i={}',(self.totb_i))
-#       self.store() # in do_focus
-        return ({'ctrls':[('totb', {'val':self.totb_i ,'items':self.totb_l})]}
-               ,self.do_focus(aid,ag)
+        return d(ctrls=[0
+                       ,('totb', d(val=self.totb_i  ,items=self.totb_l))
+                       ][1:]
                ) 
        #def do_totb
-       
+
     def do_help(self, aid, ag, data=''):
-        msg_status(DEF_STATUS_MSG)
+        msg_status(self.status_s) #DEF_STATUS_MSG)
         self.stores['help.data'] = dlg_help(
             word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,menu_h
         ,   self.stores.get('help.data'))
         open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         ag.activate()
-        return self.do_focus(aid,ag)
+        return self.do_focus('what',ag)
        #def do_help
     
     def do_exit(self, aid, ag, data=''):
@@ -1557,34 +1575,182 @@ class FifD:
         self.copy_vals(ag)
         pass;                   LOG and log('self.totb_i={}',(self.totb_i))
         self.store()
-#       open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         use_statusbar(None)
         return None
        #def do_exit
     
-    def do_click(self, aid, ag, btn_m=''):  #NOTE: do_click
+    def do_resize(self, ag):
+        M,m     = FifD,self
+        def fix_wh(hw_c, hw_min):
+            pbot_v  = ag.cattr('pb'  , hw_c)
+            rslt_v  = ag.cattr('rslt', hw_c)
+            sptr_v  = ag.cattr('sptr', hw_c)
+            srcf_v  = ag.cattr('srcf', hw_c)
+            rslt_v_n= hw_min \
+                        if  rslt_v                  >= pbot_v else \
+                      hw_min \
+                        if (rslt_v+sptr_v+hw_min)   >= pbot_v else \
+                      rslt_v
+            pass;              #log('pbot_v, srcf_v, rslt_v, rslt_v_n={}',(pbot_v, srcf_v, rslt_v, rslt_v_n))
+            if rslt_v==rslt_v_n:    # no hidden
+                return []
+            return d(ctrls=[('rslt',{hw_c:rslt_v_n})])
+           #def fix_wh
+        return fix_wh('h', M.RSLT_H) if m.rslt_va else \
+               fix_wh('w', M.RSLT_W)
+       #def do_resize
+    
+    def do_key_down(self, idd, idc, data=''):
+        M,m     = FifD,self
+        scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
+        pass;                  #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
+        ag      = self.ag
+#       if (scam,idc)==('sca',VK_ENTER):                                                                # Alt+Ctrl+Shift+Enter
+#           pass;           log('ag.hide()',())
+#           ag.hide()
+#           return 
+        if (scam,idc)==('c',ord('F')) or (scam,idc)==('c',ord('R')):                                    # Ctrl+F or Ctrl+R
+            ag.opts['on_exit_focus_to_ed'] = None
+            ag.hide()
+            to_dlg  = cmds.cmd_DialogFind if idc==ord('F') else cmds.cmd_DialogReplace
+            ed.cmd(to_dlg)
+            if app.app_api_version()>='1.0.248':
+                prop    = d(
+                    find_d      = ag.cval('what')
+                ,   op_regex_d  = ag.cval('reex')
+                ,   op_case_d   = ag.cval('case')
+                ,   op_word_d   = ag.cval('word')
+                )
+                if not m.wo_repl and to_dlg==cmds.cmd_DialogReplace:
+                    prop[rep_d] = ag.cval('repl')
+                app.app_proc(app.PROC_SET_FINDER_PROP, prop)
+            return
+        pass;                  #log('send.val={}',(ag.cval('send')))
+        upd     = {}
+        if 0:pass           #NOTE: do_key_down
+        elif scam=='c'  and idc==VK_ENTER \
+                        and '0'==self.send_s \
+                        and ag.fattr('fid')!='rslt':    upd={'fid':'rslt'}                              # Ctrl+Enter
+        elif scam==''   and idc==VK_ENTER \
+                        and ag.fattr('fid')=='rslt':    nav_to_src('same', _ed=m.rslt)      ;upd={}     # Enter      in rslt
+        elif scam=='c'  and idc==VK_ENTER \
+                        and ag.fattr('fid')=='rslt':    nav_to_src('same', _ed=m.rslt)      ;upd=None   # Ctrl+Enter in rslt
+        elif scam==''   and idc==VK_ENTER \
+                        and ag.fattr('fid')=='srcf'\
+                        and m.srcf._loaded_file:        nav_as(m.srcf._loaded_file, m.srcf) ;upd=None   # Enter in srcf
+        elif scam==''   and idc==VK_TAB \
+                        and ag.fattr('fid')=='rslt':    upd={'fid':'srcf'}                              # Tab in rslt
+        elif scam=='s'  and idc==VK_TAB \
+                        and ag.fattr('fid')=='srcf':    upd={'fid':'rslt'}                              # Shift+Tab in srcf
+        elif scam==''   and idc==VK_TAB \
+                        and ag.fattr('fid')=='srcf':    upd={'fid':'what'}                              # Tab in srcf
+#       elif scam==''   and idc in (VK_UP, VK_DOWN) \
+#                       and ag.fattr('fid')=='rslt':        self.do_click('rslt',ag);return             # Up or Down in rslt
+        elif scam== 'c' and idc==187 \
+                        and ag.fattr('fid')=='rslt':    toggle_folding(m.rslt)                          # Ctrl+= in rslt
+#       elif scam== 'c' and idc==187 \
+#                       and ag.fattr('fid')=='rslt':    m.rslt.cmd(cmds.cmd_FoldingToggleAtCurLine)     # Ctrl+= in rslt
+        elif scam== 'c' and idc==VK_NUMPAD0:            upd=m.do_dept('depo', ag)                       # Ctrl+Num0
+        elif scam== 'c' and idc==VK_NUMPAD1:            upd=m.do_dept('dep1', ag)                       # Ctrl+Num1
+        elif scam== 'c' and idc==VK_NUMPAD9:            upd=m.do_dept('depa', ag)                       # Ctrl+Num9
+        elif scam=='sc' and idc==ord('C'):              upd=m.do_fold('cfld', ag, btn_m='s/cfld')       # Ctrl+Shift+C
+        elif scam== 'c' and idc==ord('B'):              upd=m.do_fold('brow', ag, btn_m='s/brow')       # Ctrl+B
+        elif scam== 'c' and idc==ord('S'):              PresetD(self).save()                ;upd={}     # Ctrl+S
+        elif scam== 'c' and idc==ord('T'):              upd=m.do_work('!cnt', ag, btn_m='s/!cnt')       # Ctrl+T
+#       elif scam=='sc' and idc==ord('X'):              upd=m.do_cntx('cntx', ag, btn_m='c/cntx')       # Ctrl+Shift+X
+        elif scam== 'c' and ord('1')<=idc<=ord('3'):    upd=m.do_pres('prs'+chr(idc), ag)               # Ctrl+1..Ctrl+3
+        elif scam== 'c' and idc==ord('E'):              dlg_fif_opts()                                  # Ctrl+E
+        else:                                           return 
+        pass;                  #log('upd={}',(upd))
+        ag._update_on_call(upd)
+        return False
+       #def do_key_down
+
+    def do_click_dbl(self, aid, ag, data=''):
+        M,m     = FifD,self
+        scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+        pass;                   log('aid, data, scam={}',(aid, data, scam))
+        upd     = None
+        if 0:pass
+        elif aid=='rslt':
+            nav_to_src('same', _ed=m.rslt)
+            upd = None if scam=='c' else {}
+        elif aid=='srcf':
+            nav_as(m.srcf._loaded_file, m.srcf)
+            upd = None
+        else:
+            return 
+        ag._update_on_call(upd)
+        return False
+       #def do_click_dbl
+    
+    encoding_detector   = UniversalDetector() 
+    rslt_timer_cb       = None
+    last_click_t        = 0
+    SEL_TO_ACT_DELAY    = 0.200 # sec
+    TIMER_DELAY         = 200   # msec
+    def do_rslt_click(self, aid, ag, data=''):  #NOTE: do_rslt_click
+#       return self._do_rslt_click(aid, ag, data)       # Skip Timer-hack
         pass;                  #log('aid={}',(aid))
+        M,m     = FifD,self
+
+        M.last_click_t  = round(time.perf_counter(), 4)     # time of user click
+        if  M.rslt_timer_cb:
+            return [] 
+        M.rslt_timer_cb     = lambda tag: self._do_rslt_click(aid, ag, data)
+        app.timer_proc(app.TIMER_START, M.rslt_timer_cb, M.TIMER_DELAY)
+        return []
+    def _do_rslt_click(self, aid, ag, data=''):
+        pass;                  #log('aid={}',(aid))
+        M,m     = FifD,self
+        
+        now_t   = round(time.perf_counter(), 4)
+        pre_t   = M.last_click_t
+        if  (now_t - pre_t) < M.SEL_TO_ACT_DELAY:           # too small pause after last user click
+            return []                                       # wait next timer tick or user click
+        if M.rslt_timer_cb:
+            app.timer_proc(app.TIMER_DELETE, M.rslt_timer_cb, 0)
+            M.rslt_timer_cb = None
+        
         if aid=='rslt':
             row     = self.rslt.get_carets()[0][1]
+            M.rslt_body_r   = row
             path,rw,\
             cl, ln  = get_data4nav(self.rslt, row)
             pass;              #log('row, path,rw,cl,ln={}',(row,path,rw, cl, ln))
+            msg_status(path)
             if not path:    return []
             if  self.srcf._loaded_file != path:
                 self.srcf._loaded_file  = path
+                text    = ''
+                lexer   = ''
                 self.srcf.set_prop(app.PROP_RO, False)
-                self.srcf.set_text_all(open(path).read()) 
-                self.srcf.set_prop(app.PROP_LEXER_FILE, app.lexer_proc(app.LEXER_DETECT, path))
+                if path.startswith('tab:'):
+                    tab_id  = int(path.split('/')[0].split(':')[1])
+                    tab_ed  = apx.get_tab_by_id(tab_id)
+                    text    = tab_ed.get_text_all()
+                    lexer   = tab_ed.get_prop(app.PROP_LEXER_FILE)
+                elif os.path.isfile(path):
+                    enc     = self.enc_srcf if self.enc_srcf else detect_encoding(path, M.encoding_detector)
+                    pass;      #log('enc={}',(enc))
+                    try:
+                        text= open(path, encoding=enc).read()
+                    except:
+                        text= open(path).read()
+                    lexer   = app.lexer_proc(app.LEXER_DETECT, path)
+#                   self.srcf.file_open(path)
+                self.srcf.set_text_all(text) 
+                self.srcf.set_prop(app.PROP_LEXER_FILE, lexer)
                 self.srcf.set_prop(app.PROP_RO, True)
                 pass;          #log('ok load path={}',(path))
+            app.app_idle()                      # Hack to problem: PROP_LINE_TOP sometime skipped after set_prop(PROP_LEXER_FILE)
             nav_to_frag(self.srcf, rw, cl, ln)
-#           self.srcf.set_caret(        0, rw)
-#           self.srcf.set_prop(app.PROP_LINE_TOP, str(max(0, rw - 5)))
         return []
-       #def do_click
+       #def _do_rslt_click
     
     def do_work(self, aid, ag, btn_m=''):
-        msg_status(DEF_STATUS_MSG)
+        M,m     = FifD,self
+        msg_status(self.status_s) #DEF_STATUS_MSG)
 #       ag.bind_do()
         self.copy_vals(ag)
 #       self.store() # in do_focus
@@ -1609,24 +1775,17 @@ class FifD:
             ,app.MB_OKCANCEL+app.MB_ICONQUESTION):
             return self.do_focus(aid,ag)
 
-#       fold_s  = ag.cval('fold')
-#       what_s  = ag.cval('what')  
-#       w_repl  = not stores.get('wo_repl', True)
         w_repl      = not self.wo_repl
         self.repl_s = self.repl_s if w_repl else ''
         
         if 0 != self.fold_s.count('"')%2:
             msg_status(f(_('Fix quotes in the "{}" field'), self.caps['fold'])) 
-#           app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['fold']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'fold'}
             
         if not self.what_s:
             msg_status( f(_('Fill the "{}" field'), self.caps['what']))
-#           app.msg_box(f(_('Fill the "{}" field'), self.caps['what']), app.MB_OK+app.MB_ICONWARNING)
             return {'fid':'what'}
         
-#       reex01  = ag.cval('reex')
-
         if self.reex01=='1':
             try:
                 re.compile(self.what_s)
@@ -1643,20 +1802,16 @@ class FifD:
                     return {'fid':'repl'}
         if not self.incl_s:
             msg_status(f(_('Fill the "{}" field'), self.caps['incl'])) 
-#           app.msg_box(f(_('Fill the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'incl'}
         if 0 != self.incl_s.count('"')%2:
             msg_status(f(_('Fix quotes in the "{}" field'), self.caps['incl'])) 
-#           app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['incl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'incl'}
         if 0 != self.excl_s.count('"')%2:
             msg_status(f(_('Fix quotes in the "{}" field'), self.caps['excl'])) 
-#           app.msg_box(f(_('Fix quotes in the "{}" field'), self.caps['excl']), app.MB_OK+app.MB_ICONWARNING) 
             return {'fid':'excl'}
 
         roots       = []
         if root_is_proj(self.fold_s) or root_is_tabs(self.fold_s):
-#       if self.fold_s in (IN_OPEN_FILES, IN_PROJ_FOLDS):
             roots   = [self.fold_s]
         else:
             roots   = prep_quoted_folders(self.fold_s)
@@ -1666,32 +1821,20 @@ class FifD:
             roots   = map(lambda f: f.rstrip(r'\/') if f!='/' else f, roots)
             roots   = list(roots)
             pass;               LOG and log('roots={}',(roots))
-#       root        = self.fold_s
-#       root        = os.path.expanduser(root)
-#       root        = os.path.expandvars(root)
-#       root        = self.fold_s.rstrip(r'\/') if self.fold_s!='/' else self.fold_s
             if not all(map(lambda f:os.path.isdir(f), roots)):
-#       if self.fold_s!=IN_OPEN_FILES and (not root or not os.path.isdir(root)):
                 app.msg_box(f(_('Set existing folder in "{}" \nor use "{}" \nor use "{}".\n\n{} can help.')
-                             , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS, self.caps['pres']), app.MB_OK+app.MB_ICONWARNING) 
+                             , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS, _('=/Presets')), app.MB_OK+app.MB_ICONWARNING) 
                 return {'fid':'fold'}
 
-#       shtp_s  = ag.cval('shtp', '0')
+        shtp_v      = SHTP_L[int(self.shtp_s)]
 
-        if SHTP_L[int(self.shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
-                                       ,SHTP_SPARS_R, SHTP_SPARS_RCL
-                                       ) and \
-           self.sort_s!='0':
-            app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.')
-                         ,self.caps['sort'], self.caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
-            return {'fid':'shtp'}
-        if SHTP_L[int(self.shtp_s)] in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
-                                       ,SHTP_SPARS_R, SHTP_SPARS_RCL
-                                       ) and \
-           self.fold_s==IN_OPEN_FILES:
-            app.msg_box(f(_('Conflicting "{}" and "{}" options.\n\nSee Help--Tree.')
-                         ,IN_OPEN_FILES, self.caps['shtp']), app.MB_OK+app.MB_ICONWARNING) 
-            return {'fid':'shtp'}
+        if shtp_v in (SHTP_MIDDL_R, SHTP_MIDDL_RCL
+                     ,SHTP_SPARS_R, SHTP_SPARS_RCL) and (self.sort_s!='0' or self.fold_s==IN_OPEN_FILES):
+            # Auto-change Tree type
+            shtp_v  = ( SHTP_SHORT_R    if shtp_v==SHTP_MIDDL_R     else
+                        SHTP_SHORT_RCL  if shtp_v==SHTP_MIDDL_RCL   else
+                        SHTP_SHRTS_R    if shtp_v==SHTP_SPARS_R     else
+                        SHTP_SHRTS_RCL  if shtp_v==SHTP_SPARS_RCL   else SHTP_SHORT_R)
 
         # Block action buttons
         self.lock_act(ag, 'lock-save')
@@ -1699,7 +1842,6 @@ class FifD:
         pass;                   LOG and log('self.dept_n={}',(repr(self.dept_n)))
         how_walk    =dict(                                  #NOTE: fif params
              roots      =roots
-#            root       =root
             ,file_incl  =self.incl_s
             ,file_excl  =self.excl_s
             ,depth      =self.dept_n-1               # ['All', 'In folder only', '1 level', …]
@@ -1726,14 +1868,13 @@ class FifD:
             ,place      = btn_p!='!cnt'
             ,lines      = btn_p!='!cnt'
             )
-        shtp_v      = SHTP_L[int(self.shtp_s)]
         totb_it     = self.totb_l[self.totb_i]
         fxs         = self.stores.get('tofx', [])
         totb_v      = TOTB_NEW_TAB                  if btn_m=='s/!fnd' or totb_it==TOTB_NEW_TAB     else \
                       totb_it                       if totb_it.startswith('tab:')                   else \
                       'file:'+fxs[self.totb_i-4]    if totb_it.startswith('file:')                  else \
                       TOTB_USED_TAB
-        pass;               LOG#and log('totb_i,totb_it,totb_v={}',(totb_i,totb_it,totb_v))
+        pass;                   #LOG and log('totb_i,totb_it,totb_v={}',(totb_i,totb_it,totb_v))
         how_rpt     = dict(
              rpt_to_ed = self.rslt
             ,sprd   =    False
@@ -1749,7 +1890,6 @@ class FifD:
             ,algn   =    '1'==self.algn_s
             ,join   =    '1'==self.join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
             )
-    #   totb_s  = '1' if totb_s=='0' else totb_s
         ################################
         pass;                  #v=[].get('k')       # Err as while search
         self.progressor = ProgressAndBreak()
@@ -1779,7 +1919,7 @@ class FifD:
         msg_rpt = f(_('No matches found (in {} file(s))'), clfls) \
                     if 0==frfls else \
                   f(_('Found {} match(es) in {}({}) file(s)'), frgms, frfls, clfls)
-    #   self.progressor.set_progress(msg_rpt)
+        self.progressor.set_progress(msg_rpt)
         if 0==frgms and not REPORT_FAIL:    
             self.lock_act(ag, 'unlock-saved')
             self.progressor = None
@@ -1804,7 +1944,7 @@ class FifD:
            ,progressor  = self.progressor
            ,req_opts    = req_opts
            )
-    #   self.progressor.set_progress(msg_rpt)
+        self.progressor.set_progress(msg_rpt)
         self.progressor = None
         ################################
         if 0<frgms and CLOSE_AFTER_GOOD:
@@ -1813,7 +1953,15 @@ class FifD:
 
         self.lock_act(ag, 'unlock-saved')
         self.progressor = None
-        return self.do_focus(aid,ag)
+        if '1'==self.send_s:
+            return self.do_focus(aid,ag)
+        M.rslt_body     = self.rslt.get_text_all()
+        M.rslt_body_r   = -1
+        self.srcf._loaded_file  = None
+        self.srcf.set_prop(app.PROP_RO                  , False)
+        self.srcf.set_text_all(_('...waiting source...'))
+        self.srcf.set_prop(app.PROP_RO                  , True)
+        return d(fid='rslt')
        #def do_work
        
     def lock_act(self, ag, how, cids=None):
@@ -1841,75 +1989,170 @@ class FifD:
             ag.update(ctrls={cid:{'en': True } for cid in self.locked_cids})
        #def lock_act
        
+    def wnen_menu(self, ag, tag):
+        pass;              #log('tag={}',(tag))
+        if False:pass
+        elif tag=='help':       return self.do_help('help', ag)
+        elif tag=='!fnd-main':  return self.do_work('!fnd', ag, btn_m=   '!fnd')
+        elif tag=='!fnd-ntab':  return self.do_work('!fnd', ag, btn_m= 's/!fnd')
+        elif tag=='!fnd-apnd':  return self.do_work('!fnd', ag, btn_m= 'c/!fnd')
+        elif tag=='!cnt-main':  return self.do_work('!cnt', ag, btn_m=   '!cnt')
+        elif tag=='!cnt-name':  return self.do_work('!cnt', ag, btn_m= 's/!cnt')
+        elif tag=='!rep-main':  return self.do_work('!rep', ag, btn_m=   '!rep')
+        elif tag=='!rep-noqu':  return self.do_work('!rep', ag, btn_m= 's/!rep')
+        elif tag=='cfld-main':  return self.do_fold('cfld', ag, btn_m=   'cfld')
+        elif tag=='cfld-file':  return self.do_fold('cfld', ag, btn_m= 's/cfld')
+        elif tag=='cfld-tabs':  return self.do_fold('cfld', ag, btn_m= 'c/cfld')
+        elif tag=='cfld-ctab':  return self.do_fold('cfld', ag, btn_m='sc/cfld')
+        elif tag=='brow-main':  return self.do_fold('brow', ag, btn_m=   'brow')
+        elif tag=='brow-file':  return self.do_fold('brow', ag, btn_m= 's/brow')
+        elif tag=='dept-all':   return self.do_dept('depa', ag)
+        elif tag=='dept-only':  return self.do_dept('depo', ag)
+        elif tag=='dept-one':   return self.do_dept('dep1', ag)
+        elif tag=='pres-nat':   return self.do_pres('pres', ag, btn_m=   'pres')
+        elif tag=='pres-hist':  return self.do_pres('pres', ag, btn_m= 's/pres')
+        elif tag=='pres-last':  return self.do_pres('pres', ag, btn_m= 'c/pres')
+        elif tag=='pres-1':     return self.do_pres('prs1', ag)
+        elif tag=='pres-2':     return self.do_pres('prs2', ag)
+        elif tag=='pres-3':     return self.do_pres('prs3', ag)
+        elif tag=='pres-cfg':   return self.do_pres('conf', ag)
+        elif tag=='pres-save':  return self.do_pres('save', ag)
+#       elif tag=='cust-main':  return self.do_more('more', ag)
+        elif tag=='cust-rprt':  return self.do_morp('morp', ag)
+        elif tag=='cust-srch':  return self.do_mofi('mofi', ag)
+        elif tag=='cust-enco':  
+            encsNAC = ENCODINGS
+            encsN   = [nm for nm,al,cm in encsNAC]
+            enc_ind = encsN.index(self.enc_srcf) if self.enc_srcf in encsN else len(encsN)
+            enc_ind = app.dlg_menu(app.MENU_LIST
+                    ,   '\n'.join([f('{}\t{}', nm+(f(' ({}) ', al) if al!='' else ''),  cm)  
+                                    for nm,al,cm in encsNAC] + ['<No>'])
+                    ,   focused=enc_ind
+                    ,   caption=_('Encodings'))
+            if enc_ind is None: return []
+            if enc_ind == len(encsN):
+                self.enc_srcf = ''
+            else:
+                self.enc_srcf = encsN[enc_ind]
+            self.stores['enc_srcf'] = self.enc_srcf
+            return self.do_rslt_click(self, 'rslt', ag)
+
+        elif tag=='pres-tabs':  self.fold_s     = IN_OPEN_FILES
+        elif tag=='pres-proj':  self.fold_s     = IN_PROJ_FOLDS
+            
+        elif tag=='cust-excl':  self.wo_excl    = not self.wo_excl
+        elif tag=='cust-repl':  self.wo_repl    = not self.wo_repl
+            
+        elif tag=='edit-opts':  dlg_fif_opts()
+        elif tag=='edit-dcls':
+            self.store(what='save')
+            dlg_nav_by_dclick()
+            self.store(what='load')
+
+        elif tag=='rsva':
+            self.rslt_va= not self.rslt_va
+            self.stores['rslt_al']  = self.rslt_va
+            rslt_ali= ALI_TP if self.rslt_va else ALI_LF
+            return [d(ctrls=[0
+                            ,('rslt',d(ali=rslt_ali   ,w=self.rslt_w   ,h=self.rslt_h     ))
+                            ,('sptr',d(ali=rslt_ali   ,x=self.rslt_w+5 ,y=self.rslt_h+5   ))
+                           ][1:])
+                   ,self.do_resize(self.ag)
+                   ]
+        elif tag[:4] in ('rslt', 'rmlt', 'svlt'):
+            lays_l      = self.stores.get('layouts', [])  # [{nm:Nm, dlg_x:?, dlg_y:?, dlg_h:?, dlg_w:?, split:?}]
+            lays_d      = {lt['nm']:lt for lt in lays_l}
+            lt_i        = int(tag[4:])  if tag[:4] in ('rslt', 'rmlt')  else -1
+            layout      = lays_l[lt_i]  if lt_i>=0                      else None
+            if 0:pass
+            elif tag[:4]=='rmlt':
+                if  app.ID_OK != app.msg_box(
+                            f(_('Remove "{}"?'), layout['nm'])
+                            , app.MB_OKCANCEL+app.MB_ICONQUESTION): return []
+                del lays_l[lt_i]
+            elif tag=='svlt':
+                nm_tmpl     = _('#{}')
+                lt_nm       = f(nm_tmpl
+                               ,first_true(itertools.count(1+len(lays_d))
+                                        ,pred=lambda n:f(nm_tmpl, n) not in lays_d))     # First free #N after len()
+                while True:
+                    pass;  #LOG and log('lt_nm={!r}',(lt_nm))
+                    lt_nm   = app.dlg_input('Name to save dialog and controls positions', lt_nm)
+                    if not lt_nm:   return []
+                    lt_nm   = lt_nm.strip()
+                    if not lt_nm:   return []
+                    if lt_nm in lays_d and \
+                        app.ID_OK != app.msg_box(
+                                f(_('Name "{}" already used. Overwrite?'), lt_nm)
+                                , app.MB_OKCANCEL+app.MB_ICONQUESTION): continue
+                    break
+                layout      = None
+                if lt_nm in lays_d:
+                    layout  = lays_d[lt_nm]     # Overwrite
+                else:
+                    layout  = d(nm=lt_nm)       # Create
+                    lays_l+=[layout]
+                # Fill
+                f_xywh      = ag.fattrs(attrs=('x', 'y', 'w', 'h'))
+                layout.update(d(dlg_x=f_xywh['x']
+                               ,dlg_y=f_xywh['y']
+                               ,dlg_w=f_xywh['w']
+                               ,dlg_h=f_xywh['h']
+                               ,over =self.rslt_va
+                               ,split=ag.cattr('rslt', 'h' if self.rslt_va else 'w')
+                             ))
+            elif tag[:4]=='rslt':
+                self.rslt_va= layout.get('over', False)
+                self.stores['rslt_al']  = self.rslt_va
+                rslt_ali= ALI_TP    if self.rslt_va else ALI_LF
+                ctrls   = [0
+                        ,('rslt',d(ali=rslt_ali   ,h=self.rslt_h    ))
+                        ,('sptr',d(ali=rslt_ali   ,y=self.rslt_h+5  ))
+                       ][1:]        if self.rslt_va else [0
+                        ,('rslt',d(ali=rslt_ali   ,w=self.rslt_w    ))
+                        ,('sptr',d(ali=rslt_ali   ,x=self.rslt_w+5  ))
+                       ][1:]
+                return [d(form=d(x=layout['dlg_x']
+                                ,y=layout['dlg_y']
+                                ,w=layout['dlg_w']
+                                ,h=layout['dlg_h']))
+                       ,d(ctrls=ctrls)
+                       ,self.do_resize(self.ag)
+                       ]
+            # Save
+            self.stores['layouts']  = lays_l
+            self.store()
+            return []
+        else:   return []
+        self.upd_def_status(True)
+        self.pre_cnts()
+        return (dict(form =dict(#cap  =self.get_fif_cap()
+                                 h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
+                                )
+                    ,vals =self.get_fif_vals()
+                    ,ctrls=self.get_fif_cnts('vis+pos'))
+               ,self.do_focus('what',ag)
+               )
+       #def wnen_menu
+        
     def do_menu(self, aid, ag, data=''):
-        msg_status(DEF_STATUS_MSG)
+        msg_status(self.status_s) #DEF_STATUS_MSG)
         pass;                  #log('',())
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_m=='c/menu':     # [Ctrl+"="] - dlg_valign_consts
             dlg_valign_consts()
             return []
  
-        def wnen_menu(ag, tag):
-            pass;              #log('tag={}',(tag))
-            if False:pass
-            elif tag=='!fnd-main':  return self.do_work('!fnd', ag, btn_m=   '!fnd')
-            elif tag=='!fnd-ntab':  return self.do_work('!fnd', ag, btn_m= 's/!fnd')
-            elif tag=='!fnd-apnd':  return self.do_work('!fnd', ag, btn_m= 'c/!fnd')
-            elif tag=='!cnt-main':  return self.do_work('!cnt', ag, btn_m=   '!cnt')
-            elif tag=='!cnt-name':  return self.do_work('!cnt', ag, btn_m= 's/!cnt')
-            elif tag=='!rep-main':  return self.do_work('!rep', ag, btn_m=   '!rep')
-            elif tag=='!rep-noqu':  return self.do_work('!rep', ag, btn_m= 's/!rep')
-            elif tag=='cfld-main':  return self.do_fold('cfld', ag, btn_m=   'cfld')
-            elif tag=='cfld-file':  return self.do_fold('cfld', ag, btn_m= 's/cfld')
-            elif tag=='cfld-tabs':  return self.do_fold('cfld', ag, btn_m= 'c/cfld')
-            elif tag=='cfld-ctab':  return self.do_fold('cfld', ag, btn_m='sc/cfld')
-            elif tag=='brow-main':  return self.do_fold('brow', ag, btn_m=   'brow')
-            elif tag=='brow-file':  return self.do_fold('brow', ag, btn_m= 's/brow')
-            elif tag=='dept-all':   return self.do_dept('depa', ag)
-            elif tag=='dept-only':  return self.do_dept('depo', ag)
-            elif tag=='dept-one':   return self.do_dept('dep1', ag)
-            elif tag=='pres-nat':   return self.do_pres('pres', ag, btn_m=   'pres')
-            elif tag=='pres-hist':  return self.do_pres('pres', ag, btn_m= 's/pres')
-            elif tag=='pres-last':  return self.do_pres('pres', ag, btn_m= 'c/pres')
-            elif tag=='pres-1':     return self.do_pres('prs1', ag)
-            elif tag=='pres-2':     return self.do_pres('prs2', ag)
-            elif tag=='pres-3':     return self.do_pres('prs3', ag)
-#           elif tag=='pres-cfg':   return self.do_pres('????', ag)
-#           elif tag=='pres-save':  return self.do_pres('????', ag)
-            elif tag=='cust-main':  return self.do_more('more', ag)
-
-            elif tag=='pres-tabs':  self.fold_s     = IN_OPEN_FILES
-            elif tag=='pres-proj':  self.fold_s     = IN_PROJ_FOLDS
-            
-            elif tag=='cust-excl':  self.wo_excl    = not self.wo_excl
-            elif tag=='cust-repl':  self.wo_repl    = not self.wo_repl
-            
-            elif tag=='edit-opts':  dlg_fif_opts()
-            elif tag=='edit-dcls':
-                self.store(what='save')
-                dlg_nav_by_dclick()
-                self.store(what='load')
-            else:   return []
-            self.pre_cnts()
-            return (dict(form =dict( cap  =self.get_fif_cap()
-                                    ,h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
-                                    )
-                        ,vals =self.get_fif_vals()
-                        ,ctrls=self.get_fif_cnts('vis+pos'))
-                   ,self.do_focus(aid,ag)
-                   )
-           #def wnen_menu
-        
         find_c  = self.caps['!fnd']
-        coun_c  = self.caps['!cnt']
+#       coun_c  = 'Count' #self.caps['!cnt']
         repl_c  = self.caps['!rep']
         cfld_c  = self.caps['cfld']
         brow_c  = self.caps['brow'].replace('.', '').replace('…', '')
-        pres_c  = self.caps['pres'].replace('.', '').replace('…', '')
+        pres_c  = _('Presets…') #self.caps['pres'].replace('.', '').replace('…', '')
         fold_c  = self.caps['fold']
         mn_coun = [
     d(tag='!cnt-main'   ,key='Alt+T'        ,cap=  _('Count matches only'))
-   ,d(tag='!cnt-name'   ,key='Ctrl+T'       ,cap=f(_('Find file names only   [Shift+"{}"]')                     , coun_c))
+   ,d(tag='!cnt-name'   ,key='Ctrl+T'       ,cap=  _('Find file names only'))
                     ]
         mn_repl = [
     d(tag='!rep-main'   ,key='Alt+P'        ,cap=  _('Find and replace')                                                    ,en=not self.wo_repl)
@@ -1929,20 +2172,25 @@ class FifD:
    ,d(                                       cap='-')
    ,d(tag='cfld-tabs'                       ,cap=f(_('Prepare search in all tabs   [Ctrl+"{}"]')                , cfld_c))
    ,d(tag='cfld-ctab'                       ,cap=f(_('Prepare search in the current tab   [Shift+Ctrl+"{}"]')   , cfld_c))
+   ,d(                                       cap='-')
+   ,d(tag='pres-tabs'                       ,cap=f(_('Fill "{}" to find in tabs')                               , fold_c))
+   ,d(tag='pres-proj'                       ,cap=f(_('Fill "{}" to find in project folders')                    , fold_c))
                     ]
         mn_brow = [
     d(tag='brow-main'   ,key='Alt+B'        ,cap=  _('Choose folder…'))
    ,d(tag='brow-file'   ,key='Ctrl+B'       ,cap=f(_('Choose file to find in it…   [Shift+"{}"]')               , brow_c))
                     ]
         mn_dept = [
-    d(tag='dept-only'   ,key='Alt+Y'        ,cap=_('Apply "In folder only"'))
-   ,d(tag='dept-one'    ,key='Alt+Shift+1'  ,cap=_('Apply "1 level"'))
-   ,d(tag='dept-all'    ,key='Alt+L'        ,cap=_('Apply "All"'))
+    d(tag='dept-only'   ,key='Alt+Y'        ,cap=_('Apply "Only"'))
+   ,d(tag='dept-one'    ,key='Alt+Shift+1'  ,cap=_('Apply "+1 level"'))
+   ,d(tag='dept-all'    ,key='Alt+L'        ,cap=_('Apply "+All"'))
                     ]
         mn_cust = [
-    d(tag='cust-main'   ,key='Alt+E'        ,cap=_('Show advanc&ed options')                                ,ch=not self.wo_adva)
+    d(tag='cust-rprt'   ,key='Alt+O'        ,cap=_('Show options for rep&ort…')                                          )
+   ,d(tag='cust-srch'   ,key='Alt+E'        ,cap=_('Show options for s&earch…')                                          )
    ,d(tag='edit-opts'   ,key='Ctrl+E'       ,cap=_('&View and edit engine options…'))
    ,d(tag='edit-dcls'                       ,cap=_('&Configure navigation with double-click in report…'))
+   ,d(tag='cust-enco'                       ,cap=f(_('Default encod&ing for source{}…'), f(' ({})', self.enc_srcf) if self.enc_srcf else '')  ,en='0'==self.send_s)
    ,d(                                       cap='-')
    ,d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl']))
    ,d(tag='cust-repl'   ,ch=not self.wo_repl,cap=f(_('Show "{}" and "{}"')  , self.caps['repl']                 , repl_c))
@@ -1950,56 +2198,65 @@ class FifD:
         pset_l  = self.stores.get('pset', [])
         pset_n  = len(pset_l)
         mn_pres = [
-    d(tag='pres-nat' ,key='Alt+S'       ,en=pset_n>0   ,cap=f(_('Show presets list [{}]')                                            , pset_n))
-   ,d(tag='pres-hist'                   ,en=pset_n>0   ,cap=f(_('Show presets list [{}] in applying history order   [Shift+"{}"]')   , pset_n, pres_c))
+    d(tag='pres-save',key='Ctrl+S'                     ,cap=  _('Save as preset…'))
+   ,d(tag='pres-cfg'                    ,en=pset_n>0   ,cap=  _('Configure presets…'))
    ,d(                                                  cap='-')
-#  ,d(tag='pres-cfg'                    ,en=pset_n>0   ,cap=_('Configure presets…'))
-#  ,d(tag='pres-save'                                  ,cap=_('Save as preset…'))
-#  ,d(                                                  cap='-')
-   ,d(tag='pres-tabs'                                  ,cap=f(_('Fill "{}" to find in tabs')                    , fold_c))
-   ,d(tag='pres-proj'                                  ,cap=f(_('Fill "{}" to find in project folders')         , fold_c))
+   ,d(tag='pres-1'   ,key='Ctrl+1'      ,en=pset_n>0   ,cap= ('&1: '+f('Apply [{}]',pset_l[0]['name'][:40]) if pset_n>0 else ''))
+   ,d(tag='pres-2'   ,key='Ctrl+2'      ,en=pset_n>1   ,cap= ('&2: '+f('Apply [{}]',pset_l[1]['name'][:40]) if pset_n>1 else ''))
+   ,d(tag='pres-3'   ,key='Ctrl+3'      ,en=pset_n>2   ,cap= ('&3: '+f('Apply [{}]',pset_l[2]['name'][:40]) if pset_n>2 else ''))
    ,d(                                                  cap='-')
-   ,d(tag='pres-last'                   ,en=pset_n>0   ,cap=f(_('Apply last used preset   [Ctrl+"{}"]')         , pres_c))
-   ,d(tag='pres-1'   ,key='Ctrl+1'      ,en=pset_n>0   ,cap=  _('Apply 1st preset')+ (f(': "{}"',pset_l[0]['name'][:20]) if pset_n>0 else ''))
-   ,d(tag='pres-2'   ,key='Ctrl+2'      ,en=pset_n>1   ,cap=  _('Apply 2nd preset')+ (f(': "{}"',pset_l[1]['name'][:20]) if pset_n>1 else ''))
-   ,d(tag='pres-3'   ,key='Ctrl+3'      ,en=pset_n>2   ,cap=  _('Apply 3rd preset')+ (f(': "{}"',pset_l[2]['name'][:20]) if pset_n>2 else ''))
+   ,d(tag='pres-nat'                    ,en=pset_n>0   ,cap=f(_('Show presets list [{}]…'), pset_n))
                     ]
 
         mn_its  = None
         if False:pass
         elif aid=='menu':
             pass;              #log('?menu',())
-            mn_its  = [ d(cap='&Find'       ,sub=mn_find)
-                      , d(cap='&Scope'      ,sub=mn_cfld)
-                      , d(cap='&Browse'     ,sub=mn_brow)
-                      , d(cap='&Depth'      ,sub=mn_dept)
-                      , d(cap='&Presets'    ,sub=mn_pres)
-                      , d(cap='-')
-                    ] + mn_cust
+            lays_l  = self.stores.get('layouts', [])  # [{nm:Nm, dlg_x:?, dlg_y:?, dlg_h:?, dlg_w:?, split:?}]
+            mn_lays =      [
+    d(tag='rsva'              ,cap=_('Layout Results o&ver Source'), ch=self.rslt_va
+  ),d(tag='svlt'              ,cap=_('&Save dialog and controls positions...')
+                          )]
+            if lays_l: 
+                mn_lays += [d( cap='-')]
+                mn_lays += [
+    d(tag='rslt'+str(nlt)     ,cap=f(_('&{}: Restore "{}"') ,1+nlt, lt['nm'])) for nlt, lt in enumerate(lays_l)
+                           ]
+                mn_lays += [d( cap=_('&Forget'),sub=[
+    d(tag='rmlt'+str(nlt)     ,cap=f(_('&{}: "{}"...')      ,1+nlt, lt['nm'])) for nlt, lt in enumerate(lays_l)
+                                                              ]
+                          )]
+            mn_its  = [ 
+      d(                             cap=_('&Find')      ,sub=mn_find
+    ),d(                             cap=_('&Scope')     ,sub=mn_cfld
+    ),d(                             cap=_('&Browse')    ,sub=mn_brow
+    ),d(                             cap=_('&Depth')     ,sub=mn_dept
+    ),d(                             cap=_('&Presets')   ,sub=mn_pres
+    ),d(                             cap=_('&Layout')    ,sub=mn_lays   ,en=('0'==self.send_s)
+    ),d(                             cap='-'
+    )                                                     ] + mn_cust + [
+      d(                             cap='-'
+    ),d(tag='help'    ,key='Alt+H'  ,cap=_('&Help...')
+                   )]
         elif aid=='!fnd':
             mn_its  = mn_find
         elif aid=='!rep':
             mn_its  = mn_repl
-        elif aid=='!cnt':
-            mn_its  = mn_coun
+#       elif aid=='!cnt':
+#           mn_its  = mn_coun
         elif aid=='cfld':
             mn_its  = mn_cfld
         elif aid=='brow':
             mn_its  = mn_brow
         elif aid=='dept':
             mn_its  = mn_dept
-        elif aid=='more':
-            mn_its  = mn_cust
-        elif aid=='pres':
-            mn_its  = mn_pres
+#       elif aid=='more':
+#           mn_its  = mn_cust
+#       elif aid=='pres':
+#           mn_its  = mn_pres
 
         if mn_its:
-            def add_cmd(its):
-                for it in its:
-                    if 'sub' in it: add_cmd(it['sub'])
-                    else:                   it['cmd']=wnen_menu
-            add_cmd(mn_its)
-#           mn_its  = [upd_dict(it, d(cmd=wnen_menu)) for it in mn_its]
+            set_all_for_tree(mn_its, 'sub', 'cmd', self.wnen_menu)
             ag.show_menu(aid, mn_its)
         return []
        #def do_menu
@@ -2008,68 +2265,44 @@ class FifD:
         M,m     = FifD,self
         pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
         pass;                  #LOG and log('gap1={}',(gap1))
+        g1      = m.gap1
+        g2      = m.gap2
         w_excl  = not self.wo_excl
         w_repl  = not self.wo_repl
-        w_adva  = not self.wo_adva
+#       w_rslt  = True
         w_rslt  = '0'==self.send_s
-        ad01    = 0             if self.wo_adva else 1
-        ad1_1   = -1            if self.wo_adva else 1
-        c_more  = _('Mor&e >>') if self.wo_adva else _('L&ess <<')
-        w_more  = 39*2+7
-#       w_more  = 39*3          if self.wo_adva else 39*2+7
+        dept_l  = M.CMB_L+M.TXT_W-100
         pass;                  #log('mask_h={}',(mask_h))
         d       = dict
-        if how=='vis+pos':  return [
- ('pres',d(          tid='incl'         ,w=39*3*ad01            ))
-                                                                                                                   
-,('rep_',d(          tid='repl'                     ,vis=w_repl ))
-,('repl',d(          t  =5+    28+M.EG1             ,vis=w_repl ))
-,('inc_',d(          tid='incl'                                 ))
-,('incl',d(          t=m.gap1+ 56+M.EG2                         ))
-,('exc_',d(          tid='excl'                     ,vis=w_excl )) 
-,('excl',d(          t=m.gap1+ 84+M.EG3             ,vis=w_excl )) 
-,('fol_',d(          tid='fold'                                 ))
-,('fold',d(          t=m.gap2+112+M.EG4                         ))
-,('brow',d(          tid='fold'                                 ))
-,('dep_',d(          tid='dept'                                 ))
-,('dept',d(          t=m.gap2+140+M.EG5                         ))
-,('cfld',d(          tid='fold'                                 ))
-,('---=',d(          t=m.gap2+175+M.EG5                         ))
-,('more',d(          t=m.gap2+163+M.EG5 ,cap=c_more ,w=w_more   ))
-,('arp_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
-,('send',d(          tid='skip'                     ,vis=w_adva ))
-,('sen_',d(          tid='skip'                     ,vis=w_adva ))
+        if how=='vis+pos':  return [0
+,('rep_',d(          tid='repl'             ,vis=w_repl ))
+,('repl',d(          t  =5+  28+M.EG1       ,vis=w_repl ))
+,('inc_',d(          tid='incl'                         ))
+,('incl',d(          t  =g1+ 56+M.EG2                   ))
+,('exc_',d(          tid='excl'             ,vis=w_excl )) 
+,('excl',d(          t  =g1+ 84+M.EG3       ,vis=w_excl )) 
+,('fol_',d(          tid='fold'                         ))
+,('fold',d(          t  =g2+112+M.EG4                   ))
+,('dept',d(          t  =g2+112+M.EG4                   ))
+,('brow',d(          tid='fold'                         ))
+,('mofi',d(          tid='incl'                         ))
+,('send',d(          tid='fold'                         ))
+,('morp',d(          tid='fold'          ,en=not w_rslt ))
+,('pt'  ,d(                     h=m.dlg_h0              ))
+,('pb'  ,d(                                  vis=w_rslt ))
+,('rslt',d(                                  en =w_rslt ))
+,('sptr',d(                                  en =w_rslt ))
+,('srcf',d(                                  en =w_rslt ))
+,('!rep',d(          tid='repl'             ,vis=w_repl ))
+,('cfld',d(          tid='incl'                         ))
+  ][1:] 
 
-,('---r',d(          y=m.dlg_h0-3                   ,vis=w_adva and w_rslt      ))
-,('totb',d(          tid='skip'                     ,vis=w_adva ,en=not w_rslt  ))
-,('join',d(          tid='sort'                     ,vis=w_adva ,en=not w_rslt  ))
-,('sht_',d(          tid='frst'                     ,vis=w_adva ,en=not w_rslt  ))
-,('shtp',d(          tid='frst'                     ,vis=w_adva ,en=not w_rslt  ))
-,('algn',d(          tid='enco'                     ,vis=w_adva ,en=not w_rslt  ))
-,('cntx',d(          tid='enco'                     ,vis=w_adva ,en=not w_rslt  ))
-,('pb'  ,d(                                          vis=w_rslt ))
-,('pt'  ,d(                             h=m.dlg_h0  ,_vis=w_rslt ))
-                                                    
-,('ase_',d(          t=m.gap2+190+M.EG5             ,vis=w_adva ))
-,('ski_',d(          tid='skip'                     ,vis=w_adva ))
-,('skip',d(          t=m.gap2+210+M.EG6             ,vis=w_adva ))
-,('sor_',d(          tid='sort'                     ,vis=w_adva ))
-,('sort',d(          t=m.gap2+237+M.EG7             ,vis=w_adva ))
-,('frs_',d(          tid='frst'                     ,vis=w_adva ))
-,('frst',d(          t=m.gap2+264+M.EG8             ,vis=w_adva ))
-,('enc_',d(          tid='enco'                     ,vis=w_adva ))
-,('enco',d(          t=m.gap2+291+M.EG9             ,vis=w_adva ))
-                                                    
-,('!rep',d(          tid='repl'                     ,vis=w_repl ))
-,('!cnt',d(          tid='incl'                     ,vis=w_adva ))
-,('menu',d(          t=m.gap2+163+M.EG5         ,w=(39 -7)      ))
-,('help',d(          tid='dept'                                 ))
-  ] 
     # Start=Full cnts
         nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
         nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))
         cntx_cs = f(cntx_c, nBf, nAf)
-        cnts    = [0                                                      #  gjmqz ?&m
+        rslt_ali= ALI_TP if m.rslt_va else ALI_LF
+        cnts    = [0                                                      #  ghjmqsz ?&m
 ,('depa',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
 ,('depo',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
 ,('dep1',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
@@ -2078,67 +2311,57 @@ class FifD:
 ,('prs3',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&3')    ,call=m.do_pres ))# &3
 ,('!ctt',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
 ,('loop',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
+,('help',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&h')    ,call=m.do_help ))# &h
 
 ,('pt'  ,d(tp='pn'          ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
 
-,('pres',d(tp='bt'  ,p='pt' ,tid='incl'         ,l=5            ,w=39*3*ad01        ,cap=_('Pre&sets…')             ,hint=pset_h                            ,call=m.do_pres ,menu=m.do_menu ))# &s
-,('reex',d(tp='ch-b',p='pt' ,tid='what'         ,l=5+38*0       ,w=39               ,cap='.&*'                      ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
-,('case',d(tp='ch-b',p='pt' ,tid='what'         ,l=5+38*1       ,w=39               ,cap='&aA'                      ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
-,('word',d(tp='ch-b',p='pt' ,tid='what'         ,l=5+38*2       ,w=39               ,cap='"&w"'                     ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
+,('reex',d(tp='ch-b',p='pt' ,tid='what'     ,l= 5+38*0      ,w=39               ,cap='.&*'                  ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
+,('case',d(tp='ch-b',p='pt' ,tid='what'     ,l= 5+38*1      ,w=39               ,cap='&aA'                  ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
+,('word',d(tp='ch-b',p='pt' ,tid='what'     ,l= 5+38*2      ,w=39               ,cap='"&w"'                 ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
                                                                                                                                                                                     
-,('wha_',d(tp='lb'  ,p='pt' ,tid='what'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                              ))# &f
-,('what',d(tp='cb'  ,p='pt' ,t  =5              ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                         ,bind='what_s'                                  ))# 
-,('rep_',d(tp='lb'  ,p='pt' ,tid='repl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')                ,vis=w_repl                                                 ))# &r
-,('repl',d(tp='cb'  ,p='pt' ,t  =5+    28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                             ,vis=w_repl ,bind='repl_s'                                  ))# 
-,('inc_',d(tp='lb'  ,p='pt' ,tid='incl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')       ,hint=mask_h                                                            ))# &i
-,('incl',d(tp='cb'  ,p='pt' ,t=m.gap1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                         ,bind='incl_s'                                  ))# 
-,('exc_',d(tp='lb'  ,p='pt' ,tid='excl'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:')     ,hint=mask_h,vis=w_excl                                                 ))# 
-,('excl',d(tp='cb'  ,p='pt' ,t=m.gap1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                             ,vis=w_excl ,bind='excl_s'                                  ))# 
-,('fol_',d(tp='lb'  ,p='pt' ,tid='fold'         ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')      ,hint=fold_h                                                            ))# &n
-,('fold',d(tp='cb'  ,p='pt' ,t=m.gap2+112+M.EG4 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.fold_l                                         ,bind='fold_s'                                  ))# 
-,('brow',d(tp='bt'  ,p='pt' ,tid='fold'         ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')              ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
-,('dep_',d(tp='lb'  ,p='pt' ,tid='dept'         ,l=M.LBL_L      ,w=100  -5          ,cap='>'+_('In s&ubfolders:')   ,hint=dept_h                                                            ))# &u
-,('dept',d(tp='cb-r',p='pt' ,t=m.gap2+140+M.EG5 ,l=M.CMB_L      ,w=135              ,items=DEPT_L                                           ,bind='dept_n'                  ,menu=m.do_menu ))# 
-,('cfld',d(tp='bt'  ,p='pt' ,tid='fold'         ,l=5            ,w=39*3             ,cap=_('&Current folder')       ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
+,('wha_',d(tp='lb'  ,p='pt' ,tid='what'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                          ))# &f
+,('what',d(tp='cb'  ,p='pt' ,t= 5           ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                     ,bind='what_s'                                  ))# 
+,('rep_',d(tp='lb'  ,p='pt' ,tid='repl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')            ,vis=w_repl                                                 ))# &r
+,('repl',d(tp='cb'  ,p='pt' ,t= 5+ 28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                         ,vis=w_repl ,bind='repl_s'                                  ))# 
+,('inc_',d(tp='lb'  ,p='pt' ,tid='incl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')   ,hint=mask_h                                                            ))# &i
+,('incl',d(tp='cb'  ,p='pt' ,t=g1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                     ,bind='incl_s'                                  ))# 
+,('exc_',d(tp='lb'  ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:') ,hint=mask_h,vis=w_excl                                                 ))# 
+,('excl',d(tp='cb'  ,p='pt' ,t=g1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                         ,vis=w_excl ,bind='excl_s'                                  ))# 
+,('fol_',d(tp='lb'  ,p='pt' ,tid='fold'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')  ,hint=fold_h                                                            ))# &n
+,('fold',d(tp='cb'  ,p='pt' ,t=g2+112+M.EG4 ,l=M.CMB_L  ,w=M.TXT_W-102  ,a='lR' ,items=m.fold_l                                     ,bind='fold_s'                                  ))# 
+,('dept',d(tp='cb-r',p='pt' ,t=g2+112+M.EG4 ,l=dept_l       ,w=100      ,a='LR' ,items=DEPT_L               ,hint=dept_h            ,bind='dept_n'                  ,menu=m.do_menu ))# 
+,('brow',d(tp='bt'  ,p='pt' ,tid='fold'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')          ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
+,('cfld',d(tp='bt'  ,p='pt' ,tid='incl'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Current')          ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
                                                                                                                                                                                     
-,('---=',d(tp='clr' ,p='pt' ,t=m.gap2+175+M.EG5 ,l=0            ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))                                                            ))#
-,('menu',d(tp='bt'  ,p='pt' ,t=m.gap2+163+M.EG5 ,l=5            ,w=(39 -7)          ,cap=_('&=')                    ,hint=menu_h,sto=w_adva                 ,call=m.do_menu                 ))# &=
-,('more',d(tp='bt'  ,p='pt' ,t=m.gap2+163+M.EG5 ,l=5+39 -7      ,w=w_more           ,cap=c_more                     ,hint=more_h                            ,call=m.do_more ,menu=m.do_menu ))# &e
+,('mofi',d(tp='bt'  ,p='pt' ,tid='incl'     ,l= 5           ,w=39*3             ,cap=_('For s&earch…')      ,hint=mofi_h                            ,call=m.do_mofi                 ))# &e
+,('send',d(tp='ch'  ,p='pt' ,tid='fold'     ,l= 5           ,w=39*1             ,cap=_('Sen&d')             ,hint=send_h                            ,call=m.do_morp                 ))# &d
+,('morp',d(tp='bt'  ,p='pt' ,tid='fold'     ,l= 5+39*2-10   ,w=39*1+10          ,cap=_('t&o…')              ,hint=morp_h,en=not w_rslt              ,call=m.do_morp                 ))# &o
                                                                                                                                                                                     
-,('arp_',d(tp='lb'  ,p='pt' ,t=m.gap2+190+M.EG5 ,l=39*3+20      ,w=150-10           ,cap=_('Adv. report options')               ,vis=w_adva                                                 ))# 
-,('send',d(tp='ch'  ,p='pt' ,tid='skip'         ,l=35           ,w=39*2             ,cap=_('Send')                              ,vis=w_adva                 ,call=m.do_send                 ))# &:
-,('sen_',d(tp='lb'  ,p='pt' ,tid='skip'         ,l=5+39*2       ,w=39*1             ,cap='>'+_('to&:')                          ,vis=w_adva                                                 ))# &:
-,('totb',d(tp='cb-r',p='pt' ,tid='skip'         ,l=39*3+10      ,w=150              ,items=m.totb_l                             ,vis=w_adva ,bind='totb_i'  ,call=m.do_totb ,en=not w_rslt  ))# 
-,('join',d(tp='ch'  ,p='pt' ,tid='sort'         ,l=39*3+10      ,w=150              ,cap=_('Appen&d results')                   ,vis=w_adva ,bind='join_s'                  ,en=not w_rslt  ))# &d
-,('sht_',d(tp='lb'  ,p='pt' ,tid='frst'         ,l=5            ,w=39*3             ,cap='>'+_('Tree type &/:')     ,hint=shtp_h,vis=w_adva                                 ,en=not w_rslt  ))# &/
-,('shtp',d(tp='cb-r',p='pt' ,tid='frst'         ,l=39*3+10      ,w=150              ,items=SHTP_L                               ,vis=w_adva ,bind='shtp_s'                  ,en=not w_rslt  ))# 
-,('algn',d(tp='ch'  ,p='pt' ,tid='enco'         ,l=39*3+10      ,w=80               ,cap=_('Align &|')              ,hint=algn_h,vis=w_adva ,bind='algn_s'                  ,en=not w_rslt  ))# &|
-,('cntx',d(tp='ch'  ,p='pt' ,tid='enco'         ,l=39*3+80      ,w=150              ,cap=cntx_cs                    ,hint=cntx_h,vis=w_adva ,bind='cntx_s'  ,call=m.do_cntx ,en=not w_rslt  ))# &x
+,('!fnd',d(tp='bt'  ,p='pt' ,tid='what'     ,l=M.TBN_L  ,w=M.BTN_W-30   ,a='LR' ,cap=_('Find'),def_bt=True  ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
+,('!rep',d(tp='bt'  ,p='pt' ,tid='repl'     ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')          ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
+,('menu',d(tp='bt'  ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-30,w=30  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
                                                                                                                                                                                     
-,('ase_',d(tp='lb'  ,p='pt' ,t=m.gap2+190+M.EG5 ,l=M.TL2_L+110  ,r=M.TBN_L-GAP      ,cap=_('Adv. search options')               ,vis=w_adva                                                 ))# 
-,('ski_',d(tp='lb'  ,p='pt' ,tid='skip'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&kip files:')                  ,vis=w_adva                                                 ))# &k
-,('skip',d(tp='cb-r',p='pt' ,t=m.gap2+210+M.EG6 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SKIP_L                               ,vis=w_adva ,bind='skip_s'                                  ))# 
-,('sor_',d(tp='lb'  ,p='pt' ,tid='sort'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('S&ort file list:')              ,vis=w_adva                                                 ))# &o
-,('sort',d(tp='cb-r',p='pt' ,t=m.gap2+237+M.EG7 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=SORT_L                               ,vis=w_adva ,bind='sort_s'                                  ))# 
-,('frs_',d(tp='lb'  ,p='pt' ,tid='frst'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Firsts (&0=all):')  ,hint=frst_h,vis=w_adva                                                 ))# &0
-,('frst',d(tp='ed'  ,p='pt' ,t=m.gap2+264+M.EG8 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP                                                  ,vis=w_adva ,bind='frst_s'                                  ))# 
-,('enc_',d(tp='lb'  ,p='pt' ,tid='enco'         ,l=M.TL2_L      ,w=100-5            ,cap='>'+_('Encodings &\\:')    ,hint=enco_h,vis=w_adva                                                 ))# \
-,('enco',d(tp='cb-r',p='pt' ,t=m.gap2+291+M.EG9 ,l=M.TL2_L+100  ,r=M.TBN_L-GAP      ,items=ENCO_L                               ,vis=w_adva ,bind='enco_s'                                  ))# 
-                                                                                                                                                                                    
-,('!fnd',d(tp='bt'  ,p='pt' ,tid='what'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Find'),def_bt=True      ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
-,('!rep',d(tp='bt'  ,p='pt' ,tid='repl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')              ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
-,('!cnt',d(tp='bt'  ,p='pt' ,tid='incl'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Coun&t')                ,hint=coun_h,vis=w_adva                 ,call=m.do_work ,menu=m.do_menu ))# &t
-,('help',d(tp='bt'  ,p='pt' ,tid='dept'         ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('&Help…')                            ,sto=w_adva                 ,call=m.do_help                 ))# &h
-                                                                                                                                                                                    
-,('---r',d(tp='clr' ,p='pt' ,y=m.dlg_h0-3       ,x=0        ,w=1000 ,h=1        ,props=f('0,{},0,0',rgb_to_int(185,185,185))    ,vis=w_adva and w_rslt                                      ))#
-
-,('pb'  ,d(tp='pn'          ,ali=ALI_CL         ,vis=w_rslt                                                 ))
-,('rslt',d(tp='edr' ,p='pb' ,ali=ALI_LF         ,vis=w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1' ,on_caret=m.do_click))
-,('sptr',d(tp='sp'  ,p='pb' ,ali=ALI_LF         ,vis=w_rslt     ,x=m.rslt_w+5                               ))
-,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL         ,vis=w_rslt                     ,w_min=M.RSLT_W ,border='1' ))
-                                                                                                                                                                                    
+,('pb'  ,d(tp='pn'          ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
+#               ][1:]+([0
+#,('rslt',d(tp='edr' ,p='pb' ,ali=ALI_TP     ,en =w_rslt     ,h=m.rslt_h     ,h_min=M.RSLT_H ,border='1' ,on_caret    =m.do_rslt_click   
+#                                                                                                       ,on_click_dbl=m.do_click_dbl))
+#,('sptr',d(tp='sp'  ,p='pb' ,ali=ALI_TP     ,en =w_rslt     ,y=m.rslt_h+5                                                           ))
+#,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,h_min=M.RSLT_H ,border='1' ,on_click_dbl=m.do_click_dbl))
+#               ][1:]) if m.rslt_va else ([0
+#,('rslt',d(tp='edr' ,p='pb' ,ali=ALI_LF     ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1' ,on_caret    =m.do_rslt_click   
+#                                                                                                       ,on_click_dbl=m.do_click_dbl))
+#,('sptr',d(tp='sp'  ,p='pb' ,ali=ALI_LF     ,en =w_rslt     ,x=m.rslt_w+5                                                           ))
+#,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.RSLT_W ,border='1' ,on_click_dbl=m.do_click_dbl))
+,('rslt',d(tp='edr' ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1' 
+                                                            ,h=m.rslt_h     ,h_min=M.RSLT_H             ,on_caret    =m.do_rslt_click   
+                                                                                                        ,on_click_dbl=m.do_click_dbl))
+,('sptr',d(tp='sp'  ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,x=m.rslt_w+5
+                                                            ,y=m.rslt_h+5                                                           ))
+,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1' 
+                                                                            ,h_min=M.SRCF_H             ,on_click_dbl=m.do_click_dbl))
+#               ][1:])+[0
+                                                                                                                                      
 ,('stbr',d(tp='sb'          ,ali=ALI_BT         ))  # 
-#,('stbr',d(tp='sb'                      ,l=0        ,r=M.DLG_W0     ,a='lR' ,ali=ALI_BT))  # 
                 ][1:]
         self.caps   = {cid:cnt['cap']             for cid,cnt           in cnts
                         if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
@@ -2156,28 +2379,43 @@ class FifD:
                              ,incl=self.incl_s
                              ,fold=self.fold_s
                              ,dept=self.dept_n
+                             ,send=self.send_s
                             )
         if not self.wo_excl:
             vals.update(dict( excl=self.excl_s))
         if not self.wo_repl:
             vals.update(dict( repl=self.repl_s))
-        if not self.wo_adva:
-            vals.update(dict( send=self.send_s
-                             ,join=self.join_s
-                             ,totb=self.totb_i
-                             ,shtp=self.shtp_s
-                             ,cntx=self.cntx_s
-                             ,algn=self.algn_s
-                             ,skip=self.skip_s
-                             ,sort=self.sort_s
-                             ,frst=self.frst_s
-                             ,enco=self.enco_s
-                            ))
         pass;                  #LOG and log('vals={}',pf(vals))
         return vals
        #def get_fif_vals
     
    #class FifD
+
+def toggle_folding(ed_):
+    """ Try to toggle folding for line of first caret
+    """
+    row     = ed_.get_carets()[0][1]
+    fold_l  = ed_.folding(app.FOLDING_GET_LIST)
+    pass;                      #log('row, fold_l={}',(row, fold_l))
+    if not fold_l:  return 
+
+    r_fold_l= [(fold_i,fold_d,row-fold_d[0]) 
+                for fold_i,fold_d in enumerate(fold_l) 
+                if fold_d[0] <= row <= fold_d[1] and
+                   fold_d[0] !=        fold_d[1]]         # [0]/[1] line of range start/end
+    pass;                      #log('r_fold_l={}',(r_fold_l))
+    if not r_fold_l:  return 
+
+    r_fold_l.sort(key=lambda ifd:ifd[2])
+    fold_i, \
+    fold_d  = r_fold_l[0][:2]
+    folded  = fold_d[4]
+    pass;                  #log('fold_i,folded,fold_d={}',(fold_i,folded,fold_d))
+    if not folded:
+        pass;              #log('set_caret row={}',(fold_d[0]))
+        ed_.set_caret(0, fold_d[0])
+    ed_.folding(app.FOLDING_UNFOLD if folded else app.FOLDING_FOLD, index=fold_i)
+   #def toggle_folding
 
 if __name__ == '__main__' :     # Tests
     Command().show_dlg()    #??
@@ -2310,9 +2548,20 @@ ToDo
 [+][kv-kv][22feb18] ? Remove Close, set Help under Browse, set Adjust on ----
 [+][kv-kv][12mar18] Rebuild help-pic
 [ ][kv-kv][12apr18] ? Call app_idle to enable ESC
-[ ][at-kv][18may18] ? As API-bag "Config presets" blocked checks. re-Try!
+[+][at-kv][18may18] ? As API-bag "Config presets" blocked checks. re-Try!
 [+][at-kv][18may18] Set tab_size to 2 in lexer if no such setting
 [+][kv-kv][21may18] Start and second pos of Less is diff
-[ ][kv-kv][24may18] Add statusbar
-[ ][kv-kv][04jun18] Ctrl+F calls native dialog Find. Ctrl+R calls native dialog Replace
+[+][kv-kv][24may18] Add statusbar
+[ ][kv-kv][04jun18] ? Ctrl+F calls native dialog Find. Ctrl+R calls native dialog Replace
+[+][kv-kv][08jun18] Store "in module var" prev Results (a-la in tab)
+[ ][kv-kv][08jun18] ? Ctrl+S to save a new preset
+[ ][kv-kv][09jun18] Skip to control excl and repl vals if fields are hidden (into do_work)
+[ ][kv-kv][21jun18] ? Src-ed: call open_file (not set_text_all(read))
+[ ][kv-kv][22jun18] Copy rslt to tab
+[+][kv-kv][22jun18] Add to history 'what' after start-work
+[+][kv-kv][22jun18] Command to point src encoding
+[ ][kv-kv][22jun18] ? How to 'jump to next' after Ctrl+Enter from rslt?
+[+][kv-kv][25jun18] Save/set line in rslt
+[+][at-kv][25jun18] Allow vert/horz layout for Rslt/Src
+[ ][kv-kv][25jun18] Opt to gap src sel row from top
 '''

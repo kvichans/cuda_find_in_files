@@ -858,6 +858,8 @@ class BaseDlgAgent:
         app.dlg_proc(self.id_dlg, app.DLG_HIDE)
        #def hide
     
+    def _before_free(self): pass
+    
     def show(self, callbk_on_exit=None):
         """ Show the form """
         ed_caller   = ed
@@ -868,6 +870,7 @@ class BaseDlgAgent:
         
         BaseDlgAgent._form_acts('save', id_dlg=self.id_dlg, key4store=self.opts.get('form data key'))
         if callbk_on_exit:  callbk_on_exit(self)
+        self._before_free()
         dlg_proc_wpr(self.id_dlg, app.DLG_FREE)
         
         ed_to_fcs   = ed_caller \
@@ -1211,19 +1214,20 @@ class BaseDlgAgent:
                         , app.DLG_PROP_SET
                         , prop=form)
 
-        for name, new_ctrl in ctrls.items():
-            pass;              #log('name, new_ctrl={}',(name, new_ctrl))
+        if ctrls:
+            for name, new_ctrl in ctrls.items():
+                pass;          #log('name, new_ctrl={}',(name, new_ctrl))
                 
-            cfg_ctrl= self.ctrls[name]
-            cfg_ctrl.update(new_ctrl)
-            new_ctrl['type']    = cfg_ctrl['type']
-            c_prop  =self._prepare_c_pr(name, new_ctrl, {'ctrls':ctrls})
-            pass;              #log('c_prop={}',(c_prop)) if new_ctrl['type']=='listview' else None
-            dlg_proc_wpr(   self.id_dlg
-                        , app.DLG_CTL_PROP_SET
-                        , name=name
-                        , prop=c_prop
-                        )
+                cfg_ctrl= self.ctrls[name]
+                cfg_ctrl.update(new_ctrl)
+                new_ctrl['type']    = cfg_ctrl['type']
+                c_prop  =self._prepare_c_pr(name, new_ctrl, {'ctrls':ctrls})
+                pass;          #log('c_prop={}',(c_prop)) if new_ctrl['type']=='listview' else None
+                dlg_proc_wpr(   self.id_dlg
+                            , app.DLG_CTL_PROP_SET
+                            , name=name
+                            , prop=c_prop
+                            )
         
         if focused in self.ctrls:
             self.form['focused']    = focused
@@ -1478,6 +1482,7 @@ class DlgAgent(BaseDlgAgent):
 #       self.id_dlg
 #       self.ctrls
 #       self.form
+        self._live  = True  # Return cval(self, cid, live=True) by get 'live' attr alse get from self.ctrls
         self._setup(ctrls, vals, form, focused or fid)
 
         rtf     = options.get('gen_repro_to_file', False)
@@ -1487,11 +1492,19 @@ class DlgAgent(BaseDlgAgent):
         
     def cval(self, cid, live=True, defv=None):
         """ Return the control val property """
-        return self.cattr(cid, 'val', live=live, defv=defv)
+        return      self.cattr(cid, 'val', live=live and self._live, defv=defv)
     def cvals(self, cids, live=True):
         """ Return the controls val property """
-        return {cid:self.cattr(cid, 'val', live=live) for cid in cids}
+        return {cid:self.cattr(cid, 'val', live=live and self._live) for cid in cids}
     
+    def _before_free(self):
+        # Update val in self.ctrls by live value
+        for cid,cfg_ctrl in self.ctrls.items():
+            if 'val' in cfg_ctrl:
+                cfg_ctrl['val'] = self.cattr(cid, 'val', live=True)
+        self._live = False
+       #def _before_free
+
     def _setup(self, ctrls, vals=None, form=None, fid=None):
         """ Arrange and fill all: controls static/dinamic attrs, form attrs, focus.
             Params
@@ -1695,9 +1708,15 @@ class DlgAgent(BaseDlgAgent):
        #def show_menu
 
     def _update_on_call(self, upds):
+        if upds is None:                                                # To hide/close
+            app.dlg_proc(self.id_dlg, app.DLG_HIDE)
+            return
         if isinstance(upds, tuple) or isinstance(upds, list) :          # Allow to use list of upd data
-            upds    = deep_upd(upds)
             pass;      #log('upds={}',(upds))
+#           upds    = deep_upd(upds)
+            for upd in upds:
+                self._update_on_call(upd)
+            return 
         ctrls_u = odict(upds.get('ctrls',  []))
         pass;          #log('ctrls_u={}',(ctrls_u))
         vals    = upds.get('vals',   {})
@@ -2309,6 +2328,14 @@ _   = get_translation(__file__) # I18N
 ######################################
 #NOTE: misc
 ######################################
+def set_all_for_tree(tree, sub_key, key, val):
+    for node in tree:
+        if sub_key in node:
+            set_all_for_tree(node[sub_key], sub_key, key, val)
+        else:
+            node[key]   = val
+   #def set_all_for_tree
+
 def upd_dict(d1, d2):
     rsp = d1.copy()
     rsp.update(d2)

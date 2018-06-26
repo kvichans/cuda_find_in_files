@@ -508,7 +508,7 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
         tab_id  = int(path.split('/')[0].split(':')[1])
         pass;                   NAVLOG and log('tab_id={}',(tab_id))
         op_ed   = apx.get_tab_by_id(tab_id)
-        if not op_ed:   return  app.msg_status(f(_("No tab for navigation"), ))
+        if not op_ed:   return  msg_status(f(_("No tab for navigation"), ))
     elif not os.path.isfile(path):
         pass;                   NAVLOG and log('not isfile',())
         return
@@ -553,7 +553,26 @@ def _open_and_nav(where:str, how_act:str, path:str, rw=-1, cl=-1, ln=-1):
     return True
    #def _open_and_nav
 
+def nav_as(path, ed_as):
+    op_ed   = None
+    if path.startswith('tab:'):
+        tab_id  = int(path.split('/')[0].split(':')[1])
+        pass;                   NAVLOG and log('tab_id={}',(tab_id))
+        op_ed   = apx.get_tab_by_id(tab_id)
+        if not op_ed:                   return  msg_status(_("No tab for navigation"))
+    else:
+        if not os.path.isfile(path):    return  msg_status(_("No file for navigation"))
+        op_ed   = ed_of_file_open(path)
+        if not op_ed:
+            app.file_open(path)
+            op_ed   = ed
+    op_ed.set_caret(*ed_as.get_carets()[0])
+   #def nav_as
+       
 def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
+    if cl!=-1:
+        op_ed.set_prop(app.PROP_COLUMN_LEFT, '0')
+
     if False:pass
     elif rw==-1:
         pass
@@ -568,7 +587,7 @@ def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
         op_ed.set_caret(        cl+ln,  rw,     cl, rw)
     if rw!=-1:
         top_row = max(0, rw - max(5, indent_vert))
-        op_ed.set_prop(app.PROP_LINE_TOP, str(top_row))
+        op_ed.set_prop(app.PROP_LINE_TOP, top_row)
    #def nav_to_frag
 
 reSP    = re.compile(  r'(?P<S>\t+)'        # Shift !
@@ -633,7 +652,7 @@ def _build_path(ted, path:str, row:int, shft:str)->str:
             continue#for t_row
         if len(t_sft) >  len(shft):
             pass;               NAVLOG and log('bad: t_sft>shft', ())
-            return app.msg_status(f(_("Line {} has bad data for navigation"), 1+t_row))
+            return msg_status(f(_("Line {} has bad data for navigation"), 1+t_row))
         path    = os.path.join(t_pth, path) if path else t_pth
         pass;                   NAVLOG and log('new path={}', (path))
         if os.path.isfile(path):
@@ -655,7 +674,7 @@ def get_data4nav(ted, row:int):
     if not full:
         pass;                   NAVLOG and log('return (path, rw, cl, ln)={}', ([None]*4))
         return  [None]*4
-#   if not full:            return  app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
+#   if not full:            return  msg_status(f(_("Line {} has no data for navigation"), 1+row))
     if os.path.isfile(path) or path.startswith('tab:'):
         pass;                   NAVLOG and log('return (path, rw, cl, ln)={}', (path, rw, cl, ln))
         return (path, rw, cl, ln)
@@ -671,11 +690,11 @@ def get_data4nav(ted, row:int):
 def jump_to(drct:str, what:str):
     global last_rpt_tid
     pass;                       NAVLOG and log('drct,what,last_rpt_tid={}',(drct,what,last_rpt_tid))
-    if not last_rpt_tid:return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
+    if not last_rpt_tid:return msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
     rpt_ed  = apx.get_tab_by_id(last_rpt_tid)
-    if not rpt_ed:      return app.msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
+    if not rpt_ed:      return msg_status(_('Undefined report to jump. Fill new report or navigate with old one.'))
     crts    = rpt_ed.get_carets()
-    if len(crts)>1:     return app.msg_status(_("Command doesn't work with multi-carets"))
+    if len(crts)>1:     return msg_status(_("Command doesn't work with multi-carets"))
 #   last_row= crts[0][1]
     all_rows= rpt_ed.get_line_count()
     
@@ -694,7 +713,7 @@ def jump_to(drct:str, what:str):
         cl, ln  = get_data4nav(rpt_ed, base_row)
         if not path \
         or not (os.path.isfile(path) or path.startswith('tab:')):
-            return app.msg_status(f(_('Line "{}":{} has no data for navigation'), rpt_ed.get_prop(app.PROP_TAB_TITLE, ''), 1+base_row))
+            return msg_status(f(_('Line "{}":{} has no data for navigation'), rpt_ed.get_prop(app.PROP_TAB_TITLE, ''), 1+base_row))
         base_path   = path
         base_rw     = rw
     pass;                       NAVLOG and log('base_path,base_rw={}',(base_path,base_rw))
@@ -712,7 +731,7 @@ def jump_to(drct:str, what:str):
             if not rpt_act:
                 tid = ed.get_prop(app.PROP_TAB_ID)
                 rpt_ed.focus()
-            rpt_ed.set_prop(     app.PROP_LINE_TOP, str(max(0, _row - max(5, apx.get_opt('find_indent_vert', -5)))))
+            rpt_ed.set_prop(     app.PROP_LINE_TOP, max(0, _row - max(5, apx.get_opt('find_indent_vert', -5))))
             if not rpt_act:
                 apx.get_tab_by_id(tid).focus()
        #def set_rpt_active_row
@@ -720,10 +739,10 @@ def jump_to(drct:str, what:str):
     row     = base_row
     while True:
         row    += 1 if drct=='next' else -1
-        if not 0<=row<all_rows:                 return app.msg_status(_('No data to jump'))
+        if not 0<=row<all_rows:                 return msg_status(_('No data to jump'))
         line    = rpt_ed.get_text_line(row)
         if not line.lstrip(c9).startswith('<') \
-        or line.startswith(RPT_FIND_SIGN):      return app.msg_status(_('No data to jump'))
+        or line.startswith(RPT_FIND_SIGN):      return msg_status(_('No data to jump'))
         
         path,rw,\
         cl, ln  = get_data4nav(rpt_ed, row)
@@ -755,7 +774,7 @@ def jump_to(drct:str, what:str):
        #while
    #def jump_to
        
-def nav_to_src(where:str, how_act='move'):
+def nav_to_src(where:str, how_act='move', _ed=ed):
     """ Try to open file and navigate to row[+col+sel].
         Return True if nav successed.
         FiF-res structure variants
@@ -779,19 +798,19 @@ def nav_to_src(where:str, how_act='move'):
     """
     global last_rpt_tid
     pass;                   NAVLOG and log('where, how_act={}',(where, how_act))
-    crts    = ed.get_carets()
-    if len(crts)>1:         return app.msg_status(_("Command doesn't work with multi-carets"))
-    last_rpt_tid= ed.get_prop(app.PROP_TAB_ID)
+    crts    = _ed.get_carets()
+    if len(crts)>1:         return msg_status(_("Command doesn't work with multi-carets"))
+    last_rpt_tid= _ed.get_prop(app.PROP_TAB_ID)
         
     row     = crts[0][1]
-    pass;                   _t = get_data4nav(ed, row)
+    pass;                   _t = get_data4nav(_ed, row)
     pass;                   NAVLOG and log('get_data4nav(ed, row)={}',(_t))
     pass;                   path,rw,cl,ln  = _t
 #   path,rw,\
-#   cl, ln  = get_data4nav(ed, row)
+#   cl, ln  = get_data4nav(_ed, row)
     if path and (os.path.isfile(path) or path.startswith('tab:')):
         return _open_and_nav(where, how_act, path, rw, cl, ln)
-    app.msg_status(f(_("Line {} has no data for navigation"), 1+row))
+    msg_status(f(_("Line {} has no data for navigation"), 1+row))
    #def nav_to_src
 
 def fold_all_roots(rpt_ed:app.Editor, what1:str, what2:str):
@@ -957,32 +976,6 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 #   pass;                      #LOG and log('repl_s,ext_lns={}',(repl_s,ext_lns))
 
     enco_l  = how_walk.get('enco', ['UTF-8'])
-    def detect_encoding(_path, _detector):
-        _detector.reset()
-        pass;                  #LOG and log('_path={}',(_path))
-        try:
-            with open(_path, 'rb') as h_path:
-                line    = h_path.readline()
-                _lines  = 1
-                _bytes  = len(line)
-                while line:
-                    _detector.feed(line)
-                    if _detector.done:
-                        pass;  #LOG and log('done. _detector.result={}',(_detector.result))
-                        break
-                    line    = h_path.readline()
-                    _lines += 1
-                    _bytes += len(line)
-            _detector.close()
-            pass;              #LOG and log('_lines={}, _bytes={} _detector.done={}, _detector.result={}'
-                                   #        ,_lines,    _bytes,   _detector.done,    _detector.result)
-            encoding    = _detector.result['encoding'] if _detector.done else locale.getpreferredencoding()
-        except Exception:# as ex:
-            pass;              #LOG and log('ex={}',(ex))
-            return locale.getpreferredencoding()
-        pass;                  #LOG and log('_lines,encoding={}',(_lines,encoding))
-        return encoding
-       #def detect_encoding
     detector= UniversalDetector() if ENCO_DETD in enco_l else None
     rpt_enc_fail= apx.get_opt('fif_log_encoding_fail', False)
 
@@ -1429,13 +1422,40 @@ class ProgressAndBreak:
         return self.will_break
    #class ProgressAndBreak
 
+def detect_encoding(_path, _detector):
+    _detector.reset()
+    pass;                  #LOG and log('_path={}',(_path))
+    try:
+        with open(_path, 'rb') as h_path:
+            line    = h_path.readline()
+            _lines  = 1
+            _bytes  = len(line)
+            while line:
+                _detector.feed(line)
+                if _detector.done:
+                    pass;  #LOG and log('done. _detector.result={}',(_detector.result))
+                    break
+                line    = h_path.readline()
+                _lines += 1
+                _bytes += len(line)
+        _detector.close()
+        pass;              #LOG and log('_lines={}, _bytes={} _detector.done={}, _detector.result={}'
+                               #        ,_lines,    _bytes,   _detector.done,    _detector.result)
+        encoding    = _detector.result['encoding'] if _detector.done else locale.getpreferredencoding()
+    except Exception:# as ex:
+        pass;              #LOG and log('ex={}',(ex))
+        return locale.getpreferredencoding()
+    pass;                  #LOG and log('_lines,encoding={}',(_lines,encoding))
+    return encoding
+   #def detect_encoding
+
 #def undo_by_report():
 #   """ Use data from fif-report to undo replacements in files
 #   """
 #   lxr  = ed.get_prop(app.PROP_LEXER_FILE, '')
-#   if lxr.upper() not in lexers_l:         return app.msg_status(  _('Undo must start from tab with Results of Replace'))
+#   if lxr.upper() not in lexers_l:         return msg_status(  _('Undo must start from tab with Results of Replace'))
 #   line0= ed.get_text_line(0)
-#   if not line0.startswith(RPT_REPL_SIGN): return app.msg_status(f(_('Undo must start from tab with text "{}"'), RPT_REPL_SIGN))
+#   if not line0.startswith(RPT_REPL_SIGN): return msg_status(f(_('Undo must start from tab with text "{}"'), RPT_REPL_SIGN))
 #   if app.ID_YES != app.msg_box(
 #                       'Do you want execute undo for all replacements:'
 #                  +c13+line0
