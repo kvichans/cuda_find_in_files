@@ -206,9 +206,9 @@ def dlg_fif_opts():
         ).show(_('"Find in file" options'))
     except Exception as ex:
         pass;                   log('ex={}',(ex))
-        FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
-        fif_opts    = json.loads(open(FIF_OPTS).read())
-        op_ed.dlg_opt_editor('FiF options', fif_opts, subset='fif.')
+#       FIF_OPTS    = os.path.dirname(__file__)+os.sep+'fif_options.json'
+#       fif_opts    = json.loads(open(FIF_OPTS).read())
+#       op_ed.dlg_opt_editor('FiF options', fif_opts, subset='fif.')
 
     reload_opts()
    #def dlg_fif_opts
@@ -1567,8 +1567,8 @@ class FifD:
             roots   = list(roots)
             pass;               LOG and log('roots={}',(roots))
             if not all(map(lambda f:os.path.isdir(f), roots)):
-                app.msg_box(f(_('Set existing folder in "{}" \nor use "{}" \nor use "{}".\n\n{} can help.')
-                             , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS, _('=/Presets')), app.MB_OK+app.MB_ICONWARNING) 
+                app.msg_box(f(_('Set existing folder in "{}" \nor use "{}" \nor use "{}".\n\n=/Presets can help.')
+                             , self.caps['fold'], IN_OPEN_FILES, IN_PROJ_FOLDS), app.MB_OK+app.MB_ICONWARNING) 
                 return {'fid':'fold'}
 
         shtp_v      = SHTP_L[int(self.shtp_s)]
@@ -1635,6 +1635,7 @@ class FifD:
             ,algn   =    '1'==self.algn_s
             ,join   =    '1'==self.join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
             )
+        fil_tab     = 'tab' if root_is_tabs(self.fold_s) else 'file'
         ################################
         pass;                  #v=[].get('k')       # Err as while search
         M.rslt_body   = M.DEF_RSLT_BODY
@@ -1657,7 +1658,7 @@ class FifD:
             self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
         if 0==rpt_info['cllc_files']: 
-            msg_status(_("No files picked"))
+            msg_status(f(_("No {}s picked"), fil_tab))
             self.lock_act(ag, 'unlock-saved')
             self.progressor = None
             return self.do_focus(aid,ag)   #continue#while_fif
@@ -1666,9 +1667,11 @@ class FifD:
         frgms   = rpt_info['frgms']
         ################################
         pass;                  #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
-        msg_rpt = f(_('No matches found (in {} file(s))'), clfls) \
+        fil_tabs= fil_tab+'s'   if clfls>1 else fil_tab
+        matchs  = 'matches'     if frgms>1 else 'match'
+        msg_rpt = f(_('No matches found (in {} {})'), clfls, fil_tabs) \
                     if 0==frfls else \
-                  f(_('Found {} match(es) in {}({}) file(s)'), frgms, frfls, clfls)
+                  f(_('Found {} {} in {}({}) {}'), frgms, matchs, frfls, clfls, fil_tabs)
         self.progressor.set_progress(msg_rpt)
         if 0==frgms and not REPORT_FAIL:    
             self.lock_act(ag, 'unlock-saved')
@@ -1890,6 +1893,8 @@ class FifD:
             nav_as(self.srcf._loaded_file, self.srcf)   ;return None
         elif tag=='rslt-move':
             app.file_open('')
+            ed.set_prop(app.PROP_ENC,       'UTF-8')
+            ed.set_prop(app.PROP_TAB_TITLE, _('Results'))
             ed.set_text_all(self.rslt.get_text_all())
             mrks    = self.rslt.attr(app.MARKERS_GET)
             for mrk in (mrks if mrks else []):
@@ -2161,14 +2166,11 @@ class FifD:
         self.gap1   = (GAP- 28 if self.wo_repl else GAP)
         self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
         rslt_srcf_h =   0 if not w_rslt else max(100, M.RSLT_H+5+M.SRCF_H)
-        self.dlg_w,\
-        self.dlg_h,\
-        self.dlg_h0 = (self.TBN_L + FifD.BTN_W + GAP
-                      ,FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
-                      ,FifD.DLG_H0 + self.gap2 + 5
-                      )
-        pass;                  #log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
-        pass;                  #log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
+        self.dlg_w  = self.TBN_L + FifD.BTN_W + GAP
+        self.dlg_h  = FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
+        self.dlg_h0 = FifD.DLG_H0 + self.gap2 + 5                   +10
+        pass;                   log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
+        pass;                   log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
         return self
        #def pre_cnts
 
@@ -2462,4 +2464,5 @@ ToDo
 [ ][kv-kv][02jul18] Show/Hide rslt after apply preset
 [+][kv-kv][02jul18] Set "waiting" after empty found
 [+][kv-kv][05jul18] Split search history for session/project
+[ ][kv-kv][06jul18] Repeat search by sel in rslt/srcf
 '''
