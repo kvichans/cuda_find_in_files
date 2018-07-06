@@ -2153,9 +2153,9 @@ class FifD:
         self.fold_l = [s for s in self.stores.get(hp+'fold', []) if s ]
         self.repl_l = [s for s in self.stores.get(hp+'repl', []) if s ]
         self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
-        self.incl_s = self.incl_l[0] if self.incl_l else ''
-        self.excl_s = self.excl_l[0] if self.excl_l else ''
-        self.fold_s = self.fold_l[0] if self.fold_l else ''
+        self.incl_s = self.incl_s if self.incl_s else self.incl_l[0] if self.incl_l else ''
+        self.excl_s = self.excl_s if self.excl_s else self.excl_l[0] if self.excl_l else ''
+        self.fold_s = self.fold_s if self.fold_s else self.fold_l[0] if self.fold_l else ''
         
         w_rslt      = '0'==self.send_s
         self.gap1   = (GAP- 28 if self.wo_repl else GAP)
