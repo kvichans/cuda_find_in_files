@@ -34,6 +34,7 @@ def use_statusbar(st):
     global _statusbar
     _statusbar   = st
 def msg_status(msg, process_messages=True):
+    pass;                      #log('###',())
     if _statusbar:
         app.statusbar_proc(_statusbar, app.STATUSBAR_SET_CELL_TEXT, tag=1, value=msg)
         if process_messages:

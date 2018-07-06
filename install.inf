@@ -81,7 +81,7 @@ method=_
 
 [item24]
 section=commands
-caption=&Find in Files\Configure navigation with &double-click in report...
+caption=&Find in Files\Configure navigation with &double-click in tab report...
 method=dlg_nav_by_dclick
 menu=op
 

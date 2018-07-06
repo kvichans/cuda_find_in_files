@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.04 2018-06-25'
+    '3.1.06 2018-07-06'
 ToDo: (see end of file)
 '''
 
@@ -108,25 +108,12 @@ def reload_opts():
     enco_l          = [f(enco, loc_enco) for enco in enco_l]
    #def reload_opts()
 
+def limit_len(text, max_len, div='..'):
+    if len(text)<=max_len:  return text
+    part_len    = int((max_len-2)/2)
+    return text[:part_len] + div + text[-part_len:]
+
 class Command:
-#   def undo_by_report(self):
-#       undo_by_report()
-       #def undo_by_report
-
-#   def __init__(self):
-#       fif_lxrdir  = os.path.dirname(__file__)+os.sep+'data'+os.sep+'lexlib'
-#       cud_lxrdir  = app.app_path(app.APP_DIR_DATA)         +os.sep+'lexlib'
-#       if not os.path.exists(cud_lxrdir+os.sep+'Search results.lcf')
-#           shutil.copy(
-#               fif_lxrdir+os.sep+'Search results.lcf'
-#           ,   cud_lxrdir+os.sep+'Search results.lcf'
-#           )
-#           shutil.copy(
-#               fif_lxrdir+os.sep+'Search results.cuda-lexmap'
-#           ,   cud_lxrdir+os.sep+'Search results.cuda-lexmap'
-#           )
-#      #def __init__
-
     def find_in_ed(self):
         if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
         filename= ed.get_filename()
@@ -232,13 +219,15 @@ class PresetD:
               ,'fold','dept'
               ,'skip','sort','frst','enco'
                      ,'send'
-                     ,'totb','join','shtp','algn','cntx']
+                     ,'totb','join','shtp','algn'
+                     ,'cntx','cntb','cnta']
     caps_l  = ['.*','aA','"w"'
               ,'In files','Not in files'
               ,'In folder','Subfolders'
               ,'Skip files','Sort file list','Firsts','Encodings'
                      ,'[Report] Send to tab/file'
-                     ,'[Report] Show in','[Report] Append results','[Report] Tree type','[Report] Align','[Report] Show context']
+                     ,'[Report] Show in','[Report] Append results','[Report] Tree type','[Report] Align'
+                     ,'[Report] Show context','[Report] Context "before"','[Report] Context "after"']
     yn01    = {'0':_('No'), '1':_('Yes'), _('No'):'0', _('Yes'):'1'}
     
     @staticmethod
@@ -246,7 +235,7 @@ class PresetD:
         pass;                      #LOG and log('fifkey, val={}',(fifkey, val))
         if val is None: return ''
         if False:pass
-        elif fifkey in ('incl','excl','fold','frst'):   return val
+        elif fifkey in ('incl','excl','fold','frst','cntb','cnta'):   return val
         elif fifkey in ('reex','case','word'
                        ,'send','join','algn','cntx'):   return PresetD.yn01[val] #_('Yes') if val=='1' else _('No')
         elif fifkey=='totb':    return totb_l[int(val)] if val in ('0', '1') else val
@@ -274,10 +263,10 @@ class PresetD:
                 ps_ind      = ag.cval('prss')
                 ps          = pset_l[ps_ind]
                 ps['name']  = ag.cval('name')
+                self._restore(ps)
+                msg_status(_('Options is restored from preset: ')+ps['name'])
             m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
             open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
-#           stores_main.update(stores)
-#           open(CFG_JSON, 'w').write(json.dumps(stores_main, indent=4))
             return None
             
         def acts(cid, ag, data=''):
@@ -398,10 +387,10 @@ class PresetD:
                  ,('lval',dict(tp='lb'  ,t=5            ,l=260+180+1,w=220-1,cap=_('With values:')                                                  )) # &
                  ,('vals',dict(tp='clx' ,t=5+20,h=400   ,l=260+180+1,w=220-1,items=ps_vas       ,en=F               ,val=(-1,ps_vls)                ))
                   #
-                 ,('!'   ,dict(tp='bt'  ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Save')      ,def_bt=True                        ,call=save_close)) # &
+                 ,('!'   ,dict(tp='bt'  ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Apply')     ,def_bt=True                        ,call=save_close)) # &
                  ,('-'   ,dict(tp='bt'  ,t=460          ,l=DLG_W-5-100,w=100,cap=_('Cancel')                                        ,call=LMBD_HIDE ))
                  ]
-        DlgAgent(form   =dict(cap=_('Configure presets'), w=DLG_W, h=490)
+        DlgAgent(form   =dict(cap=_('Presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
                 ,fid    ='prss'
                               #,options={'gen_repro_to_file':'repro_prs_config.py'}
@@ -420,7 +409,7 @@ class PresetD:
                    m.fif.fold_s,m.fif.dept_n,
                    m.fif.skip_s,m.fif.sort_s,m.fif.frst_s,m.fif.enco_s,
                    m.fif.send_s,
-                   totb_v,m.fif.join_s,m.fif.shtp_s,m.fif.algn_s,m.fif.cntx_s)
+                   totb_v,m.fif.join_s,m.fif.shtp_s,m.fif.algn_s,m.fif.cntx_s,m.fif.cntx_b,m.fif.cntx_a)
 
         ps_its  = [f('{}', M.caps_l[i]                  ) for i, k in enumerate(M.keys_l)]
         ps_vas  = [f('{}', M.desc_fif_val(k, invl_l[i]) ) for i, k in enumerate(M.keys_l)]
@@ -485,38 +474,14 @@ class PresetD:
             elif k=='shtp':     m.fif.shtp_s = ps[k]
             elif k=='algn':     m.fif.algn_s = ps[k]
             elif k=='cntx':     m.fif.cntx_s = ps[k]
+            elif k=='cntb':     m.fif.cntx_b = ps[k]
+            elif k=='cnta':     m.fif.cntx_a = ps[k]
             elif k=='totb':
                 totb_v       = ps[k]
                 m.fif.totb_i = m.fif.totb_l.index(totb_v) if totb_v in m.fif.totb_l else \
                                totb_v                     if totb_v in (0, 1)       else \
                                1
        #def _restore
-
-    def menu4rest(self):
-        M,m     = PresetD,self
-        m.fif.copy_vals(m.fif.ag)
-        pset_l  = m.fif.stores.get('pset', [])
-        if not pset_l:      return None
-        for ps in pset_l:
-            M.upgrd(ps)
-        dlg_list= [f(_('Restore: {}\t[{}{}{}].*aAw, [{}{}]In files, [{}{}]In folders, [{}{}{}{}]Adv. search, [{}{}{}{}{}]Adv. report')
-                    ,ps['name']
-                    ,ps['_reex'],ps['_case'],ps['_word']
-                    ,ps['_incl'],ps['_excl']
-                    ,ps['_fold'],ps['_dept']
-                    ,ps['_skip'],ps['_sort'],ps['_frst'],ps['_enco']
-                    ,ps['_totb'],ps['_join'],ps['_shtp'],ps['_algn'],ps['_cntx']
-                    ) 
-                    for ps in pset_l]
-        ps_ind  = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(dlg_list), caption=_('Presets'))      #NOTE: dlg-menu-press
-        if ps_ind is None:  return None
-        # Restore
-        ps      = pset_l[ps_ind]
-        m._restore(ps)
-        m.fif.store()
-        msg_status(_('Options is restored from preset: ')+ps['name'])
-        return True
-       #def menu4rest
 
     def ind4rest(self, ps_ind):
         M,m     = PresetD,self
@@ -532,6 +497,11 @@ class PresetD:
 
     @staticmethod
     def upgrd(ps:list)->list:
+        if 'cntb' not in ps:  
+            ps['cntb']  = 1
+            ps['_cntb'] = 'x'
+            ps['cnta']  = 1
+            ps['_cnta'] = 'x'
         if 'send' not in ps:  
             ps['send']  = '1'
             ps['_send'] = 'x'
@@ -565,195 +535,60 @@ class PresetD:
        #def upgrd
    #class PresetD
 
-RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
-_TIPS_BODY  = _(r'''
-• ".*" - Option "Regular Expression". 
-It allows to use in field "Find what" special symbols:
-    .   any character
-    \d  digit character (0..9)
-    \w  word-like character (digits, letters, "_")
-In field "Replace with":
-    \1  to insert first found group,
-    \2  to insert second found group, ... 
-See full documentation by link at bottom.
- 
-• "w" - {word}
- 
-—————————————————————————————————————————————— 
- 
-• Values in fields "In files" and "Not in files" can contain
-    ?       for any single char,
-    *       for any substring (may be empty),
-    [seq]   any character in seq,
-    [!seq]  any character not in seq. 
-Note: 
-    *       matches all names, 
-    *.*     doesn't match all.
- 
-• Values in fields "In files" and "Not in files" can filter subfolder names 
-if they start with "/".
-Example.
-    In files:       /a*  *.txt
-    Not in files:   /ab*
-    In folder:      c:/root
-    In subfolders:  All
-    Search will consider all *.txt files in folder c:/root
-    and in all subfolders a* except ab*.
- 
-• Set special value "{tags}" for field "In folder" to search in opened documents.
-Fields "In files" and "Not in files" will be to filter tab titles.
-To search in all tabs, use mask "*" in field "In files".
-See: commands in menu/Scope.
- 
-• Set special value "{proj}" for field "In folder" to search in project files.
-See: commands in menu/Scope.
- 
-—————————————————————————————————————————————— 
- 
-• Long-term searches can be interrupted by ESC.
-Search has three stages: 
-    picking files, 
-    finding fragments, 
-    reporting.
-ESC stops any stage. 
-When picking and finding, ESC stops only this stage, so next stage begins.
- 
-—————————————————————————————————————————————— 
- 
-• Use right click or Context keyboard button 
-to see context menu over these elements
-    Find/Replace
-    Current folder
-    Browse
-    In subfolders combobox
-''')
-_KEYS_BODY  = _(r'''
-• "Find" - {find}
- 
-• "Replace" - {repl}
- 
-• "Current folder" - {cfld}
- 
-• "In folder" - {fold}
- 
-• "Browse…" - {brow}
- 
-• "In subfolders" - {dept}
- 
-• "=" - {menu}
- 
-• Ctrl+Enter moves focus to Results (if it is shown and not focused).
-• Ctrl+Enter on focused Results closes dialog and opens found fragment.
-• Enter on focused Source closes dialog and opens selected fragment.
 
-• Ctrl+F calls appication dialog Find.'
-• Ctrl+R calls appication dialog Replace.'
-''')
 _TREE_BODY  = _(r'''
-Option "Tree type" - {shtp}
+If report will be sent to tab 
+    [x] Send
+then option "Tree type" in dialog "{morp}" allows to set:
+ 
+{shtp}
 ''')
+_KEYS_TABLE = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hotkeys.txt')  , encoding='utf-8').read()
+_TIPS_BODY  = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hints.txt')    , encoding='utf-8').read()
+RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
 
-def dlg_help(word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,menu_h, stores=None):
+def dlg_fif_help(fif, stores=None):
     if app.app_api_version()<MIN_API_VER_HLP: return app.msg_status(_('Need update application'))
     stores      = {} if stores is None else stores
-    TIPS_BODY   =_TIPS_BODY.strip().format(word=word_h.replace('\r', '\n'), tags=IN_OPEN_FILES, proj=IN_PROJ_FOLDS)
-    KEYS_BODY   =_KEYS_BODY.strip().format(find=find_h.replace('\r', '\n')
-                                          ,repl=repl_h.replace('\r', '\n')
-#                                         ,coun=coun_h.replace('\r', '\n')
-                                          ,cfld=cfld_h.replace('\r', '\n')
-                                          ,fold=fold_h.replace('\r', '\n')
-                                          ,brow=brow_h.replace('\r', '\n')
-                                          ,dept=dept_h.replace('\r', '\n')
-#                                         ,pset=pset_h.replace('\r', '\n')
-#                                         ,more=more_h.replace('\r', '\n')
-                                          ,menu=menu_h.replace('\r', '\n')
-#                                         ,cntx=cntx_h.replace('\r', '\n')
-                                          )
-    TREE_BODY   =_TREE_BODY.strip().format(shtp=shtp_h.replace('\r', '\n'))
-#   pass;                      TIPS_BODY = 'TIPS_BODY'
-#   pass;                      KEYS_BODY = 'KEYS_BODY'
-#   pass;                      TREE_BODY = 'TREE_BODY'
-    pass;                      #TIPS_BODY='tips';KEYS_BODY='keys';TREE_BODY='tree''
-    PW, PH      = 730, 310
-    DW, DH      = PW+10, PH+200
-    hints_png   = os.path.dirname(__file__)+os.sep+r'images'+os.sep+f('fif-hints_{}x{}.png', PW, PH)
-    tab                 = stores.get('tab', 'keys')
-    tab                 = 'keys' if tab=='opts' else tab    # From old dlg
-
-    def prep(tab):
-        htxt            = KEYS_BODY            if tab=='keys' else \
-                          TIPS_BODY            if tab=='tips' else \
-                          TREE_BODY            if tab=='tree' else ''
-        me_t            = GAP       +( PH+GAP  if tab=='keys' else 0)
-        me_h            = DH-28     +(-PH-GAP  if tab=='keys' else 0)
-        return htxt, me_t, me_h
-       #def prep
-       
-    def when_resize(ag):
-#       if tab=='opts':
-#           return {}
-        f_wh    = ag.fattrs(attrs=('w', 'h'), live=ag.fattr('vis'))
-        return {'ctrls':[('htxt',dict(
-                                w=f_wh['w']-10 
-                               ,t=5              + (5+PH  if tab=='keys' else 0)
-                               ,h=f_wh['h']-10-28- (5+PH  if tab=='keys' else 0)
-                               ))]}
-
-    def acts(aid, ag, data=''):
-        nonlocal tab
-        if aid=='-':                    return None
-        if aid=='prps': dlg_fif_opts(); return {}
-        stores['tab']   = tab = aid
-        htxt_vi         = True#(tab!='opts')
-        htxt, me_t, me_h= prep(tab)
-        me_thw          = odict(when_resize(ag)['ctrls'])['htxt']   if htxt_vi else {}
-        htxt_y          = me_thw['t']                               if htxt_vi else 0
-        htxt_h          = me_thw['h']                               if htxt_vi else 0
-        htxt_w          = me_thw['w']                               if htxt_vi else 0
-        pass;                  #log('vi={}',(vi))
-        upds    =  {'ctrls':
-                    [('imge' ,dict(vis=(tab=='keys')        ))
-#                   ,('edtr' ,dict(vis=(tab=='opts')        ))
-#                   ,('htxt' ,dict(vis=(tab!='opts'), val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
-                    ,('htxt' ,dict(vis=(tab!='opts'), val=htxt     ,y=htxt_y,h=htxt_h,w=htxt_w ))
-#                   ,('htxt' ,dict(vis=vi           , val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
-#                   ,('htxt' ,dict(vis=False        , val=htxt     ,y=me_thw['t'],h=me_thw['h'],w=me_thw['w'] ))
-                    ,('porg' ,dict(vis=(tab=='tips')        ))
-                    ,('keys' ,dict(val=(tab=='keys')        ))
-                    ,('tips' ,dict(val=(tab=='tips')        ))
-                    ,('tree' ,dict(val=(tab=='tree')        ))
-                    ]
-                 ,'fid':'htxt'}
-        pass;                  #log('upds={}',pf(upds))
-        return upds
-       #def acts
-
-    htxt, me_t, me_h    = prep(tab)
-    ag  = DlgAgent(
-              form  =dict( cap      =_('Help for "Find in Files"')
-                          ,w        = GAP+DW+GAP
-                          ,h        = GAP+DH+GAP
+    TIPS_BODY   =_TIPS_BODY.strip().format(
+                    word=word_h.replace('\r', '\n')
+                  , incl=fif.caps['incl']
+                  , excl=fif.caps['excl']
+                  , fold=fif.caps['fold']
+                  , tags=IN_OPEN_FILES
+                  , proj=IN_PROJ_FOLDS)
+    TREE_BODY   =_TREE_BODY.strip().format(
+                    morp=morp_h
+                  , shtp=shtp_h.replace('\r', '\n'))
+    KEYS_TABLE  = _KEYS_TABLE.strip('\n\r')
+    page        = stores.get('page', 0)
+    ag_hlp      = DlgAgent(
+              form  =dict( cap      =_('Help "Find in Files"')
+                          ,w        = 670+10
+                          ,h        = 400+10
                           ,resize   = True
-                          ,on_resize= when_resize
                           )
-            , ctrls = 
-                [('imge',dict(tp='im'   ,t=GAP ,h=PH    ,l=GAP          ,w=PW   ,a='-'      ,items=hints_png            ,vis=(tab=='keys')              ))
-                ,('htxt',dict(tp='me'   ,t=me_t,h=me_h  ,l=GAP          ,w=DW               ,ro_mono_brd='1,1,1'                            ,val=htxt   ))
-                
-                ,('porg',dict(tp='llb'  ,tid='-'        ,l=GAP          ,w=180  ,a='TB'     ,cap=_('Reg.ex. on python.org')
-                                                                                            ,url=RE_DOC_REF             ,vis=(tab=='tips')              ))
-                ,('keys',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-435   ,w=80   ,a='TB'     ,cap=_('&Keys')             ,val=(tab=='keys')  ,call=acts  ))# &k
-                ,('tips',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-350   ,w=80   ,a='TB'     ,cap=_('T&ips')             ,val=(tab=='tips')  ,call=acts  ))# &i
-                ,('tree',dict(tp='chb'  ,tid='-'        ,l=GAP+DW-265   ,w=80   ,a='TB'     ,cap=_('&Tree')             ,val=(tab=='tree')  ,call=acts  ))# &t
-                ,('-'   ,dict(tp='bt'   ,t=GAP+DH-23    ,l=GAP+DW-80    ,w=80   ,a='LRTB'   ,cap=_('&Close')                                ,call=acts  ))# &c
-            ]
-            , fid   = 'htxt'
-                               #,options={'gen_repro_to_file':'repro_dlg_help.py'}
+            , ctrls = [0
+                ,('tabs',dict(tp='pgs'  ,l=5,w=670  
+                                        ,t=5,h=400  ,a='lRtB'   ,items='Hotkeys\tHints\tTree types' ,val=page       ))
+                ,('keys',dict(tp='me'   ,p='tabs.0' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=KEYS_TABLE ))
+                ,('tips',dict(tp='me'   ,p='tabs.1' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=TIPS_BODY  ))
+                ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=TREE_BODY  ))
+                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')     ,url=RE_DOC_REF ))
+            ][1:]
+            , fid   = 'tabs'
+                               #,options={'gen_repro_to_file':'repro_dlg_fif_help.py'}
         )
-    pass;                      #log('OPTS_JSON={}',(OPTS_JSON))
-    ag.show()    #NOTE: dlg_help
+    def do_exit(ag):
+        pass
+        page = 0 if ag.cattr('keys', 'vis') else 1 if ag.cattr('tips', 'vis') else 2
+#       page = ag.cval('tabs')
+        stores['page']  = page
+    try:    ##!! Wait 'val' for 'pages' 
+        ag_hlp.show(callbk_on_exit=lambda ag: do_exit(ag))    #NOTE: dlg_fif_help
+    except:pass
     return stores
-   #def dlg_help
+   #def dlg_fif_help
 
 def dlg_nav_by_dclick():
     pass;                      #LOG and log('ok',())
@@ -818,8 +653,6 @@ def dlg_nav_by_dclick():
     open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
    #def dlg_nav_by_dclick
 
-DEF_STATUS_MSG  = '' #_('"Enter" to start search')
-
 mask_h  = _('Space-separated file or folder masks.'
             '\rFolder mask starts with "/".'
             '\rDouble-quote mask, which needs space-char.'
@@ -856,7 +689,7 @@ cfld_h  = _('Use folder of current file.'
             )
 mofi_h  = _('Extra search options')
 send_h  = _('Output report to tab/file')
-morp_h  = _('Extra tab/file report options')
+morp_h  = _('Extra tab report options')
 menu_h  = _('Local menu'
             '\rCtrl+Click - Adjust vertical alignments…'
             )
@@ -980,6 +813,28 @@ def get_live_fiftabs(_fxs)->list:
 def dlg_fif(what='', opts={}):
     return FifD(what, opts).show()
 
+def prefix_to_sep_stores(def_prefix=''):
+    sprd_res    = apx.get_opt('fif_sep_hist_for_sess_proj', [])
+    sess_path   = app.app_path(app.APP_FILE_SESSION)
+    pass;                      #log('sprd_res={}',(sprd_res))
+    pass;                      #log('sess_path={}',(sess_path))
+    proj_path   = ''
+    try:
+        import cuda_project_man
+        proj_vars   = cuda_project_man.project_variables()
+        pass;                  #log('global_project_info={}',(cuda_project_man.global_project_info))
+        pass;                  #log('proj_vars={}',(proj_vars))
+        proj_path   = proj_vars.get('ProjMainFile', '')
+    except:pass
+    pass;                      #log('proj_path={}',(proj_path))
+    for sprd_re in sprd_res:
+        if re.search(sprd_re, sess_path) or re.search(sprd_re, proj_path):
+            pass;              #log('prefix={}',(sprd_re+':'))
+            return sprd_re+':'
+    pass;                      #log('prefix={}',(def_prefix))
+    return def_prefix
+   #def prefix_to_sep_stores
+
 class FifD:
     status_s  = ''
     
@@ -1023,16 +878,20 @@ class FifD:
     SRCF_W      = 300       # Min width of 'srcf'
     SRCF_H      = 100       # Min heght of 'srcf'
 
-    rslt_body   = _('...waiting results...')
+    DEF_RSLT_BODY   = _('...waiting results...')
+    rslt_body   = DEF_RSLT_BODY
     rslt_body_r = -1
     def show(self):
         M,m     = FifD,self
+
+        self.hip= prefix_to_sep_stores()
         self.pre_cnts()
         self.ag = DlgAgent(
-            form =dict(cap     = self.get_fif_cap()
+            form =dict(cap     = f(_('Find in Files ({})'), VERSION_V)
                       ,resize  = True
                       ,w       = self.dlg_w
                       ,h       = self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
+                      ,on_show       = lambda idd, idc, data: m.do_resize(m.ag)
                       ,on_resize     = m.do_resize
                       ,on_key_down   = m.do_key_down
                       ,on_close_query= lambda idd, idc, data: not self.is_working_stop()
@@ -1041,7 +900,7 @@ class FifD:
         ,   vals =self.get_fif_vals()
         ,   fid  ='what'
         ,   options = {'bindof':self
-                               ,'gen_repro_to_file':apx.get_opt('fif_repro_to_file', '')
+                               ,'gen_repro_to_file':apx.get_opt('fif_repro_to_file', '')    #NOTE: fif_repro
                               #,'gen_repro_to_file':'repro_dlg_fif.py'
                     }
         )
@@ -1057,6 +916,7 @@ class FifD:
         self.rslt.set_prop(app.PROP_MARGIN              , 2000)
         self.rslt.set_prop(app.PROP_LEXER_FILE          , FIF_LEXER)  ##!!
         self.rslt.set_prop(app.PROP_TAB_SIZE            , 1)
+        self.rslt.set_text_all(M.DEF_RSLT_BODY)
         self.rslt.set_prop(app.PROP_RO                  , True)
         
         self.srcf = app.Editor(self.ag.handle('srcf'))
@@ -1078,7 +938,6 @@ class FifD:
         app.statusbar_proc(statusbar, app.STATUSBAR_SET_CELL_AUTOSTRETCH, tag=1, value=True)
         use_statusbar(statusbar)
         self.upd_def_status(True)
-#       msg_status(self.status_s) #DEF_STATUS_MSG)
         pass;                  #msg_status('ok')
         if '0'==self.send_s and self.ag.cval('what') and self.ag.cval('fold')==IN_OPEN_FILES:
             # Run search at start
@@ -1101,6 +960,9 @@ class FifD:
         pass;                  #LOG and log('FifD.DEF_WD_TXTS={}',(FifD.DEF_WD_TXTS))
         self.store(what='load')
         FifD.upgrade(self.stores)     # Upgrade types
+
+        self.hip    = prefix_to_sep_stores()        # HIstory Prefix. To store separated history for some sessions
+        hp          = self.hip
     
         self.what_s  = what if what else ed.get_text_sel() if USE_SEL_ON_START else ''
         self.what_s  = self.what_s.splitlines()[0] if self.what_s else ''
@@ -1114,15 +976,19 @@ class FifD:
             self.reex01  = '1' if 'r' in ed_opt else '0'
             self.case01  = '1' if 'c' in ed_opt else '0'
             self.word01  = '1' if 'w' in ed_opt else '0'
-        self.incl_s  = opts.get('incl', self.stores.get('incl',  [''])[0])
-        self.excl_s  = opts.get('excl', self.stores.get('excl',  [''])[0])
-        self.fold_s  = opts.get('fold', self.stores.get('fold',  [''])[0])
+        self.incl_s  = opts.get('incl', self.stores.get(hp+'incl',  [''])[0])
+        self.excl_s  = opts.get('excl', self.stores.get(hp+'excl',  [''])[0])
+        self.fold_s  = opts.get('fold', self.stores.get(hp+'fold',  [''])[0])
         self.dept_n  = opts.get('dept', self.stores.get('dept',  0)-1)+1
         self.send_s  = opts.get('send', self.stores.get('send', '1'))
         self.join_s  = opts.get('join', self.stores.get('join', '0'))
         self.totb_i  = opts.get('totb', self.stores.get('totb',  0 ));  self.totb_i =  1  if self.totb_i== 0  else self.totb_i
         self.shtp_s  = opts.get('shtp', self.stores.get('shtp', '0'))
         self.cntx_s  = opts.get('cntx', self.stores.get('cntx', '0'))
+        nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))  # old storing in user.json
+        nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))  # old storing in user.json
+        self.cntx_b  = opts.get('cntb', self.stores.get('cntb', nBf))
+        self.cntx_a  = opts.get('cnta', self.stores.get('cnta', nAf))
         self.algn_s  = opts.get('algn', self.stores.get('algn', '0'))
         self.skip_s  = opts.get('skip', self.stores.get('skip', '0'))
         self.sort_s  = opts.get('sort', self.stores.get('sort', '0'))
@@ -1132,7 +998,7 @@ class FifD:
         self.wo_excl= self.stores.get('wo_excl', True)
         self.wo_repl= self.stores.get('wo_repl', True)
 
-        self.rslt_va= self.stores.get('rslt_al', False)
+        self.rslt_va= self.stores.get('rslt_va', False)
         self.rslt_w = self.stores.get('rslt_w', M.RSLT_W)   if not self.rslt_va else M.RSLT_W
         self.rslt_h = self.stores.get('rslt_h', M.RSLT_H)   if     self.rslt_va else M.RSLT_H
         
@@ -1154,9 +1020,30 @@ class FifD:
         self.ag         = None
         self.progressor = None  # For lock dlg-hiding while search
         self.locked_cids= None  # Locked controls while working
-
-#       self.upd_def_status()
        #def __init__
+    
+    def do_resize(self, ag):
+        pass;                  #return []
+        M,m     = FifD,self
+        def fix_wh(hw_c, hw_min):
+            pbot_v  = ag.cattr('pb'  , hw_c)
+            rslt_v  = ag.cattr('rslt', hw_c)
+            sptr_v  = ag.cattr('sptr', hw_c)
+            srcf_v  = ag.cattr('srcf', hw_c)
+            rslt_v_n= hw_min \
+                        if  rslt_v                  >= pbot_v else \
+                      hw_min \
+                        if (rslt_v+sptr_v+hw_min)   >= pbot_v else \
+                      rslt_v
+            pass;              #log('###pbot_v, srcf_v, rslt_v, rslt_v_n={}',(pbot_v, srcf_v, rslt_v, rslt_v_n))
+            pass;              #return []
+            if rslt_v==rslt_v_n:    # no hidden
+                return []
+            return d(ctrls=[('rslt',{hw_c:rslt_v_n})])
+           #def fix_wh
+        return fix_wh('h', M.RSLT_H) if m.rslt_va else \
+               fix_wh('w', M.RSLT_W)
+       #def do_resize
     
     def is_working_stop(self):
         pass;                  #log('?? is_working_stop={}',(self.progressor))
@@ -1171,19 +1058,14 @@ class FifD:
         self.word01     = ag.cval('word')
         self.what_s     = ag.cval('what')
         self.incl_s     = ag.cval('incl')
-        if not self.wo_excl:     
-            self.excl_s = ag.cval('excl')
-        else:
-            self.excl_s = ''
+        self.excl_s     = ag.cval('excl') if not self.wo_excl else ''
         self.fold_s     = ag.cval('fold')
         self.dept_n     = ag.cval('dept')
-        if not self.wo_repl:     
-            self.repl_s = ag.cval('repl')
+        self.repl_s     = ag.cval('repl') if not self.wo_repl else self.repl_s
         self.send_s     = ag.cval('send')
-#       if '0'==self.send_s:
-#           self.rslt_w = ag.cattr('rslt', 'w')
-        self.rslt_w     = ag.cattr('rslt', 'w') if not self.rslt_va else self.rslt_w
-        self.rslt_h     = ag.cattr('rslt', 'h') if     self.rslt_va else self.rslt_h
+        if '0'==self.send_s:
+            self.rslt_w = ag.cattr('rslt', 'w') if not self.rslt_va else self.rslt_w
+            self.rslt_h = ag.cattr('rslt', 'h') if     self.rslt_va else self.rslt_h
        #def copy_vals
     
     def store(self, what='save'):#, set=''):
@@ -1192,58 +1074,36 @@ class FifD:
                             if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
                            odict()
         if what=='save':
+            hp  = self.hip
             self.stores['wo_excl']  = self.wo_excl
             self.stores['wo_repl']  = self.wo_repl
             self.stores['reex']     = self.reex01
             self.stores['case']     = self.case01
             self.stores['word']     = self.word01
-            self.stores['what']     = add_to_history(self.what_s, self.stores.get('what', []), MAX_HIST, unicase=False)
-            self.stores['incl']     = add_to_history(self.incl_s, self.stores.get('incl', []), MAX_HIST, unicase=(os.name=='nt'))
-            self.stores['excl']     = add_to_history(self.excl_s, self.stores.get('excl', []), MAX_HIST, unicase=(os.name=='nt'))
-            self.stores['fold']     = add_to_history(self.fold_s, self.stores.get('fold', []), MAX_HIST, unicase=(os.name=='nt'))
+            self.stores[hp+'what']  = add_to_history(self.what_s, self.stores.get(hp+'what', []), MAX_HIST, unicase=False)
+            self.stores[hp+'incl']  = add_to_history(self.incl_s, self.stores.get(hp+'incl', []), MAX_HIST, unicase=(os.name=='nt'))
+            self.stores[hp+'excl']  = add_to_history(self.excl_s, self.stores.get(hp+'excl', []), MAX_HIST, unicase=(os.name=='nt'))
+            self.stores[hp+'fold']  = add_to_history(self.fold_s, self.stores.get(hp+'fold', []), MAX_HIST, unicase=(os.name=='nt'))
+            self.stores[hp+'repl']  = add_to_history(self.repl_s, self.stores.get(hp+'repl', []), MAX_HIST, unicase=False)
             self.stores['dept']     = self.dept_n
-            self.stores['repl']     = add_to_history(self.repl_s, self.stores.get('repl', []), MAX_HIST, unicase=False)
             self.stores['send']     = self.send_s
             self.stores['join']     = self.join_s
             self.stores['totb']     = 1 if self.totb_i==0 else self.totb_i
             self.stores['shtp']     = self.shtp_s
             self.stores['cntx']     = self.cntx_s
+            self.stores['cntb']     = self.cntx_b
+            self.stores['cnta']     = self.cntx_a
             self.stores['algn']     = self.algn_s
             self.stores['skip']     = self.skip_s
             self.stores['sort']     = self.sort_s
             self.stores['frst']     = self.frst_s
             self.stores['enco']     = self.enco_s
+            self.stores['rslt_va']  = self.rslt_va
             self.stores['rslt_w']   = self.rslt_w
             self.stores['rslt_h']   = self.rslt_h
             open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
        #def store
     
-    def pre_cnts(self):
-        M,m     = FifD,self
-        self.what_l = [s for s in self.stores.get('what', []) if s ]
-        self.incl_l = [s for s in self.stores.get('incl', []) if s ]
-        self.excl_l = [s for s in self.stores.get('excl', []) if s ]
-        self.fold_l = [s for s in self.stores.get('fold', []) if s ]
-        self.repl_l = [s for s in self.stores.get('repl', []) if s ]
-        self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
-        
-        w_rslt      = '0'==self.send_s
-#       self.wo_excl= self.stores.get('wo_excl', True)
-#       self.wo_repl= self.stores.get('wo_repl', True)
-        self.gap1   = (GAP- 28 if self.wo_repl else GAP)
-        self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
-        rslt_srcf_h =   0 if not w_rslt else max(100, M.RSLT_H+5+M.SRCF_H)
-        self.dlg_w,\
-        self.dlg_h,\
-        self.dlg_h0 = (self.TBN_L + FifD.BTN_W + GAP
-                      ,FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
-                      ,FifD.DLG_H0 + self.gap2 + 5
-                      )
-        pass;                  #log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
-        pass;                  #log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
-        return self
-       #def pre_cnts
-
     def upd_def_status(self, do_out=False):
         info_fi     = []
         info_fi    += [(SKIP_L[int(self.skip_s)]    )]  if self.skip_s!='0' else []
@@ -1259,16 +1119,14 @@ class FifD:
             info_rp+= [(_('Report: ')+totb_it       )]  
             info_rp+= [(SHTP_L[int(self.shtp_s)]    )]  
             info_rp+= [(_('aligned')                )]  if self.algn_s=='1' else []
-            info_rp+= [(_('context')                )]  if self.cntx_s=='1' else []
+            info_rp+= [(f(_('context-{}+{}'), self.cntx_b, self.cntx_a)
+                                                    )]  if self.cntx_s=='1' else []
         
         cap_fi  = ('Search: ' + ', '.join(info_fi)) if info_fi else ''
         cap_rp  =               ', '.join(info_rp)  if info_rp else ''
         self.status_s   = '; '.join([cap_fi, cap_rp]).strip('; ') if cap_fi or cap_rp else ''
         msg_status(self.status_s) if do_out else 0
        #def upd_def_status
-
-    def get_fif_cap(self):
-        return f(_('Find in Files ({})'), VERSION_V)
 
     def do_focus(self,aid,ag, store=True):
         self.store() if store else None
@@ -1283,8 +1141,7 @@ class FifD:
        #def do_focus
     
     def do_pres(self, aid, ag, btn_m=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
-#       if aid not in ('prs1', 'prs2', 'prs3', 'pres'): return self.do_focus('what',ag)
+        msg_status(self.status_s)
         btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
         
         self.what_s = ag.cval('what')
@@ -1295,22 +1152,18 @@ class FifD:
             PresetD(self).save()
         if btn_p == 'conf':
             PresetD(self).config()
-        if btn_p in ('prs1', 'prs2', 'prs3'):
+        if btn_p in ('prs1', 'prs2', 'prs3', 'prs4', 'prs5'):
             PresetD(self).ind4rest(int(btn_p[3])-1)
-
-        if btn_m=='pres':
-            PresetD(self).menu4rest()
 
 #       self.store() # in do_focus
         return (dict(vals=self.get_fif_vals()
-                    ,form={'cap':self.get_fif_cap()}
                     )
                ,self.do_focus('what',ag)
                )
        #def do_pres
 
     def do_fold(self, aid, ag, btn_m=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
+        msg_status(self.status_s)
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','fold','dept'])
@@ -1363,7 +1216,7 @@ class FifD:
        #def do_fold
        
     def do_dept(self, aid, ag, data=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
+        msg_status(self.status_s)
         pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
         self.copy_vals(ag)
 #       ag.bind_do(['dept'])
@@ -1379,9 +1232,9 @@ class FifD:
        #def do_dept
     
     def do_mofi(self, aid, ag, data=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
+        msg_status(self.status_s)
         pass;                  #log('self.skip_s={}',(self.skip_s))
-        ag_mofi = DlgAgent(form   =dict(cap=_('Extra search options'), w=320, h=120)
+        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=320, h=120)
                 ,ctrls  =[0
                 ,('ski_',d(tp='lb'  ,tid='skip' ,l=5    ,w=100-5,cap='>'+_('S&kip files:')                  ))# &k
                 ,('skip',d(tp='cb-r',t=5        ,l=5+100,w=200  ,items=SKIP_L                               ))# 
@@ -1407,13 +1260,55 @@ class FifD:
         self.enco_s = ag_mofi.cval('enco')
         pass;                  #log('self.skip_s={}',(self.skip_s))
         self.upd_def_status(True)
-        return []#d(form=d(cap=self.get_fif_cap()))
+        return []
        #def do_mofi
     
     def do_morp(self, aid, ag, data=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
+        msg_status(self.status_s)
         M,m     = FifD,self
         
+        def do_totb(aid, ag, data=''):
+            pass;              #LOG and log('totb props={}',(ag.cattrs('totb')))
+            self.totb_i = ag.cval('totb')
+            pass;              #log('totb_i={}',(self.totb_i))
+            totb_i_pre  = self.totb_i
+    #       self.copy_vals(self.ag)
+            totb_v      = self.totb_l[self.totb_i]
+            pass;               LOG and log('totb_i_pre,totb_i,totb_v={}',(totb_i_pre,self.totb_i,totb_v))
+            fxs         = self.stores.get('tofx', [])
+            if False:pass
+            elif totb_v==_('[Clear fixed files]') and fxs:
+                if app.ID_YES != app.msg_box(
+                                  f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), 'Send report to')
+                                , app.MB_OKCANCEL+app.MB_ICONQUESTION):
+                    self.totb_i  = totb_i_pre
+                    return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
+                self.stores['tofx']  = []
+                self.totb_i  = 1                                    # == TOTB_USED_TAB
+            elif totb_v==_('[Clear fixed files]'): #  and not fxs
+                self.totb_i  = 1                                    # == TOTB_USED_TAB
+            elif totb_v==_('[Add fixed file]'):
+                fx      = app.dlg_file(True, '', os.path.expanduser(self.fold_s), '')
+                if not fx or not os.path.isfile(fx):
+                    self.totb_i  = totb_i_pre
+                    return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
+                fxs     = self.stores.get('tofx', [])
+                if fx in fxs:
+                    self.totb_i  = 4+fxs.index(fx)
+                else:
+                    self.stores['tofx'] = fxs + [fx]
+                    self.totb_i  = 4+len(self.stores['tofx'])-1     # skip: new,prev,clear,add,files-1
+            else:
+                return self.do_focus(aid,ag)
+        
+            self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
+            pass;                   LOG and log('self.totb_i={}',(self.totb_i))
+            return d(ctrls=[0
+                           ,('totb', d(val=self.totb_i  ,items=self.totb_l))
+                           ][1:]
+                   ) 
+           #def do_totb
+
         self.copy_vals(ag)
         if aid=='send':
             if self.send_s=='1':
@@ -1423,20 +1318,15 @@ class FifD:
             self.upd_def_status(True)
             self.pre_cnts() 
             return d(ctrls=self.get_fif_cnts('vis+pos')
-                     ,form=d(#cap=  self.get_fif_cap()
-                             h    =self.dlg_h
+                     ,form=d(h    =self.dlg_h
                             ,h_max=self.dlg_h if send_b else 0
                             )
                     ,fid='what')
         
-        nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
-        nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))
-        cntx_cs = f(cntx_c, nBf, nAf)
-       
-        ag_morp = DlgAgent(form   =dict(cap=_('Extra report options'), w=310, h=200)
+        ag_morp = DlgAgent(form   =dict(cap=morp_h, w=310, h=200)
                 ,ctrls  =[0
                 ,('tot_',d(tp='lb'  ,t=  5      ,l=  5  ,w=100  ,cap=_('&Report to:')                               ))# &r
-                ,('totb',d(tp='cb-r',t= 23      ,l=  5  ,w=140  ,items=m.totb_l                     ,call=m.do_totb ))# 
+                ,('totb',d(tp='cb-r',t= 23      ,l=  5  ,w=140  ,items=m.totb_l                     ,call=do_totb   ))# 
                 ,('join',d(tp='ch'  ,tid='totb' ,l=170  ,w=140  ,cap=_('Appen&d results')                           ))# &d
                 ,('sht_',d(tp='lb'  ,t= 60      ,l=  5  ,w=100  ,cap=_('&Tree type:')       ,hint=shtp_h            ))# &t
                 ,('shtp',d(tp='cb-r',t= 78      ,l=  5  ,w=140  ,items=SHTP_L                                       ))# 
@@ -1452,8 +1342,8 @@ class FifD:
                            ,shtp=self.shtp_s
                            ,algn=self.algn_s
                            ,cntx=self.cntx_s
-                           ,cxbf=nBf
-                           ,cxaf=nAf
+                           ,cxbf=self.cntx_b
+                           ,cxaf=self.cntx_a
                            )
                 ,fid    = self.stores.get('morp.fid', 'totb')
                               #,options={'gen_repro_to_file':'repro_dlg_pres.py'}
@@ -1463,20 +1353,18 @@ class FifD:
         self.join_s = ag_morp.cval('join')
         self.shtp_s = ag_morp.cval('shtp')
         self.cntx_s = ag_morp.cval('cntx')
+        self.cntx_b = ag_morp.cval('cxbf')
+        self.cntx_a = ag_morp.cval('cxaf')
         self.algn_s = ag_morp.cval('algn')
-        nBf         = ag_morp.cval('cxbf')
-        nAf         = ag_morp.cval('cxaf')
-        apx.set_opt('fif_context_width_before', nBf)
-        apx.set_opt('fif_context_width_after' , nAf)
+        ag.activate()
         self.upd_def_status(True)
         self.pre_cnts()
-        return d(form=d(#cap=self.get_fif_cap()
-                        h_max=self.dlg_h if '1'==self.send_s else 0
+        return d(form=d(h_max=self.dlg_h if '1'==self.send_s else 0
                 ))
        #def do_morp
     
     def do_more(self, aid, ag, data=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
+        msg_status(self.status_s)
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
@@ -1504,8 +1392,7 @@ class FifD:
 #       self.store() # in do_focus
         self.pre_cnts()
         pass;                  #LOG and log('dlg_h={}',(dlg_h))
-        return (dict(form =dict(#cap  =self.get_fif_cap()
-                                 h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
+        return (dict(form =dict(h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
                                 )
                     ,vals =self.get_fif_vals()
                     ,ctrls=self.get_fif_cnts('vis+pos'))
@@ -1513,54 +1400,11 @@ class FifD:
                )
        #def do_more
 
-    def do_totb(self, aid, ag, data=''):
-        pass;                  #LOG and log('totb props={}',(ag.cattrs('totb')))
-        self.totb_i = ag.cval('totb')
-        pass;                   log('totb_i={}',(self.totb_i))
-        totb_i_pre  = self.totb_i
-#       self.copy_vals(self.ag)
-        totb_v      = self.totb_l[self.totb_i]
-        pass;                   LOG and log('totb_i_pre,totb_i,totb_v={}',(totb_i_pre,self.totb_i,totb_v))
-        fxs         = self.stores.get('tofx', [])
-        if False:pass
-        elif totb_v==_('[Clear fixed files]') and fxs:
-            if app.ID_YES != app.msg_box(
-                              f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), 'Send report to')
-#                             f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), self.caps['totb'])
-                            , app.MB_OKCANCEL+app.MB_ICONQUESTION):
-                self.totb_i  = totb_i_pre
-                return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
-            self.stores['tofx']  = []
-            self.totb_i  = 1                                    # == TOTB_USED_TAB
-        elif totb_v==_('[Clear fixed files]'): #  and not fxs
-            self.totb_i  = 1                                    # == TOTB_USED_TAB
-        elif totb_v==_('[Add fixed file]'):
-            fx      = app.dlg_file(True, '', os.path.expanduser(self.fold_s), '')
-            if not fx or not os.path.isfile(fx):
-                self.totb_i  = totb_i_pre
-                return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
-            fxs     = self.stores.get('tofx', [])
-            if fx in fxs:
-                self.totb_i  = 4+fxs.index(fx)
-            else:
-                self.stores['tofx'] = fxs + [fx]
-                self.totb_i  = 4+len(self.stores['tofx'])-1     # skip: new,prev,clear,add,files-1
-        else:
-            return self.do_focus(aid,ag)
-        
-        self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
-        pass;                   LOG and log('self.totb_i={}',(self.totb_i))
-        return d(ctrls=[0
-                       ,('totb', d(val=self.totb_i  ,items=self.totb_l))
-                       ][1:]
-               ) 
-       #def do_totb
-
     def do_help(self, aid, ag, data=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
-        self.stores['help.data'] = dlg_help(
-            word_h, shtp_h, cntx_h, find_h,repl_h,coun_h,cfld_h,fold_h,brow_h,dept_h,pset_h,more_h,menu_h
-        ,   self.stores.get('help.data'))
+        msg_status(self.status_s)
+
+        self.stores['dlg.help.data'] = dlg_fif_help(self, self.stores.get('dlg.help.data'))
+
         open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
         ag.activate()
         return self.do_focus('what',ag)
@@ -1579,138 +1423,40 @@ class FifD:
         return None
        #def do_exit
     
-    def do_resize(self, ag):
-        M,m     = FifD,self
-        def fix_wh(hw_c, hw_min):
-            pbot_v  = ag.cattr('pb'  , hw_c)
-            rslt_v  = ag.cattr('rslt', hw_c)
-            sptr_v  = ag.cattr('sptr', hw_c)
-            srcf_v  = ag.cattr('srcf', hw_c)
-            rslt_v_n= hw_min \
-                        if  rslt_v                  >= pbot_v else \
-                      hw_min \
-                        if (rslt_v+sptr_v+hw_min)   >= pbot_v else \
-                      rslt_v
-            pass;              #log('pbot_v, srcf_v, rslt_v, rslt_v_n={}',(pbot_v, srcf_v, rslt_v, rslt_v_n))
-            if rslt_v==rslt_v_n:    # no hidden
-                return []
-            return d(ctrls=[('rslt',{hw_c:rslt_v_n})])
-           #def fix_wh
-        return fix_wh('h', M.RSLT_H) if m.rslt_va else \
-               fix_wh('w', M.RSLT_W)
-       #def do_resize
-    
-    def do_key_down(self, idd, idc, data=''):
-        M,m     = FifD,self
-        scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
-        pass;                  #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
-        ag      = self.ag
-#       if (scam,idc)==('sca',VK_ENTER):                                                                # Alt+Ctrl+Shift+Enter
-#           pass;           log('ag.hide()',())
-#           ag.hide()
-#           return 
-        if (scam,idc)==('c',ord('F')) or (scam,idc)==('c',ord('R')):                                    # Ctrl+F or Ctrl+R
-            ag.opts['on_exit_focus_to_ed'] = None
-            ag.hide()
-            to_dlg  = cmds.cmd_DialogFind if idc==ord('F') else cmds.cmd_DialogReplace
-            ed.cmd(to_dlg)
-            if app.app_api_version()>='1.0.248':
-                prop    = d(
-                    find_d      = ag.cval('what')
-                ,   op_regex_d  = ag.cval('reex')
-                ,   op_case_d   = ag.cval('case')
-                ,   op_word_d   = ag.cval('word')
-                )
-                if not m.wo_repl and to_dlg==cmds.cmd_DialogReplace:
-                    prop[rep_d] = ag.cval('repl')
-                app.app_proc(app.PROC_SET_FINDER_PROP, prop)
-            return
-        pass;                  #log('send.val={}',(ag.cval('send')))
-        upd     = {}
-        if 0:pass           #NOTE: do_key_down
-        elif scam=='c'  and idc==VK_ENTER \
-                        and '0'==self.send_s \
-                        and ag.fattr('fid')!='rslt':    upd={'fid':'rslt'}                              # Ctrl+Enter
-        elif scam==''   and idc==VK_ENTER \
-                        and ag.fattr('fid')=='rslt':    nav_to_src('same', _ed=m.rslt)      ;upd={}     # Enter      in rslt
-        elif scam=='c'  and idc==VK_ENTER \
-                        and ag.fattr('fid')=='rslt':    nav_to_src('same', _ed=m.rslt)      ;upd=None   # Ctrl+Enter in rslt
-        elif scam==''   and idc==VK_ENTER \
-                        and ag.fattr('fid')=='srcf'\
-                        and m.srcf._loaded_file:        nav_as(m.srcf._loaded_file, m.srcf) ;upd=None   # Enter in srcf
-        elif scam==''   and idc==VK_TAB \
-                        and ag.fattr('fid')=='rslt':    upd={'fid':'srcf'}                              # Tab in rslt
-        elif scam=='s'  and idc==VK_TAB \
-                        and ag.fattr('fid')=='srcf':    upd={'fid':'rslt'}                              # Shift+Tab in srcf
-        elif scam==''   and idc==VK_TAB \
-                        and ag.fattr('fid')=='srcf':    upd={'fid':'what'}                              # Tab in srcf
-#       elif scam==''   and idc in (VK_UP, VK_DOWN) \
-#                       and ag.fattr('fid')=='rslt':        self.do_click('rslt',ag);return             # Up or Down in rslt
-        elif scam== 'c' and idc==187 \
-                        and ag.fattr('fid')=='rslt':    toggle_folding(m.rslt)                          # Ctrl+= in rslt
-#       elif scam== 'c' and idc==187 \
-#                       and ag.fattr('fid')=='rslt':    m.rslt.cmd(cmds.cmd_FoldingToggleAtCurLine)     # Ctrl+= in rslt
-        elif scam== 'c' and idc==VK_NUMPAD0:            upd=m.do_dept('depo', ag)                       # Ctrl+Num0
-        elif scam== 'c' and idc==VK_NUMPAD1:            upd=m.do_dept('dep1', ag)                       # Ctrl+Num1
-        elif scam== 'c' and idc==VK_NUMPAD9:            upd=m.do_dept('depa', ag)                       # Ctrl+Num9
-        elif scam=='sc' and idc==ord('C'):              upd=m.do_fold('cfld', ag, btn_m='s/cfld')       # Ctrl+Shift+C
-        elif scam== 'c' and idc==ord('B'):              upd=m.do_fold('brow', ag, btn_m='s/brow')       # Ctrl+B
-        elif scam== 'c' and idc==ord('S'):              PresetD(self).save()                ;upd={}     # Ctrl+S
-        elif scam== 'c' and idc==ord('T'):              upd=m.do_work('!cnt', ag, btn_m='s/!cnt')       # Ctrl+T
-#       elif scam=='sc' and idc==ord('X'):              upd=m.do_cntx('cntx', ag, btn_m='c/cntx')       # Ctrl+Shift+X
-        elif scam== 'c' and ord('1')<=idc<=ord('3'):    upd=m.do_pres('prs'+chr(idc), ag)               # Ctrl+1..Ctrl+3
-        elif scam== 'c' and idc==ord('E'):              dlg_fif_opts()                                  # Ctrl+E
-        else:                                           return 
-        pass;                  #log('upd={}',(upd))
-        ag._update_on_call(upd)
-        return False
-       #def do_key_down
-
-    def do_click_dbl(self, aid, ag, data=''):
-        M,m     = FifD,self
-        scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
-        pass;                   log('aid, data, scam={}',(aid, data, scam))
-        upd     = None
-        if 0:pass
-        elif aid=='rslt':
-            nav_to_src('same', _ed=m.rslt)
-            upd = None if scam=='c' else {}
-        elif aid=='srcf':
-            nav_as(m.srcf._loaded_file, m.srcf)
-            upd = None
-        else:
-            return 
-        ag._update_on_call(upd)
-        return False
-       #def do_click_dbl
+    def do_mouse_down(self, aid, ag, data=''):
+        pass;                   log('aid,data={}',(aid,data))
+        if 1==data['btn']:  # 1==right
+            self.do_menu(aid, self.ag, data)
+            return False
+        return []
+       #def do_mouse_down
     
     encoding_detector   = UniversalDetector() 
     rslt_timer_cb       = None
     last_click_t        = 0
     SEL_TO_ACT_DELAY    = 0.200 # sec
     TIMER_DELAY         = 200   # msec
-    def do_rslt_click(self, aid, ag, data=''):  #NOTE: do_rslt_click
-#       return self._do_rslt_click(aid, ag, data)       # Skip Timer-hack
+    def do_rslt_click(self, aid, ag, data='', timer=False):  #NOTE: do_rslt_click
         pass;                  #log('aid={}',(aid))
         M,m     = FifD,self
 
-        M.last_click_t  = round(time.perf_counter(), 4)     # time of user click
-        if  M.rslt_timer_cb:
-            return [] 
-        M.rslt_timer_cb     = lambda tag: self._do_rslt_click(aid, ag, data)
-        app.timer_proc(app.TIMER_START, M.rslt_timer_cb, M.TIMER_DELAY)
-        return []
-    def _do_rslt_click(self, aid, ag, data=''):
-        pass;                  #log('aid={}',(aid))
-        M,m     = FifD,self
-        
         now_t   = round(time.perf_counter(), 4)
+        if not timer:
+            # Direct call
+            M.last_click_t  = now_t                         # time of user click
+            if  M.rslt_timer_cb:
+                return [] 
+            M.rslt_timer_cb     = lambda tag: self.do_rslt_click(aid, ag, data, timer=True)
+            app.timer_proc(app.TIMER_START, M.rslt_timer_cb, M.TIMER_DELAY)
+            return []
+
+        # Timer call
         pre_t   = M.last_click_t
         if  (now_t - pre_t) < M.SEL_TO_ACT_DELAY:           # too small pause after last user click
             return []                                       # wait next timer tick or user click
-        if M.rslt_timer_cb:
-            app.timer_proc(app.TIMER_DELETE, M.rslt_timer_cb, 0)
-            M.rslt_timer_cb = None
+        assert M.rslt_timer_cb
+        app.timer_proc(app.TIMER_DELETE, M.rslt_timer_cb, 0)
+        M.rslt_timer_cb = None
         
         if aid=='rslt':
             row     = self.rslt.get_carets()[0][1]
@@ -1718,7 +1464,7 @@ class FifD:
             path,rw,\
             cl, ln  = get_data4nav(self.rslt, row)
             pass;              #log('row, path,rw,cl,ln={}',(row,path,rw, cl, ln))
-            msg_status(path)
+            msg_status(path) if path else 0
             if not path:    return []
             if  self.srcf._loaded_file != path:
                 self.srcf._loaded_file  = path
@@ -1738,7 +1484,6 @@ class FifD:
                     except:
                         text= open(path).read()
                     lexer   = app.lexer_proc(app.LEXER_DETECT, path)
-#                   self.srcf.file_open(path)
                 self.srcf.set_text_all(text) 
                 self.srcf.set_prop(app.PROP_LEXER_FILE, lexer)
                 self.srcf.set_prop(app.PROP_RO, True)
@@ -1746,11 +1491,11 @@ class FifD:
             app.app_idle()                      # Hack to problem: PROP_LINE_TOP sometime skipped after set_prop(PROP_LEXER_FILE)
             nav_to_frag(self.srcf, rw, cl, ln)
         return []
-       #def _do_rslt_click
+       #def do_rslt_click
     
     def do_work(self, aid, ag, btn_m=''):
         M,m     = FifD,self
-        msg_status(self.status_s) #DEF_STATUS_MSG)
+        msg_status(self.status_s)
 #       ag.bind_do()
         self.copy_vals(ag)
 #       self.store() # in do_focus
@@ -1892,6 +1637,11 @@ class FifD:
             )
         ################################
         pass;                  #v=[].get('k')       # Err as while search
+        M.rslt_body   = M.DEF_RSLT_BODY
+        M.rslt_body_r = -1
+        self.rslt.set_prop(app.PROP_RO                  , False)
+        self.rslt.set_text_all(M.rslt_body)
+        self.rslt.set_prop(app.PROP_RO                  , True)
         self.progressor = ProgressAndBreak()
         pass;                  #v=[].get('k')       # Err as while search
         rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
@@ -2009,15 +1759,13 @@ class FifD:
         elif tag=='dept-all':   return self.do_dept('depa', ag)
         elif tag=='dept-only':  return self.do_dept('depo', ag)
         elif tag=='dept-one':   return self.do_dept('dep1', ag)
-        elif tag=='pres-nat':   return self.do_pres('pres', ag, btn_m=   'pres')
-        elif tag=='pres-hist':  return self.do_pres('pres', ag, btn_m= 's/pres')
-        elif tag=='pres-last':  return self.do_pres('pres', ag, btn_m= 'c/pres')
         elif tag=='pres-1':     return self.do_pres('prs1', ag)
         elif tag=='pres-2':     return self.do_pres('prs2', ag)
         elif tag=='pres-3':     return self.do_pres('prs3', ag)
+        elif tag=='pres-4':     return self.do_pres('prs4', ag)
+        elif tag=='pres-5':     return self.do_pres('prs5', ag)
         elif tag=='pres-cfg':   return self.do_pres('conf', ag)
         elif tag=='pres-save':  return self.do_pres('save', ag)
-#       elif tag=='cust-main':  return self.do_more('more', ag)
         elif tag=='cust-rprt':  return self.do_morp('morp', ag)
         elif tag=='cust-srch':  return self.do_mofi('mofi', ag)
         elif tag=='cust-enco':  
@@ -2026,11 +1774,12 @@ class FifD:
             enc_ind = encsN.index(self.enc_srcf) if self.enc_srcf in encsN else len(encsN)
             enc_ind = app.dlg_menu(app.MENU_LIST
                     ,   '\n'.join([f('{}\t{}', nm+(f(' ({}) ', al) if al!='' else ''),  cm)  
-                                    for nm,al,cm in encsNAC] + ['<No>'])
+                                    for nm,al,cm in encsNAC] 
+                                 +['<None>'])
                     ,   focused=enc_ind
                     ,   caption=_('Encodings'))
             if enc_ind is None: return []
-            if enc_ind == len(encsN):
+            if enc_ind == len(encsN):   # '<None>'
                 self.enc_srcf = ''
             else:
                 self.enc_srcf = encsN[enc_ind]
@@ -2049,9 +1798,9 @@ class FifD:
             dlg_nav_by_dclick()
             self.store(what='load')
 
-        elif tag=='rsva':
+        elif tag=='rsva' and '0'==self.send_s:
             self.rslt_va= not self.rslt_va
-            self.stores['rslt_al']  = self.rslt_va
+            self.stores['rslt_va']  = self.rslt_va
             rslt_ali= ALI_TP if self.rslt_va else ALI_LF
             return [d(ctrls=[0
                             ,('rslt',d(ali=rslt_ali   ,w=self.rslt_w   ,h=self.rslt_h     ))
@@ -2059,13 +1808,14 @@ class FifD:
                            ][1:])
                    ,self.do_resize(self.ag)
                    ]
-        elif tag[:4] in ('rslt', 'rmlt', 'svlt'):
+        elif tag[:4] in ('relt', 'rmlt', 'svlt') and '0'==self.send_s:
             lays_l      = self.stores.get('layouts', [])  # [{nm:Nm, dlg_x:?, dlg_y:?, dlg_h:?, dlg_w:?, split:?}]
             lays_d      = {lt['nm']:lt for lt in lays_l}
-            lt_i        = int(tag[4:])  if tag[:4] in ('rslt', 'rmlt')  else -1
-            layout      = lays_l[lt_i]  if lt_i>=0                      else None
+            lt_i        = int(tag[4:])-1  if tag[:4] in ('relt', 'rmlt')    else -1
+            layout      = lays_l[lt_i]  if 0<=lt_i<len(lays_l)              else None
             if 0:pass
             elif tag[:4]=='rmlt':
+                if not layout:  return []
                 if  app.ID_OK != app.msg_box(
                             f(_('Remove "{}"?'), layout['nm'])
                             , app.MB_OKCANCEL+app.MB_ICONQUESTION): return []
@@ -2101,9 +1851,14 @@ class FifD:
                                ,over =self.rslt_va
                                ,split=ag.cattr('rslt', 'h' if self.rslt_va else 'w')
                              ))
-            elif tag[:4]=='rslt':
-                self.rslt_va= layout.get('over', False)
-                self.stores['rslt_al']  = self.rslt_va
+            elif tag[:4]=='relt':
+                if not layout:  return []
+                self.rslt_va    = layout.get('over', False)
+                if self.rslt_va:
+                    self.rslt_h = layout.get('split', self.rslt_h)
+                else:
+                    self.rslt_w = layout.get('split', self.rslt_w)
+                self.stores['rslt_va']  = self.rslt_va
                 rslt_ali= ALI_TP    if self.rslt_va else ALI_LF
                 ctrls   = [0
                         ,('rslt',d(ali=rslt_ali   ,h=self.rslt_h    ))
@@ -2112,6 +1867,7 @@ class FifD:
                         ,('rslt',d(ali=rslt_ali   ,w=self.rslt_w    ))
                         ,('sptr',d(ali=rslt_ali   ,x=self.rslt_w+5  ))
                        ][1:]
+                msg_status(f(_('Apply layout: {}'), layout['nm']))
                 return [d(form=d(x=layout['dlg_x']
                                 ,y=layout['dlg_y']
                                 ,w=layout['dlg_w']
@@ -2123,11 +1879,30 @@ class FifD:
             self.stores['layouts']  = lays_l
             self.store()
             return []
-        else:   return []
+
+        elif tag=='rslt-fold':
+            toggle_folding(self.rslt)                   ;return []
+        elif tag=='rslt-opfr':
+            nav_to_src('same', _ed=self.rslt)           ;return []
+        elif tag=='rslt-tofr':
+            nav_to_src('same', _ed=self.rslt)           ;return None
+        elif tag=='srcf-opfr':
+            nav_as(self.srcf._loaded_file, self.srcf)   ;return None
+        elif tag=='rslt-move':
+            app.file_open('')
+            ed.set_text_all(self.rslt.get_text_all())
+            mrks    = self.rslt.attr(app.MARKERS_GET)
+            for mrk in (mrks if mrks else []):
+                ed.attr(app.MARKERS_ADD, *mrk)
+            ed.set_prop(app.PROP_LEXER_FILE, FIF_LEXER)
+            ed.set_prop(app.PROP_TAB_SIZE  , 1)
+            return None
+        
+        else:
+            return []
         self.upd_def_status(True)
         self.pre_cnts()
-        return (dict(form =dict(#cap  =self.get_fif_cap()
-                                 h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
+        return (dict(form =dict(h    =self.dlg_h ,h_min=self.dlg_h     ,h_max=self.dlg_h if '1'==self.send_s else 0
                                 )
                     ,vals =self.get_fif_vals()
                     ,ctrls=self.get_fif_cnts('vis+pos'))
@@ -2136,77 +1911,98 @@ class FifD:
        #def wnen_menu
         
     def do_menu(self, aid, ag, data=''):
-        msg_status(self.status_s) #DEF_STATUS_MSG)
-        pass;                  #log('',())
+        M,m     = FifD,self
+        msg_status(self.status_s)
+        pass;                  #log('aid={}',(aid))
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_m=='c/menu':     # [Ctrl+"="] - dlg_valign_consts
             dlg_valign_consts()
             return []
- 
+
+        if aid in ('rslt', 'srcf'):
+            pass;              #log('',())
+            where, dx, dy       = '+h', 0, 0
+            if type(data)==dict:
+                pass;          #log('data={}',(data))
+                where, dx, dy   = 'dxdy', 7+data['x'], 7+data['y']
+            if aid=='rslt': ag.show_menu(aid, [
+                    d(tag='rslt-opfr'   ,key='Enter'        ,cap=  _('Open fragment')       ,cmd=self.wnen_menu ,en=bool(self.srcf._loaded_file)
+                  ),d(tag='rslt-tofr'   ,key='Ctrl+Enter'   ,cap=  _('Go to fragment')      ,cmd=self.wnen_menu ,en=bool(self.srcf._loaded_file)
+                  ),d(                                       cap='-'
+                  ),d(tag='rslt-fold'   ,key='Ctrl++'       ,cap=  _('Fold branch')         ,cmd=self.wnen_menu ,en=(M.rslt_body_r!=-1)
+                  ),d(                                       cap='-'
+                  ),d(tag='rslt-move'                       ,cap=  _('Copy Results to tab') ,cmd=self.wnen_menu ,en=(M.rslt_body_r!=-1)
+                                 )]
+                ,   where, dx, dy)
+            if aid=='srcf': ag.show_menu(aid, [
+                    d(tag='srcf-opfr'   ,key='Ctrl+Enter'   ,cap=  _('Go to fragment')      ,cmd=self.wnen_menu ,en=bool(self.srcf._loaded_file)
+                                 )]
+                ,   where, dx, dy)
+            return []
+
+        self.copy_vals(ag) 
         find_c  = self.caps['!fnd']
-#       coun_c  = 'Count' #self.caps['!cnt']
         repl_c  = self.caps['!rep']
         cfld_c  = self.caps['cfld']
         brow_c  = self.caps['brow'].replace('.', '').replace('…', '')
-        pres_c  = _('Presets…') #self.caps['pres'].replace('.', '').replace('…', '')
         fold_c  = self.caps['fold']
+        w_rslt  = '0'==self.send_s
         mn_coun = [
-    d(tag='!cnt-main'   ,key='Alt+T'        ,cap=  _('Count matches only'))
-   ,d(tag='!cnt-name'   ,key='Ctrl+T'       ,cap=  _('Find file names only'))
-                    ]
+    d(tag='!cnt-main'   ,key='Alt+T'        ,cap=  _('Count matches only')
+  ),d(tag='!cnt-name'   ,key='Ctrl+T'       ,cap=  _('Find file names only')
+                   )]
         mn_repl = [
-    d(tag='!rep-main'   ,key='Alt+P'        ,cap=  _('Find and replace')                                                    ,en=not self.wo_repl)
-   ,d(tag='!rep-noqu'                       ,cap=f(_('Find and replace (without question)   [Shift+"{}"]')      , repl_c)   ,en=not self.wo_repl)
-                    ]
+    d(tag='!rep-main'   ,key='Alt+P'        ,cap=  _('Find and replace')                                                    ,en=not self.wo_repl
+  ),d(tag='!rep-noqu'                       ,cap=f(_('Find and replace (without question)   [Shift+"{}"]')      , repl_c)   ,en=not self.wo_repl
+                   )]
         mn_find = [
-    d(tag='!fnd-main'   ,key='Enter'        ,cap=  _('Find'))
-   ,d(tag='!fnd-ntab'                       ,cap=f(_('Find and put report to new tab   [Shift+"{}"]')           , find_c))
-   ,d(tag='!fnd-apnd'                       ,cap=f(_('Find and append result to existing report   [Ctrl+"{}"]') , find_c))
-   ,d(                                       cap='-')
-                    ] +mn_coun+ [
-    d(                                       cap='-')
-                    ] +mn_repl
+    d(tag='!fnd-main'   ,key='Enter'        ,cap=  _('Find')
+  ),d(tag='!fnd-ntab'                       ,cap=f(_('Find and put report to new tab   [Shift+"{}"]')           , find_c)    ,en=not w_rslt
+  ),d(tag='!fnd-apnd'                       ,cap=f(_('Find and append result to existing report   [Ctrl+"{}"]') , find_c)    ,en=not w_rslt
+  ),d(                                       cap='-'
+                   )] +mn_coun+ [
+    d(                                       cap='-'
+                   )] +mn_repl
         mn_cfld = [
-    d(tag='cfld-main'   ,key='Alt+C'        ,cap=  _('Use folder of current file')                                          ,en=bool(ed.get_filename()))
-   ,d(tag='cfld-file'   ,key='Ctrl+Shift+C' ,cap=f(_('Prepare search in the current file   [Shift+"{}"]')       , cfld_c)   ,en=bool(ed.get_filename()))
-   ,d(                                       cap='-')
-   ,d(tag='cfld-tabs'                       ,cap=f(_('Prepare search in all tabs   [Ctrl+"{}"]')                , cfld_c))
-   ,d(tag='cfld-ctab'                       ,cap=f(_('Prepare search in the current tab   [Shift+Ctrl+"{}"]')   , cfld_c))
-   ,d(                                       cap='-')
-   ,d(tag='pres-tabs'                       ,cap=f(_('Fill "{}" to find in tabs')                               , fold_c))
-   ,d(tag='pres-proj'                       ,cap=f(_('Fill "{}" to find in project folders')                    , fold_c))
-                    ]
+    d(tag='cfld-main'   ,key='Alt+C'        ,cap=  _('Use folder of current file')                                          ,en=bool(ed.get_filename())
+  ),d(tag='cfld-file'   ,key='Ctrl+Shift+C' ,cap=f(_('Prepare search in the current file   [Shift+"{}"]')       , cfld_c)   ,en=bool(ed.get_filename())
+  ),d(                                       cap='-'
+  ),d(tag='cfld-tabs'                       ,cap=f(_('Prepare search in all tabs   [Ctrl+"{}"]')                , cfld_c)
+  ),d(tag='cfld-ctab'                       ,cap=f(_('Prepare search in the current tab   [Shift+Ctrl+"{}"]')   , cfld_c)
+  ),d(                                       cap='-'
+  ),d(tag='pres-proj'                       ,cap=f(_('Fill "{}" to find in project folders')                    , fold_c)
+  ),d(tag='pres-tabs'                       ,cap=f(_('Fill "{}" to find in tabs')                               , fold_c)
+                   )]
         mn_brow = [
-    d(tag='brow-main'   ,key='Alt+B'        ,cap=  _('Choose folder…'))
-   ,d(tag='brow-file'   ,key='Ctrl+B'       ,cap=f(_('Choose file to find in it…   [Shift+"{}"]')               , brow_c))
-                    ]
+    d(tag='brow-main'   ,key='Alt+B'        ,cap=  _('Choose folder…')
+  ),d(tag='brow-file'   ,key='Ctrl+B'       ,cap=f(_('Choose file to find in it…   [Shift+"{}"]')               , brow_c)
+                   )]
         mn_dept = [
-    d(tag='dept-only'   ,key='Alt+Y'        ,cap=_('Apply "Only"'))
-   ,d(tag='dept-one'    ,key='Alt+Shift+1'  ,cap=_('Apply "+1 level"'))
-   ,d(tag='dept-all'    ,key='Alt+L'        ,cap=_('Apply "+All"'))
-                    ]
+    d(tag='dept-only'   ,key='Alt+Y'        ,cap=  _('Apply "Onl&y"   [Ctrl+Num0]')
+  ),d(tag='dept-one'    ,key='Alt+Shift+1'  ,cap=  _('Apply "+1 level"   [Ctrl+Num1]')
+  ),d(tag='dept-all'    ,key='Alt+L'        ,cap=  _('Apply "+A&ll"   [Ctrl+Num9]')
+                   )]
         mn_cust = [
-    d(tag='cust-rprt'   ,key='Alt+O'        ,cap=_('Show options for rep&ort…')                                          )
-   ,d(tag='cust-srch'   ,key='Alt+E'        ,cap=_('Show options for s&earch…')                                          )
-   ,d(tag='edit-opts'   ,key='Ctrl+E'       ,cap=_('&View and edit engine options…'))
-   ,d(tag='edit-dcls'                       ,cap=_('&Configure navigation with double-click in report…'))
-   ,d(tag='cust-enco'                       ,cap=f(_('Default encod&ing for source{}…'), f(' ({})', self.enc_srcf) if self.enc_srcf else '')  ,en='0'==self.send_s)
-   ,d(                                       cap='-')
-   ,d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl']))
-   ,d(tag='cust-repl'   ,ch=not self.wo_repl,cap=f(_('Show "{}" and "{}"')  , self.caps['repl']                 , repl_c))
-                    ]
+    d(tag='cust-rprt'   ,key='Alt+O'        ,cap=  _('Options for report t&o tab…')                                             ,en=not w_rslt
+  ),d(tag='cust-srch'   ,key='Alt+E'        ,cap=  _('Extra options for s&earch…')
+  ),d(tag='edit-opts'   ,key='Ctrl+E'       ,cap=  _('&View and edit engine options…')
+  ),d(tag='edit-dcls'                       ,cap=  _('&Configure navigation with double-click in tab report…')
+  ),d(tag='cust-enco'                       ,cap=f(_('Source Encod&ing{}…'), f(' ({})', self.enc_srcf) if self.enc_srcf else ''),en=w_rslt
+  ),d(                                       cap='-'
+  ),d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl'])
+  ),d(tag='cust-repl'   ,ch=not self.wo_repl,cap=f(_('Show "{}" and "{}"')  , self.caps['repl']                 , repl_c)
+                   )]
         pset_l  = self.stores.get('pset', [])
         pset_n  = len(pset_l)
         mn_pres = [
-    d(tag='pres-save',key='Ctrl+S'                     ,cap=  _('Save as preset…'))
-   ,d(tag='pres-cfg'                    ,en=pset_n>0   ,cap=  _('Configure presets…'))
-   ,d(                                                  cap='-')
-   ,d(tag='pres-1'   ,key='Ctrl+1'      ,en=pset_n>0   ,cap= ('&1: '+f('Apply [{}]',pset_l[0]['name'][:40]) if pset_n>0 else ''))
-   ,d(tag='pres-2'   ,key='Ctrl+2'      ,en=pset_n>1   ,cap= ('&2: '+f('Apply [{}]',pset_l[1]['name'][:40]) if pset_n>1 else ''))
-   ,d(tag='pres-3'   ,key='Ctrl+3'      ,en=pset_n>2   ,cap= ('&3: '+f('Apply [{}]',pset_l[2]['name'][:40]) if pset_n>2 else ''))
-   ,d(                                                  cap='-')
-   ,d(tag='pres-nat'                    ,en=pset_n>0   ,cap=f(_('Show presets list [{}]…'), pset_n))
-                    ]
+    d(tag='pres-save',key='Ctrl+S'                     ,cap=  _('&Save preset as…')
+  ),d(tag='pres-cfg' ,key='Ctrl+Alt+S'  ,en=pset_n>0   ,cap=f(_('Presets [{}]…'), pset_n)
+  ),d(                                                  cap='-')
+                  ]+[
+    d(tag='pres-'+str(1+nps)    ,cap=f(_('&{}: {}') ,1+nps, limit_len(ps['name'], 60))   
+                    ,key=(f('Ctrl+{}', 1+nps) if nps<5 else '')
+                                                                             ) for nps, ps in enumerate(pset_l)
+                  ]
 
         mn_its  = None
         if False:pass
@@ -2214,25 +2010,27 @@ class FifD:
             pass;              #log('?menu',())
             lays_l  = self.stores.get('layouts', [])  # [{nm:Nm, dlg_x:?, dlg_y:?, dlg_h:?, dlg_w:?, split:?}]
             mn_lays =      [
-    d(tag='rsva'              ,cap=_('Layout Results o&ver Source'), ch=self.rslt_va
+    d(tag='rsva'              ,cap=_('Set Results o&ver Source')        ,ch=self.rslt_va
   ),d(tag='svlt'              ,cap=_('&Save dialog and controls positions...')
                           )]
             if lays_l: 
                 mn_lays += [d( cap='-')]
                 mn_lays += [
-    d(tag='rslt'+str(nlt)     ,cap=f(_('&{}: Restore "{}"') ,1+nlt, lt['nm'])) for nlt, lt in enumerate(lays_l)
+    d(tag='relt'+str(1+nlt)   ,cap=f(_('&{}: Restore "{}"') ,1+nlt, limit_len(lt['nm'], 30))
+                    ,key=(f('Alt+{}', 1+nlt) if nlt<5 else '')
+                                                                                            ) for nlt, lt in enumerate(lays_l)
                            ]
                 mn_lays += [d( cap=_('&Forget'),sub=[
-    d(tag='rmlt'+str(nlt)     ,cap=f(_('&{}: "{}"...')      ,1+nlt, lt['nm'])) for nlt, lt in enumerate(lays_l)
+    d(tag='rmlt'+str(nlt)     ,cap=f(_('&{}: "{}"...')      ,1+nlt, limit_len(lt['nm'], 30))) for nlt, lt in enumerate(lays_l)
                                                               ]
                           )]
             mn_its  = [ 
       d(                             cap=_('&Find')      ,sub=mn_find
-    ),d(                             cap=_('&Scope')     ,sub=mn_cfld
+    ),d(                             cap=_('Sco&pe')     ,sub=mn_cfld
     ),d(                             cap=_('&Browse')    ,sub=mn_brow
     ),d(                             cap=_('&Depth')     ,sub=mn_dept
-    ),d(                             cap=_('&Presets')   ,sub=mn_pres
-    ),d(                             cap=_('&Layout')    ,sub=mn_lays   ,en=('0'==self.send_s)
+    ),d(                             cap=_('Pre&sets')   ,sub=mn_pres
+    ),d(                             cap=_('&Layout')    ,sub=mn_lays   ,en=w_rslt
     ),d(                             cap='-'
     )                                                     ] + mn_cust + [
       d(                             cap='-'
@@ -2242,18 +2040,12 @@ class FifD:
             mn_its  = mn_find
         elif aid=='!rep':
             mn_its  = mn_repl
-#       elif aid=='!cnt':
-#           mn_its  = mn_coun
         elif aid=='cfld':
             mn_its  = mn_cfld
         elif aid=='brow':
             mn_its  = mn_brow
         elif aid=='dept':
             mn_its  = mn_dept
-#       elif aid=='more':
-#           mn_its  = mn_cust
-#       elif aid=='pres':
-#           mn_its  = mn_pres
 
         if mn_its:
             set_all_for_tree(mn_its, 'sub', 'cmd', self.wnen_menu)
@@ -2261,107 +2053,209 @@ class FifD:
         return []
        #def do_menu
        
+    def do_key_down(self, idd, idc, data=''):
+        M,m     = FifD,self
+        scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
+        pass;                  #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
+        ag      = self.ag
+        fid     = ag.fattr('fid')
+#       if (scam,idc)==('sca',VK_ENTER):                                                            # Alt+Ctrl+Shift+Enter
+#           pass;           log('ag.hide()',())
+#           ag.hide()
+#           return 
+        if idc==VK_APPS and fid in ('rslt', 'srcf'):                                                # ContextMenu in rslt or srcf
+            _ed     = m.rslt if fid=='rslt' else m.srcf
+            c, r    = _ed.get_carets()[0][:2]
+            x, y    = _ed.convert(app.CONVERT_CARET_TO_PIXELS, c, r)
+            m.do_menu(fid, m.ag, data=d(x=x, y=y))
+            return False
+        
+        if (scam,idc)==('c',ord('F')) or (scam,idc)==('c',ord('R')):                                # Ctrl+F or Ctrl+R
+            ag.opts['on_exit_focus_to_ed'] = None
+            ag.hide()
+            to_dlg  = cmds.cmd_DialogFind if idc==ord('F') else cmds.cmd_DialogReplace
+            ed.cmd(to_dlg)
+            if app.app_api_version()>='1.0.248':
+                prop    = d(
+                    find_d      = ag.cval('what')
+                ,   op_regex_d  = ag.cval('reex')
+                ,   op_case_d   = ag.cval('case')
+                ,   op_word_d   = ag.cval('word')
+                )
+                if not m.wo_repl and to_dlg==cmds.cmd_DialogReplace:
+                    prop[rep_d] = ag.cval('repl')
+                app.app_proc(app.PROC_SET_FINDER_PROP, prop)
+            return
+        pass;                  #log('send.val={}',(ag.cval('send')))
+        upd     = {}
+        if 0:pass           #NOTE: do_key_down
+        elif scam=='c'  and idc==VK_ENTER \
+                        and '0'==self.send_s \
+                        and fid!='rslt' \
+                        and fid!='srcf':            upd={'fid':'rslt'}                              # Ctrl+Enter
+        elif scam==''   and idc==VK_ENTER \
+                        and fid=='rslt':            nav_to_src('same', _ed=m.rslt)      ;upd={}     # Enter      in rslt
+        elif scam=='c'  and idc==VK_ENTER \
+                        and fid=='rslt':            nav_to_src('same', _ed=m.rslt)      ;upd=None   # Ctrl+Enter in rslt
+        elif scam=='c'  and idc==VK_ENTER \
+                        and fid=='srcf'\
+                        and m.srcf._loaded_file:    nav_as(m.srcf._loaded_file, m.srcf) ;upd=None   # Ctrl+Enter in srcf
+        
+        elif scam==''   and idc==VK_TAB \
+                        and fid=='rslt':            upd={'fid':'srcf'}                              # Tab in rslt
+        elif scam=='s'  and idc==VK_TAB \
+                        and fid=='srcf':            upd={'fid':'rslt'}                              # Shift+Tab in srcf
+        elif scam==''   and idc==VK_TAB \
+                        and fid=='srcf':            upd={'fid':'what'}                              # Tab in srcf
+        elif scam== 'c' and idc==187 \
+                        and fid=='rslt':            toggle_folding(m.rslt)                          # Ctrl+= in rslt
+        elif scam== 'c' and idc==VK_NUMPAD0:        upd=m.do_dept('depo', ag)                       # Ctrl+Num0
+        elif scam== 'c' and idc==VK_NUMPAD1:        upd=m.do_dept('dep1', ag)                       # Ctrl+Num1
+        elif scam== 'c' and idc==VK_NUMPAD9:        upd=m.do_dept('depa', ag)                       # Ctrl+Num9
+        elif scam=='sc' and idc==ord('C'):          upd=m.do_fold('cfld', ag, btn_m='s/cfld')       # Ctrl+Shift+C
+        elif scam== 'c' and idc==ord('B'):          upd=m.do_fold('brow', ag, btn_m='s/brow')       # Ctrl+B
+        elif scam== 'c' and idc==ord('S'):          PresetD(self).save()                ;upd={}     # Ctrl+S
+        elif scam=='ca' and idc==ord('S'):          PresetD(self).config()              ;upd={}     # Ctrl+Alt+S
+        elif scam== 'c' and idc==ord('T'):          upd=m.do_work('!cnt', ag, btn_m='s/!cnt')       # Ctrl+T
+        elif scam== 'c' and ord('1')<=idc<=ord('5'):upd=m.do_pres('prs'+chr(idc), ag)               # Ctrl+1..Ctrl+5
+        elif scam== 'a' and ord('1')<=idc<=ord('5'):upd=m.wnen_menu(ag, 'relt'+chr(idc))            # Alt+1..Alt+5
+        elif scam== 'c' and idc==ord('E'):          dlg_fif_opts()                                  # Ctrl+E
+        else:                                       return 
+        pass;                  #log('upd={}',(upd))
+        ag._update_on_call(upd)
+        return False
+       #def do_key_down
+
+    def do_click_dbl(self, aid, ag, data=''):
+        M,m     = FifD,self
+        scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+        pass;                   log('aid, data, scam={}',(aid, data, scam))
+        upd     = None
+        if 0:pass
+        elif aid=='rslt':
+            nav_to_src('same', _ed=m.rslt)
+            upd = None if scam=='c' else {}
+        elif aid=='srcf':
+            nav_as(m.srcf._loaded_file, m.srcf)
+            upd = None
+        else:
+            return 
+        ag._update_on_call(upd)
+        return False
+       #def do_click_dbl
+    
+    def pre_cnts(self):
+        M,m     = FifD,self
+        hp      = self.hip
+        self.what_l = [s for s in self.stores.get(hp+'what', []) if s ]
+        self.incl_l = [s for s in self.stores.get(hp+'incl', []) if s ]
+        self.excl_l = [s for s in self.stores.get(hp+'excl', []) if s ]
+        self.fold_l = [s for s in self.stores.get(hp+'fold', []) if s ]
+        self.repl_l = [s for s in self.stores.get(hp+'repl', []) if s ]
+        self.totb_l = FifD.get_totb_l(self.stores.get('tofx', []))
+        self.incl_s = self.incl_l[0] if self.incl_l else ''
+        self.excl_s = self.excl_l[0] if self.excl_l else ''
+        self.fold_s = self.fold_l[0] if self.fold_l else ''
+        
+        w_rslt      = '0'==self.send_s
+        self.gap1   = (GAP- 28 if self.wo_repl else GAP)
+        self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
+        rslt_srcf_h =   0 if not w_rslt else max(100, M.RSLT_H+5+M.SRCF_H)
+        self.dlg_w,\
+        self.dlg_h,\
+        self.dlg_h0 = (self.TBN_L + FifD.BTN_W + GAP
+                      ,FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
+                      ,FifD.DLG_H0 + self.gap2 + 5
+                      )
+        pass;                  #log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
+        pass;                  #log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
+        return self
+       #def pre_cnts
+
     def get_fif_cnts(self, how=''): #NOTE: fif_cnts
         M,m     = FifD,self
         pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
         pass;                  #LOG and log('gap1={}',(gap1))
+        pass;                  #log('m.rslt_w={}',(m.rslt_w))
         g1      = m.gap1
         g2      = m.gap2
         w_excl  = not self.wo_excl
         w_repl  = not self.wo_repl
-#       w_rslt  = True
         w_rslt  = '0'==self.send_s
         dept_l  = M.CMB_L+M.TXT_W-100
         pass;                  #log('mask_h={}',(mask_h))
         d       = dict
         if how=='vis+pos':  return [0
-,('rep_',d(          tid='repl'             ,vis=w_repl ))
-,('repl',d(          t  =5+  28+M.EG1       ,vis=w_repl ))
-,('inc_',d(          tid='incl'                         ))
-,('incl',d(          t  =g1+ 56+M.EG2                   ))
-,('exc_',d(          tid='excl'             ,vis=w_excl )) 
-,('excl',d(          t  =g1+ 84+M.EG3       ,vis=w_excl )) 
-,('fol_',d(          tid='fold'                         ))
-,('fold',d(          t  =g2+112+M.EG4                   ))
-,('dept',d(          t  =g2+112+M.EG4                   ))
-,('brow',d(          tid='fold'                         ))
-,('mofi',d(          tid='incl'                         ))
-,('send',d(          tid='fold'                         ))
-,('morp',d(          tid='fold'          ,en=not w_rslt ))
-,('pt'  ,d(                     h=m.dlg_h0              ))
-,('pb'  ,d(                                  vis=w_rslt ))
-,('rslt',d(                                  en =w_rslt ))
-,('sptr',d(                                  en =w_rslt ))
-,('srcf',d(                                  en =w_rslt ))
-,('!rep',d(          tid='repl'             ,vis=w_repl ))
-,('cfld',d(          tid='incl'                         ))
+ ,('rep_',d(         tid='repl'             ,vis=w_repl ))
+ ,('repl',d(         t  =5+  28+M.EG1       ,vis=w_repl ))
+ ,('inc_',d(         tid='incl'                         ))
+ ,('incl',d(         t  =g1+ 56+M.EG2                   ))
+ ,('exc_',d(         tid='excl'             ,vis=w_excl )) 
+ ,('excl',d(         t  =g1+ 84+M.EG3       ,vis=w_excl )) 
+ ,('fol_',d(         tid='fold'                         ))
+ ,('fold',d(         t  =g2+112+M.EG4                   ))
+ ,('dept',d(         t  =g2+112+M.EG4                   ))
+ ,('brow',d(         tid='fold'                         ))
+ ,('mofi',d(         tid='incl'                         ))
+ ,('send',d(         tid='fold'                         ))
+ ,('morp',d(         tid='fold'          ,en=not w_rslt ))
+ ,('pt'  ,d(                    h=m.dlg_h0              ))
+ ,('pb'  ,d(                                 vis=w_rslt ))
+ ,('rslt',d(                                 en =w_rslt ))
+ ,('sptr',d(                                 en =w_rslt ))
+ ,('srcf',d(                                 en =w_rslt ))
+ ,('!rep',d(         tid='repl'             ,vis=w_repl ))
+ ,('cfld',d(         tid='incl'                         ))
   ][1:] 
 
     # Start=Full cnts
-        nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))
-        nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))
-        cntx_cs = f(cntx_c, nBf, nAf)
         rslt_ali= ALI_TP if m.rslt_va else ALI_LF
         cnts    = [0                                                      #  ghjmqsz ?&m
-,('depa',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
-,('depo',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
-,('dep1',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
-,('prs1',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&1')    ,call=m.do_pres ))# &1
-,('prs2',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&2')    ,call=m.do_pres ))# &2
-,('prs3',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&3')    ,call=m.do_pres ))# &3
-,('!ctt',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
-,('loop',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
-,('help',d(tp='bt'  ,t=0,l=0,w=0,sto=F  ,cap=_('&h')    ,call=m.do_help ))# &h
+ ,('depa',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
+ ,('depo',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
+ ,('dep1',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
+ ,('!ctt',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
+ ,('loop',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
+ ,('help',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&h')    ,call=m.do_help ))# &h
 
-,('pt'  ,d(tp='pn'          ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
+ ,('pt'  ,d(tp='pn'         ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
 
-,('reex',d(tp='ch-b',p='pt' ,tid='what'     ,l= 5+38*0      ,w=39               ,cap='.&*'                  ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
-,('case',d(tp='ch-b',p='pt' ,tid='what'     ,l= 5+38*1      ,w=39               ,cap='&aA'                  ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
-,('word',d(tp='ch-b',p='pt' ,tid='what'     ,l= 5+38*2      ,w=39               ,cap='"&w"'                 ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
+ ,('reex',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*0      ,w=39               ,cap='.&*'                  ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
+ ,('case',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*1      ,w=39               ,cap='&aA'                  ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
+ ,('word',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*2      ,w=39               ,cap='"&w"'                 ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
                                                                                                                                                                                     
-,('wha_',d(tp='lb'  ,p='pt' ,tid='what'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                          ))# &f
-,('what',d(tp='cb'  ,p='pt' ,t= 5           ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                     ,bind='what_s'                                  ))# 
-,('rep_',d(tp='lb'  ,p='pt' ,tid='repl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')            ,vis=w_repl                                                 ))# &r
-,('repl',d(tp='cb'  ,p='pt' ,t= 5+ 28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                         ,vis=w_repl ,bind='repl_s'                                  ))# 
-,('inc_',d(tp='lb'  ,p='pt' ,tid='incl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')   ,hint=mask_h                                                            ))# &i
-,('incl',d(tp='cb'  ,p='pt' ,t=g1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                     ,bind='incl_s'                                  ))# 
-,('exc_',d(tp='lb'  ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:') ,hint=mask_h,vis=w_excl                                                 ))# 
-,('excl',d(tp='cb'  ,p='pt' ,t=g1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                         ,vis=w_excl ,bind='excl_s'                                  ))# 
-,('fol_',d(tp='lb'  ,p='pt' ,tid='fold'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')  ,hint=fold_h                                                            ))# &n
-,('fold',d(tp='cb'  ,p='pt' ,t=g2+112+M.EG4 ,l=M.CMB_L  ,w=M.TXT_W-102  ,a='lR' ,items=m.fold_l                                     ,bind='fold_s'                                  ))# 
-,('dept',d(tp='cb-r',p='pt' ,t=g2+112+M.EG4 ,l=dept_l       ,w=100      ,a='LR' ,items=DEPT_L               ,hint=dept_h            ,bind='dept_n'                  ,menu=m.do_menu ))# 
-,('brow',d(tp='bt'  ,p='pt' ,tid='fold'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')          ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
-,('cfld',d(tp='bt'  ,p='pt' ,tid='incl'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Current')          ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
+ ,('wha_',d(tp='lb' ,p='pt' ,tid='what'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                          ))# &f
+ ,('what',d(tp='cb' ,p='pt' ,t= 5           ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                     ,bind='what_s'                                  ))# 
+ ,('rep_',d(tp='lb' ,p='pt' ,tid='repl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')            ,vis=w_repl                                                 ))# &r
+ ,('repl',d(tp='cb' ,p='pt' ,t= 5+ 28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                         ,vis=w_repl ,bind='repl_s'                                  ))# 
+ ,('inc_',d(tp='lb' ,p='pt' ,tid='incl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')   ,hint=mask_h                                                            ))# &i
+ ,('incl',d(tp='cb' ,p='pt' ,t=g1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                     ,bind='incl_s'                                  ))# 
+ ,('exc_',d(tp='lb' ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:') ,hint=mask_h,vis=w_excl                                                 ))# 
+ ,('excl',d(tp='cb' ,p='pt' ,t=g1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                         ,vis=w_excl ,bind='excl_s'                                  ))# 
+ ,('fol_',d(tp='lb' ,p='pt' ,tid='fold'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')  ,hint=fold_h                                                            ))# &n
+ ,('fold',d(tp='cb' ,p='pt' ,t=g2+112+M.EG4 ,l=M.CMB_L  ,w=M.TXT_W-102  ,a='lR' ,items=m.fold_l                                     ,bind='fold_s'                                  ))# 
+ ,('dept',d(tp='cbr',p='pt' ,t=g2+112+M.EG4 ,l=dept_l       ,w=100      ,a='LR' ,items=DEPT_L               ,hint=dept_h            ,bind='dept_n'                  ,menu=m.do_menu ))# 
+ ,('brow',d(tp='bt' ,p='pt' ,tid='fold'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')          ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
+ ,('cfld',d(tp='bt' ,p='pt' ,tid='incl'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Current')          ,hint=cfld_h                            ,call=m.do_fold ,menu=m.do_menu ))# &c
                                                                                                                                                                                     
-,('mofi',d(tp='bt'  ,p='pt' ,tid='incl'     ,l= 5           ,w=39*3             ,cap=_('For s&earch…')      ,hint=mofi_h                            ,call=m.do_mofi                 ))# &e
-,('send',d(tp='ch'  ,p='pt' ,tid='fold'     ,l= 5           ,w=39*1             ,cap=_('Sen&d')             ,hint=send_h                            ,call=m.do_morp                 ))# &d
-,('morp',d(tp='bt'  ,p='pt' ,tid='fold'     ,l= 5+39*2-10   ,w=39*1+10          ,cap=_('t&o…')              ,hint=morp_h,en=not w_rslt              ,call=m.do_morp                 ))# &o
+ ,('mofi',d(tp='bt' ,p='pt' ,tid='incl'     ,l= 5           ,w=39*3             ,cap=_('For s&earch…')      ,hint=mofi_h                            ,call=m.do_mofi                 ))# &e
+ ,('send',d(tp='ch' ,p='pt' ,tid='fold'     ,l= 5           ,w=39*1             ,cap=_('Sen&d')             ,hint=send_h                            ,call=m.do_morp                 ))# &d
+ ,('morp',d(tp='bt' ,p='pt' ,tid='fold'     ,l= 5+39*2-10   ,w=39*1+10          ,cap=_('t&o…')              ,hint=morp_h,en=not w_rslt              ,call=m.do_morp                 ))# &o
                                                                                                                                                                                     
-,('!fnd',d(tp='bt'  ,p='pt' ,tid='what'     ,l=M.TBN_L  ,w=M.BTN_W-30   ,a='LR' ,cap=_('Find'),def_bt=True  ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
-,('!rep',d(tp='bt'  ,p='pt' ,tid='repl'     ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')          ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
-,('menu',d(tp='bt'  ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-30,w=30  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
+ ,('!fnd',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L  ,w=M.BTN_W-30   ,a='LR' ,cap=_('Find'),def_bt=True  ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
+ ,('!rep',d(tp='bt' ,p='pt' ,tid='repl'     ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')          ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
+ ,('menu',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-30,w=30  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
                                                                                                                                                                                     
-,('pb'  ,d(tp='pn'          ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
-#               ][1:]+([0
-#,('rslt',d(tp='edr' ,p='pb' ,ali=ALI_TP     ,en =w_rslt     ,h=m.rslt_h     ,h_min=M.RSLT_H ,border='1' ,on_caret    =m.do_rslt_click   
-#                                                                                                       ,on_click_dbl=m.do_click_dbl))
-#,('sptr',d(tp='sp'  ,p='pb' ,ali=ALI_TP     ,en =w_rslt     ,y=m.rslt_h+5                                                           ))
-#,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,h_min=M.RSLT_H ,border='1' ,on_click_dbl=m.do_click_dbl))
-#               ][1:]) if m.rslt_va else ([0
-#,('rslt',d(tp='edr' ,p='pb' ,ali=ALI_LF     ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1' ,on_caret    =m.do_rslt_click   
-#                                                                                                       ,on_click_dbl=m.do_click_dbl))
-#,('sptr',d(tp='sp'  ,p='pb' ,ali=ALI_LF     ,en =w_rslt     ,x=m.rslt_w+5                                                           ))
-#,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.RSLT_W ,border='1' ,on_click_dbl=m.do_click_dbl))
-,('rslt',d(tp='edr' ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1' 
-                                                            ,h=m.rslt_h     ,h_min=M.RSLT_H             ,on_caret    =m.do_rslt_click   
+ ,('pb'  ,d(tp='pn'         ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
+ ,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu 
+                                                            ,h=m.rslt_h     ,h_min=M.RSLT_H             ,on_caret    =m.do_rslt_click                               
                                                                                                         ,on_click_dbl=m.do_click_dbl))
-,('sptr',d(tp='sp'  ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,x=m.rslt_w+5
-                                                            ,y=m.rslt_h+5                                                           ))
-,('srcf',d(tp='edr' ,p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1' 
+ ,('sptr',d(tp='sp' ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,x=m.rslt_w+5
+                                                            ,y=m.rslt_h+5                                                           )) 
+ ,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu  
                                                                             ,h_min=M.SRCF_H             ,on_click_dbl=m.do_click_dbl))
-#               ][1:])+[0
                                                                                                                                       
-,('stbr',d(tp='sb'          ,ali=ALI_BT         ))  # 
+ ,('stbr',d(tp='sb'         ,ali=ALI_BT         ))  # 
                 ][1:]
         self.caps   = {cid:cnt['cap']             for cid,cnt           in cnts
                         if cnt['tp'] in ('bt', 'ch')          and 'cap' in cnt}
@@ -2557,11 +2451,15 @@ ToDo
 [ ][kv-kv][08jun18] ? Ctrl+S to save a new preset
 [ ][kv-kv][09jun18] Skip to control excl and repl vals if fields are hidden (into do_work)
 [ ][kv-kv][21jun18] ? Src-ed: call open_file (not set_text_all(read))
-[ ][kv-kv][22jun18] Copy rslt to tab
+[ ][kv-kv][22jun18] ! Copy rslt to tab
 [+][kv-kv][22jun18] Add to history 'what' after start-work
 [+][kv-kv][22jun18] Command to point src encoding
 [ ][kv-kv][22jun18] ? How to 'jump to next' after Ctrl+Enter from rslt?
 [+][kv-kv][25jun18] Save/set line in rslt
 [+][at-kv][25jun18] Allow vert/horz layout for Rslt/Src
 [ ][kv-kv][25jun18] Opt to gap src sel row from top
+[ ][kv-kv][26jun18] Splitter has bad pos after 'over' turn off
+[ ][kv-kv][02jul18] Show/Hide rslt after apply preset
+[+][kv-kv][02jul18] Set "waiting" after empty found
+[+][kv-kv][05jul18] Split search history for session/project
 '''

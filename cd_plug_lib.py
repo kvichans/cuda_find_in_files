@@ -65,6 +65,7 @@ REDUCTIONS  = {'lb'     :'label'
             ,  'gr'     :'group'
             ,  'sp'     :'splitter'
 
+            ,  'pgs'    :'pages'
             ,  'tvw'    :'treeview'
             ,  'edr'    :'editor'
             ,  'sb'     :'statusbar'
@@ -904,7 +905,7 @@ class BaseDlgAgent:
 
     def cattr(self, name, attr, live=True, defv=None):
         """ Return one the control property """
-        live= False if attr in ('type',) else live          # Unchangable
+        live= False if attr in ('type', 'p') else live          # Unchangable
         pr  = dlg_proc_wpr(self.id_dlg
                         , app.DLG_CTL_PROP_GET
                         , name=name)            if live else    self.ctrls[name]
@@ -924,9 +925,14 @@ class BaseDlgAgent:
                         , name=name)            if live else    self.ctrls[name]
         attrs   = attrs if attrs else list(pr.keys())
         pass;                  #log('pr={}',(pr))
-        rsp     = {attr:pr.get(attr) for attr in attrs if attr not in ('val','on_change','callback')}
+        rsp     = {attr:pr.get(attr) for attr in attrs 
+                    if attr not in ('type', 'p', 'val')}
         if 'val' in attrs:
-            rsp['val'] = self._take_val(name, pr.get('val')) if live else pr.get('val')
+            rsp['val']  = self._take_val(name, pr.get('val')) if live else pr.get('val')
+        if 'p' in attrs:
+            rsp['p']    = self.ctrls[name].get('p', '')
+        if 'type' in attrs:
+            rsp['type'] = self.ctrls[name]['type']
         return rsp
        #def cattrs
        
@@ -1039,6 +1045,7 @@ class BaseDlgAgent:
         elif tp=='listview':
             new_val = -1 if liv_val=='' else int(liv_val)
         elif old_val is not None: 
+            pass;              #log('name,old_val,liv_val={}',(name,old_val,liv_val))
             new_val = type(old_val)(liv_val)
         return new_val
        #def _take_val
@@ -1569,7 +1576,8 @@ class DlgAgent(BaseDlgAgent):
         pass;                  #log('fpr is self.form={}',(fpr is self.form))
         fpr     = BaseDlgAgent._form_acts('move', form=fpr)         # Move and (maybe) resize
         pass;                  #log('fpr is self.form={}',(fpr is self.form))
-        if 'on_resize' in self.form and \
+        if 'on_resize'   in self.form and \
+           'on_show' not in self.form and \
            (fpr['w'] != w0 or \
             fpr['h'] != h0):
             pass;              #log('fpr[w],fpr[h],w0,h0={}',(fpr['w'], fpr['h'], w0,h0))
@@ -1653,17 +1661,25 @@ class DlgAgent(BaseDlgAgent):
         return c_pr
        #def _prepare_c_pr
 
-    def show_menu(self, cid, mn_content, where='+h'):
+    def show_menu(self, cid, mn_content, where='+h', dx=0, dy=0):
         """ cid             Control to show menu near it
             mn_content      [{cap:'', tag:'', en:T, ch:F, rd:F, cmd:(lambda ag, tag:''), sub:[]}]
             where           Menu position 
                                 '+h' - under the control
                                 '+w' - righter the control
         """
-        pr      = self.cattrs(cid, ('x','y','w','h'))
-        x, y    = pr['x']+(pr['w'] if '+w' in where else 0) \
-                , pr['y']+(pr['h'] if '+h' in where else 0)
-        pass;                  #log('x, y={}',(x, y))
+        pr      = self.cattrs(cid, ('x','y','w','h', 'p'))
+        pid     = pr['p']
+        while pid:
+            ppr = self.cattrs(pid, ('x','y', 'p'))
+            pass;              #log('pid, ppr={}',())
+            pr['x']+= ppr['x']
+            pr['y']+= ppr['y']
+            pid     = ppr['p']
+        x, y    =  pr['x']+(pr['w']         if '+w' in where else 0) \
+                ,  pr['y']+(pr['h']         if '+h' in where else 0)
+        x, y    = (pr['x']+dx, pr['y']+dy)  if where=='dxdy' else (x, y)
+        pass;                  #log('(x, y), (dx, dy), pr={}',((x, y), (dx, dy), pr))
         prXY    = _os_scale('scale', {'x':x, 'y':y})
         x, y    = prXY['x'], prXY['y']
         pass;                  #log('x, y={}',(x, y))

@@ -1,0 +1,56 @@
+﻿• ".*" - Option "Regular Expression". 
+It allows to use in field "Find what" special symbols:
+    .   any character
+    \d  digit character (0..9)
+    \w  word-like character (digits, letters, "_")
+In field "Replace with":
+    \1  to insert first found group,
+    \2  to insert second found group, ... 
+See full documentation by link at bottom.
+ 
+• "w" - {word}
+ 
+—————————————————————————————————————————————— 
+ 
+• Values in fields "{incl}" and "{excl}" can contain
+    ?       for any single char,
+    *       for any substring (may be empty),
+    [seq]   any character in seq,
+    [!seq]  any character not in seq. 
+Note: 
+    *       matches all names, 
+    *.*     doesn't match all.
+ 
+• Values in fields "{incl}" and "{excl}" can filter subfolder names 
+if they start with "/".
+Example.
+    {incl:12}: /a*  *.txt
+    {excl:12}: /ab*
+    {fold:12}: c:/root
+    Depth       : All
+    Search will consider all *.txt files in folder c:/root
+    and in all subfolders a* except ab*.
+ 
+• Set special value "{tags}" for field "{fold}" to search in opened documents.
+Fields "{incl}" and "{excl}" will be to filter tab titles.
+To search in all tabs, use mask "*" in field "{incl}".
+See: commands in menu/Scope.
+ 
+• Set special value "{proj}" for field "{fold}" to search in project files.
+See: commands in menu/Scope.
+ 
+—————————————————————————————————————————————— 
+ 
+• Long-term searches can be interrupted by ESC.
+Search has three stages: 
+    picking files, 
+    finding fragments, 
+    reporting.
+ESC stops any stage. 
+When picking and finding, ESC stops only this stage, so next stage begins.
+ 
+—————————————————————————————————————————————— 
+ 
+• Use right click or Context keyboard button 
+to see context menu over these elements
+    "Find", "Replace", "Current", "Browse", Depth combobox

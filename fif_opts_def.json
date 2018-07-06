@@ -1,4 +1,16 @@
 [
+    {   "cmt": ["Store separated history for pointed sessions/projects.",
+                "The history has values of the fields:",
+                "  Find what, Replace with, In files, Not in files, In folder",
+                "Each string in list is re-pattern to search in session/project file path."
+                "Will be used first suitable string"],
+        "def": [],
+        "frm": "json",
+        "opt": "fif_sep_hist_for_sess_proj",
+        "chp": "History",
+        "tgs": []
+    },
+
     {   "cmt": "Copy options [.*], [aA], [\"w\"] from CudaText dialog to plugin's dialog.",
         "def": false,
         "frm": "bool",
@@ -41,31 +53,6 @@
         "tgs": ["searching", "stop"]
     },
 
-    {   "cmt": ["Appends N nearest lines to report (if [x]\"Show context\").",
-                "So, 2*N+1 lines will be reported for each found line.",
-                "Also see options:",
-                "  fif_context_width_before",
-                "  fif_context_width_after"],
-        "def": 1,
-        "frm": "int",
-        "opt": "fif_context_width",
-        "chp": "Report",
-        "tgs": ["report", "context"]
-    },
-    {   "cmt": "Appends N previous lines to report (if [x]\"Show context\").",
-        "def": 1,
-        "frm": "int",
-        "opt": "fif_context_width_before",
-        "chp": "Report",
-        "tgs": ["report", "context"]
-    },
-    {   "cmt": "Appends N next lines to report (if [x]\"Show context\").",
-        "def": 1,
-        "frm": "int",
-        "opt": "fif_context_width_after",
-        "chp": "Report",
-        "tgs": ["report", "context"]
-    },
     {   "cmt": "Show report if nothing found.",
         "def": false,
         "frm": "bool",

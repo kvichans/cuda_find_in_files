@@ -1,9 +1,23 @@
+3.1.06 (2018-07-06)
+added: Local menu over Results/Source
+added: Command to copy Results to new tab (see local menu)
+added: Separated history for specified session/project (see option fif_sep_hist_for_sess_proj)
+added: Hotkeys Alt+1(..5) to apply 1st(..5th) layout
+reworked: Dialog Help - only text, tabbed 
+fixed: Save values of context "+-counts" as others (not into user.json)
+fixed: Contents of Help pages (2 of 3) move to external files into readme folder
+
+3.1.05 (2018-06-29)
+added: apply preset from dialog Presets
+added: call dialog Presets by Ctrl+Alt+S
+removed: list of presets as dlg_menu
+
 3.1.04 (2018-06-25)
 added: command in menu to set encoding for Source
 added: save text and caret row in Results between runtime calls
 added: skip some caret events on Results to show Source only for last of caret position
 added: save active control into sub-dialogs "Extra report options" and "Extra search options"
-added: vert/horz layout for Rslt/Src
+added: vert/horz layout for Results/Source
 
 3.1.03 (2018-06-22)
 added: menu commands =/Layout/* to save/restore dialog and splitter positions
