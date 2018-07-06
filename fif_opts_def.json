@@ -2,7 +2,7 @@
     {   "cmt": ["Store separated history for pointed sessions/projects.",
                 "The history has values of the fields:",
                 "  Find what, Replace with, In files, Not in files, In folder",
-                "Each string in list is re-pattern to search in session/project file path."
+                "Each string in list is re-pattern to search in session/project file path.",
                 "Will be used first suitable string"],
         "def": [],
         "frm": "json",
