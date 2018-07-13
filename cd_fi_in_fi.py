@@ -2166,8 +2166,8 @@ class FifD:
         self.gap2   = (GAP- 28 if self.wo_excl else GAP)+self.gap1 -GAP
         rslt_srcf_h =   0 if not w_rslt else max(100, M.RSLT_H+5+M.SRCF_H)
         self.dlg_w  = self.TBN_L + FifD.BTN_W + GAP
-        self.dlg_h  = FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
-        self.dlg_h0 = FifD.DLG_H0 + self.gap2 + 5                   +(0 if 'win'==get_desktop_environment() else 15)
+        self.dlg_h  = FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h   +(0 if 'win'==get_desktop_environment() else 23)
+        self.dlg_h0 = FifD.DLG_H0 + self.gap2 + 5                  +(0 if 'win'==get_desktop_environment() else 23)
         pass;                  #log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
         pass;                  #log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
         return self
