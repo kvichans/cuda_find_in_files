@@ -979,7 +979,7 @@ class FifD:
         self.excl_s  = opts.get('excl', self.stores.get(hp+'excl',  [''])[0])
         self.fold_s  = opts.get('fold', self.stores.get(hp+'fold',  [''])[0])
         self.dept_n  = opts.get('dept', self.stores.get('dept',  0)-1)+1
-        self.send_s  = opts.get('send', self.stores.get('send', '1'))
+        self.send_s  = opts.get('send', self.stores.get('send', '0'))
         self.join_s  = opts.get('join', self.stores.get('join', '0'))
         self.totb_i  = opts.get('totb', self.stores.get('totb',  0 ));  self.totb_i =  1  if self.totb_i== 0  else self.totb_i
         self.shtp_s  = opts.get('shtp', self.stores.get('shtp', '0'))
