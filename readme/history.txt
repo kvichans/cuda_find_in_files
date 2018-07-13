@@ -1,3 +1,7 @@
+3.1.07 (2018-07-13)
+fixed: Default layout is "Results over Source"
+fixed: Shift from top in Source is 3
+
 3.1.06 (2018-07-06)
 added: Local menu over Results/Source
 added: Command to copy Results to new tab (see local menu)
@@ -35,9 +39,7 @@ added: in-dialog editors for Results and Source
 2.3.19 (2018-06-04)
 fixed: Allow to change checks in dlg Configure presets
 added: Hotkeys 
-	- Ctrl+1	Apply 1st preset 
-	- Ctrl+2	Apply 2nd preset 
-	- Ctrl+3	Apply 3rd preset 
+	- Ctrl+1(..5)	Apply 1st(..5th) preset 
 	- Ctrl+B	Choose file to find
 	- Ctrl+Num0	Apply "In folder only"
 	- Ctrl+Num1	Apply "1 level"

@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.06 2018-07-06'
+    '3.1.07 2018-07-13'
 ToDo: (see end of file)
 '''
 
@@ -28,7 +28,7 @@ MIN_API_VER     = '1.0.180' # panel group p
 MIN_API_VER     = '1.0.183' # on_change
 MIN_API_VER     = '1.0.216' # STATUSBAR_SET_AUTOSTRETCH
 MIN_API_VER     = '1.0.246' # events for control 'editor'
-MIN_API_VER_HLP = '1.0.232' # PROP_GUTTER_ALL
+#MIN_API_VER     = '1.0.249' # on_menu in 'editor', 'val' in 'pages'
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
@@ -548,7 +548,6 @@ _TIPS_BODY  = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hin
 RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
 
 def dlg_fif_help(fif, stores=None):
-    if app.app_api_version()<MIN_API_VER_HLP: return app.msg_status(_('Need update application'))
     stores      = {} if stores is None else stores
     TIPS_BODY   =_TIPS_BODY.strip().format(
                     word=word_h.replace('\r', '\n')
@@ -582,9 +581,9 @@ def dlg_fif_help(fif, stores=None):
     def do_exit(ag):
         pass
         page = 0 if ag.cattr('keys', 'vis') else 1 if ag.cattr('tips', 'vis') else 2
-#       page = ag.cval('tabs')
+#       page = ag.cval('tabs')  ##!! Wait 'val' for 'pages' 
         stores['page']  = page
-    try:    ##!! Wait 'val' for 'pages' 
+    try:                        ##!! Wait 'val' for 'pages' 
         ag_hlp.show(callbk_on_exit=lambda ag: do_exit(ag))    #NOTE: dlg_fif_help
     except:pass
     return stores
@@ -998,7 +997,7 @@ class FifD:
         self.wo_excl= self.stores.get('wo_excl', True)
         self.wo_repl= self.stores.get('wo_repl', True)
 
-        self.rslt_va= self.stores.get('rslt_va', False)
+        self.rslt_va= self.stores.get('rslt_va', True)
         self.rslt_w = self.stores.get('rslt_w', M.RSLT_W)   if not self.rslt_va else M.RSLT_W
         self.rslt_h = self.stores.get('rslt_h', M.RSLT_H)   if     self.rslt_va else M.RSLT_H
         
@@ -1458,7 +1457,7 @@ class FifD:
         app.timer_proc(app.TIMER_DELETE, M.rslt_timer_cb, 0)
         M.rslt_timer_cb = None
         
-        if aid=='rslt':
+        if aid=='rslt' and M.rslt_body!=M.DEF_RSLT_BODY:
             row     = self.rslt.get_carets()[0][1]
             M.rslt_body_r   = row
             path,rw,\
@@ -1489,7 +1488,7 @@ class FifD:
                 self.srcf.set_prop(app.PROP_RO, True)
                 pass;          #log('ok load path={}',(path))
             app.app_idle()                      # Hack to problem: PROP_LINE_TOP sometime skipped after set_prop(PROP_LEXER_FILE)
-            nav_to_frag(self.srcf, rw, cl, ln)
+            nav_to_frag(self.srcf, rw, cl, ln, indent_vert=-3)
         return []
        #def do_rslt_click
     
@@ -1918,7 +1917,7 @@ class FifD:
     def do_menu(self, aid, ag, data=''):
         M,m     = FifD,self
         msg_status(self.status_s)
-        pass;                  #log('aid={}',(aid))
+        pass;                  #log('aid,data={}',(aid,data))
         btn_p,btn_m = FifD.scam_pair(aid)
         if btn_m=='c/menu':     # [Ctrl+"="] - dlg_valign_consts
             dlg_valign_consts()
@@ -1943,7 +1942,7 @@ class FifD:
                     d(tag='srcf-opfr'   ,key='Ctrl+Enter'   ,cap=  _('Go to fragment')      ,cmd=self.wnen_menu ,en=bool(self.srcf._loaded_file)
                                  )]
                 ,   where, dx, dy)
-            return []
+            return False
 
         self.copy_vals(ag) 
         find_c  = self.caps['!fnd']
@@ -2168,9 +2167,9 @@ class FifD:
         rslt_srcf_h =   0 if not w_rslt else max(100, M.RSLT_H+5+M.SRCF_H)
         self.dlg_w  = self.TBN_L + FifD.BTN_W + GAP
         self.dlg_h  = FifD.DLG_H0 + self.gap2 + 25 + rslt_srcf_h
-        self.dlg_h0 = FifD.DLG_H0 + self.gap2 + 5                   +10
-        pass;                   log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
-        pass;                   log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
+        self.dlg_h0 = FifD.DLG_H0 + self.gap2 + 5                   +(0 if 'win'==get_desktop_environment() else 15)
+        pass;                  #log('DLG_H0, gap2={}',(FifD.DLG_H0, self.gap2))
+        pass;                  #log('dlg_w, dlg_h, dlg_h0={}',(self.dlg_w, self.dlg_h, self.dlg_h0))
         return self
        #def pre_cnts
 
@@ -2249,11 +2248,13 @@ class FifD:
  ,('menu',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-30,w=30  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
                                                                                                                                                                                     
  ,('pb'  ,d(tp='pn'         ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
+#,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,menu=m.do_menu 
  ,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu 
                                                             ,h=m.rslt_h     ,h_min=M.RSLT_H             ,on_caret    =m.do_rslt_click                               
                                                                                                         ,on_click_dbl=m.do_click_dbl))
  ,('sptr',d(tp='sp' ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,x=m.rslt_w+5
                                                             ,y=m.rslt_h+5                                                           )) 
+#,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,menu=m.do_menu  
  ,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu  
                                                                             ,h_min=M.SRCF_H             ,on_click_dbl=m.do_click_dbl))
                                                                                                                                       
@@ -2465,4 +2466,5 @@ ToDo
 [+][kv-kv][02jul18] Set "waiting" after empty found
 [+][kv-kv][05jul18] Split search history for session/project
 [ ][kv-kv][06jul18] Repeat search by sel in rslt/srcf
+[ ][kv-kv][09jul18] Event on_open for *.fif to set markers by (r:c:l)
 '''

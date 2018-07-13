@@ -587,7 +587,7 @@ def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
     else:
         op_ed.set_caret(        cl+ln,  rw,     cl, rw)
     if rw!=-1:
-        top_row = max(0, rw - max(5, indent_vert))
+        top_row = max(0, rw - min(5, abs(indent_vert)))
         op_ed.set_prop(app.PROP_LINE_TOP, top_row)
    #def nav_to_frag
 
