@@ -104,6 +104,14 @@
         "tgs": ["report", "comfort"]
     },
 
+    {   "cmt": ["Append the value to field 'Not in files'",
+               "Default value: /.svn /.git /.hg /.idea"],
+        "def": "/.svn /.git /.hg /.idea",
+        "frm": "str",
+        "opt": "fif_always_not_in_files",
+        "chp": "Searching",
+        "tgs": ["searching"]
+    },
     {   "cmt": "Size of buffer (at file start) to detect binary files.",
         "def": 1024,
         "frm": "int",

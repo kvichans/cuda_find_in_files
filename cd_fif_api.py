@@ -97,9 +97,10 @@ def api_reload_opts():
     pass;                       NAVLOG  = (-4== 4) and LOG or apx.get_opt('fif_NAVLOG', False)
     pass;                       DBG_DATA_TO_REPORT  =         apx.get_opt('fif_DBG_data_to_report', False)
 
-    global lexers_l,FIF_LEXER,lexers_l,USE_SEL_ON_START,ESC_FULL_STOP,REPORT_FAIL,FOLD_PREV_RES,LEN_TRG_IN_TITLE
+    global FIF_LEXER,lexers_l,USE_SEL_ON_START,ESC_FULL_STOP,REPORT_FAIL,FOLD_PREV_RES,LEN_TRG_IN_TITLE
     global BLOCKSIZE,CONTEXT_WIDTH,SKIP_FILE_SIZE,AUTO_SAVE,FOCUS_TO_RPT,SAVE_REQ_TO_RPT,TAB_SIZE_IN_RPT
     global MARK_FIND_STYLE,MARK_TREPL_STYLE,MARK_FREPL_STYLE
+    global ALWAYS_EXCL
     lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
     FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
     lexers_l        = list(map(lambda s: s.upper(), lexers_l))
@@ -121,6 +122,7 @@ def api_reload_opts():
     MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
     MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
     MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
+    ALWAYS_EXCL     = apx.get_opt('fif_always_not_in_files'     , '/.svn /.git /.hg /.idea')
    #def api_reload_opts
 api_reload_opts()
 if 'sw'==app.__name__:

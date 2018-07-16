@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.07 2018-07-13'
+    '3.1.08 2018-07-16'
 ToDo: (see end of file)
 '''
 
@@ -657,6 +657,11 @@ mask_h  = _('Space-separated file or folder masks.'
             '\rDouble-quote mask, which needs space-char.'
             '\rUse ? for any character and * for any fragment.'
             '\rNote: "*" matchs all names, "*.*" doesnt match all.')
+excl_h  = mask_h+f(_(''
+            '\r '
+            '\rAlways excluded: {}'
+            '\rSee option "fif_always_not_in_files" to change.'
+            ), ALWAYS_EXCL)
 reex_h  = _('Regular expression'
             '\rFormat for found groups in Replace: \\1'
             )
@@ -1129,7 +1134,7 @@ class FifD:
 
     def do_focus(self,aid,ag, store=True):
         self.store() if store else None
-        aid_ed  = ag.cattr(aid, 'type') in ('edit', 'combo')
+        aid_ed  = ag.cattr(aid, 'type') in ('edit', 'combo') if aid[0]!='!' else False
         fid     = ag.fattr('focused')
         fid_ed  = ag.cattr(fid, 'type') in ('edit', 'combo') if fid else None
         fid     = aid    if aid_ed                                  else \
@@ -1587,7 +1592,7 @@ class FifD:
         how_walk    =dict(                                  #NOTE: fif params
              roots      =roots
             ,file_incl  =self.incl_s
-            ,file_excl  =self.excl_s
+            ,file_excl  =self.excl_s + ' ' + ALWAYS_EXCL
             ,depth      =self.dept_n-1               # ['All', 'In folder only', '1 level', …]
             ,skip_hidn  =self.skip_s in ('1', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
             ,skip_binr  =self.skip_s in ('2', '3')   # [' ', 'Hidden', 'Binary', 'Hidden, Binary']
@@ -2231,7 +2236,7 @@ class FifD:
  ,('repl',d(tp='cb' ,p='pt' ,t= 5+ 28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                         ,vis=w_repl ,bind='repl_s'                                  ))# 
  ,('inc_',d(tp='lb' ,p='pt' ,tid='incl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')   ,hint=mask_h                                                            ))# &i
  ,('incl',d(tp='cb' ,p='pt' ,t=g1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                     ,bind='incl_s'                                  ))# 
- ,('exc_',d(tp='lb' ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:') ,hint=mask_h,vis=w_excl                                                 ))# 
+ ,('exc_',d(tp='lb' ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:') ,hint=excl_h,vis=w_excl                                                 ))# 
  ,('excl',d(tp='cb' ,p='pt' ,t=g1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                         ,vis=w_excl ,bind='excl_s'                                  ))# 
  ,('fol_',d(tp='lb' ,p='pt' ,tid='fold'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')  ,hint=fold_h                                                            ))# &n
  ,('fold',d(tp='cb' ,p='pt' ,t=g2+112+M.EG4 ,l=M.CMB_L  ,w=M.TXT_W-102  ,a='lR' ,items=m.fold_l                                     ,bind='fold_s'                                  ))# 
@@ -2467,4 +2472,5 @@ ToDo
 [+][kv-kv][05jul18] Split search history for session/project
 [ ][kv-kv][06jul18] Repeat search by sel in rslt/srcf
 [ ][kv-kv][09jul18] Event on_open for *.fif to set markers by (r:c:l)
+[ ][at-kv][14jul18] Add opt fif_append_to_exludes to section Searching with def val '/.svn /.git /.hg'
 '''

@@ -1,3 +1,6 @@
+3.1.08 (2018-07-16)
+added: Append constant (value of option fif_always_not_in_files) to "Not in files" to skip some folders (as .svn .git .hg .idea)
+
 3.1.07 (2018-07-13)
 fixed: Default "Send" is off
 fixed: Default layout is "Results over Source"
