@@ -1704,7 +1704,7 @@ class FifD:
         self.progressor.set_progress(msg_rpt)
         self.progressor = None
         ################################
-        if 0<frgms and CLOSE_AFTER_GOOD:
+        if 0<frgms and CLOSE_AFTER_GOOD and not w_rslt:
             self.store()
             return None #break#while_fif
 

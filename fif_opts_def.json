@@ -104,8 +104,7 @@
         "tgs": ["report", "comfort"]
     },
 
-    {   "cmt": ["Append the value to field 'Not in files'",
-               "Default value: /.svn /.git /.hg /.idea"],
+    {   "cmt": ["Append the value to the field 'Not in files'"],
         "def": "/.svn /.git /.hg /.idea",
         "frm": "str",
         "opt": "fif_always_not_in_files",
