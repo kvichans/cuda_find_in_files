@@ -1,3 +1,6 @@
+3.1.09 (2018-08-17)
+fixed: Dlg Help
+
 3.1.08 (2018-07-16)
 added: Append constant (value of option fif_always_not_in_files) to "Not in files" to skip some folders (as .svn .git .hg .idea)
 

@@ -31,12 +31,12 @@ Example.
     Search will consider all *.txt files in folder c:/root
     and in all subfolders a* except ab*.
  
-• Set special value "{tags}" for field "{fold}" to search in opened documents.
+• Set special value "{tags}" (in short <t> or <Tabs>) for field "{fold}" to search in opened documents.
 Fields "{incl}" and "{excl}" will be to filter tab titles.
 To search in all tabs, use mask "*" in field "{incl}".
 See: commands in menu/Scope.
  
-• Set special value "{proj}" for field "{fold}" to search in project files.
+• Set special value "{proj}" (in short <p>) for field "{fold}" to search in project files.
 See: commands in menu/Scope.
  
 —————————————————————————————————————————————— 
@@ -54,3 +54,6 @@ When picking and finding, ESC stops only this stage, so next stage begins.
 • Use right click or Context keyboard button 
 to see context menu over these elements
     "Find", "Replace", "Current", "Browse", Depth combobox
+ 
+—————————————————————————————————————————————— 
+You are welcome to plugin forum. See bottom link.

@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.08 2018-07-16'
+    '3.1.09 2018-08-17'
 ToDo: (see end of file)
 '''
 
@@ -545,7 +545,8 @@ then option "Tree type" in dialog "{morp}" allows to set:
 ''')
 _KEYS_TABLE = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hotkeys.txt')  , encoding='utf-8').read()
 _TIPS_BODY  = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hints.txt')    , encoding='utf-8').read()
-RE_DOC_REF  = 'https://docs.python.org/3/library/re.html'
+RE_DOC_URL  = 'https://docs.python.org/3/library/re.html'
+GH_ISU_URL  = 'https://github.com/kvichans/cuda_find_in_files/issues'
 
 def dlg_fif_help(fif, stores=None):
     stores      = {} if stores is None else stores
@@ -572,16 +573,17 @@ def dlg_fif_help(fif, stores=None):
                                         ,t=5,h=400  ,a='lRtB'   ,items='Hotkeys\tHints\tTree types' ,val=page       ))
                 ,('keys',dict(tp='me'   ,p='tabs.0' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=KEYS_TABLE ))
                 ,('tips',dict(tp='me'   ,p='tabs.1' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=TIPS_BODY  ))
+                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')     ,url=RE_DOC_URL ))
                 ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=TREE_BODY  ))
-                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')     ,url=RE_DOC_REF ))
+                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Plugin forum')              ,url=GH_ISU_URL ))
             ][1:]
             , fid   = 'tabs'
                                #,options={'gen_repro_to_file':'repro_dlg_fif_help.py'}
         )
     def do_exit(ag):
         pass
-        page = 0 if ag.cattr('keys', 'vis') else 1 if ag.cattr('tips', 'vis') else 2
-#       page = ag.cval('tabs')  ##!! Wait 'val' for 'pages' 
+#       page = 0 if ag.cattr('keys', 'vis') else 1 if ag.cattr('tips', 'vis') else 2
+        page = ag.cval('tabs')  ##!! Wait 'val' for 'pages' 
         stores['page']  = page
     try:                        ##!! Wait 'val' for 'pages' 
         ag_hlp.show(callbk_on_exit=lambda ag: do_exit(ag))    #NOTE: dlg_fif_help
@@ -882,7 +884,7 @@ class FifD:
     SRCF_W      = 300       # Min width of 'srcf'
     SRCF_H      = 100       # Min heght of 'srcf'
 
-    DEF_RSLT_BODY   = _('...waiting results...')
+    DEF_RSLT_BODY   = _('(no results)')
     rslt_body   = DEF_RSLT_BODY
     rslt_body_r = -1
     def show(self):
@@ -934,7 +936,7 @@ class FifD:
         self.srcf.set_prop(app.PROP_GUTTER_STATES       , False)
         self.srcf.set_prop(app.PROP_GUTTER_FOLD         , False)
         self.srcf.set_prop(app.PROP_GUTTER_BM           , False)
-        self.srcf.set_text_all(_('...waiting source...'))
+        self.srcf.set_text_all(_('(no source)'))
         self.srcf.set_prop(app.PROP_RO                  , True)
         self.srcf._loaded_file  = None
         statusbar   = self.ag.handle('stbr')
@@ -1716,7 +1718,7 @@ class FifD:
         M.rslt_body_r   = -1
         self.srcf._loaded_file  = None
         self.srcf.set_prop(app.PROP_RO                  , False)
-        self.srcf.set_text_all(_('...waiting source...'))
+        self.srcf.set_text_all(_('(no source)'))
         self.srcf.set_prop(app.PROP_RO                  , True)
         return d(fid='rslt')
        #def do_work
@@ -2226,7 +2228,7 @@ class FifD:
 
  ,('pt'  ,d(tp='pn'         ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
 
- ,('reex',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*0      ,w=39               ,cap='.&*'                  ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
+ ,('reex',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*0      ,w=39               ,cap='&.*'                  ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
  ,('case',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*1      ,w=39               ,cap='&aA'                  ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
  ,('word',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*2      ,w=39               ,cap='"&w"'                 ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
                                                                                                                                                                                     
@@ -2435,7 +2437,7 @@ ToDo
 [-][kv-kv][22aug17] ? Rename to 'In folder[s]'
 [+][kv-kv][08sep17] "Context -1+1"
 [ ][kv-kv][14sep17] Save fold before to work
-[ ][kv-kv][27sep17] ? New "Show in": in dlg editor (footer?)
+[+][kv-kv][27sep17] ? New "Show in": in dlg editor (footer?)
 [+][kv-kv][04oct17] "No files found" if collect_files returns []
 [+][at-kv][25oct17] DLG_SCALE
 [+][kv-kv][01dec17] Show count of searched files in status (NB for "nothing")
@@ -2454,12 +2456,12 @@ ToDo
 [+][at-kv][18may18] Set tab_size to 2 in lexer if no such setting
 [+][kv-kv][21may18] Start and second pos of Less is diff
 [+][kv-kv][24may18] Add statusbar
-[ ][kv-kv][04jun18] ? Ctrl+F calls native dialog Find. Ctrl+R calls native dialog Replace
+[+][kv-kv][04jun18] ? Ctrl+F calls native dialog Find. Ctrl+R calls native dialog Replace
 [+][kv-kv][08jun18] Store "in module var" prev Results (a-la in tab)
-[ ][kv-kv][08jun18] ? Ctrl+S to save a new preset
+[+][kv-kv][08jun18] ? Ctrl+S to save a new preset
 [ ][kv-kv][09jun18] Skip to control excl and repl vals if fields are hidden (into do_work)
-[ ][kv-kv][21jun18] ? Src-ed: call open_file (not set_text_all(read))
-[ ][kv-kv][22jun18] ! Copy rslt to tab
+[-][kv-kv][21jun18] ? Src-ed: call open_file (not set_text_all(read))
+[+][kv-kv][22jun18] ! Copy rslt to tab
 [+][kv-kv][22jun18] Add to history 'what' after start-work
 [+][kv-kv][22jun18] Command to point src encoding
 [ ][kv-kv][22jun18] ? How to 'jump to next' after Ctrl+Enter from rslt?
@@ -2472,5 +2474,6 @@ ToDo
 [+][kv-kv][05jul18] Split search history for session/project
 [ ][kv-kv][06jul18] Repeat search by sel in rslt/srcf
 [ ][kv-kv][09jul18] Event on_open for *.fif to set markers by (r:c:l)
-[ ][at-kv][14jul18] Add opt fif_append_to_exludes to section Searching with def val '/.svn /.git /.hg'
+[+][at-kv][14jul18] Add opt fif_always_not_in_files to section Searching with def val '/.svn /.git /.hg'
+[ ][kv-kv][23jul18] ? Why need dlg_h0+=23 at Lin?
 '''
