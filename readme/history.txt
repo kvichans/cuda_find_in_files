@@ -1,3 +1,6 @@
+3.1.10 (2018-08-29)
+fixed: layout for MacOS
+
 3.1.09 (2018-08-17)
 fixed: Dlg Help
 

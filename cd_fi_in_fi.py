@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.09 2018-08-17'
+    '3.1.10 2018-08-29'
 ToDo: (see end of file)
 '''
 
@@ -2219,12 +2219,12 @@ class FifD:
     # Start=Full cnts
         rslt_ali= ALI_TP if m.rslt_va else ALI_LF
         cnts    = [0                                                      #  ghjmqsz ?&m
- ,('depa',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
- ,('depo',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
- ,('dep1',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
- ,('!ctt',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
- ,('loop',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
- ,('help',d(tp='bt' ,t=0,l=0,w=0,sto=F  ,cap=_('&h')    ,call=m.do_help ))# &h
+ ,('depa',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
+ ,('depo',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
+ ,('dep1',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
+ ,('!ctt',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
+ ,('loop',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
+ ,('help',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&h')    ,call=m.do_help ))# &h
 
  ,('pt'  ,d(tp='pn'         ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
 
@@ -2250,9 +2250,9 @@ class FifD:
  ,('send',d(tp='ch' ,p='pt' ,tid='fold'     ,l= 5           ,w=39*1             ,cap=_('Sen&d')             ,hint=send_h                            ,call=m.do_morp                 ))# &d
  ,('morp',d(tp='bt' ,p='pt' ,tid='fold'     ,l= 5+39*2-10   ,w=39*1+10          ,cap=_('t&o…')              ,hint=morp_h,en=not w_rslt              ,call=m.do_morp                 ))# &o
                                                                                                                                                                                     
- ,('!fnd',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L  ,w=M.BTN_W-30   ,a='LR' ,cap=_('Find'),def_bt=True  ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
+ ,('!fnd',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L  ,w=M.BTN_W-39   ,a='LR' ,cap=_('Find'),def_bt=True  ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
  ,('!rep',d(tp='bt' ,p='pt' ,tid='repl'     ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')          ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
- ,('menu',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-30,w=30  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
+ ,('menu',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-39,w=39  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
                                                                                                                                                                                     
  ,('pb'  ,d(tp='pn'         ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
 #,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,menu=m.do_menu 
