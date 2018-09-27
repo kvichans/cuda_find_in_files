@@ -1,3 +1,7 @@
+3.1.11 (2018-09-26)
+added: new search filter - "age more/less N hours/days/weeks/months/years"
+fixed: avoid deprecated API
+
 3.1.10 (2018-08-29)
 fixed: layout for MacOS
 

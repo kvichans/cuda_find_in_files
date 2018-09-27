@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.10 2018-08-29'
+    '3.1.11 2018-09-26'
 ToDo: (see end of file)
 '''
 
@@ -217,14 +217,14 @@ class PresetD:
     keys_l  = ['reex','case','word'
               ,'incl','excl'
               ,'fold','dept'
-              ,'skip','sort','frst','enco'
+              ,'skip','sort','olde','frst','enco'
                      ,'send'
                      ,'totb','join','shtp','algn'
                      ,'cntx','cntb','cnta']
     caps_l  = ['.*','aA','"w"'
               ,'In files','Not in files'
               ,'In folder','Subfolders'
-              ,'Skip files','Sort file list','Firsts','Encodings'
+              ,'Skip files','Sort file list','Age','Firsts','Encodings'
                      ,'[Report] Send to tab/file'
                      ,'[Report] Show in','[Report] Append results','[Report] Tree type','[Report] Align'
                      ,'[Report] Show context','[Report] Context "before"','[Report] Context "after"']
@@ -239,6 +239,7 @@ class PresetD:
         elif fifkey in ('reex','case','word'
                        ,'send','join','algn','cntx'):   return PresetD.yn01[val] #_('Yes') if val=='1' else _('No')
         elif fifkey=='totb':    return totb_l[int(val)] if val in ('0', '1') else val
+        elif fifkey=='olde':    return ('<'+val).replace('<<', '<').replace('<>', '>').replace('/', '')
         pass;                      #log('fifkey, val={}',(fifkey, val))
         val = int(val)
         if False:pass
@@ -257,6 +258,8 @@ class PresetD:
         M,m     = PresetD,self
         pset_l  = copy.deepcopy(m.fif.stores.get('pset', []))
         if not pset_l:  return msg_status(_('No preset to config'))
+        for ps in pset_l:
+            M.upgrd(ps)
 
         def save_close(cid, ag, data=''):
             if pset_l:
@@ -268,6 +271,7 @@ class PresetD:
             m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
             open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
             return None
+           #def save_close
             
         def acts(cid, ag, data=''):
             if not pset_l:  return {}
@@ -334,6 +338,7 @@ class PresetD:
             
             pass;               LOG and log('no act: cid,ps_ind={}',(cid,ps_ind))
             return {'fid':'prss'}
+           #def acts
         
         def fill_what(cid, ag, data=''):
             ps_ind  = ag.cval('prss')
@@ -360,6 +365,7 @@ class PresetD:
                       ,('mvdn',dict(en=ps_ind<(len(pset_l)-1))      )
                       ]+prss_nms
                ,fid='prss')
+           #def fill_what
 
         ps_ind      = 0
         ps          = pset_l[ps_ind]                                                            if pset_l else {}
@@ -407,7 +413,7 @@ class PresetD:
         invl_l  = (m.fif.reex01,m.fif.case01,m.fif.word01,
                    m.fif.incl_s,m.fif.excl_s,
                    m.fif.fold_s,m.fif.dept_n,
-                   m.fif.skip_s,m.fif.sort_s,m.fif.frst_s,m.fif.enco_s,
+                   m.fif.skip_s,m.fif.sort_s,m.fif.olde_s,m.fif.frst_s,m.fif.enco_s,
                    m.fif.send_s,
                    totb_v,m.fif.join_s,m.fif.shtp_s,m.fif.algn_s,m.fif.cntx_s,m.fif.cntx_b,m.fif.cntx_a)
 
@@ -467,6 +473,7 @@ class PresetD:
             elif k=='dept':     m.fif.dept_n = ps[k]
             elif k=='skip':     m.fif.skip_s = ps[k]
             elif k=='sort':     m.fif.sort_s = ps[k]
+            elif k=='olde':     m.fif.olde_s = ps[k]
             elif k=='frst':     m.fif.frst_s = ps[k]
             elif k=='enco':     m.fif.enco_s = ps[k]
             elif k=='send':     m.fif.send_s = ps[k]
@@ -497,6 +504,9 @@ class PresetD:
 
     @staticmethod
     def upgrd(ps:list)->list:
+        if 'olde' not in ps:  
+            ps['olde']  = '0/d'
+            ps['_olde'] = 'x'
         if 'cntb' not in ps:  
             ps['cntb']  = 1
             ps['_cntb'] = 'x'
@@ -693,9 +703,9 @@ cfld_h  = _('Use folder of current file.'
             '\rCtrl+Click   - Prepare search in all tabs.'
             '\rShift+Ctrl+Click - Prepare search in the current tab.'
             )
-mofi_h  = _('Extra search options')
+mofi_h  = _('Advanced search options')
 send_h  = _('Output report to tab/file')
-morp_h  = _('Extra tab report options')
+morp_h  = _('Advanced tab report options')
 menu_h  = _('Local menu'
             '\rCtrl+Click - Adjust vertical alignments…'
             )
@@ -716,6 +726,12 @@ frst_h  = _('M[, F]'
             '\r     - Collect all proper files'
             '\r     - Sort the list'
             '\r     - Use first F files to search'
+            )
+OLDE_U  = ['hour(s)', 'day(s)', 'week(s)', 'month(s)', 'year(s)']
+olde_h  = _('"N" or "<N" or ">N".'
+            '\rSkip files if the age less or more then N.'
+            '\r"N" and "<N" are equal.'
+            '\r"0" to all ages.'
             )
 shtp_h  = f(_(  'Format of the reported tree structure.'
             '\rCompact - report all found line with full file info:'
@@ -977,11 +993,17 @@ class FifD:
         self.case01  = opts.get('case', self.stores.get('case', '0'))
         self.word01  = opts.get('word', self.stores.get('word', '0'))
         if USE_EDFIND_OPS:
-            ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')
-            # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
-            self.reex01  = '1' if 'r' in ed_opt else '0'
-            self.case01  = '1' if 'c' in ed_opt else '0'
-            self.word01  = '1' if 'w' in ed_opt else '0'
+            if app.app_api_version()>='1.0.248':
+                fpr     = app.app_proc(app.PROC_GET_FINDER_PROP, '')
+                self.reex01  = '1' if ('op_regex_d' in fpr and fpr['op_regex_d'] or fpr['op_regex']) else '0'
+                self.case01  = '1' if ('op_case_d'  in fpr and fpr['op_case_d']  or fpr['op_case'] ) else '0'
+                self.word01  = '1' if ('op_word_d'  in fpr and fpr['op_word_d']  or fpr['op_word'] ) else '0'
+            else:
+                ed_opt  = app.app_proc(app.PROC_GET_FIND_OPTIONS, '')   # Deprecated
+                # c - Case, r - RegEx,  w - Word,  f - From-caret,  a - Wrap
+                self.reex01  = '1' if 'r' in ed_opt else '0'
+                self.case01  = '1' if 'c' in ed_opt else '0'
+                self.word01  = '1' if 'w' in ed_opt else '0'
         self.incl_s  = opts.get('incl', self.stores.get(hp+'incl',  [''])[0])
         self.excl_s  = opts.get('excl', self.stores.get(hp+'excl',  [''])[0])
         self.fold_s  = opts.get('fold', self.stores.get(hp+'fold',  [''])[0])
@@ -998,6 +1020,7 @@ class FifD:
         self.algn_s  = opts.get('algn', self.stores.get('algn', '0'))
         self.skip_s  = opts.get('skip', self.stores.get('skip', '0'))
         self.sort_s  = opts.get('sort', self.stores.get('sort', '0'))
+        self.olde_s  = opts.get('olde', self.stores.get('olde', '0/d'))
         self.frst_s  = opts.get('frst', self.stores.get('frst', '0'));  self.frst_s  = '0' if not self.frst_s else self.frst_s
         self.enco_s  = opts.get('enco', self.stores.get('enco', '0'))
 
@@ -1102,6 +1125,7 @@ class FifD:
             self.stores['algn']     = self.algn_s
             self.stores['skip']     = self.skip_s
             self.stores['sort']     = self.sort_s
+            self.stores['olde']     = self.olde_s
             self.stores['frst']     = self.frst_s
             self.stores['enco']     = self.enco_s
             self.stores['rslt_va']  = self.rslt_va
@@ -1114,6 +1138,8 @@ class FifD:
         info_fi     = []
         info_fi    += [(SKIP_L[int(self.skip_s)]    )]  if self.skip_s!='0' else []
         info_fi    += [(_('sorted')                 )]  if self.sort_s!='0' else []
+        age         = ('<'+self.olde_s).replace('<<', '<').replace('<>', '>').replace('/', '')
+        info_fi    += [(_('age')+age)]                  if age[1]!='0'      else []
         info_fi    += [(_('first "')+self.frst_s+'"')]  if self.frst_s!='0' else []
             
         info_rp     = []
@@ -1240,19 +1266,27 @@ class FifD:
     def do_mofi(self, aid, ag, data=''):
         msg_status(self.status_s)
         pass;                  #log('self.skip_s={}',(self.skip_s))
-        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=320, h=120)
+        olde_n, \
+        olde_u  = self.olde_s.split('/')
+        olde_ui = {U[0]:i for i,U in enumerate(OLDE_U)}[olde_u]
+        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=320, h=120+27)
                 ,ctrls  =[0
                 ,('ski_',d(tp='lb'  ,tid='skip' ,l=5    ,w=100-5,cap='>'+_('S&kip files:')                  ))# &k
                 ,('skip',d(tp='cb-r',t=5        ,l=5+100,w=200  ,items=SKIP_L                               ))# 
                 ,('sor_',d(tp='lb'  ,tid='sort' ,l=5    ,w=100-5,cap='>'+_('S&ort file list:')              ))# &o
                 ,('sort',d(tp='cb-r',t=5+27*1   ,l=5+100,w=200  ,items=SORT_L                               ))# 
-                ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=100-5,cap='>'+_('Firsts (&0=all):')  ,hint=frst_h))# &0
-                ,('frst',d(tp='ed'  ,t=5+27*2   ,l=5+100,w=200  ,bind='frst_s'                              ))# 
-                ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=100-5,cap='>'+_('Encodings &\\:')    ,hint=enco_h))# \
-                ,('enco',d(tp='cb-r',t=5+27*3   ,l=5+100,w=200  ,items=ENCO_L                               ))# 
+                ,('old_',d(tp='lb'  ,tid='olde' ,l=5    ,w=100-5,cap='>'+_('A&ge (0=all):')     ,hint=olde_h))# &g
+                ,('olde',d(tp='ed'  ,t=5+27*2   ,l=5+100,w= 75                                              ))# 
+                ,('oldu',d(tp='cb-r',tid='olde' ,l=5+180,w=120  ,s=OLDE_U                               ))# 
+                ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=100-5,cap='>'+_('&Firsts (0=all):')  ,hint=frst_h))# &f
+                ,('frst',d(tp='ed'  ,t=5+27*3   ,l=5+100,w=200                                              ))# 
+                ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=100-5,cap='>'+_('&Encodings:')       ,hint=enco_h))# &e
+                ,('enco',d(tp='cb-r',t=5+27*4   ,l=5+100,w=200  ,s=ENCO_L                               ))# 
                         ][1:]
                 ,vals   = d(skip=self.skip_s
                            ,sort=self.sort_s
+                           ,olde=olde_n
+                           ,oldu=olde_ui
                            ,frst=self.frst_s
                            ,enco=self.enco_s
                            )
@@ -1260,9 +1294,12 @@ class FifD:
                               #,options={'gen_repro_to_file':'repro_dlg_pres.py'}
         )
         ag_mofi.show(callbk_on_exit=lambda ag: self.stores.update({'mofi.fid':ag.fattr('fid')}))
+        age         = ag_mofi.cval('olde').strip()
+        age         = age if re.match('[<>]?\d+$', age) else '0' 
         self.skip_s = ag_mofi.cval('skip')
         self.sort_s = ag_mofi.cval('sort')
-        self.frst_s = ag_mofi.cval('frst')
+        self.olde_s = age+'/'+OLDE_U[ag_mofi.cval('oldu')][0]
+        self.frst_s = ag_mofi.cval('frst').strip()
         self.enco_s = ag_mofi.cval('enco')
         pass;                  #log('self.skip_s={}',(self.skip_s))
         self.upd_def_status(True)
@@ -1590,8 +1627,12 @@ class FifD:
         # Block action buttons
         self.lock_act(ag, 'lock-save')
         
-        pass;                   LOG and log('self.dept_n={}',(repr(self.dept_n)))
-        how_walk    =dict(                                  #NOTE: fif params
+        pass;                  #LOG and log('self.dept_n={}',(repr(self.dept_n)))
+        pass;                  #LOG and log('self.olde_s={}',(self.olde_s))
+        age         = self.olde_s if re.match('[<>]?[1-9]\d*/[hdwmy]$', self.olde_s) else ''
+        age         = age.replace('/', '')
+        age         = ('<' if age and age[0]!='<' and age[0]!='>' else '') + age
+        how_walk    = dict(                                 #NOTE: fif params
              roots      =roots
             ,file_incl  =self.incl_s
             ,file_excl  =self.excl_s + ' ' + ALWAYS_EXCL
@@ -1601,11 +1642,12 @@ class FifD:
             ,sort_type  =apx.icase( self.sort_s=='0','' 
                                    ,self.sort_s=='1','date,desc' 
                                    ,self.sort_s=='2','date,asc' ,'')
+            ,age        =age
             ,only_frst  =int((self.frst_s+',0').split(',')[1])
             ,skip_unwr  =btn_p=='!rep'
             ,enco       =ENCO_L[int(self.enco_s)].split(', ')
             )
-        what_find   =dict(
+        what_find   = dict(
              find       =self.what_s
             ,repl       =self.repl_s if btn_p=='!rep' else None
             ,mult       =False
@@ -1651,13 +1693,17 @@ class FifD:
         self.rslt.set_prop(app.PROP_RO                  , True)
         self.progressor = ProgressAndBreak()
         pass;                  #v=[].get('k')       # Err as while search
-        rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
+        rpt_data, rpt_info = None, None
+        try:
+            rpt_data, rpt_info = find_in_files(     #NOTE: run-fif
              how_walk   = how_walk
             ,what_find  = what_find
             ,what_save  = what_save
             ,how_rpt    = how_rpt
             ,progressor = self.progressor
             )
+        except Exception as e:
+            log(traceback.format_exc()) 
         if not rpt_data and not rpt_info: 
             msg_status(_("Search stopped"))
             self.lock_act(ag, 'unlock-saved')
@@ -1693,16 +1739,19 @@ class FifD:
             req_opts['fold']=self.fold_s
             req_opts['dept']-=1
             req_opts    = json.dumps(req_opts)
-        report_to_tab(                      #NOTE: run-report
-            rpt_data
-           ,rpt_info
-           ,how_rpt
-           ,how_walk
-           ,what_find
-           ,what_save
-           ,progressor  = self.progressor
-           ,req_opts    = req_opts
-           )
+        try:
+            report_to_tab(                      #NOTE: run-report
+                rpt_data
+               ,rpt_info
+               ,how_rpt
+               ,how_walk
+               ,what_find
+               ,what_save
+               ,progressor  = self.progressor
+               ,req_opts    = req_opts
+               )
+        except Exception as e:
+            log(traceback.format_exc()) 
         self.progressor.set_progress(msg_rpt)
         self.progressor = None
         ################################

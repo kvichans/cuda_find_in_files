@@ -7,6 +7,7 @@ ToDo: (see end of file)
 '''
 
 import  re, os, sys, locale, json, collections, traceback, time
+from    datetime        import datetime, timedelta
 from    fnmatch         import fnmatch
 
 import  cudatext            as app
@@ -934,8 +935,11 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
         try:
             from cuda_project_man import global_project_info
             roots   = global_project_info['nodes'][:]
+            pass;               LOG and log('roots={}',(roots))
             how_walk['roots'] = roots
-        except:
+        except Exception as ex:
+            pass;               LOG and log('ex={}',(ex))
+#       except:
             roots   = []
             how_walk['roots'] = roots
     pass;                       LOG and log('roots={}',(roots))
@@ -1255,6 +1259,7 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
             'file_incl'    !str
             'file_excl'     str('')
             'sort_type'     str('')     ''/'date,desc'/'date,asc'
+            'age'           str('<>Nd') ''=all
             'only_frst'     int(0)      0=all
             'skip_hidn'     bool(T)
             'skip_binr'     bool(F) 
@@ -1279,6 +1284,7 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     binr    = how_walk.get('skip_binr', False)
     size    = how_walk.get('skip_size', SKIP_FILE_SIZE)
     unwr    = how_walk.get('skip_unwr', False)
+    age     = how_walk.get('age', '')
     frst    = how_walk.get('only_frst', 0)
     sort    = how_walk.get('sort_type', '')
     incls,  \
@@ -1287,6 +1293,29 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     excls_fo= prep_filename_masks(excl)
     pass;                      #LOG and log('incls={} incls_fo={}',incls, incls_fo)
     pass;                      #LOG and log('excls={} excls_fo={}',excls, excls_fo)
+    
+    pass;                       log('age={}',(age))
+    age_d   = []
+    if age:
+        age_u   = age[-1]
+        age_n   = int(age[1:-1])
+        age_d   = dict( now=datetime.now()
+                      , how=age[0]
+                      , thr=timedelta(hours=age_n)      if age_u=='h' else
+                            timedelta(days =age_n)      if age_u=='d' else
+                            timedelta(weeks=age_n)      if age_u=='w' else
+                            timedelta(days =age_n*30)   if age_u=='m' else
+                            timedelta(days =age_n*365) #if age_u=='y'
+                      )
+    def with_age(age_d, mtime):
+        mdt = datetime.fromtimestamp(mtime)
+        dt  = age_d['now'] - mdt
+        pass;                  #log('age_d={}',(age_d))
+        pass;                  #log('mdt,dt={}',(mdt,dt))
+        return dt > age_d['thr'] \
+                if  age_d['how']=='>' else \
+               dt < age_d['thr']
+        
     dir_n   = 0
     for root in roots:
         if stoped:  break#for root
@@ -1341,6 +1370,7 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
                 if unwr and not os.access(path, os.W_OK):                       continue#for filename
                 if hidn and is_hidden_file(path):                               continue#for filename
                 if binr and is_birary_file(path):                               continue#for filename
+                if age_d and not with_age(age_d, os.path.getmtime(path)):       continue#for filename
                 rsp    += [path]
                 if  not sort and 0<frst<=len(rsp):
                     break#for filename
