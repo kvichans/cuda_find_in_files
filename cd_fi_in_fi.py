@@ -1277,11 +1277,11 @@ class FifD:
                 ,('sort',d(tp='cb-r',t=5+27*1   ,l=5+100,w=200  ,items=SORT_L                               ))# 
                 ,('old_',d(tp='lb'  ,tid='olde' ,l=5    ,w=100-5,cap='>'+_('A&ge (0=all):')     ,hint=olde_h))# &g
                 ,('olde',d(tp='ed'  ,t=5+27*2   ,l=5+100,w= 75                                              ))# 
-                ,('oldu',d(tp='cb-r',tid='olde' ,l=5+180,w=120  ,s=OLDE_U                               ))# 
+                ,('oldu',d(tp='cb-r',tid='olde' ,l=5+180,w=120  ,items=OLDE_U                               ))# 
                 ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=100-5,cap='>'+_('&Firsts (0=all):')  ,hint=frst_h))# &f
                 ,('frst',d(tp='ed'  ,t=5+27*3   ,l=5+100,w=200                                              ))# 
                 ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=100-5,cap='>'+_('&Encodings:')       ,hint=enco_h))# &e
-                ,('enco',d(tp='cb-r',t=5+27*4   ,l=5+100,w=200  ,s=ENCO_L                               ))# 
+                ,('enco',d(tp='cb-r',t=5+27*4   ,l=5+100,w=200  ,items=ENCO_L                               ))# 
                         ][1:]
                 ,vals   = d(skip=self.skip_s
                            ,sort=self.sort_s
