@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.11 2018-09-26'
+    '3.1.12 2018-10-10'
 ToDo: (see end of file)
 '''
 
@@ -1269,19 +1269,19 @@ class FifD:
         olde_n, \
         olde_u  = self.olde_s.split('/')
         olde_ui = {U[0]:i for i,U in enumerate(OLDE_U)}[olde_u]
-        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=320, h=120+27)
+        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=320, h=120+33)
                 ,ctrls  =[0
                 ,('ski_',d(tp='lb'  ,tid='skip' ,l=5    ,w=100-5,cap='>'+_('S&kip files:')                  ))# &k
                 ,('skip',d(tp='cb-r',t=5        ,l=5+100,w=200  ,items=SKIP_L                               ))# 
                 ,('sor_',d(tp='lb'  ,tid='sort' ,l=5    ,w=100-5,cap='>'+_('S&ort file list:')              ))# &o
-                ,('sort',d(tp='cb-r',t=5+27*1   ,l=5+100,w=200  ,items=SORT_L                               ))# 
+                ,('sort',d(tp='cb-r',t=5+29*1   ,l=5+100,w=200  ,items=SORT_L                               ))# 
                 ,('old_',d(tp='lb'  ,tid='olde' ,l=5    ,w=100-5,cap='>'+_('A&ge (0=all):')     ,hint=olde_h))# &g
-                ,('olde',d(tp='ed'  ,t=5+27*2   ,l=5+100,w= 75                                              ))# 
+                ,('olde',d(tp='ed'  ,t=5+29*2   ,l=5+100,w= 75                                              ))# 
                 ,('oldu',d(tp='cb-r',tid='olde' ,l=5+180,w=120  ,items=OLDE_U                               ))# 
                 ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=100-5,cap='>'+_('&Firsts (0=all):')  ,hint=frst_h))# &f
-                ,('frst',d(tp='ed'  ,t=5+27*3   ,l=5+100,w=200                                              ))# 
+                ,('frst',d(tp='ed'  ,t=5+29*3   ,l=5+100,w=200                                              ))# 
                 ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=100-5,cap='>'+_('&Encodings:')       ,hint=enco_h))# &e
-                ,('enco',d(tp='cb-r',t=5+27*4   ,l=5+100,w=200  ,items=ENCO_L                               ))# 
+                ,('enco',d(tp='cb-r',t=5+29*4   ,l=5+100,w=200  ,items=ENCO_L                               ))# 
                         ][1:]
                 ,vals   = d(skip=self.skip_s
                            ,sort=self.sort_s
@@ -1366,7 +1366,7 @@ class FifD:
                             )
                     ,fid='what')
         
-        ag_morp = DlgAgent(form   =dict(cap=morp_h, w=310, h=200)
+        ag_morp = DlgAgent(form   =dict(cap=morp_h, w=310, h=205)
                 ,ctrls  =[0
                 ,('tot_',d(tp='lb'  ,t=  5      ,l=  5  ,w=100  ,cap=_('&Report to:')                               ))# &r
                 ,('totb',d(tp='cb-r',t= 23      ,l=  5  ,w=140  ,items=m.totb_l                     ,call=do_totb   ))# 
@@ -1378,7 +1378,7 @@ class FifD:
                 ,('cxb_',d(tp='lb'  ,tid='cxbf' ,l=  5  ,w= 80  ,cap='>'+_('&Before:')                              ))# &b
                 ,('cxbf',d(tp='sed' ,t=140      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
                 ,('cxa_',d(tp='lb'  ,tid='cxaf' ,l=  5  ,w= 80  ,cap='>'+_('A&fter:')                               ))# &f
-                ,('cxaf',d(tp='sed' ,t=165      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
+                ,('cxaf',d(tp='sed' ,t=169      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
                         ][1:]
                 ,vals   = d(totb=self.totb_i
                            ,join=self.join_s

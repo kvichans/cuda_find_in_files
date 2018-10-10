@@ -1,3 +1,6 @@
+3.1.12 (2018-10-10)
+fixed: layouts
+
 3.1.11 (2018-09-26)
 added: new search filter - "age more/less N hours/days/weeks/months/years"
 fixed: avoid deprecated API
