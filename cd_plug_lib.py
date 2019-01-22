@@ -1627,7 +1627,7 @@ class DlgAgent(BaseDlgAgent):
                     app.dlg_proc(self.id_dlg, app.DLG_HIDE)
                     return
                 elif not upds:                                          # No changes
-                    return
+                    return False                                        # False to cancel the current event
                 pass;          #log('upds={}',(upds))
                 pass;          #log('?? _update_on_call',())
                 self._update_on_call(upds)
