@@ -85,6 +85,7 @@ def log(msg='', *args, **kwargs):
     return Tr.tr.log(msg)
     
 class Tr :
+    to_file=None
     tr=None
     """ Трассировщик.
         Основной (единственный) метод: log(строка) - выводит указанную строку в лог.
@@ -104,6 +105,7 @@ class Tr :
     mise_fmt        = ''
     homise_fmt      = ''
     def __init__(self, log_to_file=None) :
+        log_to_file = log_to_file if log_to_file else Tr.to_file
         # Поля объекта
         self.gap    = ''                # Отступ
         self.tm     = perf_counter()    # Отметка времени о запуске
@@ -123,8 +125,8 @@ class Tr :
                                 ,datefmt='%H:%M:%S'
                                 ,style='%')
         # Tr()
-    def __del__(self):
-        logging.shutdown()
+#   def __del__(self):
+#       logging.shutdown()
 
     class TrLiver :
         cnt = 0
@@ -788,7 +790,7 @@ def dlg_proc_wpr(id_dialog, id_action, prop='', index=-1, index2=-1, name=''):
     return res
    #def dlg_proc_wpr
 
-LMBD_HIDE   = lambda cid,ag:None
+LMBD_HIDE   = lambda cid,ag,d='':None
 class BaseDlgAgent:
     """ 
     Simple helper to use dlg_proc(). See wiki.freepascal.org/CudaText_API#dlg_proc
@@ -2383,6 +2385,27 @@ def deep_upd(dcts):
 
 def isint(what):    return isinstance(what, int)
    
+def unfold_line(ed_, row):
+    fold_l  = ed_.folding(app.FOLDING_GET_LIST)
+    pass;                      #log('row, fold_l={}',(row, fold_l))
+    if not fold_l:  return 
+
+    r_fold_l= [(fold_i,fold_d,row-fold_d[0]) 
+                for fold_i,fold_d in enumerate(fold_l) 
+                if fold_d[0] <= row <= fold_d[1] and
+                   fold_d[0] !=        fold_d[1]]         # [0]/[1] line of range start/end
+    pass;                      #log('r_fold_l={}',(r_fold_l))
+    if not r_fold_l:  return 
+
+    r_fold_l.sort(key=lambda ifd:ifd[2])
+    
+    for item in r_fold_l:
+        fold_i, fold_d  = item[:2]
+        folded  = fold_d[4]
+        if folded:
+            ed_.folding(app.FOLDING_UNFOLD, index=fold_i)
+   #def unfold_line
+       
 def ed_of_file_open(op_file):
     if not app.file_open(op_file):
         return None

@@ -18,7 +18,8 @@ from    .chardet.universaldetector import UniversalDetector
 
 OrdDict = collections.OrderedDict
 
-pass;                           Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
+pass;                           Tr.to_file=                   apx.get_opt('fif_log_file', '')
+pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
 pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                           FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
 pass;                           RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
@@ -573,29 +574,7 @@ def nav_as(path, ed_as):
     op_ed.set_caret(*ed_as.get_carets()[0])
    #def nav_as
        
-def _unfold_line(ed_, row):
-    fold_l  = ed_.folding(app.FOLDING_GET_LIST)
-    pass;                      #log('row, fold_l={}',(row, fold_l))
-    if not fold_l:  return 
-
-    r_fold_l= [(fold_i,fold_d,row-fold_d[0]) 
-                for fold_i,fold_d in enumerate(fold_l) 
-                if fold_d[0] <= row <= fold_d[1] and
-                   fold_d[0] !=        fold_d[1]]         # [0]/[1] line of range start/end
-    pass;                      #log('r_fold_l={}',(r_fold_l))
-    if not r_fold_l:  return 
-
-    r_fold_l.sort(key=lambda ifd:ifd[2])
-    
-    for item in r_fold_l:
-        fold_i, fold_d  = item[:2]
-        folded  = fold_d[4]
-        if folded:
-            ed_.folding(app.FOLDING_UNFOLD, index=fold_i)
-
-       
 def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
-    
     _unfold_line(op_ed, rw)
     if cl!=-1:
         op_ed.set_prop(app.PROP_COLUMN_LEFT, '0')
@@ -1006,6 +985,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
 #   pass;                      #LOG and log('repl_s,ext_lns={}',(repl_s,ext_lns))
 
     enco_l  = how_walk.get('enco', ['UTF-8'])
+    pass;                       FNDLOG and log('enco_l={}',(enco_l))
     detector= UniversalDetector() if ENCO_DETD in enco_l else None
     rpt_enc_fail= apx.get_opt('fif_log_encoding_fail', False)
 
@@ -1196,7 +1176,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
                     pass;  #FNDLOG and log('tree4rsp={}',pf(tree4rsp))
                 break#for enco_n
             except Exception as ex:
-                pass;           FNDLOG and log('ex={}',(ex))
+                pass;           FNDLOG and log('ex="{}" on enco_s="{}"',(ex),enco_s)
                 if rpt_enc_fail and enco_n == len(enco_l)-1:
                     print(f(_('Cannot read "{}" (encoding={}/{}): {}'), path, enco_s, enco_l, ex))
            #for encd_n
