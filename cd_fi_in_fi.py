@@ -1,4 +1,4 @@
-﻿''' Plugin for CudaText editor
+''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
@@ -115,7 +115,7 @@ def limit_len(text, max_len, div='..'):
 
 class Command:
     def find_in_ed(self):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         filename= ed.get_filename()
         incl_s  = os.path.basename(filename) if filename else ed.get_prop(app.PROP_TAB_TITLE)
         incl_s  = '"'+incl_s+'"' if ' ' in incl_s else incl_s
@@ -126,7 +126,7 @@ class Command:
        #def find_in_ed
 
     def find_in_tabs(self):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         return dlg_fif(what='', opts=dict(
              incl = '*'
             ,fold = IN_OPEN_FILES
@@ -134,29 +134,29 @@ class Command:
        #def find_in_ed
 
     def repeat_find_by_rpt(self):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         if ed.get_prop(app.PROP_LEXER_FILE).upper() not in lexers_l:
-            return app.msg_status(_('The command works only with reports of FindInFile plugin'))
+            return app.msg_status(_('The command works only with reports of FindInFiles plugin'))
         req_opts  = report_extract_request(ed)
         if not req_opts:
-            return app.msg_status(_('No info to Repeat Finding'))
+            return app.msg_status(_('No info to repeat search'))
         req_opts= json.loads(req_opts)
         what    = req_opts.pop('what', '')
         return dlg_fif(what=what, opts=req_opts)
        #def repeat_find_by_rpt
 
     def show_dlg(self, what='', opts={}):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         return dlg_fif(what, opts)
 
     def _nav_to_src(self, where:str, how_act='move'):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         return nav_to_src(where, how_act)
     def _jump_to(self, drct:str, what:str):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         return jump_to(drct, what)
     def on_goto_def(self, ed_self):
-        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Need update application'))
+        if app.app_api_version()<MIN_API_VER: return app.msg_status(_('Must update the application'))
         if ed_self.get_prop(app.PROP_LEXER_FILE).upper() in lexers_l:
             self._nav_to_src('same', 'move')
             return True

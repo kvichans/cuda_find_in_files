@@ -1,8 +1,8 @@
-﻿''' Plugin for CudaText editor
+''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.15 2018-05-21'
+    '2.3.16 2019-02-12'
 ToDo: (see end of file)
 '''
 
@@ -573,7 +573,30 @@ def nav_as(path, ed_as):
     op_ed.set_caret(*ed_as.get_carets()[0])
    #def nav_as
        
+def _unfold_line(ed_, row):
+    fold_l  = ed_.folding(app.FOLDING_GET_LIST)
+    pass;                      #log('row, fold_l={}',(row, fold_l))
+    if not fold_l:  return 
+
+    r_fold_l= [(fold_i,fold_d,row-fold_d[0]) 
+                for fold_i,fold_d in enumerate(fold_l) 
+                if fold_d[0] <= row <= fold_d[1] and
+                   fold_d[0] !=        fold_d[1]]         # [0]/[1] line of range start/end
+    pass;                      #log('r_fold_l={}',(r_fold_l))
+    if not r_fold_l:  return 
+
+    r_fold_l.sort(key=lambda ifd:ifd[2])
+    
+    for item in r_fold_l:
+        fold_i, fold_d  = item[:2]
+        folded  = fold_d[4]
+        if folded:
+            ed_.folding(app.FOLDING_UNFOLD, index=fold_i)
+
+       
 def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
+    
+    _unfold_line(op_ed, rw)
     if cl!=-1:
         op_ed.set_prop(app.PROP_COLUMN_LEFT, '0')
 

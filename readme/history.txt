@@ -1,3 +1,8 @@
+3.1.13 (2019-02-13)
+added: plugin events (double click, go to definition) work only if plugin already loaded (faster)
+added: on "Go to definition" from report, target line is unfolded
+fixed: wording in options descriptions
+
 3.1.12 (2018-10-10)
 fixed: layouts
 
