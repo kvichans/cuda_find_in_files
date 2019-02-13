@@ -1,8 +1,8 @@
-''' Plugin for CudaText editor
+﻿''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.12 2018-10-10'
+    '3.1.13 2019-02-13'
 ToDo: (see end of file)
 '''
 
@@ -31,10 +31,11 @@ MIN_API_VER     = '1.0.246' # events for control 'editor'
 #MIN_API_VER     = '1.0.249' # on_menu in 'editor', 'val' in 'pages'
 
 pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
-pass;                           from pprint import pformat
-pass;                           pf=lambda d:pformat(d,width=150)
+pass;                          #LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                          #from pprint import pformat
+pass;                          #pf=lambda d:pformat(d,width=150)
 pass;                           ##!! "waits correction"
+pass;                          #log('ok',())
 
 _   = get_translation(__file__) # I18N
 
@@ -255,7 +256,7 @@ class PresetD:
        #def PresetD.__init__
 
     def config(self):
-        M,m     = PresetD,self
+        M,m     = self.__class__,self
         pset_l  = copy.deepcopy(m.fif.stores.get('pset', []))
         if not pset_l:  return msg_status(_('No preset to config'))
         for ps in pset_l:
@@ -405,7 +406,7 @@ class PresetD:
        #def config
 
     def save(self):
-        M,m     = PresetD,self
+        M,m     = self.__class__,self
         m.fif.copy_vals(m.fif.ag)
         pset_l  = m.fif.stores.get('pset', [])
         totb_i  = m.fif.totb_i if 0<m.fif.totb_i<4+len(m.fif.stores.get('tofx', [])) else 1   # "tab:" skiped
@@ -460,7 +461,7 @@ class PresetD:
        #def save
 
     def _restore(self, ps):
-        M,m     = PresetD,self
+        M,m     = self.__class__,self
         for i, k in enumerate(M.keys_l):
             if ps.get('_'+k, '')!='x':  continue
             if 0:pass
@@ -491,7 +492,7 @@ class PresetD:
        #def _restore
 
     def ind4rest(self, ps_ind):
-        M,m     = PresetD,self
+        M,m     = self.__class__,self
         m.fif.copy_vals(m.fif.ag)
         pset_l  = m.fif.stores.get('pset', [])
         if ps_ind>=len(pset_l):     return None
@@ -574,18 +575,18 @@ def dlg_fif_help(fif, stores=None):
     page        = stores.get('page', 0)
     ag_hlp      = DlgAgent(
               form  =dict( cap      =_('Help "Find in Files"')
-                          ,w        = 670+10
-                          ,h        = 400+10
+                          ,w        = 910+10
+                          ,h        = 580+10
                           ,resize   = True
                           )
             , ctrls = [0
-                ,('tabs',dict(tp='pgs'  ,l=5,w=670  
-                                        ,t=5,h=400  ,a='lRtB'   ,items='Hotkeys\tHints\tTree types' ,val=page       ))
-                ,('keys',dict(tp='me'   ,p='tabs.0' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=KEYS_TABLE ))
-                ,('tips',dict(tp='me'   ,p='tabs.1' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=TIPS_BODY  ))
-                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')     ,url=RE_DOC_URL ))
-                ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                ,val=TREE_BODY  ))
-                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Plugin forum')              ,url=GH_ISU_URL ))
+                ,('tabs',dict(tp='pgs'  ,l=5,w=910  
+                                        ,t=5,h=580  ,a='lRtB'   ,items='Hotkeys+Tricks\tHints\tTree types'  ,val=page       ))
+                ,('keys',dict(tp='me'   ,p='tabs.0' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=KEYS_TABLE ))
+                ,('tips',dict(tp='me'   ,p='tabs.1' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=TIPS_BODY  ))
+                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')             ,url=RE_DOC_URL ))
+                ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=TREE_BODY  ))
+                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Plugin forum')                      ,url=GH_ISU_URL ))
             ][1:]
             , fid   = 'tabs'
                                #,options={'gen_repro_to_file':'repro_dlg_fif_help.py'}
@@ -904,7 +905,7 @@ class FifD:
     rslt_body   = DEF_RSLT_BODY
     rslt_body_r = -1
     def show(self):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
 
         self.hip= prefix_to_sep_stores()
         self.pre_cnts()
@@ -974,10 +975,11 @@ class FifD:
             self.rslt.set_prop(app.PROP_RO                  , True)
         self.ag.show(callbk_on_exit=lambda ag: self.do_exit('', ag))
         self.store()
+        pass;                  #Tr.tr=None if Tr.to_file else Tr.tr # Free log file
        #def show
 
     def __init__(self, what='', opts={}):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         pass
         pass;                  #LOG and log('FifD.DEF_WD_TXTS={}',(FifD.DEF_WD_TXTS))
         self.store(what='load')
@@ -1053,7 +1055,7 @@ class FifD:
     
     def do_resize(self, ag):
         pass;                  #return []
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         def fix_wh(hw_c, hw_min):
             pbot_v  = ag.cattr('pb'  , hw_c)
             rslt_v  = ag.cattr('rslt', hw_c)
@@ -1308,7 +1310,7 @@ class FifD:
     
     def do_morp(self, aid, ag, data=''):
         msg_status(self.status_s)
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         
         def do_totb(aid, ag, data=''):
             pass;              #LOG and log('totb props={}',(ag.cattrs('totb')))
@@ -1460,7 +1462,7 @@ class FifD:
             return False
 #       ag.bind_do()
         self.copy_vals(ag)
-        pass;                   LOG and log('self.totb_i={}',(self.totb_i))
+        pass;                  #LOG and log('self.totb_i={}',(self.totb_i))
         self.store()
         use_statusbar(None)
         return None
@@ -1481,7 +1483,7 @@ class FifD:
     TIMER_DELAY         = 200   # msec
     def do_rslt_click(self, aid, ag, data='', timer=False):  #NOTE: do_rslt_click
         pass;                  #log('aid={}',(aid))
-        M,m     = FifD,self
+        M,m     = self.__class__,self
 
         now_t   = round(time.perf_counter(), 4)
         if not timer:
@@ -1537,7 +1539,7 @@ class FifD:
        #def do_rslt_click
     
     def do_work(self, aid, ag, btn_m=''):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         msg_status(self.status_s)
 #       ag.bind_do()
         self.copy_vals(ag)
@@ -1971,7 +1973,7 @@ class FifD:
        #def wnen_menu
         
     def do_menu(self, aid, ag, data=''):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         msg_status(self.status_s)
         pass;                  #log('aid,data={}',(aid,data))
         btn_p,btn_m = FifD.scam_pair(aid)
@@ -2114,7 +2116,7 @@ class FifD:
        #def do_menu
        
     def do_key_down(self, idd, idc, data=''):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
         pass;                  #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
         ag      = self.ag
@@ -2187,7 +2189,7 @@ class FifD:
        #def do_key_down
 
     def do_click_dbl(self, aid, ag, data=''):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
         pass;                   log('aid, data, scam={}',(aid, data, scam))
         upd     = None
@@ -2205,7 +2207,7 @@ class FifD:
        #def do_click_dbl
     
     def pre_cnts(self):
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         hp      = self.hip
         self.what_l = [s for s in self.stores.get(hp+'what', []) if s ]
         self.incl_l = [s for s in self.stores.get(hp+'incl', []) if s ]
@@ -2230,7 +2232,7 @@ class FifD:
        #def pre_cnts
 
     def get_fif_cnts(self, how=''): #NOTE: fif_cnts
-        M,m     = FifD,self
+        M,m     = self.__class__,self
         pass;                  #LOG and log('dlg_w, dlg_h={}',(dlg_w, dlg_h))
         pass;                  #LOG and log('gap1={}',(gap1))
         pass;                  #log('m.rslt_w={}',(m.rslt_w))

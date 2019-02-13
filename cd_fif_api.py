@@ -1,4 +1,4 @@
-''' Plugin for CudaText editor
+﻿''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
@@ -575,7 +575,7 @@ def nav_as(path, ed_as):
    #def nav_as
        
 def nav_to_frag(op_ed, rw, cl, ln, how_act='', indent_vert=-5):
-    _unfold_line(op_ed, rw)
+    unfold_line(op_ed, rw)
     if cl!=-1:
         op_ed.set_prop(app.PROP_COLUMN_LEFT, '0')
 
@@ -1572,5 +1572,5 @@ ToDo
 [+][a1-kv][31may16] Use source EOL to save after replacements
 [+][kv-kv][01jun16] Use Ctrl/Shift/Alt for more action
 [+][kv-kv][02jun16] Add buttons "#&1", "#&2", "#&3" for direct load Preset #1, #2, #3 (outside? width=0!)
-[ ][kv-kv][20dec16] Ленивый обход
+[ ][kv-kv][20dec16] Ленивый  обход
 '''

@@ -1,8 +1,10 @@
 [
-    {   "cmt": ["Option allows to save separate search settings (search text,",
-                "source folder, files mask etc) per each mentioned session/project.",
-                "Each item in the option is RegEx, which is compared with the",
-                "full path of session (project). First matched item is used."],
+    {   "cmt": ["Option allows to save separate search settings",
+                "(search text, source folder, files mask etc)",
+                "per each mentioned session or project.",
+                "Each item in the option is RegEx,",
+                "which is compared with the full path of session (project).",
+                "First matched item is used."],
         "def": [],
         "frm": "json",
         "opt": "fif_sep_hist_for_sess_proj",
@@ -95,7 +97,7 @@
         "chp": "Report",
         "tgs": ["report", "comfort"]
     },
-    {   "cmt": ["Show search details (\"Find\", \"In folder\", …) in the first line of report.",
+    {   "cmt": ["Save search details (\"Find\", \"In folder\", …) in the first line of report.",
                 "The info will be used in command \"Repeat search for this report-tab\"."],
         "def": false,
         "frm": "bool",
