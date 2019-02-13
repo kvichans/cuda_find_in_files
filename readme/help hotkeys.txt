@@ -1,34 +1,34 @@
-﻿———————————————————————————————————————————————————————————————————————————————————————————
-|             Command         ·     Hotkey    · Comment                                   |
-|—————————————————————————————————————————————————————————————————————————————————————————|
-|  Find                       ·         Enter · If focus not in Results/Source            |
-|  Count matches              ·         Alt+T ·                                           |
-|  Find filenames             ·        Ctrl+T ·                                           |
-| · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · |
-|  Focus to Results           ·    Ctrl+Enter · If focus not in Results/Source            |
-|  Open found fragment        ·         Enter · If focus in Results. Selects the fragment |
-|  Close and go to found      ·    Ctrl+Enter · If focus in Results. Selects the fragment |
-|  Close and go to found      ·    Ctrl+Enter · If focus in Source. Restores selection    |
-|  Fold Results branch        ·        Ctrl+= · If focus in Results                       |
-| · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · |
-|  In current file            ·  Ctrl+Shift+C · Сlick      Shift+"Current"                |
-|  In all tabs                ·               · Сlick       Ctrl+"Current"                |
-|  In current tab             ·               · Сlick Ctrl+Shift+"Current"                |
-|  Choose file                ·        Ctrl+B · Сlick       Shift+"Browse"                |
-|  Depth "Only"               ·         Alt+Y · Ctrl+Num0                                 |
-|  Depth "+1 level"           ·         Alt+! · Ctrl+Num1                                 |
-|  Depth "All"                ·         Alt+L · Ctrl+Num9                                 |
-| · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · |
-|  Save values as preset      ·        Ctrl+S ·                                           |
-|  Presets dialog             ·    Ctrl+Alt+S ·                                           |
-|  Use Preset #1(..#5)        ·   Ctrl+1(..5) · Others from menu/dialog                   |
-|  Use Layout #1(..#5)        ·    Alt+1(..5) · Others from menu                          |
-| · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · |
-|  ±"Not in"/±"Replace"       ·         Alt+V · 4-states loop to show/hide                |
-|  Engine options             ·        Ctrl+E ·                                           |
-|  Configure vert. alignments ·               · Сlick Ctrl+"="                            |
-| · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · |
-|  Call CudaText's "Find"     ·        Ctrl+F · Copies patern/.*/aA/"w"                   |
-|  Call CudaText's "Replace"  ·        Ctrl+R · Copies paterns/.*/aA/"w"                  |
-|  Dialog "Help"              ·         Alt+H ·                                           |
-———————————————————————————————————————————————————————————————————————————————————————————
+┌─────────────────────────────┬───────────────┬───────────────────────────────────────────┐
+│             Command         │     Hotkey    │ Comment                                   │
+├─────────────────────────────┼───────────────┼───────────────────────────────────────────┤
+│  Find                       │         Enter │ If focus not in Results/Source            │
+│  Count matches only         │         Alt+T │                                           │
+│  Find file names only       │        Ctrl+T │                                           │
+├─────────────────────────────┼───────────────┼───────────────────────────────────────────┤
+│  Focus to Results           │    Ctrl+Enter │ If focus not in Results/Source            │
+│  Open found fragment        │         Enter │ If focus in Results. Selects the fragment │
+│  Close and go to found      │    Ctrl+Enter │ If focus in Results. Selects the fragment │
+│  Close and go to found      │    Ctrl+Enter │ If focus in Source. Restores selection    │
+│  Fold Results branch        │        Ctrl+= │ If focus in Results                       │
+├─────────────────────────────┼───────────────┼───────────────────────────────────────────┤
+│  In current file            │  Ctrl+Shift+C │ Сlick      Shift+"Current"                │
+│  In all tabs                │               │ Сlick       Ctrl+"Current"                │
+│  In current tab             │               │ Сlick Ctrl+Shift+"Current"                │
+│  Choose file                │        Ctrl+B │ Сlick       Shift+"Browse"                │
+│  Depth "Only"               │         Alt+Y │ Ctrl+Num0                                 │
+│  Depth "+1 level"           │         Alt+! │ Ctrl+Num1                                 │
+│  Depth "All"                │         Alt+L │ Ctrl+Num9                                 │
+├─────────────────────────────┼───────────────┼───────────────────────────────────────────┤
+│  Save values as preset      │        Ctrl+S │                                           │
+|  Dialog "Presets"           │    Ctrl+Alt+S │                                           │
+|  Use Preset #1...#5         │   Ctrl+1...+5 │ Others from menu/dialog                   │
+|  Use Layout #1...#5         │    Alt+1...+5 │ Others from menu                          │
+├─────────────────────────────┼───────────────┼───────────────────────────────────────────┤
+│  ±"Not in"/±"Replace"       │         Alt+V │ 4-states loop to show/hide                │
+│  Engine options             │        Ctrl+E │                                           │
+│  Configure vert. alignments │               │ Сlick Ctrl+"="                            │
+├─────────────────────────────┼───────────────┼───────────────────────────────────────────┤
+│  Call CudaText's "Find"     │        Ctrl+F │ Copies pattern, [.*], [aA], ["w"]         │
+│  Call CudaText's "Replace"  │        Ctrl+R │ Copies pattern, [.*], [aA], ["w"]         │
+│  Dialog "Help"              │         Alt+H │                                           │
+└─────────────────────────────┴───────────────┴───────────────────────────────────────────┘
