@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.13 2019-02-13'
+    '3.1.14 2019-03-31'
 ToDo: (see end of file)
 '''
 
@@ -1469,7 +1469,7 @@ class FifD:
        #def do_exit
     
     def do_mouse_down(self, aid, ag, data=''):
-        pass;                   log('aid,data={}',(aid,data))
+        pass;                  #log('aid,data={}',(aid,data))
         if 1==data['btn']:  # 1==right
             self.do_menu(aid, self.ag, data)
             return False
@@ -2191,7 +2191,7 @@ class FifD:
     def do_click_dbl(self, aid, ag, data=''):
         M,m     = self.__class__,self
         scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
-        pass;                   log('aid, data, scam={}',(aid, data, scam))
+        pass;                  #log('aid, data, scam={}',(aid, data, scam))
         upd     = None
         if 0:pass
         elif aid=='rslt':
