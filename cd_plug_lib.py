@@ -104,7 +104,7 @@ class Tr :
     se_fmt          = ''
     mise_fmt        = ''
     homise_fmt      = ''
-    def __init__(self, log_to_file=None) :
+    def __init__(self, log_to_file=None):
         log_to_file = log_to_file if log_to_file else Tr.to_file
         # Поля объекта
         self.gap    = ''                # Отступ
@@ -954,9 +954,22 @@ class BaseDlgAgent:
                 self.update({'ctrls':[(name, {attr:val})]})
        #def bind_do
 
+    def scam(self):
+        scam= app.app_proc(app.PROC_GET_KEYSTATE, '')
+        scam= scam.replace('m', 'c') if self._c2m else scam
+        return scam
+    def scam_pair(self, aid):
+        scam        = self.scam()
+        return aid, scam + '/' + aid if scam and scam!='a' else aid   # smth == a/smth
+    
     def __init__(self, ctrls, form=None, focused=None, options=None):
         # Fields
         self.opts   = options if options else {}
+
+        ctrl_to_meta= self.opts.get('ctrl_to_meta', 'by_os')
+        self._c2m   = ctrl_to_meta=='need'  or \
+                      ctrl_to_meta=='by_os' and \
+                        'mac'==get_desktop_environment()        # Need to translate 'Ctrl+' to 'Meta+' in hint,...
         
         self.id_dlg = dlg_proc_wpr(0, app.DLG_CREATE)
         pass;                  #log('DLG_CREATE self.id_dlg={}',(self.id_dlg))
@@ -1180,6 +1193,9 @@ class BaseDlgAgent:
 
         if cfg_ctrl.get('bind'):
             self.binds[name]    = cfg_ctrl['bind']
+        
+        if self._c2m and 'hint' in c_pr:
+            c_pr['hint']    = c_pr['hint'].replace('Ctrl+', 'Meta+')
         
         if callable(cfg_ctrl.get('call'))        and opts.get('prepare call', True):
             if tp!='button':
@@ -1573,6 +1589,7 @@ class DlgAgent(BaseDlgAgent):
         h0      = fpr['h']
         if fpr.get('resize', False):
             self._prepare_anchors()                                 # a,aid -> a_*,sp_*
+            fpr['border']   = app.DBORDER_TOOLSIZE
             fpr['w_min']    = fpr.get('w_min', fpr['w'])
             fpr['h_min']    = fpr.get('h_min', fpr['h'])
         pass;                  #log('fpr is self.form={}',(fpr is self.form))
@@ -1586,6 +1603,7 @@ class DlgAgent(BaseDlgAgent):
             self.form['on_resize'](self)
 
         fpr['topmost']      = True
+        fpr.pop('resize', None)
         dlg_proc_wpr(           self.id_dlg
                             , app.DLG_PROP_SET
                             , prop=fpr)                         # Upd live-attrs
@@ -1709,7 +1727,9 @@ class DlgAgent(BaseDlgAgent):
                       app.menu_proc(mid_prn, app.MENU_ADD, caption=it['cap'])
                      )
                 if 'key' in it and it['key']:
-                    app.menu_proc(      mid, app.MENU_SET_HOTKEY            , command=     it['key'])
+                    key = it['key']
+                    key = key.replace('Ctrl+', 'Meta+') if self._c2m else key
+                    app.menu_proc(      mid, app.MENU_SET_HOTKEY            , command=key)
                 if 'en' in it:
                     app.menu_proc(      mid, app.MENU_SET_ENABLED           , command=bool(it['en']))
                 if 'ch' in it:

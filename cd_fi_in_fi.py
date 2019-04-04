@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.14 2019-03-31'
+    '3.1.15 2019-04-04'
 ToDo: (see end of file)
 '''
 
@@ -377,8 +377,8 @@ class PresetD:
         ps_vls      = [('1' if ps['_'+k]=='x' else '0'      ) for    k in           M.keys_l ]  if pset_l else ['0']
         pass;              #LOG and log('ps_mns={}',(ps_mns))
         pass;              #LOG and log('ps_its={}',(ps_its))
-        ctrls   = \
-                 [('lprs',dict(tp='lb'  ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                                                    )) # &p
+        ctrls   = [0
+                 ,('lprs',dict(tp='lb'  ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                                                     )) # &p
                  ,('prss',dict(tp='lbx' ,t=5+20,h=345   ,l=5        ,w=245  ,items=ps_mns       ,en=(len(pset_l)>0)  ,val=ps_ind    ,call=fill_what )) #
                   # Content
                  ,('lnam',dict(tp='lb'  ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name:')                                                        )) # &n
@@ -396,7 +396,7 @@ class PresetD:
                   #
                  ,('!'   ,dict(tp='bt'  ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Apply')     ,def_bt=True                        ,call=save_close)) # &
                  ,('-'   ,dict(tp='bt'  ,t=460          ,l=DLG_W-5-100,w=100,cap=_('Cancel')                                        ,call=LMBD_HIDE ))
-                 ]
+                 ][1:]
         DlgAgent(form   =dict(cap=_('Presets'), w=DLG_W, h=490)
                 ,ctrls  =ctrls
                 ,fid    ='prss'
@@ -572,6 +572,8 @@ def dlg_fif_help(fif, stores=None):
                     morp=morp_h
                   , shtp=shtp_h.replace('\r', '\n'))
     KEYS_TABLE  = _KEYS_TABLE.strip('\n\r')
+    c2m         = 'mac'==get_desktop_environment() #or True
+    KEYS_TABLE  = _KEYS_TABLE.strip('\n\r').replace('Ctrl+', 'Meta+') if c2m else KEYS_TABLE
     page        = stores.get('page', 0)
     ag_hlp      = DlgAgent(
               form  =dict( cap      =_('Help "Find in Files"')
@@ -587,7 +589,7 @@ def dlg_fif_help(fif, stores=None):
                 ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')             ,url=RE_DOC_URL ))
                 ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=TREE_BODY  ))
                 ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Plugin forum')                      ,url=GH_ISU_URL ))
-            ][1:]
+                    ][1:]
             , fid   = 'tabs'
                                #,options={'gen_repro_to_file':'repro_dlg_fif_help.py'}
         )
@@ -861,10 +863,10 @@ def prefix_to_sep_stores(def_prefix=''):
 class FifD:
     status_s  = ''
     
-    @staticmethod
-    def scam_pair(aid):
-        scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
-        return aid, scam + '/' + aid if scam and scam!='a' else aid   # smth == a/smth
+#   @staticmethod
+#   def scam_pair(aid):
+#       scam        = app.app_proc(app.PROC_GET_KEYSTATE, '')
+#       return aid, scam + '/' + aid if scam and scam!='a' else aid   # smth == a/smth
 
     @staticmethod
     def upgrade(dct):
@@ -925,6 +927,7 @@ class FifD:
         ,   options = {'bindof':self
                                ,'gen_repro_to_file':apx.get_opt('fif_repro_to_file', '')    #NOTE: fif_repro
                               #,'gen_repro_to_file':'repro_dlg_fif.py'
+                   #,   'ctrl_to_meta':'need'                       # 'by_os' is default
                     }
         )
         self.rslt = app.Editor(self.ag.handle('rslt'))              #NOTE: app.Editor
@@ -1176,7 +1179,8 @@ class FifD:
     
     def do_pres(self, aid, ag, btn_m=''):
         msg_status(self.status_s)
-        btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+#       btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+        btn_p,btn_m = ag.scam_pair(aid)         if not btn_m else   (aid, btn_m)
         
         self.what_s = ag.cval('what')
         if not self.wo_repl:     
@@ -1201,7 +1205,8 @@ class FifD:
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','fold','dept'])
-        btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+#       btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+        btn_p,btn_m = ag.scam_pair(aid)         if not btn_m else   (aid, btn_m)
 
         if False:pass
         elif btn_m=='brow':     # BroDir
@@ -1413,7 +1418,8 @@ class FifD:
         self.copy_vals(ag)
 #       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
-        btn_p,btn_m = FifD.scam_pair(aid)
+#       btn_p,btn_m = FifD.scam_pair(aid)
+        btn_p,btn_m = ag.scam_pair(aid)         if not btn_m else   (aid, btn_m)
 
         if False:pass
 
@@ -1456,7 +1462,8 @@ class FifD:
        #def do_help
     
     def do_exit(self, aid, ag, data=''):
-        scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+#       scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+        scam    = ag.scam()
         pass;                  #log('###aid,scam={}',(aid,scam))
         if self.progressor and 'c'!=scam:
             return False
@@ -1545,7 +1552,8 @@ class FifD:
         self.copy_vals(ag)
 #       self.store() # in do_focus
         
-        btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+#       btn_p,btn_m = FifD.scam_pair(aid)       if not btn_m else   (aid, btn_m)
+        btn_p,btn_m = ag.scam_pair(aid)         if not btn_m else   (aid, btn_m)
         btn_p,btn_m = btn_p.replace('!ctt', '!cnt'),btn_m.replace('!ctt', '!cnt')
         if btn_p not in ('!cnt', '!fnd', '!rep'):   return self.do_focus(aid,ag)
         pass;                  #log('btn_p,btn_m={}',(btn_p,btn_m))
@@ -1976,7 +1984,8 @@ class FifD:
         M,m     = self.__class__,self
         msg_status(self.status_s)
         pass;                  #log('aid,data={}',(aid,data))
-        btn_p,btn_m = FifD.scam_pair(aid)
+#       btn_p,btn_m = FifD.scam_pair(aid)
+        btn_p,btn_m = ag.scam_pair(aid)
         if btn_m=='c/menu':     # [Ctrl+"="] - dlg_valign_consts
             dlg_valign_consts()
             return []
@@ -2117,9 +2126,10 @@ class FifD:
        
     def do_key_down(self, idd, idc, data=''):
         M,m     = self.__class__,self
-        scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
-        pass;                  #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
+#       scam    = data if data else app.app_proc(app.PROC_GET_KEYSTATE, '')
         ag      = self.ag
+        scam    = ag.scam()
+        pass;                  #log('idc, data, scam, chr(idc)={}',(idc, data, scam, chr(idc)))
         fid     = ag.fattr('fid')
 #       if (scam,idc)==('sca',VK_ENTER):                                                            # Alt+Ctrl+Shift+Enter
 #           pass;           log('ag.hide()',())
@@ -2190,7 +2200,8 @@ class FifD:
 
     def do_click_dbl(self, aid, ag, data=''):
         M,m     = self.__class__,self
-        scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+#       scam    = app.app_proc(app.PROC_GET_KEYSTATE, '')
+        scam    = ag.scam()
         pass;                  #log('aid, data, scam={}',(aid, data, scam))
         upd     = None
         if 0:pass

@@ -1,3 +1,6 @@
+3.1.15 (2019-04-04)
+added: use Meta instead Ctrl on Mac OS
+
 3.1.13 (2019-02-13)
 added: plugin events (double click, go to definition) work only if plugin already loaded (faster)
 added: on "Go to definition" from report, target line is unfolded
