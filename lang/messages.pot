@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2019-04-24 12:36+0300\n"
+"POT-Creation-Date: 2019-04-24 13:30+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -109,11 +109,11 @@ msgid "Options is restored from preset"
 msgstr ""
 
 #: cd_fi_in_fi.py:381
-msgid "&Presets"
+msgid "&Presets:"
 msgstr ""
 
 #: cd_fi_in_fi.py:384 cd_fi_in_fi.py:432
-msgid "&Name"
+msgid "&Name:"
 msgstr ""
 
 #: cd_fi_in_fi.py:387
@@ -133,11 +133,11 @@ msgid "Dele&te"
 msgstr ""
 
 #: cd_fi_in_fi.py:392
-msgid "&What to restore"
+msgid "&What to restore:"
 msgstr ""
 
 #: cd_fi_in_fi.py:394 cd_fi_in_fi.py:436
-msgid "With values"
+msgid "With values:"
 msgstr ""
 
 #: cd_fi_in_fi.py:397
@@ -157,7 +157,7 @@ msgid "Save preset"
 msgstr ""
 
 #: cd_fi_in_fi.py:434
-msgid "&What to save"
+msgid "&What to save:"
 msgstr ""
 
 #: cd_fi_in_fi.py:438 cd_fi_in_fi.py:744
@@ -312,6 +312,30 @@ msgstr ""
 
 #: cd_fi_in_fi.py:712
 msgid "See \"mouse_goto_definition\" in default.json and user.json"
+msgstr ""
+
+#: cd_fi_in_fi.py:713
+msgid "<no action>"
+msgstr ""
+
+#: cd_fi_in_fi.py:714
+msgid "Navigate to same group"
+msgstr ""
+
+#: cd_fi_in_fi.py:715
+msgid "Navigate to next group"
+msgstr ""
+
+#: cd_fi_in_fi.py:716
+msgid "Navigate to prev group"
+msgstr ""
+
+#: cd_fi_in_fi.py:717
+msgid "Navigate to next group, activate"
+msgstr ""
+
+#: cd_fi_in_fi.py:718
+msgid "Navigate to prev group, activate"
 msgstr ""
 
 #: cd_fi_in_fi.py:727
@@ -594,23 +618,23 @@ msgid "context-{}+{}"
 msgstr ""
 
 #: cd_fi_in_fi.py:1382
-msgid "S&kip files"
+msgid "S&kip files:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1384
-msgid "S&ort file list"
+msgid "S&ort file list:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1386
-msgid "A&ge (0=all)"
+msgid "A&ge (0=all):"
 msgstr ""
 
 #: cd_fi_in_fi.py:1389
-msgid "&Firsts (0=all)"
+msgid "&Firsts (0=all):"
 msgstr ""
 
 #: cd_fi_in_fi.py:1391
-msgid "&Encodings"
+msgid "&Encodings:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1434
@@ -622,7 +646,7 @@ msgid "Report to"
 msgstr ""
 
 #: cd_fi_in_fi.py:1480
-msgid "&Report to"
+msgid "&Report to:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1482
@@ -630,7 +654,7 @@ msgid "Appen&d results"
 msgstr ""
 
 #: cd_fi_in_fi.py:1483
-msgid "&Tree type"
+msgid "&Tree type:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1485
@@ -642,11 +666,11 @@ msgid "Add conte&xt lines"
 msgstr ""
 
 #: cd_fi_in_fi.py:1487
-msgid "&Before"
+msgid "&Before:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1489
-msgid "A&fter"
+msgid "A&fter:"
 msgstr ""
 
 #: cd_fi_in_fi.py:1671
@@ -911,23 +935,23 @@ msgid "\"&w\""
 msgstr ""
 
 #: cd_fi_in_fi.py:2400
-msgid "*&Find what"
+msgid "*&Find what:"
 msgstr ""
 
 #: cd_fi_in_fi.py:2402
-msgid "&Replace with"
+msgid "&Replace with:"
 msgstr ""
 
 #: cd_fi_in_fi.py:2404
-msgid "*&In files"
+msgid "*&In files:"
 msgstr ""
 
 #: cd_fi_in_fi.py:2406
-msgid "Not in files"
+msgid "Not in files:"
 msgstr ""
 
 #: cd_fi_in_fi.py:2408
-msgid "*I&n folder"
+msgid "*I&n folder:"
 msgstr ""
 
 #: cd_fi_in_fi.py:2411

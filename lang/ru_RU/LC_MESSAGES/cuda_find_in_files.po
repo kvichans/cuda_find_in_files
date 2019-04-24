@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2019-04-24 12:23+0300\n"
-"PO-Revision-Date: 2019-04-24 12:25+0300\n"
+"POT-Creation-Date: 2019-04-24 13:30+0300\n"
+"PO-Revision-Date: 2019-04-24 13:41+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -112,12 +112,12 @@ msgid "Options is restored from preset"
 msgstr "Настройки восстановлены из пресета"
 
 #: cd_fi_in_fi.py:381
-msgid "&Presets"
-msgstr "&Пресеты"
+msgid "&Presets:"
+msgstr "&Пресеты:"
 
 #: cd_fi_in_fi.py:384 cd_fi_in_fi.py:432
-msgid "&Name"
-msgstr "&Имя"
+msgid "&Name:"
+msgstr "&Имя:"
 
 #: cd_fi_in_fi.py:387
 msgid "Move &up"
@@ -136,12 +136,12 @@ msgid "Dele&te"
 msgstr "Удалит&ь"
 
 #: cd_fi_in_fi.py:392
-msgid "&What to restore"
-msgstr "&Что восстановить"
+msgid "&What to restore:"
+msgstr "&Что восстановить:"
 
 #: cd_fi_in_fi.py:394 cd_fi_in_fi.py:436
-msgid "With values"
-msgstr "Со значениями"
+msgid "With values:"
+msgstr "Со значениями:"
 
 #: cd_fi_in_fi.py:397
 msgid "Apply"
@@ -160,8 +160,8 @@ msgid "Save preset"
 msgstr "Сохранить пресет"
 
 #: cd_fi_in_fi.py:434
-msgid "&What to save"
-msgstr "&Что сохранить"
+msgid "&What to save:"
+msgstr "&Что сохранить:"
 
 #: cd_fi_in_fi.py:438 cd_fi_in_fi.py:744
 msgid "OK"
@@ -441,7 +441,7 @@ msgstr ""
 " \n"
 "• Долгий поиск можно прервать с помощью ESC.\n"
 "Весь поиск делится на три последовательные стадии: \n"
-"    Сбор подходящий файлов, \n"
+"    Сбор подходящих файлов, \n"
 "    Выделение подходящих фрагментов, \n"
 "    Составление отчета о результатах.\n"
 "ESC прерывает текущую стадию поиска. \n"
@@ -480,6 +480,30 @@ msgstr "Форум плагина"
 #: cd_fi_in_fi.py:712
 msgid "See \"mouse_goto_definition\" in default.json and user.json"
 msgstr "См. \"mouse_goto_definition\" в default.json и user.json"
+
+#: cd_fi_in_fi.py:713
+msgid "<no action>"
+msgstr "<нет реакции>"
+
+#: cd_fi_in_fi.py:714
+msgid "Navigate to same group"
+msgstr "Показать в этой же группе табов"
+
+#: cd_fi_in_fi.py:715
+msgid "Navigate to next group"
+msgstr "Показать в следующей группе табов"
+
+#: cd_fi_in_fi.py:716
+msgid "Navigate to prev group"
+msgstr "Показать в предыдущей группе табов"
+
+#: cd_fi_in_fi.py:717
+msgid "Navigate to next group, activate"
+msgstr "Показать в следующей группе табов, передать фокус"
+
+#: cd_fi_in_fi.py:718
+msgid "Navigate to prev group, activate"
+msgstr "Показать в предыдущей группе табов, передать фокус"
 
 #: cd_fi_in_fi.py:727
 msgid "Configure found result navigation by double-click"
@@ -873,24 +897,24 @@ msgid "context-{}+{}"
 msgstr "ближайшие-{}+{}"
 
 #: cd_fi_in_fi.py:1382
-msgid "S&kip files"
-msgstr "&Пропускать"
+msgid "S&kip files:"
+msgstr "&Пропускать:"
 
 #: cd_fi_in_fi.py:1384
-msgid "S&ort file list"
-msgstr "&Сортировать"
+msgid "S&ort file list:"
+msgstr "&Сортировать:"
 
 #: cd_fi_in_fi.py:1386
-msgid "A&ge (0=all)"
-msgstr "&Возраст (0=все)"
+msgid "A&ge (0=all):"
+msgstr "&Возраст (0=все):"
 
 #: cd_fi_in_fi.py:1389
-msgid "&Firsts (0=all)"
-msgstr "Перв&ые (0=все)"
+msgid "&Firsts (0=all):"
+msgstr "Перв&ые (0=все):"
 
 #: cd_fi_in_fi.py:1391
-msgid "&Encodings"
-msgstr "&Кодировки"
+msgid "&Encodings:"
+msgstr "&Кодировки:"
 
 #: cd_fi_in_fi.py:1434
 msgid "Clear all fixed files ({}) for \"{}\"?"
@@ -901,16 +925,16 @@ msgid "Report to"
 msgstr "Результаты в"
 
 #: cd_fi_in_fi.py:1480
-msgid "&Report to"
-msgstr "&Результаты в"
+msgid "&Report to:"
+msgstr "&Результаты в:"
 
 #: cd_fi_in_fi.py:1482
 msgid "Appen&d results"
 msgstr "&Дополнять результаты"
 
 #: cd_fi_in_fi.py:1483
-msgid "&Tree type"
-msgstr "&Тип дерева"
+msgid "&Tree type:"
+msgstr "&Тип дерева:"
 
 #: cd_fi_in_fi.py:1485
 msgid "&Align (r:c:l)"
@@ -921,12 +945,12 @@ msgid "Add conte&xt lines"
 msgstr "Добавить &ближайшие строки"
 
 #: cd_fi_in_fi.py:1487
-msgid "&Before"
-msgstr "П&еред"
+msgid "&Before:"
+msgstr "П&еред:"
 
 #: cd_fi_in_fi.py:1489
-msgid "A&fter"
-msgstr "П&осле"
+msgid "A&fter:"
+msgstr "П&осле:"
 
 #: cd_fi_in_fi.py:1671
 msgid "Do you want to replace in {}?"
@@ -1199,24 +1223,24 @@ msgid "\"&w\""
 msgstr "\"&с\""
 
 #: cd_fi_in_fi.py:2400
-msgid "*&Find what"
-msgstr "*&Что искать"
+msgid "*&Find what:"
+msgstr "*&Что искать:"
 
 #: cd_fi_in_fi.py:2402
-msgid "&Replace with"
-msgstr "&Заменить на"
+msgid "&Replace with:"
+msgstr "&Заменить на:"
 
 #: cd_fi_in_fi.py:2404
-msgid "*&In files"
-msgstr "*В &файлах"
+msgid "*&In files:"
+msgstr "*В &файлах:"
 
 #: cd_fi_in_fi.py:2406
-msgid "Not in files"
-msgstr "Не в файлах"
+msgid "Not in files:"
+msgstr "Не в файлах:"
 
 #: cd_fi_in_fi.py:2408
-msgid "*I&n folder"
-msgstr "*В &папке"
+msgid "*I&n folder:"
+msgstr "*В &папке:"
 
 #: cd_fi_in_fi.py:2411
 msgid "&Browse…"

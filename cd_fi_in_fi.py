@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.15 2019-04-04'
+    '3.1.16 2019-04-24'
 ToDo: (see end of file)
 '''
 
@@ -268,7 +268,7 @@ class PresetD:
                 ps          = pset_l[ps_ind]
                 ps['name']  = ag.cval('name')
                 self._restore(ps)
-                msg_status(_('Options is restored from preset: ')+ps['name'])
+                msg_status(_('Options is restored from preset')+': '+ps['name'])
             m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
             open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
             return None
@@ -378,10 +378,10 @@ class PresetD:
         pass;              #LOG and log('ps_mns={}',(ps_mns))
         pass;              #LOG and log('ps_its={}',(ps_its))
         ctrls   = [0
-                 ,('lprs',dict(tp='lb'  ,t=5            ,l=5        ,w=245  ,cap=_('&Presets:')                                                     )) # &p
+                 ,('lprs',dict(tp='lb'  ,t=5            ,l=5        ,w=245  ,cap=_('&Presets')+':'                                                  )) # &p
                  ,('prss',dict(tp='lbx' ,t=5+20,h=345   ,l=5        ,w=245  ,items=ps_mns       ,en=(len(pset_l)>0)  ,val=ps_ind    ,call=fill_what )) #
                   # Content
-                 ,('lnam',dict(tp='lb'  ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name:')                                                        )) # &n
+                 ,('lnam',dict(tp='lb'  ,t=5+20+345+10  ,l=5        ,w=245  ,cap=_('&Name')+':'                                                     )) # &n
                  ,('name',dict(tp='ed'  ,t=5+20+345+30  ,l=5        ,w=245                      ,en=(len(pset_l)>0)  ,val=ps.get('name', '')        )) # 
                   # Acts
                  ,('mvup',dict(tp='bt'  ,t=435          ,l=5        ,w=120  ,cap=_('Move &up')  ,en=(len(pset_l)>1) and ps_ind>0    ,call=acts      )) # &u
@@ -389,9 +389,9 @@ class PresetD:
                  ,('clon',dict(tp='bt'  ,t=435          ,l=5*2+120  ,w=120  ,cap=_('Clon&e')    ,en=(len(pset_l)>0)                 ,call=acts      )) # &e
                  ,('delt',dict(tp='bt'  ,t=460          ,l=5*2+120  ,w=120  ,cap=_('Dele&te')   ,en=(len(pset_l)>0)                 ,call=acts      )) # &t
                   #
-                 ,('lwha',dict(tp='lb'  ,t=5            ,l=260      ,w=180  ,cap=_('&What to restore:')                                             )) # &w
+                 ,('lwha',dict(tp='lb'  ,t=5            ,l=260      ,w=180  ,cap=_('&What to restore')+':'                                          )) # &w
                  ,('what',dict(tp='clx' ,t=5+20,h=400   ,l=260      ,w=180  ,items=ps_its       ,en=T               ,val=(-1,ps_vls),call=acts      ))
-                 ,('lval',dict(tp='lb'  ,t=5            ,l=260+180+1,w=220-1,cap=_('With values:')                                                  )) # &
+                 ,('lval',dict(tp='lb'  ,t=5            ,l=260+180+1,w=220-1,cap=_('With values')+':'                                               )) # &
                  ,('vals',dict(tp='clx' ,t=5+20,h=400   ,l=260+180+1,w=220-1,items=ps_vas       ,en=F               ,val=(-1,ps_vls)                ))
                   #
                  ,('!'   ,dict(tp='bt'  ,t=435          ,l=DLG_W-5-100,w=100,cap=_('Apply')     ,def_bt=True                        ,call=save_close)) # &
@@ -429,11 +429,11 @@ class PresetD:
         if not  m.fif.fold_s:   what_vs[M.keys_l.index('fold')]   = '0'
         if '0'==m.fif.frst_s:   what_vs[M.keys_l.index('frst')]   = '0'
         btn,vals,*_t   = dlg_wrapper(_('Save preset'), GAP+400+GAP,GAP+500+GAP,     #NOTE: dlg-pres-new
-             [dict(           tp='lb'   ,t=GAP              ,l=GAP          ,w=300  ,cap=_('&Name:')            ) # &n
+             [dict(           tp='lb'   ,t=GAP              ,l=GAP          ,w=300  ,cap=_('&Name')+':'         ) # &n
              ,dict(cid='name',tp='ed'   ,t=GAP+20           ,l=GAP          ,w=400                              ) # 
-             ,dict(           tp='lb'   ,t=GAP+55           ,l=GAP          ,w=300  ,cap=_('&What to save:')    ) # &w
+             ,dict(           tp='lb'   ,t=GAP+55           ,l=GAP          ,w=300  ,cap=_('&What to save')+':' ) # &w
              ,dict(cid='what',tp='clx'  ,t=GAP+75,h=390     ,l=GAP          ,w=180  ,items=ps_its               )
-             ,dict(           tp='lb'   ,t=GAP+55           ,l=GAP+180+1    ,w=220-1,cap=_('With values:')      ) # &
+             ,dict(           tp='lb'   ,t=GAP+55           ,l=GAP+180+1    ,w=220-1,cap=_('With values')+':'   ) # &
              ,dict(cid='vals',tp='clx'  ,t=GAP+75,h=390     ,l=GAP+180+1    ,w=220-1,items=ps_vas   ,en=F       )
              ,dict(cid='!'   ,tp='bt'   ,t=GAP+500-28       ,l=GAP+400-170  ,w=80   ,cap=_('OK')    ,def_bt=True) # &
              ,dict(cid='-'   ,tp='bt'   ,t=GAP+500-28       ,l=GAP+400-80   ,w=80   ,cap=_('Cancel')            )
@@ -554,15 +554,113 @@ then option "Tree type" in dialog "{morp}" allows to set:
  
 {shtp}
 ''')
-_KEYS_TABLE = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hotkeys.txt')  , encoding='utf-8').read()
-_TIPS_BODY  = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hints.txt')    , encoding='utf-8').read()
+#_KEYS_TABLE = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hotkeys.txt')  , encoding='utf-8').read()
+_KEYS_TABLE = _(r'''
+┌────────────────────────────┬──────────────┬────────────────────────────┬───────────────────────────────────────────┐
+│          Command           │    Hotkey    │           Trick            │                  Comment                  │
+╞════════════════════════════╪══════════════╪════════════════════════════╪═══════════════════════════════════════════╡
+│ Find                       │        Enter │                            │ If focus not in Results/Source            │
+│ Count matches              │        Alt+T │                            │                                           │
+│ Find filenames             │       Ctrl+T │                            │                                           │
+├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤
+│ Focus to Results           │   Ctrl+Enter │                            │ If focus not in Results/Source            │
+│ Open found fragment        │        Enter │                            │ If focus in Results. Selects the fragment │
+│ Close and go to found      │   Ctrl+Enter │                            │ If focus in Results. Selects the fragment │
+│ Close and go to found      │   Ctrl+Enter │                            │ If focus in Source. Restores selection    │
+│ Fold Results branch        │       Ctrl+= │                            │ If focus in Results                       │
+├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤
+│ In current file            │ Ctrl+Shift+C │      Shift+Сlick "Current" │                                           │
+│ In all tabs                │              │ Ctrl      +Сlick "Current" │                                           │
+│ In current tab             │              │ Ctrl+Shift+Сlick "Current" │                                           │
+│ Choose file                │       Ctrl+B │      Shift+Сlick  "Browse" │                                           │
+│ Depth "Only"               │        Alt+Y │                  Ctrl+Num0 │                                           │
+│ Depth "+1 level"           │        Alt+! │                  Ctrl+Num1 │                                           │
+│ Depth "All"                │        Alt+L │                  Ctrl+Num9 │                                           │
+├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤
+│ Save values as preset      │       Ctrl+S │                            │                                           │
+│ Presets dialog             │   Ctrl+Alt+S │                            │                                           │
+│ Use Preset #1(..#5)        │  Ctrl+1(..5) │                            │ Others from menu/dialog                   │
+│ Use Layout #1(..#5)        │   Alt+1(..5) │                            │ Others from menu                          │
+├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤
+│ ±"Not in"/±"Replace"       │        Alt+V │                            │ 4-states loop to show/hide                │
+│ Engine options             │       Ctrl+E │                            │                                           │
+│ Configure vert. alignments │              │             Ctrl+Сlick "=" │                                           │
+├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤
+│ Call CudaText's "Find"     │       Ctrl+F │                            │ With transfer patern/.*/aA/"w"            │
+│ Call CudaText's "Replace"  │       Ctrl+R │                            │ With transfer paterns/.*/aA/"w"           │
+│ Dialog "Help"              │        Alt+H │                            │                                           │
+└────────────────────────────┴──────────────┴────────────────────────────┴───────────────────────────────────────────┘
+''')
+#_TIPS_BODY  = open(os.path.dirname(__file__)+os.sep+r'readme'+os.sep+f('help hints.txt')    , encoding='utf-8').read()
+_TIPS_BODY  = _(r'''
+• ".*" - Option "Regular Expression". 
+It allows to use in field "Find what" special symbols:
+    .   any character
+    \d  digit character (0..9)
+    \w  word-like character (digits, letters, "_")
+In field "Replace with":
+    \1  to insert first found group,
+    \2  to insert second found group, ... 
+See full documentation on page
+    docs.python.org/3/library/re.html
+ 
+• "w" - {word}
+ 
+—————————————————————————————————————————————— 
+ 
+• Values in fields "{incl}" and "{excl}" can contain
+    ?       for any single char,
+    *       for any substring (may be empty),
+    [seq]   any character in seq,
+    [!seq]  any character not in seq. 
+Note: 
+    *       matches all names, 
+    *.*     doesn't match all.
+ 
+• Values in fields "{incl}" and "{excl}" can filter subfolder names 
+if they start with "/".
+Example.
+    {incl:12}: /a*  *.txt
+    {excl:12}: /ab*
+    {fold:12}: c:/root
+    Depth       : All
+    Search will consider all *.txt files in folder c:/root
+    and in all subfolders a* except ab*.
+ 
+• Set special value "{tags}" (in short <t> or <Tabs>) for field "{fold}" to search in opened documents.
+Fields "{incl}" and "{excl}" will be to filter tab titles.
+To search in all tabs, use mask "*" in field "{incl}".
+See: commands in menu/Scope.
+ 
+• Set special value "{proj}" (in short <p>) for field "{fold}" to search in project files.
+See: commands in menu/Scope.
+ 
+—————————————————————————————————————————————— 
+ 
+• Long-term searches can be interrupted by ESC.
+Search has three stages: 
+    picking files, 
+    finding fragments, 
+    reporting.
+ESC stops any stage. 
+When picking and finding, ESC stops only this stage, so next stage begins.
+ 
+—————————————————————————————————————————————— 
+ 
+• Use right click or Context keyboard button 
+to see context menu over these elements
+    "Find", "Replace", "Current", "Browse", Depth combobox
+ 
+—————————————————————————————————————————————— 
+You are welcome to plugin forum. See bottom link.
+''')
 RE_DOC_URL  = 'https://docs.python.org/3/library/re.html'
 GH_ISU_URL  = 'https://github.com/kvichans/cuda_find_in_files/issues'
 
 def dlg_fif_help(fif, stores=None):
     stores      = {} if stores is None else stores
     TIPS_BODY   =_TIPS_BODY.strip().format(
-                    word=word_h.replace('\r', '\n')
+                    word=word_h
                   , incl=fif.caps['incl']
                   , excl=fif.caps['excl']
                   , fold=fif.caps['fold']
@@ -570,25 +668,28 @@ def dlg_fif_help(fif, stores=None):
                   , proj=IN_PROJ_FOLDS)
     TREE_BODY   =_TREE_BODY.strip().format(
                     morp=morp_h
-                  , shtp=shtp_h.replace('\r', '\n'))
+                  , shtp=shtp_h)
     KEYS_TABLE  = _KEYS_TABLE.strip('\n\r')
     c2m         = 'mac'==get_desktop_environment() #or True
     KEYS_TABLE  = _KEYS_TABLE.strip('\n\r').replace('Ctrl+', 'Meta+') if c2m else KEYS_TABLE
     page        = stores.get('page', 0)
     ag_hlp      = DlgAgent(
-              form  =dict( cap      =_('Help "Find in Files"')
-                          ,w        = 910+10
+              form  =dict( cap      =_('"Find in Files" help')
+                          ,w        = 930+10
                           ,h        = 580+10
                           ,resize   = True
                           )
             , ctrls = [0
                 ,('tabs',dict(tp='pgs'  ,l=5,w=910  
-                                        ,t=5,h=580  ,a='lRtB'   ,items='Hotkeys+Tricks\tHints\tTree types'  ,val=page       ))
-                ,('keys',dict(tp='me'   ,p='tabs.0' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=KEYS_TABLE ))
-                ,('tips',dict(tp='me'   ,p='tabs.1' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=TIPS_BODY  ))
-                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org')             ,url=RE_DOC_URL ))
-                ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'                        ,val=TREE_BODY  ))
-                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Plugin forum')                      ,url=GH_ISU_URL ))
+                                        ,t=5,h=580  ,a='lRtB'   ,items=[_('Hotkeys+Tricks')
+                                                                       ,_('Hints')
+                                                                       ,_('Tree types')]        ,val=page       ))
+#                                       ,t=5,h=580  ,a='lRtB'   ,items='Hotkeys+Tricks\tHints\tTree types'      ,val=page       ))
+                ,('keys',dict(tp='me'   ,p='tabs.0' ,ali=ALI_CL ,ro_mono_brd='1,1,1'            ,val=KEYS_TABLE ))
+                ,('tips',dict(tp='me'   ,p='tabs.1' ,ali=ALI_CL ,ro_mono_brd='1,1,1'            ,val=TIPS_BODY  ))
+#               ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Reg.ex. on python.org') ,url=RE_DOC_URL ))
+                ,('tree',dict(tp='me'   ,p='tabs.2' ,ali=ALI_CL ,ro_mono_brd='1,1,1'            ,val=TREE_BODY  ))
+                ,('porg',dict(tp='llb'  ,p='tabs.1' ,ali=ALI_BT ,cap=_('Plugin forum')          ,url=GH_ISU_URL ))
                     ][1:]
             , fid   = 'tabs'
                                #,options={'gen_repro_to_file':'repro_dlg_fif_help.py'}
@@ -596,9 +697,9 @@ def dlg_fif_help(fif, stores=None):
     def do_exit(ag):
         pass
 #       page = 0 if ag.cattr('keys', 'vis') else 1 if ag.cattr('tips', 'vis') else 2
-        page = ag.cval('tabs')  ##!! Wait 'val' for 'pages' 
+        page = ag.cval('tabs')
         stores['page']  = page
-    try:                        ##!! Wait 'val' for 'pages' 
+    try:
         ag_hlp.show(callbk_on_exit=lambda ag: do_exit(ag))    #NOTE: dlg_fif_help
     except:pass
     return stores
@@ -668,139 +769,139 @@ def dlg_nav_by_dclick():
    #def dlg_nav_by_dclick
 
 mask_h  = _('Space-separated file or folder masks.'
-            '\rFolder mask starts with "/".'
-            '\rDouble-quote mask, which needs space-char.'
-            '\rUse ? for any character and * for any fragment.'
-            '\rNote: "*" matchs all names, "*.*" doesnt match all.')
+            '\nFolder mask starts with "/".'
+            '\nDouble-quote mask, which needs space-char.'
+            '\nUse ? for any character and * for any fragment.'
+            '\nNote: "*" matchs all names, "*.*" doesnt match all.')
 excl_h  = mask_h+f(_(''
-            '\r '
-            '\rAlways excluded: {}'
-            '\rSee option "fif_always_not_in_files" to change.'
+            '\n '
+            '\nAlways excluded: {}'
+            '\nSee option "fif_always_not_in_files" to change.'
             ), ALWAYS_EXCL)
 reex_h  = _('Regular expression'
-            '\rFormat for found groups in Replace: \\1'
+            '\nFormat for found groups in Replace: \\1'
             )
 case_h  = _('Case sensitive')
 word_h  = _('Option "Whole words". It is ignored when:'
-            '\r  Regular expression (".*") is turned on,'
-            '\r  "Find what" contains not only letters, digits and "_".'
+            '\n  Regular expression (".*") is turned on,'
+            '\n  "Find what" contains not only letters, digits and "_".'
             )
 brow_h  = _('Choose folder.'
-            '\rShift+Click or Ctrl+B - Choose file to find in it.'
+            '\nShift+Click or Ctrl+B - Choose file to find in it.'
             )
 fold_h  = f(_('Start folder(s).'
-            '\rSpace-separated folders.'
-            '\rDouble-quote folder, which needs space-char.'
-            '\r~ is user Home folder.'
-            '\r$VAR or ${{VAR}} is environment variable.'
-            '\r{} to search in tabs (in short <Tabs> or <t>).'
-            '\r{} to search in project folders (in short <p>).'
+            '\nSpace-separated folders.'
+            '\nDouble-quote folder, which needs space-char.'
+            '\n~ is user Home folder.'
+            '\n$VAR or ${{VAR}} is environment variable.'
+            '\n{} to search in tabs (in short <Tabs> or <t>).'
+            '\n{} to search in project folders (in short <p>).'
             ), IN_OPEN_FILES, IN_PROJ_FOLDS)
 dept_h  = _('Which subfolders will be searched.'
-            '\rAlt+Y or Ctrl+Num0 - Apply "Only".'
-            '\rAlt+! or Ctrl+Num1 - Apply "+1 level".'
-            '\rAlt+L or Ctrl+Num9 - Apply "+All" subfolders.'
+            '\nAlt+Y or Ctrl+Num0 - Apply "Only".'
+            '\nAlt+! or Ctrl+Num1 - Apply "+1 level".'
+            '\nAlt+L or Ctrl+Num9 - Apply "+All" subfolders.'
             )
 cfld_h  = _('Use folder of current file.'
-            '\rShift+Click or Ctrl+Shift+C - Prepare search in the current file.'
-            '\rCtrl+Click   - Prepare search in all tabs.'
-            '\rShift+Ctrl+Click - Prepare search in the current tab.'
+            '\nShift+Click or Ctrl+Shift+C - Prepare search in the current file.'
+            '\nCtrl+Click   - Prepare search in all tabs.'
+            '\nShift+Ctrl+Click - Prepare search in the current tab.'
             )
 mofi_h  = _('Advanced search options')
 send_h  = _('Output report to tab/file')
 morp_h  = _('Advanced tab report options')
 menu_h  = _('Local menu'
-            '\rCtrl+Click - Adjust vertical alignments…'
+            '\nCtrl+Click - Adjust vertical alignments...'
             )
 more_h  = _('Show/Hide advanced options'
-            '\rCtrl+Click   - Show/Hide "Not in files".'
-            '\rShift+Click - Show/Hide "Replace".'
-            '\r '
-            '\rAlt+V - Toggle visibility on cycle'
-            '\r   hidden "Not in files", hidden  "Replace"'
-            '\r   visible  "Not in files", hidden  "Replace"'
-            '\r   visible  "Not in files", visible   "Replace"'
-            '\r   hidden "Not in files", visible   "Replace"'
+            '\nCtrl+Click   - Show/Hide "Not in files".'
+            '\nShift+Click - Show/Hide "Replace".'
+            '\n '
+            '\nAlt+V - Toggle visibility on cycle'
+            '\n   hidden "Not in files", hidden  "Replace"'
+            '\n   visible  "Not in files", hidden  "Replace"'
+            '\n   visible  "Not in files", visible   "Replace"'
+            '\n   hidden "Not in files", visible   "Replace"'
             )
 frst_h  = _('M[, F]'
-            '\rStop after M fragments will be found.'
-            '\rSearch only inside F first proper files.'
-            '\r    Note: If Sort is on then steps are'
-            '\r     - Collect all proper files'
-            '\r     - Sort the list'
-            '\r     - Use first F files to search'
+            '\nStop after M fragments will be found.'
+            '\nSearch only inside F first proper files.'
+            '\n    Note: If Sort is on then steps are'
+            '\n     - Collect all proper files'
+            '\n     - Sort the list'
+            '\n     - Use first F files to search'
             )
-OLDE_U  = ['hour(s)', 'day(s)', 'week(s)', 'month(s)', 'year(s)']
+OLDE_U0 = ['h', 'd', 'w', 'm', 'y']
+OLDE_U  = [_('hour(s)'), _('day(s)'), _('week(s)'), _('month(s)'), _('year(s)')]
 olde_h  = _('"N" or "<N" or ">N".'
-            '\rSkip files if the age less or more then N.'
-            '\r"N" and "<N" are equal.'
-            '\r"0" to all ages.'
+            '\nSkip files if the age less or more then N.'
+            '\n"N" and "<N" are equal.'
+            '\n"0" to all ages.'
             )
 shtp_h  = f(_(  'Format of the reported tree structure.'
-            '\rCompact - report all found line with full file info:'
-            '\r    path(r[:c:l]):line'
-            '\r    path/(r[:c:l]):line'
-            '\r  Tree schemes'
-            '\r    +Search for "*"'
-            '\r      <full_path(row[:col:len])>: line with ALL marked fragments'
-            '\r    +Search for "*"'
-            '\r      <full_path>: #count'
-            '\r         <(row[:col:len])>: line with ALL marked fragments'
-            '\rSparse - report separated folders and fragments:'
-            '\r    dir/file(r[:c:l]):line'
-            '\r    dir/file/(r[:c:l]):line'
-            '\r  Tree schemes'
-            '\r    +Search for "*"'
-            '\r      <root>: #count'
-            '\r        <dir>: #count'
-            '\r          <file.ext(row[:col:len])>: line with ONE marked fragment'
-            '\r    +Search for "*"'
-            '\r      <root>: #count'
-            '\r        <dir>: #count'
-            '\r          <file.ext>: #count'
-            '\r            <(row[:col:len])>: line with ONE marked fragment'
-            '\rFor '
-            '\r  sorted files'
-            '\rand for search in tabs'
-            '\r  In folder={}'
-            '\ronly Compact options are used.'
-            '\rWhen a conflict occurs, "Tree type" is automatically changed.'
+            '\nCompact - report all found line with full file info:'
+            '\n    path(r[:c:l]):line'
+            '\n    path/(r[:c:l]):line'
+            '\n  Tree schemes'
+            '\n    +Search for "*"'
+            '\n      <full_path(row[:col:len])>: line with ALL marked fragments'
+            '\n    +Search for "*"'
+            '\n      <full_path>: #count'
+            '\n         <(row[:col:len])>: line with ALL marked fragments'
+            '\nSparse - report separated folders and fragments:'
+            '\n    dir/file(r[:c:l]):line'
+            '\n    dir/file/(r[:c:l]):line'
+            '\n  Tree schemes'
+            '\n    +Search for "*"'
+            '\n      <root>: #count'
+            '\n        <dir>: #count'
+            '\n          <file.ext(row[:col:len])>: line with ONE marked fragment'
+            '\n    +Search for "*"'
+            '\n      <root>: #count'
+            '\n        <dir>: #count'
+            '\n          <file.ext>: #count'
+            '\n            <(row[:col:len])>: line with ONE marked fragment'
+            '\nFor '
+            '\n  sorted files'
+            '\nand for search in tabs'
+            '\n  In folder={}'
+            '\nonly Compact options are used.'
+            '\nWhen a conflict occurs, "Tree type" is automatically changed.'
            ),IN_OPEN_FILES)
 #NOTE: hints
 cntx_c  = _('Conte&xt -{}+{}')
-cntx_h  = _('Show result line and both its nearest lines, above and below result.'
-            '\rCtrl+Click or Ctrl+Shift+X - Set count of above and below lines.')
+cntx_h  = _('Show result line and both its nearest lines, above and below result.')
 algn_h  = _("Align columns (filenames/numbers) by widest cell width")
 find_h  = f(_('Start search.'
-            '\rShift+Click  - Put report to new tab.'
-            '\r   It is like pressing Find with option "Show in: {}".'
-            '\rCtrl+Click  - Append result to existing report.'
-            '\r   It is like pressing Find with option "[x]Append results".'
+            '\nShift+Click  - Put report to new tab.'
+            '\n   It is like pressing Find with option "Show in: {}".'
+            '\nCtrl+Click  - Append result to existing report.'
+            '\n   It is like pressing Find with option "[x]Append results".'
             ), TOTB_NEW_TAB)
 repl_h  = _('Start search and replacement.'
-            '\rShift+Click  - Run without question'
-            '\r   "Do you want to replace…?"'
+            '\nShift+Click  - Run without question'
+            '\n   "Do you want to replace...?"'
             )
 coun_h  = _('Count matches only.'
-            '\rShift+Click or Ctrl+T - Find file names only.'
-            '\r '
-            '\rNote: Alt+T and Ctrl+T works if button is hidden.'
+            '\nShift+Click or Ctrl+T - Find file names only.'
+            '\n '
+            '\nNote: Alt+T and Ctrl+T works if button is hidden.'
             )
 pset_h  = _('Save options for future. Restore saved options.'
-            '\rShift+Click - Show presets list in applying history order.'
-            '\rCtrl+Click   - Apply last used preset.'
-            '\r '
-            '\rNote: Alt+S works if button is hidden.'
-            '\rCtrl+1 - Apply first preset.'
-            '\rCtrl+2 - Apply second preset.'
-            '\rCtrl+3 - Apply third preset.'
+            '\nShift+Click - Show presets list in applying history order.'
+            '\nCtrl+Click   - Apply last used preset.'
+            '\n '
+            '\nNote: Alt+S works if button is hidden.'
+            '\nCtrl+1 - Apply first preset.'
+            '\nCtrl+2 - Apply second preset.'
+            '\nCtrl+3 - Apply third preset.'
             )
     
 enco_h  = f(_('In which encodings try to read files.'
-            '\rFirst suitable will be used.'
-            '\r"{}" is slow.'
-            '\r '
-            '\rDefault encoding: {}'), ENCO_DETD, loc_enco)
+            '\nFirst suitable will be used.'
+            '\n"{}" is slow.'
+            '\n '
+            '\nDefault encoding: {}'), ENCO_DETD, loc_enco)
 
 def add_to_history(val:str, lst:list, max_len:int, unicase=True)->list:
     """ Add/Move val to list head. """
@@ -1275,20 +1376,21 @@ class FifD:
         pass;                  #log('self.skip_s={}',(self.skip_s))
         olde_n, \
         olde_u  = self.olde_s.split('/')
-        olde_ui = {U[0]:i for i,U in enumerate(OLDE_U)}[olde_u]
-        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=320, h=120+33)
+        olde_ui = {U[0]:i for i,U in enumerate(OLDE_U0)}[olde_u]
+        ag_mofi = DlgAgent(form   =dict(cap=mofi_h, w=340, h=120+33+30)                                     #NOTE: ag_mofi Search opts
                 ,ctrls  =[0
-                ,('ski_',d(tp='lb'  ,tid='skip' ,l=5    ,w=100-5,cap='>'+_('S&kip files:')                  ))# &k
-                ,('skip',d(tp='cb-r',t=5        ,l=5+100,w=200  ,items=SKIP_L                               ))# 
-                ,('sor_',d(tp='lb'  ,tid='sort' ,l=5    ,w=100-5,cap='>'+_('S&ort file list:')              ))# &o
-                ,('sort',d(tp='cb-r',t=5+29*1   ,l=5+100,w=200  ,items=SORT_L                               ))# 
-                ,('old_',d(tp='lb'  ,tid='olde' ,l=5    ,w=100-5,cap='>'+_('A&ge (0=all):')     ,hint=olde_h))# &g
-                ,('olde',d(tp='ed'  ,t=5+29*2   ,l=5+100,w= 75                                              ))# 
-                ,('oldu',d(tp='cb-r',tid='olde' ,l=5+180,w=120  ,items=OLDE_U                               ))# 
-                ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=100-5,cap='>'+_('&Firsts (0=all):')  ,hint=frst_h))# &f
-                ,('frst',d(tp='ed'  ,t=5+29*3   ,l=5+100,w=200                                              ))# 
-                ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=100-5,cap='>'+_('&Encodings:')       ,hint=enco_h))# &e
-                ,('enco',d(tp='cb-r',t=5+29*4   ,l=5+100,w=200  ,items=ENCO_L                               ))# 
+                ,('ski_',d(tp='lb'  ,tid='skip' ,l=5    ,w=120-5,cap='>'+_('S&kip files')+':'               ))# &k
+                ,('skip',d(tp='cb-r',t=5        ,l=5+120,w=200  ,items=SKIP_L                               ))# 
+                ,('sor_',d(tp='lb'  ,tid='sort' ,l=5    ,w=120-5,cap='>'+_('S&ort file list')+':'           ))# &o
+                ,('sort',d(tp='cb-r',t=5+29*1   ,l=5+120,w=200  ,items=SORT_L                               ))# 
+                ,('old_',d(tp='lb'  ,tid='olde' ,l=5    ,w=120-5,cap='>'+_('A&ge (0=all)')+':'  ,hint=olde_h))# &g
+                ,('olde',d(tp='ed'  ,t=5+29*2   ,l=5+120,w= 75                                              ))# 
+                ,('oldu',d(tp='cb-r',tid='olde' ,l=5+200,w=120  ,items=OLDE_U                               ))# 
+                ,('frs_',d(tp='lb'  ,tid='frst' ,l=5    ,w=120-5,cap='>'+_('&Firsts (0=all)')+':',hint=frst_h))# &f
+                ,('frst',d(tp='ed'  ,t=5+29*3   ,l=5+120,w=200                                              ))# 
+                ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=120-5,cap='>'+_('&Encodings')+':'    ,hint=enco_h))# &e
+                ,('enco',d(tp='cb-r',t=5+29*4   ,l=5+120,w=200  ,items=ENCO_L                               ))# 
+                ,('okok',d(tp='bt'  ,t=150      ,l=280  ,w= 45  ,cap='OK'   ,def_bt=True    ,call=LMBD_HIDE ))# 
                         ][1:]
                 ,vals   = d(skip=self.skip_s
                            ,sort=self.sort_s
@@ -1305,7 +1407,7 @@ class FifD:
         age         = age if re.match('[<>]?\d+$', age) else '0' 
         self.skip_s = ag_mofi.cval('skip')
         self.sort_s = ag_mofi.cval('sort')
-        self.olde_s = age+'/'+OLDE_U[ag_mofi.cval('oldu')][0]
+        self.olde_s = age+'/'+OLDE_U0[ag_mofi.cval('oldu')][0]
         self.frst_s = ag_mofi.cval('frst').strip()
         self.enco_s = ag_mofi.cval('enco')
         pass;                  #log('self.skip_s={}',(self.skip_s))
@@ -1329,7 +1431,7 @@ class FifD:
             if False:pass
             elif totb_v==_('[Clear fixed files]') and fxs:
                 if app.ID_YES != app.msg_box(
-                                  f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), 'Send report to')
+                                  f(_('Clear all fixed files ({}) for "{}"?'), len(fxs), _('Report to'))
                                 , app.MB_OKCANCEL+app.MB_ICONQUESTION):
                     self.totb_i  = totb_i_pre
                     return {'vals':{'totb':self.totb_i}}            # Cancel, set prev state
@@ -1373,19 +1475,20 @@ class FifD:
                             )
                     ,fid='what')
         
-        ag_morp = DlgAgent(form   =dict(cap=morp_h, w=310, h=205)
+        ag_morp = DlgAgent(form   =dict(cap=morp_h, w=330, h=205)                                                   #NOTE: ag_morp Report opts
                 ,ctrls  =[0
-                ,('tot_',d(tp='lb'  ,t=  5      ,l=  5  ,w=100  ,cap=_('&Report to:')                               ))# &r
+                ,('tot_',d(tp='lb'  ,t=  5      ,l=  5  ,w=100  ,cap=_('&Report to')+':'                            ))# &r
                 ,('totb',d(tp='cb-r',t= 23      ,l=  5  ,w=140  ,items=m.totb_l                     ,call=do_totb   ))# 
                 ,('join',d(tp='ch'  ,tid='totb' ,l=170  ,w=140  ,cap=_('Appen&d results')                           ))# &d
-                ,('sht_',d(tp='lb'  ,t= 60      ,l=  5  ,w=100  ,cap=_('&Tree type:')       ,hint=shtp_h            ))# &t
+                ,('sht_',d(tp='lb'  ,t= 60      ,l=  5  ,w=100  ,cap=_('&Tree type')+':'    ,hint=shtp_h            ))# &t
                 ,('shtp',d(tp='cb-r',t= 78      ,l=  5  ,w=140  ,items=SHTP_L                                       ))# 
                 ,('algn',d(tp='ch'  ,tid='shtp' ,l=170  ,w= 80  ,cap=_('&Align (r:c:l)')    ,hint=algn_h            ))# &a
                 ,('cntx',d(tp='ch'  ,t=115      ,l=  5  ,w=140  ,cap=_('Add conte&xt lines'),hint=cntx_h            ))# &x
-                ,('cxb_',d(tp='lb'  ,tid='cxbf' ,l=  5  ,w= 80  ,cap='>'+_('&Before:')                              ))# &b
+                ,('cxb_',d(tp='lb'  ,tid='cxbf' ,l=  5  ,w= 80  ,cap='>'+_('&Before')+':'                           ))# &b
                 ,('cxbf',d(tp='sed' ,t=140      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
-                ,('cxa_',d(tp='lb'  ,tid='cxaf' ,l=  5  ,w= 80  ,cap='>'+_('A&fter:')                               ))# &f
+                ,('cxa_',d(tp='lb'  ,tid='cxaf' ,l=  5  ,w= 80  ,cap='>'+_('A&fter')+':'                            ))# &f
                 ,('cxaf',d(tp='sed' ,t=169      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
+                ,('okok',d(tp='bt'  ,tid='cxaf' ,l=280  ,w= 45  ,cap='OK'           ,def_bt=True    ,call=LMBD_HIDE ))# 
                         ][1:]
                 ,vals   = d(totb=self.totb_i
                            ,join=self.join_s
@@ -1419,7 +1522,7 @@ class FifD:
 #       ag.bind_do()
 #       ag.bind_do(['excl','repl','adva'])
 #       btn_p,btn_m = FifD.scam_pair(aid)
-        btn_p,btn_m = ag.scam_pair(aid)         if not btn_m else   (aid, btn_m)
+        btn_p,btn_m = ag.scam_pair(aid)
 
         if False:pass
 
@@ -1693,7 +1796,7 @@ class FifD:
             ,algn   =    '1'==self.algn_s
             ,join   =    '1'==self.join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
             )
-        fil_tab     = 'tab' if root_is_tabs(self.fold_s) else 'file'
+        fil_tab     = _('tab') if root_is_tabs(self.fold_s) else _('file')
         ################################
         pass;                  #v=[].get('k')       # Err as while search
         M.rslt_body   = M.DEF_RSLT_BODY
@@ -1889,7 +1992,7 @@ class FifD:
                             , app.MB_OKCANCEL+app.MB_ICONQUESTION): return []
                 del lays_l[lt_i]
             elif tag=='svlt':
-                nm_tmpl     = _('#{}')
+                nm_tmpl     = '#{}'
                 lt_nm       = f(nm_tmpl
                                ,first_true(itertools.count(1+len(lays_d))
                                         ,pred=lambda n:f(nm_tmpl, n) not in lays_d))     # First free #N after len()
@@ -2015,7 +2118,7 @@ class FifD:
         find_c  = self.caps['!fnd']
         repl_c  = self.caps['!rep']
         cfld_c  = self.caps['cfld']
-        brow_c  = self.caps['brow'].replace('.', '').replace('…', '')
+        brow_c  = self.caps['brow'].replace('.', '').replace('...', '').replace('…', '')
         fold_c  = self.caps['fold']
         w_rslt  = '0'==self.send_s
         mn_coun = [
@@ -2046,7 +2149,7 @@ class FifD:
                    )]
         mn_brow = [
     d(tag='brow-main'   ,key='Alt+B'        ,cap=  _('Choose folder…')
-  ),d(tag='brow-file'   ,key='Ctrl+B'       ,cap=f(_('Choose file to find in it…   [Shift+"{}"]')               , brow_c)
+  ),d(tag='brow-file'   ,key='Ctrl+B'       ,cap=f(_('Choose file to find in it…')+ '[Shift+"{}"]'              , brow_c)
                    )]
         mn_dept = [
     d(tag='dept-only'   ,key='Alt+Y'        ,cap=  _('Apply "Onl&y"   [Ctrl+Num0]')
@@ -2054,7 +2157,7 @@ class FifD:
   ),d(tag='dept-all'    ,key='Alt+L'        ,cap=  _('Apply "+A&ll"   [Ctrl+Num9]')
                    )]
         mn_cust = [
-    d(tag='cust-rprt'   ,key='Alt+O'        ,cap=  _('Options for report t&o tab…')                                             ,en=not w_rslt
+    d(tag='cust-rprt'   ,key='Alt+O'        ,cap=  _('Options for report t&o tab…')                                         ,en=not w_rslt
   ),d(tag='cust-srch'   ,key='Alt+E'        ,cap=  _('Extra options for s&earch…')
   ),d(tag='edit-opts'   ,key='Ctrl+E'       ,cap=  _('&View and edit engine options…')
   ),d(tag='edit-dcls'                       ,cap=  _('&Configure navigation with double-click in tab report…')
@@ -2070,7 +2173,7 @@ class FifD:
   ),d(tag='pres-cfg' ,key='Ctrl+Alt+S'  ,en=pset_n>0   ,cap=f(_('Presets [{}]…'), pset_n)
   ),d(                                                  cap='-')
                   ]+[
-    d(tag='pres-'+str(1+nps)    ,cap=f(_('&{}: {}') ,1+nps, limit_len(ps['name'], 60))   
+    d(tag='pres-'+str(1+nps)    ,cap=f('&{}: {}' ,1+nps, limit_len(ps['name'], 60))   
                     ,key=(f('Ctrl+{}', 1+nps) if nps<5 else '')
                                                                              ) for nps, ps in enumerate(pset_l)
                   ]
@@ -2089,10 +2192,10 @@ class FifD:
                 mn_lays += [
     d(tag='relt'+str(1+nlt)   ,cap=f(_('&{}: Restore "{}"') ,1+nlt, limit_len(lt['nm'], 30))
                     ,key=(f('Alt+{}', 1+nlt) if nlt<5 else '')
-                                                                                            ) for nlt, lt in enumerate(lays_l)
+                                                                                            )   for nlt, lt in enumerate(lays_l)
                            ]
                 mn_lays += [d( cap=_('&Forget'),sub=[
-    d(tag='rmlt'+str(nlt)     ,cap=f(_('&{}: "{}"...')      ,1+nlt, limit_len(lt['nm'], 30))) for nlt, lt in enumerate(lays_l)
+    d(tag='rmlt'+str(nlt)     ,cap=f('&{}: "{}"...'      ,1+nlt, limit_len(lt['nm'], 30)))      for nlt, lt in enumerate(lays_l)
                                                               ]
                           )]
             mn_its  = [ 
@@ -2105,7 +2208,7 @@ class FifD:
     ),d(                             cap='-'
     )                                                     ] + mn_cust + [
       d(                             cap='-'
-    ),d(tag='help'    ,key='Alt+H'  ,cap=_('&Help...')
+    ),d(tag='help'    ,key='Alt+H'  ,cap=_('&Help…')
                    )]
         elif aid=='!fnd':
             mn_its  = mn_find
@@ -2281,28 +2384,28 @@ class FifD:
     # Start=Full cnts
         rslt_ali= ALI_TP if m.rslt_va else ALI_LF
         cnts    = [0                                                      #  ghjmqsz ?&m
- ,('depa',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&l')    ,call=m.do_dept ))# &l
- ,('depo',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&y')    ,call=m.do_dept ))# &y
- ,('dep1',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&!')    ,call=m.do_dept ))# &!
- ,('!ctt',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&t')    ,call=m.do_work ))# &t
- ,('loop',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&v')    ,call=m.do_more ))# &v
- ,('help',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap=_('&h')    ,call=m.do_help ))# &h
+ ,('depa',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap='&l'    ,call=m.do_dept ))# &l
+ ,('depo',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap='&y'    ,call=m.do_dept ))# &y
+ ,('dep1',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap='&!'    ,call=m.do_dept ))# &!
+ ,('!ctt',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap='&t'    ,call=m.do_work ))# &t
+ ,('loop',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap='&v'    ,call=m.do_more ))# &v
+ ,('help',d(tp='bt' ,t=0,l=-99,w=44,sto=F  ,cap='&h'    ,call=m.do_help ))# &h
 
  ,('pt'  ,d(tp='pn'         ,ali=ALI_TP ,w=m.dlg_w ,h=m.dlg_h0))
 
  ,('reex',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*0      ,w=39               ,cap='&.*'                  ,hint=reex_h            ,bind='reex01'  ,call=m.do_focus                ))# &*
- ,('case',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*1      ,w=39               ,cap='&aA'                  ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
- ,('word',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*2      ,w=39               ,cap='"&w"'                 ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
+ ,('case',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*1      ,w=39               ,cap=_('&aA')               ,hint=case_h            ,bind='case01'  ,call=m.do_focus                ))# &a
+ ,('word',d(tp='chb',p='pt' ,tid='what'     ,l= 5+38*2      ,w=39               ,cap=_('"&w"')              ,hint=word_h            ,bind='word01'  ,call=m.do_focus                ))# &w
                                                                                                                                                                                     
- ,('wha_',d(tp='lb' ,p='pt' ,tid='what'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what:')                                                                          ))# &f
+ ,('wha_',d(tp='lb' ,p='pt' ,tid='what'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&Find what')+':'                                                                       ))# &f
  ,('what',d(tp='cb' ,p='pt' ,t= 5           ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.what_l                                     ,bind='what_s'                                  ))# 
- ,('rep_',d(tp='lb' ,p='pt' ,tid='repl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with:')            ,vis=w_repl                                                 ))# &r
+ ,('rep_',d(tp='lb' ,p='pt' ,tid='repl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('&Replace with')+':'         ,vis=w_repl                                                 ))# &r
  ,('repl',d(tp='cb' ,p='pt' ,t= 5+ 28+M.EG1 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.repl_l                         ,vis=w_repl ,bind='repl_s'                                  ))# 
- ,('inc_',d(tp='lb' ,p='pt' ,tid='incl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files:')   ,hint=mask_h                                                            ))# &i
+ ,('inc_',d(tp='lb' ,p='pt' ,tid='incl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*&In files')+':',hint=mask_h                                                            ))# &i
  ,('incl',d(tp='cb' ,p='pt' ,t=g1+ 56+M.EG2 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.incl_l                                     ,bind='incl_s'                                  ))# 
- ,('exc_',d(tp='lb' ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files:') ,hint=excl_h,vis=w_excl                                                 ))# 
+ ,('exc_',d(tp='lb' ,p='pt' ,tid='excl'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('Not in files')+':',hint=excl_h,vis=w_excl                                               ))# 
  ,('excl',d(tp='cb' ,p='pt' ,t=g1+ 84+M.EG3 ,l=M.CMB_L      ,w=M.TXT_W  ,a='lR' ,items=m.excl_l                         ,vis=w_excl ,bind='excl_s'                                  ))# 
- ,('fol_',d(tp='lb' ,p='pt' ,tid='fold'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder:')  ,hint=fold_h                                                            ))# &n
+ ,('fol_',d(tp='lb' ,p='pt' ,tid='fold'     ,l=M.LBL_L      ,r=M.CMB_L-5        ,cap='>'+_('*I&n folder')+':',hint=fold_h                                                           ))# &n
  ,('fold',d(tp='cb' ,p='pt' ,t=g2+112+M.EG4 ,l=M.CMB_L  ,w=M.TXT_W-102  ,a='lR' ,items=m.fold_l                                     ,bind='fold_s'                                  ))# 
  ,('dept',d(tp='cbr',p='pt' ,t=g2+112+M.EG4 ,l=dept_l       ,w=100      ,a='LR' ,items=DEPT_L               ,hint=dept_h            ,bind='dept_n'                  ,menu=m.do_menu ))# 
  ,('brow',d(tp='bt' ,p='pt' ,tid='fold'     ,l=M.TBN_L      ,w=M.BTN_W  ,a='LR' ,cap=_('&Browse…')          ,hint=brow_h                            ,call=m.do_fold ,menu=m.do_menu ))# &b
@@ -2314,7 +2417,7 @@ class FifD:
                                                                                                                                                                                     
  ,('!fnd',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L  ,w=M.BTN_W-39   ,a='LR' ,cap=_('Find'),def_bt=True  ,hint=find_h                            ,call=m.do_work ,menu=m.do_menu ))# 
  ,('!rep',d(tp='bt' ,p='pt' ,tid='repl'     ,l=M.TBN_L  ,w=M.BTN_W      ,a='LR' ,cap=_('Re&place')          ,hint=repl_h,vis=w_repl                 ,call=m.do_work ,menu=m.do_menu ))# &p
- ,('menu',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-39,w=39  ,a='LR' ,cap=_('&=')                ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
+ ,('menu',d(tp='bt' ,p='pt' ,tid='what'     ,l=M.TBN_L+M.BTN_W-39,w=39  ,a='LR' ,cap='&='                   ,hint=menu_h,sto=False                  ,call=m.do_menu                 ))# &=
                                                                                                                                                                                     
  ,('pb'  ,d(tp='pn'         ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
 #,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,menu=m.do_menu 
@@ -2538,4 +2641,5 @@ ToDo
 [ ][kv-kv][09jul18] Event on_open for *.fif to set markers by (r:c:l)
 [+][at-kv][14jul18] Add opt fif_always_not_in_files to section Searching with def val '/.svn /.git /.hg'
 [ ][kv-kv][23jul18] ? Why need dlg_h0+=23 at Lin?
+[ ][kv-kv][24apr19] Allow menu Layout if [ ]Send. Only "over" item will be unenabled
 '''
