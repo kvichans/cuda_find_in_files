@@ -1,0 +1,1379 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2019-04-24 12:23+0300\n"
+"PO-Revision-Date: 2019-04-24 12:25+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 2.2.1\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+#: cd_fi_in_fi.py:60
+msgid "+1 level"
+msgstr "+1 уровень"
+
+#: cd_fi_in_fi.py:60
+msgid "+2 levels"
+msgstr "+2 уровня"
+
+#: cd_fi_in_fi.py:60
+msgid "+3 levels"
+msgstr "+3 уровня"
+
+#: cd_fi_in_fi.py:60
+msgid "+4 levels"
+msgstr "+4 уровня"
+
+#: cd_fi_in_fi.py:60
+msgid "+5 levels"
+msgstr "+5 уровней"
+
+#: cd_fi_in_fi.py:60
+msgid "+All"
+msgstr "+Все уровни"
+
+#: cd_fi_in_fi.py:60
+msgid "Only"
+msgstr "Тек. папка"
+
+#: cd_fi_in_fi.py:61
+msgid "-Binary"
+msgstr "-Двоичные"
+
+#: cd_fi_in_fi.py:61
+msgid "-Hidden"
+msgstr "-Скрытые"
+
+#: cd_fi_in_fi.py:61
+msgid "-Hidden, -Binary"
+msgstr "-Скрытые, -Двоичные"
+
+#: cd_fi_in_fi.py:61
+msgid "Don't skip"
+msgstr "Не пропускать"
+
+#: cd_fi_in_fi.py:62
+msgid "By date, from newest"
+msgstr "По дате, начиная со последних"
+
+#: cd_fi_in_fi.py:62
+msgid "By date, from oldest"
+msgstr "По дате, начиная со старых"
+
+#: cd_fi_in_fi.py:62
+msgid "Don't sort"
+msgstr "Не сортировать"
+
+#: cd_fi_in_fi.py:119 cd_fi_in_fi.py:130 cd_fi_in_fi.py:138 cd_fi_in_fi.py:150
+#: cd_fi_in_fi.py:154 cd_fi_in_fi.py:157 cd_fi_in_fi.py:160
+msgid "Must update the application"
+msgstr "Необходимо обновить приложение"
+
+#: cd_fi_in_fi.py:140
+msgid "The command works only with reports of FindInFiles plugin"
+msgstr "Команда применима только к результатам \"Поиска по файлам\""
+
+#: cd_fi_in_fi.py:143
+msgid "No info to repeat search"
+msgstr "Нет данных для повторного поиска"
+
+#: cd_fi_in_fi.py:199
+msgid "To view/edit options install plugin \"Options Editor\""
+msgstr "Для просмотра/изменения нужно установить плагин \"Options Editor\""
+
+#: cd_fi_in_fi.py:207
+msgid "\"Find in file\" options"
+msgstr "\"Find in file\" options"
+
+#: cd_fi_in_fi.py:232
+msgid "No"
+msgstr "Нет"
+
+#: cd_fi_in_fi.py:232
+msgid "Yes"
+msgstr "Да"
+
+#: cd_fi_in_fi.py:261
+msgid "No preset to config"
+msgstr "Нет пресета для настройки"
+
+#: cd_fi_in_fi.py:271
+msgid "Options is restored from preset"
+msgstr "Настройки восстановлены из пресета"
+
+#: cd_fi_in_fi.py:381
+msgid "&Presets"
+msgstr "&Пресеты"
+
+#: cd_fi_in_fi.py:384 cd_fi_in_fi.py:432
+msgid "&Name"
+msgstr "&Имя"
+
+#: cd_fi_in_fi.py:387
+msgid "Move &up"
+msgstr "Переместить &вверх"
+
+#: cd_fi_in_fi.py:388
+msgid "Move &down"
+msgstr "Переместить в&низ"
+
+#: cd_fi_in_fi.py:389
+msgid "Clon&e"
+msgstr "Дубл&ировать"
+
+#: cd_fi_in_fi.py:390
+msgid "Dele&te"
+msgstr "Удалит&ь"
+
+#: cd_fi_in_fi.py:392
+msgid "&What to restore"
+msgstr "&Что восстановить"
+
+#: cd_fi_in_fi.py:394 cd_fi_in_fi.py:436
+msgid "With values"
+msgstr "Со значениями"
+
+#: cd_fi_in_fi.py:397
+msgid "Apply"
+msgstr "Применить"
+
+#: cd_fi_in_fi.py:398 cd_fi_in_fi.py:439 cd_fi_in_fi.py:745
+msgid "Cancel"
+msgstr "Отменить"
+
+#: cd_fi_in_fi.py:400
+msgid "Presets"
+msgstr "Пресеты"
+
+#: cd_fi_in_fi.py:431
+msgid "Save preset"
+msgstr "Сохранить пресет"
+
+#: cd_fi_in_fi.py:434
+msgid "&What to save"
+msgstr "&Что сохранить"
+
+#: cd_fi_in_fi.py:438 cd_fi_in_fi.py:744
+msgid "OK"
+msgstr "OK"
+
+#: cd_fi_in_fi.py:440
+msgid "#{}: \"{}\" in \"{}\""
+msgstr "#{}: \"{}\" в \"{}\""
+
+#: cd_fi_in_fi.py:459
+msgid "Options is saved to preset: "
+msgstr "Настройки сохранены в пресете: "
+
+#: cd_fi_in_fi.py:502
+msgid "Options is restored from preset: "
+msgstr "Настройки восстановлены из пресета: "
+
+#: cd_fi_in_fi.py:550
+msgid ""
+"\n"
+"If report will be sent to tab \n"
+"    [x] Send\n"
+"then option \"Tree type\" in dialog \"{morp}\" allows to set:\n"
+" \n"
+"{shtp}\n"
+msgstr ""
+"\n"
+"Если результаты будут в табе \n"
+"    [x] Вывести\n"
+"тогда опция \"Тип дерева\" в диалоге \"{morp}\" позволяет применить:\n"
+" \n"
+"{shtp}\n"
+
+#: cd_fi_in_fi.py:558
+msgid ""
+"\n"
+"┌────────────────────────────┬──────────────┬────────────────────────────┬───────────────────────────────────────────┐\n"
+"│          Command           │    Hotkey    │           Trick            "
+"│                  Comment                  │\n"
+"╞════════════════════════════╪══════════════╪════════════════════════════╪═══════════════════════════════════════════╡\n"
+"│ Find                       │        Enter │                            │ "
+"If focus not in Results/Source            │\n"
+"│ Count matches              │        Alt+T │                            "
+"│                                           │\n"
+"│ Find filenames             │       Ctrl+T │                            "
+"│                                           │\n"
+"├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ Focus to Results           │   Ctrl+Enter │                            │ "
+"If focus not in Results/Source            │\n"
+"│ Open found fragment        │        Enter │                            │ "
+"If focus in Results. Selects the fragment │\n"
+"│ Close and go to found      │   Ctrl+Enter │                            │ "
+"If focus in Results. Selects the fragment │\n"
+"│ Close and go to found      │   Ctrl+Enter │                            │ "
+"If focus in Source. Restores selection    │\n"
+"│ Fold Results branch        │       Ctrl+= │                            │ "
+"If focus in Results                       │\n"
+"├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ In current file            │ Ctrl+Shift+C │      Shift+Сlick \"Current\" "
+"│                                           │\n"
+"│ In all tabs                │              │ Ctrl      +Сlick \"Current\" "
+"│                                           │\n"
+"│ In current tab             │              │ Ctrl+Shift+Сlick \"Current\" "
+"│                                           │\n"
+"│ Choose file                │       Ctrl+B │      Shift+Сlick  \"Browse\" "
+"│                                           │\n"
+"│ Depth \"Only\"               │        Alt+Y │                  Ctrl+Num0 "
+"│                                           │\n"
+"│ Depth \"+1 level\"           │        Alt+! │                  Ctrl+Num1 "
+"│                                           │\n"
+"│ Depth \"All\"                │        Alt+L │                  Ctrl+Num9 "
+"│                                           │\n"
+"├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ Save values as preset      │       Ctrl+S │                            "
+"│                                           │\n"
+"│ Presets dialog             │   Ctrl+Alt+S │                            "
+"│                                           │\n"
+"│ Use Preset #1(..#5)        │  Ctrl+1(..5) │                            │ "
+"Others from menu/dialog                   │\n"
+"│ Use Layout #1(..#5)        │   Alt+1(..5) │                            │ "
+"Others from menu                          │\n"
+"├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ ±\"Not in\"/±\"Replace\"       │        Alt+V │                            "
+"│ 4-states loop to show/hide                │\n"
+"│ Engine options             │       Ctrl+E │                            "
+"│                                           │\n"
+"│ Configure vert. alignments │              │             Ctrl+Сlick \"=\" "
+"│                                           │\n"
+"├────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ Call CudaText's \"Find\"     │       Ctrl+F │                            │ "
+"With transfer patern/.*/aA/\"w\"            │\n"
+"│ Call CudaText's \"Replace\"  │       Ctrl+R │                            │ "
+"With transfer paterns/.*/aA/\"w\"           │\n"
+"│ Dialog \"Help\"              │        Alt+H │                            "
+"│                                           │\n"
+"└────────────────────────────┴──────────────┴────────────────────────────┴───────────────────────────────────────────┘\n"
+msgstr ""
+"\n"
+"┌───────────────────────────────┬──────────────┬────────────────────────────┬───────────────────────────────────────────┐\n"
+"│          Команда              │    Хоткей    │           Трюк             "
+"│                  Комментарий              │\n"
+"╞═══════════════════════════════╪══════════════╪════════════════════════════╪═══════════════════════════════════════════╡\n"
+"│ Искать                        │        Enter │                            "
+"│ Если фокус не в Результатах/Исходнике     │\n"
+"│ Посчитать фрагменты           │        Alt+T │                            "
+"│                                           │\n"
+"│ Найти имена файлов            │       Ctrl+T │                            "
+"│                                           │\n"
+"├───────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ Активировать Результаты       │   Ctrl+Enter │                            "
+"│ Если фокус не в Результатах/Исходнике     │\n"
+"│ Перейти к фрагменту           │        Enter │                            "
+"│ Если фокус в Результатах                  │\n"
+"│ Закрыть и перейти к фрагменту │   Ctrl+Enter │                            "
+"│ Если фокус в Результатах                  │\n"
+"│ Закрыть и перейти к фрагменту │   Ctrl+Enter │                            "
+"│ Если фокус в Исходнике                    │\n"
+"│ Свернуть ветку Результатов    │       Ctrl+= │                            "
+"│ Если фокус в Результатах                  │\n"
+"├───────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ В текущем файле               │ Ctrl+Shift+C │      Shift+Сlick \"Текущий"
+"\" │                                           │\n"
+"│ Во всех табах                 │              │ Ctrl      +Сlick \"Текущий"
+"\" │                                           │\n"
+"│ В текущем табе                │              │ Ctrl+Shift+Сlick \"Текущий"
+"\" │                                           │\n"
+"│ Выбрать файл                  │       Ctrl+B │      Shift+Сlick  \"Обзор"
+"\"  │                                           │\n"
+"│ Глубина \"Тек.папка\"           │        Alt+Y │                  Ctrl"
+"+Num0 │                                           │\n"
+"│ Глубина \"+1 уровень\"          │        Alt+! │                  Ctrl"
+"+Num1 │                                           │\n"
+"│ Глубина \"Все\"                 │        Alt+L │                  Ctrl"
+"+Num9 │                                           │\n"
+"├───────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ Сохранить как пресет          │       Ctrl+S │                            "
+"│                                           │\n"
+"│ Диалог Пресеты                │   Ctrl+Alt+S │                            "
+"│                                           │\n"
+"│ Прим. Пресет #1(..#5)         │  Ctrl+1(..5) │                            "
+"│ Остальные доступны из меню/диалога        │\n"
+"│ Прим. Расположение #1(..#5)   │   Alt+1(..5) │                            "
+"│ Остальные доступны из меню                │\n"
+"├───────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ ±\"Не в файлах\"/±\"Заменить\"    │        Alt+V "
+"│                            │ 4-шаговый цикл показать/спрятать          │\n"
+"│ Глубокие настройки            │       Ctrl+E │                            "
+"│                                           │\n"
+"│ Подгонка верт. выравниваний   │              │             Ctrl+Сlick \"="
+"\" │                                           │\n"
+"├───────────────────────────────┼──────────────┼────────────────────────────┼───────────────────────────────────────────┤\n"
+"│ Перейти в CudaText \"Find\"     │       Ctrl+F "
+"│                            │ С копированием \"Что искать\" и .*/aA/\"с\"   "
+"│\n"
+"│ Перейти в CudaText \"Replace\"  │       Ctrl+R "
+"│                            │ С копированием \"Что иск/зам\" и .*/aA/\"с\"  "
+"│\n"
+"│ Диалог \"Справка\"              │        Alt+H "
+"│                            │                                           │\n"
+"└───────────────────────────────┴──────────────┴────────────────────────────┴───────────────────────────────────────────┘\n"
+
+#: cd_fi_in_fi.py:595
+msgid ""
+"\n"
+"• \".*\" - Option \"Regular Expression\". \n"
+"It allows to use in field \"Find what\" special symbols:\n"
+"    .   any character\n"
+"    \\d  digit character (0..9)\n"
+"    \\w  word-like character (digits, letters, \"_\")\n"
+"In field \"Replace with\":\n"
+"    \\1  to insert first found group,\n"
+"    \\2  to insert second found group, ... \n"
+"See full documentation on page\n"
+"    docs.python.org/3/library/re.html\n"
+" \n"
+"• \"w\" - {word}\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Values in fields \"{incl}\" and \"{excl}\" can contain\n"
+"    ?       for any single char,\n"
+"    *       for any substring (may be empty),\n"
+"    [seq]   any character in seq,\n"
+"    [!seq]  any character not in seq. \n"
+"Note: \n"
+"    *       matches all names, \n"
+"    *.*     doesn't match all.\n"
+" \n"
+"• Values in fields \"{incl}\" and \"{excl}\" can filter subfolder names \n"
+"if they start with \"/\".\n"
+"Example.\n"
+"    {incl:12}: /a*  *.txt\n"
+"    {excl:12}: /ab*\n"
+"    {fold:12}: c:/root\n"
+"    Depth       : All\n"
+"    Search will consider all *.txt files in folder c:/root\n"
+"    and in all subfolders a* except ab*.\n"
+" \n"
+"• Set special value \"{tags}\" (in short <t> or <Tabs>) for field \"{fold}\" "
+"to search in opened documents.\n"
+"Fields \"{incl}\" and \"{excl}\" will be to filter tab titles.\n"
+"To search in all tabs, use mask \"*\" in field \"{incl}\".\n"
+"See: commands in menu/Scope.\n"
+" \n"
+"• Set special value \"{proj}\" (in short <p>) for field \"{fold}\" to search "
+"in project files.\n"
+"See: commands in menu/Scope.\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Long-term searches can be interrupted by ESC.\n"
+"Search has three stages: \n"
+"    picking files, \n"
+"    finding fragments, \n"
+"    reporting.\n"
+"ESC stops any stage. \n"
+"When picking and finding, ESC stops only this stage, so next stage begins.\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Use right click or Context keyboard button \n"
+"to see context menu over these elements\n"
+"    \"Find\", \"Replace\", \"Current\", \"Browse\", Depth combobox\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+"You are welcome to plugin forum. See bottom link.\n"
+msgstr ""
+"\n"
+"• \".*\" - Опция \"Регулярное выражение\". \n"
+"Она позволяет использовать в поле \"Что искать\" специальные знаки:\n"
+"    .   любой символ\n"
+"    \\d  цифра (0..9)\n"
+"    \\w  символ для слова (цифра, буква, \"_\")\n"
+"В поле \"Заменить на\" специальные знаки:\n"
+"    \\1  вставить первую найденную группу,\n"
+"    \\2  вставить вторую найденную группу, ... \n"
+"См. полную справку на странице\n"
+"    docs.python.org/3/library/re.html\n"
+" \n"
+"• \"с\" - {word}\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Строки в полях \"{incl}\" и \"{excl}\" могут содержать специальные знаки\n"
+"    ?       любой символ,\n"
+"    *       любая подстрока (в том числе пустая),\n"
+"    [seq]   любой символ из перечисленных,\n"
+"    [!seq]  любой символ кроме перечисленных. \n"
+"Важно: \n"
+"    *       задает все файлы, \n"
+"    *.*     задает только файлы с расширениями.\n"
+" \n"
+"• Строки в полях \"{incl}\" и \"{excl}\" могут указывать на подпаки \n"
+"если они начинаются на \"/\".\n"
+"Пример.\n"
+"    {incl:12}: /a*  *.txt\n"
+"    {excl:12}: /ab*\n"
+"    {fold:12}: c:/root\n"
+"    Глубина     : Все\n"
+"    Поиск будет просматривать все файлы *.txt в папке c:/root\n"
+"    и всех подпапках a* кроме ab*.\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Специальная строка \"{tags}\" (есть короткие варианты <t> или <Tabs>)\n"
+"в поле \"{fold}\" указывает, что нужно искать в открытых документах.\n"
+"При этом маски из \"{incl}\" и \"{excl}\" будут применяться к\n"
+"надписям на ярлыках табов. Для поиска по всем табам, \n"
+"задайте маску \"*\" в \"{incl}\".\n"
+" \n"
+"• Специальная строка \"{proj}\" (короткий вариант <p>) в поле \"{fold}\" \n"
+"указывает, что нужно искать в файлах текущего проекта.\n"
+" \n"
+"См. команды в меню \"Что просматривать\".\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Долгий поиск можно прервать с помощью ESC.\n"
+"Весь поиск делится на три последовательные стадии: \n"
+"    Сбор подходящий файлов, \n"
+"    Выделение подходящих фрагментов, \n"
+"    Составление отчета о результатах.\n"
+"ESC прерывает текущую стадию поиска. \n"
+"Если это была не последняя стадия, \n"
+"то запускается следующая с теми данными, которые успели накопиться.\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+" \n"
+"• Клик ПКМ или клавишей \"Контекстное меню\" над элементами \n"
+"    \"Искать\", \"Заменить\", \"Текущий\", \"Обзор\", список уровней\n"
+"отображает контекстное меню.\n"
+" \n"
+"—————————————————————————————————————————————— \n"
+"Замечания и предложения можно оставлять на форуме плагина. Ссылка внизу.\n"
+
+#: cd_fi_in_fi.py:677
+msgid "\"Find in Files\" help"
+msgstr "\"Поиск по файлам\" - справка"
+
+#: cd_fi_in_fi.py:684
+msgid "Hotkeys+Tricks"
+msgstr "Хоткеи+Трюки"
+
+#: cd_fi_in_fi.py:685
+msgid "Hints"
+msgstr "Советы"
+
+#: cd_fi_in_fi.py:686
+msgid "Tree types"
+msgstr "Типы деревьев"
+
+#: cd_fi_in_fi.py:692
+msgid "Plugin forum"
+msgstr "Форум плагина"
+
+#: cd_fi_in_fi.py:712
+msgid "See \"mouse_goto_definition\" in default.json and user.json"
+msgstr "См. \"mouse_goto_definition\" в default.json и user.json"
+
+#: cd_fi_in_fi.py:727
+msgid "Configure found result navigation by double-click"
+msgstr "Настройка двойного клика для результатов поиска"
+
+#: cd_fi_in_fi.py:771
+msgid ""
+"Space-separated file or folder masks.\n"
+"Folder mask starts with \"/\".\n"
+"Double-quote mask, which needs space-char.\n"
+"Use ? for any character and * for any fragment.\n"
+"Note: \"*\" matchs all names, \"*.*\" doesnt match all."
+msgstr ""
+"Маски файлов и папок (разделитель - пробел).\n"
+"Маски файлов начинаются с \"/\".\n"
+"Используйте двойные кавычки для масок, содержащих пробелы.\n"
+"Используйте \"?\" для указания произвольного символа и \"*\" для "
+"произвольной строки.\n"
+"Внимание: маска \"*\" задает все файлы, а \"*.*\" задает только файлы с "
+"расширениями."
+
+#: cd_fi_in_fi.py:776
+msgid ""
+"\n"
+" \n"
+"Always excluded: {}\n"
+"See option \"fif_always_not_in_files\" to change."
+msgstr ""
+"\n"
+" \n"
+"Всегда исключены: {}\n"
+"Настройка через опцию \"fif_always_not_in_files\"."
+
+#: cd_fi_in_fi.py:781
+msgid ""
+"Regular expression\n"
+"Format for found groups in Replace: \\1"
+msgstr ""
+"Регулярное выражение\n"
+"При Замене формат найденных групп: \\1"
+
+#: cd_fi_in_fi.py:784
+msgid "Case sensitive"
+msgstr "С учетом регистра"
+
+#: cd_fi_in_fi.py:785
+msgid ""
+"Option \"Whole words\". It is ignored when:\n"
+"  Regular expression (\".*\") is turned on,\n"
+"  \"Find what\" contains not only letters, digits and \"_\"."
+msgstr ""
+"\"Полное слово\". Опция игнорируется если:\n"
+"  Включена Регулярное выражение (\".*\"),\n"
+"  \"Что искать\" содержит не только буквы, цифры и \"_\"."
+
+#: cd_fi_in_fi.py:789
+msgid ""
+"Choose folder.\n"
+"Shift+Click or Ctrl+B - Choose file to find in it."
+msgstr ""
+"Выбрать папку.\n"
+"Shift+Click или Ctrl+B - Выбрать файл для поиска в нем."
+
+#: cd_fi_in_fi.py:792
+msgid ""
+"Start folder(s).\n"
+"Space-separated folders.\n"
+"Double-quote folder, which needs space-char.\n"
+"~ is user Home folder.\n"
+"$VAR or ${{VAR}} is environment variable.\n"
+"{} to search in tabs (in short <Tabs> or <t>).\n"
+"{} to search in project folders (in short <p>)."
+msgstr ""
+"Исходная папка(и).\n"
+"Разделитель для папок пробел.\n"
+"Используйте двойные кавычки, если пробел есть в имени.\n"
+"~ домашняя папка пользователя.\n"
+"$VAR или ${{VAR}} переменная окружения.\n"
+"{} для поиска по табам (сокращения <Tabs> или <t>).\n"
+"{} для поиска по файлам проекта (сокращение <p>)."
+
+#: cd_fi_in_fi.py:800
+msgid ""
+"Which subfolders will be searched.\n"
+"Alt+Y or Ctrl+Num0 - Apply \"Only\".\n"
+"Alt+! or Ctrl+Num1 - Apply \"+1 level\".\n"
+"Alt+L or Ctrl+Num9 - Apply \"+All\" subfolders."
+msgstr ""
+"В каких подпапках искать.\n"
+"Alt+Y или Ctrl+Num0 - Назначить \"Только в текущей\".\n"
+"Alt+! или Ctrl+Num1 - Назначить \"+1 уровень\".\n"
+"Alt+L или Ctrl+Num9 - Назначить \"+Все уровни\"."
+
+#: cd_fi_in_fi.py:805
+msgid ""
+"Use folder of current file.\n"
+"Shift+Click or Ctrl+Shift+C - Prepare search in the current file.\n"
+"Ctrl+Click   - Prepare search in all tabs.\n"
+"Shift+Ctrl+Click - Prepare search in the current tab."
+msgstr ""
+"Использовать папку текущего файла.\n"
+"Shift+Click или Ctrl+Shift+C - Подготовить поиск в текущем файле.\n"
+"Ctrl+Click   - Подготовить поиск по всем табам.\n"
+"Shift+Ctrl+Click - Подготовить поиск в текущем табе."
+
+#: cd_fi_in_fi.py:810
+msgid "Advanced search options"
+msgstr "Дополнительные опции"
+
+#: cd_fi_in_fi.py:811
+msgid "Output report to tab/file"
+msgstr "Выводить результаты в таб/файл"
+
+#: cd_fi_in_fi.py:812
+msgid "Advanced tab report options"
+msgstr "Дополнительные опции для результатов в табе"
+
+#: cd_fi_in_fi.py:813
+msgid ""
+"Local menu\n"
+"Ctrl+Click - Adjust vertical alignments..."
+msgstr ""
+"Локальное меню\n"
+"Ctrl+Click - Подгонка вертикальных выравниваний..."
+
+#: cd_fi_in_fi.py:816
+msgid ""
+"Show/Hide advanced options\n"
+"Ctrl+Click   - Show/Hide \"Not in files\".\n"
+"Shift+Click - Show/Hide \"Replace\".\n"
+" \n"
+"Alt+V - Toggle visibility on cycle\n"
+"   hidden \"Not in files\", hidden  \"Replace\"\n"
+"   visible  \"Not in files\", hidden  \"Replace\"\n"
+"   visible  \"Not in files\", visible   \"Replace\"\n"
+"   hidden \"Not in files\", visible   \"Replace\""
+msgstr ""
+"Показать/Спрятать дополнения\n"
+"Ctrl+Click   - Показать/Спрятать \"Кроме файлов\".\n"
+"Shift+Click - Показать/Спрятать \"Заменить\".\n"
+" \n"
+"Alt+V - Переключать показ по циклу\n"
+"   нет  \"Кроме файлов\", нет  \"Заменить\"\n"
+"   есть \"Кроме файлов\", нет  \"Заменить\"\n"
+"   есть \"Кроме файлов\", есть \"Заменить\"\n"
+"   нет  \"Кроме файлов\", есть \"Заменить\""
+
+#: cd_fi_in_fi.py:826
+msgid ""
+"M[, F]\n"
+"Stop after M fragments will be found.\n"
+"Search only inside F first proper files.\n"
+"    Note: If Sort is on then steps are\n"
+"     - Collect all proper files\n"
+"     - Sort the list\n"
+"     - Use first F files to search"
+msgstr ""
+"M[, F]\n"
+"Остановить, когда найдено M фрагментов.\n"
+"Искать только в F первых файлах.\n"
+"    Внимание: Если включена Сортировка, то происходит так\n"
+"     - Собирается список всех подходящих файлов\n"
+"     - Список сортируется\n"
+"     - Используются первые F файлов"
+
+#: cd_fi_in_fi.py:835
+msgid "day(s)"
+msgstr "день(и)"
+
+#: cd_fi_in_fi.py:835
+msgid "hour(s)"
+msgstr "час(ы)"
+
+#: cd_fi_in_fi.py:835
+msgid "month(s)"
+msgstr "месяц(ы)"
+
+#: cd_fi_in_fi.py:835
+msgid "week(s)"
+msgstr "неделя(и)"
+
+#: cd_fi_in_fi.py:835
+msgid "year(s)"
+msgstr "год(а)"
+
+#: cd_fi_in_fi.py:836
+msgid ""
+"\"N\" or \"<N\" or \">N\".\n"
+"Skip files if the age less or more then N.\n"
+"\"N\" and \"<N\" are equal.\n"
+"\"0\" to all ages."
+msgstr ""
+"\"N\" или \"<N\" или \">N\".\n"
+"Пропускать файлы, чей возраст меньше или больше N.\n"
+"\"N\" и \"<N\" задают одно и то же.\n"
+"\"0\" любой возраст."
+
+#: cd_fi_in_fi.py:841
+msgid ""
+"Format of the reported tree structure.\n"
+"Compact - report all found line with full file info:\n"
+"    path(r[:c:l]):line\n"
+"    path/(r[:c:l]):line\n"
+"  Tree schemes\n"
+"    +Search for \"*\"\n"
+"      <full_path(row[:col:len])>: line with ALL marked fragments\n"
+"    +Search for \"*\"\n"
+"      <full_path>: #count\n"
+"         <(row[:col:len])>: line with ALL marked fragments\n"
+"Sparse - report separated folders and fragments:\n"
+"    dir/file(r[:c:l]):line\n"
+"    dir/file/(r[:c:l]):line\n"
+"  Tree schemes\n"
+"    +Search for \"*\"\n"
+"      <root>: #count\n"
+"        <dir>: #count\n"
+"          <file.ext(row[:col:len])>: line with ONE marked fragment\n"
+"    +Search for \"*\"\n"
+"      <root>: #count\n"
+"        <dir>: #count\n"
+"          <file.ext>: #count\n"
+"            <(row[:col:len])>: line with ONE marked fragment\n"
+"For \n"
+"  sorted files\n"
+"and for search in tabs\n"
+"  In folder={}\n"
+"only Compact options are used.\n"
+"When a conflict occurs, \"Tree type\" is automatically changed."
+msgstr ""
+"Форматы для дерева Результатов.\n"
+"Компактные - описание найденных фрагментов занимает минимум строк:\n"
+"    path(r[:c:l]):line\n"
+"    path/(r[:c:l]):line\n"
+"  Примеры результатов\n"
+"    +Search for \"*\"\n"
+"      <full_path(row[:col:len])>: строка со ВСЕМИ найденными в ней "
+"фрагментами\n"
+"    +Search for \"*\"\n"
+"      <full_path>: #count\n"
+"         <(row[:col:len])>: строка со ВСЕМИ найденными в ней фрагментами\n"
+"Разреженные - раздельное описание найденных файлов и фрагментов:\n"
+"    dir/file(r[:c:l]):line\n"
+"    dir/file/(r[:c:l]):line\n"
+"  Примеры результатов\n"
+"    +Search for \"*\"\n"
+"      <root>: #count\n"
+"        <dir>: #count\n"
+"          <file.ext(row[:col:len])>: строка со ОДНИМ найденным в ней "
+"фрагментом\n"
+"    +Search for \"*\"\n"
+"      <root>: #count\n"
+"        <dir>: #count\n"
+"          <file.ext>: #count\n"
+"            <(row[:col:len])>: строка со ОДНИМ найденным в ней фрагментом\n"
+"Если \n"
+"  задана сортировка файлов\n"
+"или задан поиск по табам, то есть\n"
+"  В папке={}\n"
+"то доступны только компактные типы для дерева.\n"
+"Если тип дерева некомпактный, то произойдет автоматическая замена по похожий "
+"компактный."
+
+#: cd_fi_in_fi.py:872
+msgid "Conte&xt -{}+{}"
+msgstr "Бли&жайшие -{}+{}"
+
+#: cd_fi_in_fi.py:873
+msgid "Show result line and both its nearest lines, above and below result."
+msgstr "Показывать найденные строки вместе с их ближайшими до и после."
+
+#: cd_fi_in_fi.py:874
+msgid "Align columns (filenames/numbers) by widest cell width"
+msgstr "Выравнивать имена файлов и позиции фрагментов"
+
+#: cd_fi_in_fi.py:875
+msgid ""
+"Start search.\n"
+"Shift+Click  - Put report to new tab.\n"
+"   It is like pressing Find with option \"Show in: {}\".\n"
+"Ctrl+Click  - Append result to existing report.\n"
+"   It is like pressing Find with option \"[x]Append results\"."
+msgstr ""
+"Начать поиск.\n"
+"Shift+Click  - Вывести результаты в новый таб.\n"
+"   Совпадает с вызовом Искать при настройке \"Показать в: {}\".\n"
+"Ctrl+Click  - Добавить предыдущим результатам.\n"
+"   Совпадает с вызовом Искать при настройке \"[x]Дополнять результаты\"."
+
+#: cd_fi_in_fi.py:881
+msgid ""
+"Start search and replacement.\n"
+"Shift+Click  - Run without question\n"
+"   \"Do you want to replace...?\""
+msgstr ""
+"Начать поиск с заменой.\n"
+"Shift+Click  - Пропустить вопрос\n"
+"   \"Выполнить замены в...?\""
+
+#: cd_fi_in_fi.py:885
+msgid ""
+"Count matches only.\n"
+"Shift+Click or Ctrl+T - Find file names only.\n"
+" \n"
+"Note: Alt+T and Ctrl+T works if button is hidden."
+msgstr ""
+"Посчитать число совпадений.\n"
+"Shift+Click или Ctrl+T - Найти только имена файлов.\n"
+" \n"
+"Внимание: Alt+T и Ctrl+T работают при скрытой кнопке."
+
+#: cd_fi_in_fi.py:890
+msgid ""
+"Save options for future. Restore saved options.\n"
+"Shift+Click - Show presets list in applying history order.\n"
+"Ctrl+Click   - Apply last used preset.\n"
+" \n"
+"Note: Alt+S works if button is hidden.\n"
+"Ctrl+1 - Apply first preset.\n"
+"Ctrl+2 - Apply second preset.\n"
+"Ctrl+3 - Apply third preset."
+msgstr ""
+"Сохранить/Восстановить настройки.\n"
+"Shift+Click - Показать список пресетов в поредке их последнего применения.\n"
+"Ctrl+Click   - Применить последний пресет.\n"
+" \n"
+"Внимание: Alt+S работает при скрытой кнопке.\n"
+"Ctrl+1 - Применить первый пресет.\n"
+"Ctrl+2 - Применить второй пресет.\n"
+"Ctrl+3 - Применить третий пресет."
+
+#: cd_fi_in_fi.py:900
+msgid ""
+"In which encodings try to read files.\n"
+"First suitable will be used.\n"
+"\"{}\" is slow.\n"
+" \n"
+"Default encoding: {}"
+msgstr ""
+"Какие кодировки пробовать при чтении файлов.\n"
+"До первой успешно примененной.\n"
+"Операция \"{}\" выполняется долго.\n"
+" \n"
+"Умолчательная кодировка: {}"
+
+#: cd_fi_in_fi.py:983 cd_fi_in_fi.py:1432 cd_fi_in_fi.py:1440
+msgid "[Clear fixed files]"
+msgstr "[Забыть все имена файлов]"
+
+#: cd_fi_in_fi.py:984 cd_fi_in_fi.py:1442
+msgid "[Add fixed file]"
+msgstr "[Добавить новое имя файла]"
+
+#: cd_fi_in_fi.py:1007
+msgid "(no results)"
+msgstr "(нет результатов)"
+
+#: cd_fi_in_fi.py:1016
+msgid "Find in Files ({})"
+msgstr "Поиск по файлам ({})"
+
+#: cd_fi_in_fi.py:1060 cd_fi_in_fi.py:1883
+msgid "(no source)"
+msgstr "(нет исходника)"
+
+#: cd_fi_in_fi.py:1246
+msgid "sorted"
+msgstr "с сортировкой"
+
+#: cd_fi_in_fi.py:1248
+msgid "age"
+msgstr "возраст"
+
+#: cd_fi_in_fi.py:1249
+msgid "first \""
+msgstr "первые \""
+
+#: cd_fi_in_fi.py:1256
+msgid "append to "
+msgstr "добавлять к "
+
+#: cd_fi_in_fi.py:1257
+msgid "Report: "
+msgstr "Вывести в: "
+
+#: cd_fi_in_fi.py:1259
+msgid "aligned"
+msgstr "с выравниванием"
+
+#: cd_fi_in_fi.py:1260
+msgid "context-{}+{}"
+msgstr "ближайшие-{}+{}"
+
+#: cd_fi_in_fi.py:1382
+msgid "S&kip files"
+msgstr "&Пропускать"
+
+#: cd_fi_in_fi.py:1384
+msgid "S&ort file list"
+msgstr "&Сортировать"
+
+#: cd_fi_in_fi.py:1386
+msgid "A&ge (0=all)"
+msgstr "&Возраст (0=все)"
+
+#: cd_fi_in_fi.py:1389
+msgid "&Firsts (0=all)"
+msgstr "Перв&ые (0=все)"
+
+#: cd_fi_in_fi.py:1391
+msgid "&Encodings"
+msgstr "&Кодировки"
+
+#: cd_fi_in_fi.py:1434
+msgid "Clear all fixed files ({}) for \"{}\"?"
+msgstr "Удалить все имена файлов ({}) для \"{}\"?"
+
+#: cd_fi_in_fi.py:1434
+msgid "Report to"
+msgstr "Результаты в"
+
+#: cd_fi_in_fi.py:1480
+msgid "&Report to"
+msgstr "&Результаты в"
+
+#: cd_fi_in_fi.py:1482
+msgid "Appen&d results"
+msgstr "&Дополнять результаты"
+
+#: cd_fi_in_fi.py:1483
+msgid "&Tree type"
+msgstr "&Тип дерева"
+
+#: cd_fi_in_fi.py:1485
+msgid "&Align (r:c:l)"
+msgstr "&Выравнивание (r:c:l)"
+
+#: cd_fi_in_fi.py:1486
+msgid "Add conte&xt lines"
+msgstr "Добавить &ближайшие строки"
+
+#: cd_fi_in_fi.py:1487
+msgid "&Before"
+msgstr "П&еред"
+
+#: cd_fi_in_fi.py:1489
+msgid "A&fter"
+msgstr "П&осле"
+
+#: cd_fi_in_fi.py:1671
+msgid "Do you want to replace in {}?"
+msgstr "Выполнить замены в {}?"
+
+#: cd_fi_in_fi.py:1672
+msgid "current tab"
+msgstr "текущем табе"
+
+#: cd_fi_in_fi.py:1673
+msgid "all tabs"
+msgstr "всех табах"
+
+#: cd_fi_in_fi.py:1674
+msgid "all found files"
+msgstr "всех найденных файлах"
+
+#: cd_fi_in_fi.py:1683 cd_fi_in_fi.py:1708 cd_fi_in_fi.py:1711
+msgid "Fix quotes in the \"{}\" field"
+msgstr "Исправьте кавычки в \"{}\""
+
+#: cd_fi_in_fi.py:1687 cd_fi_in_fi.py:1705
+msgid "Fill the \"{}\" field"
+msgstr "Укажите значение в \"{}\""
+
+#: cd_fi_in_fi.py:1694 cd_fi_in_fi.py:1701
+msgid ""
+"Set correct \"{}\" reg.ex.\n"
+"\n"
+"Error:\n"
+"{}"
+msgstr ""
+"Исправьте рег.выражение \"{}\"\n"
+"\n"
+"Error:\n"
+"{}"
+
+#: cd_fi_in_fi.py:1726
+msgid ""
+"Set existing folder in \"{}\" \n"
+"or use \"{}\" \n"
+"or use \"{}\".\n"
+"\n"
+"=/Presets can help."
+msgstr ""
+"Укажите существующую папку в \"{}\" \n"
+"или используйте \"{}\" \n"
+"или используйте \"{}\".\n"
+"\n"
+"=/Пресеты могут помочь."
+
+#: cd_fi_in_fi.py:1799
+msgid "file"
+msgstr "файл"
+
+#: cd_fi_in_fi.py:1799
+msgid "tab"
+msgstr "таб"
+
+#: cd_fi_in_fi.py:1821
+msgid "Search stopped"
+msgstr "Поиск остановлен"
+
+#: cd_fi_in_fi.py:1826
+msgid "No {}s picked"
+msgstr "Нет подходящих {}ов"
+
+#: cd_fi_in_fi.py:1837
+msgid "No matches found (in {} {})"
+msgstr "Фрагменты не найдены (в {} {})"
+
+#: cd_fi_in_fi.py:1839
+msgid "Found {} {} in {}({}) {}"
+msgstr "Найдено {} {} в {}({}) {}"
+
+#: cd_fi_in_fi.py:1951
+msgid "Encodings"
+msgstr "Кодировки"
+
+#: cd_fi_in_fi.py:1991
+msgid "Remove \"{}\"?"
+msgstr "Удалить \"{}\"?"
+
+#: cd_fi_in_fi.py:2007
+msgid "Name \"{}\" already used. Overwrite?"
+msgstr "Имя \"{}\" уже используется. Продолжить?"
+
+#: cd_fi_in_fi.py:2041
+msgid "Apply layout: {}"
+msgstr "Применить раскладку: {}"
+
+#: cd_fi_in_fi.py:2065 cd_fif_api.py:170
+msgid "Results"
+msgstr "Результаты"
+
+#: cd_fi_in_fi.py:2103
+msgid "Open fragment"
+msgstr "Открыть фрагмент"
+
+#: cd_fi_in_fi.py:2104 cd_fi_in_fi.py:2112
+msgid "Go to fragment"
+msgstr "Перейти к фрагменту"
+
+#: cd_fi_in_fi.py:2106
+msgid "Fold branch"
+msgstr "Свернуть ветку"
+
+#: cd_fi_in_fi.py:2108
+msgid "Copy Results to tab"
+msgstr "Скопировать Результаты в таб"
+
+#: cd_fi_in_fi.py:2125
+msgid "Count matches only"
+msgstr "Посчитать фрагменты"
+
+#: cd_fi_in_fi.py:2126
+msgid "Find file names only"
+msgstr "Найти имена файлов"
+
+#: cd_fi_in_fi.py:2129
+msgid "Find and replace"
+msgstr "Искать и заменять"
+
+#: cd_fi_in_fi.py:2130
+msgid "Find and replace (without question)   [Shift+\"{}\"]"
+msgstr "Искать и заменять (без вопроса)   [Shift+\"{}\"]"
+
+#: cd_fi_in_fi.py:2133 cd_fi_in_fi.py:2418
+msgid "Find"
+msgstr "Искать"
+
+#: cd_fi_in_fi.py:2134
+msgid "Find and put report to new tab   [Shift+\"{}\"]"
+msgstr "Искать и выводить результаты в новый таб   [Shift+\"{}\"]"
+
+#: cd_fi_in_fi.py:2135
+msgid "Find and append result to existing report   [Ctrl+\"{}\"]"
+msgstr "Искать и дополнять результаты   [Ctrl+\"{}\"]"
+
+#: cd_fi_in_fi.py:2141
+msgid "Use folder of current file"
+msgstr "Использовать папку текущего файла"
+
+#: cd_fi_in_fi.py:2142
+msgid "Prepare search in the current file   [Shift+\"{}\"]"
+msgstr "Подготовить поиск по текущему файлу   [Shift+\"{}\"]"
+
+#: cd_fi_in_fi.py:2144
+msgid "Prepare search in all tabs   [Ctrl+\"{}\"]"
+msgstr "Подготовить поиск по всем табам   [Ctrl+\"{}\"]"
+
+#: cd_fi_in_fi.py:2145
+msgid "Prepare search in the current tab   [Shift+Ctrl+\"{}\"]"
+msgstr "Подготовить поиск в текущем табе   [Shift+Ctrl+\"{}\"]"
+
+#: cd_fi_in_fi.py:2147
+msgid "Fill \"{}\" to find in project folders"
+msgstr "Заполнить \"{}\" для поиска в папках проекта"
+
+#: cd_fi_in_fi.py:2148
+msgid "Fill \"{}\" to find in tabs"
+msgstr "Заполнить \"{}\" для поиска в табах"
+
+#: cd_fi_in_fi.py:2151
+msgid "Choose folder…"
+msgstr "Выбрать папку…"
+
+#: cd_fi_in_fi.py:2152
+msgid "Choose file to find in it…"
+msgstr "Выбрать файл для поиска внутри него…"
+
+#: cd_fi_in_fi.py:2155
+msgid "Apply \"Onl&y\"   [Ctrl+Num0]"
+msgstr "Применить \"Только в текущей папке\"   [Ctrl+Num0]"
+
+#: cd_fi_in_fi.py:2156
+msgid "Apply \"+1 level\"   [Ctrl+Num1]"
+msgstr "Применить \"+1 уровень\"   [Ctrl+Num1]"
+
+#: cd_fi_in_fi.py:2157
+msgid "Apply \"+A&ll\"   [Ctrl+Num9]"
+msgstr "Применить  \"+Все уровни\"   [Ctrl+Num9]"
+
+#: cd_fi_in_fi.py:2160
+msgid "Options for report t&o tab…"
+msgstr "Опции для Результатов в таб…"
+
+#: cd_fi_in_fi.py:2161
+msgid "Extra options for s&earch…"
+msgstr "Доп. опции для поиска…"
+
+#: cd_fi_in_fi.py:2162
+msgid "&View and edit engine options…"
+msgstr "Глубокие опции поиска…"
+
+#: cd_fi_in_fi.py:2163
+msgid "&Configure navigation with double-click in tab report…"
+msgstr "Настройка действий при двойном клике в табе с Результатами…"
+
+#: cd_fi_in_fi.py:2164
+msgid "Source Encod&ing{}…"
+msgstr "Кодировка исходника…"
+
+#: cd_fi_in_fi.py:2166
+msgid "Show \"{}\""
+msgstr "Показать \"{}\""
+
+#: cd_fi_in_fi.py:2167
+msgid "Show \"{}\" and \"{}\""
+msgstr "Показать \"{}\" и \"{}\""
+
+#: cd_fi_in_fi.py:2172
+msgid "&Save preset as…"
+msgstr "Сохранит пресет как…"
+
+#: cd_fi_in_fi.py:2173
+msgid "Presets [{}]…"
+msgstr "Пресеты [{}]…"
+
+#: cd_fi_in_fi.py:2187
+msgid "Set Results o&ver Source"
+msgstr "Расположить Результаты над Исходником"
+
+#: cd_fi_in_fi.py:2188
+msgid "&Save dialog and controls positions..."
+msgstr "Сохранить расположение..."
+
+#: cd_fi_in_fi.py:2193
+msgid "&{}: Restore \"{}\""
+msgstr "&{}: Восстановить \"{}\""
+
+#: cd_fi_in_fi.py:2197
+msgid "&Forget"
+msgstr "Забыть"
+
+#: cd_fi_in_fi.py:2202
+msgid "&Find"
+msgstr "Поиск"
+
+#: cd_fi_in_fi.py:2203
+msgid "Sco&pe"
+msgstr "Что просматривать"
+
+#: cd_fi_in_fi.py:2204
+msgid "&Browse"
+msgstr "Об&зор"
+
+#: cd_fi_in_fi.py:2205
+msgid "&Depth"
+msgstr "Глубина"
+
+#: cd_fi_in_fi.py:2206
+msgid "Pre&sets"
+msgstr "Пресеты"
+
+#: cd_fi_in_fi.py:2207
+msgid "&Layout"
+msgstr "Расположение"
+
+#: cd_fi_in_fi.py:2211
+msgid "&Help…"
+msgstr "Справка…"
+
+#: cd_fi_in_fi.py:2397
+msgid "&aA"
+msgstr "&аА"
+
+#: cd_fi_in_fi.py:2398
+msgid "\"&w\""
+msgstr "\"&с\""
+
+#: cd_fi_in_fi.py:2400
+msgid "*&Find what"
+msgstr "*&Что искать"
+
+#: cd_fi_in_fi.py:2402
+msgid "&Replace with"
+msgstr "&Заменить на"
+
+#: cd_fi_in_fi.py:2404
+msgid "*&In files"
+msgstr "*В &файлах"
+
+#: cd_fi_in_fi.py:2406
+msgid "Not in files"
+msgstr "Не в файлах"
+
+#: cd_fi_in_fi.py:2408
+msgid "*I&n folder"
+msgstr "*В &папке"
+
+#: cd_fi_in_fi.py:2411
+msgid "&Browse…"
+msgstr "Об&зор…"
+
+#: cd_fi_in_fi.py:2412
+msgid "&Current"
+msgstr "Теку&щий"
+
+#: cd_fi_in_fi.py:2414
+msgid "For s&earch…"
+msgstr "Для по&иска…"
+
+#: cd_fi_in_fi.py:2415
+msgid "Sen&d"
+msgstr "В&ывести"
+
+#: cd_fi_in_fi.py:2416
+msgid "t&o…"
+msgstr "&в…"
+
+#: cd_fi_in_fi.py:2419
+msgid "Re&place"
+msgstr "Заменить"
+
+#: cd_fif_api.py:47
+msgid "+Search"
+msgstr "+Search"
+
+#: cd_fif_api.py:48
+msgid "+Replace"
+msgstr "+Replace"
+
+#: cd_fif_api.py:50
+msgid "<Project Folders>"
+msgstr "<Project Folders>"
+
+#: cd_fif_api.py:51
+msgid "<Open Files>"
+msgstr "<Open Files>"
+
+#: cd_fif_api.py:56
+msgid "<prior tab>"
+msgstr "<prior tab>"
+
+#: cd_fif_api.py:57
+msgid "<new tab>"
+msgstr "<new tab>"
+
+#: cd_fif_api.py:58
+msgid "path(r):line"
+msgstr "path(r):line"
+
+#: cd_fif_api.py:59
+msgid "path(r:c:l):line"
+msgstr "path(r:c:l):line"
+
+#: cd_fif_api.py:60
+msgid "path/(r):line"
+msgstr "path/(r):line"
+
+#: cd_fif_api.py:61
+msgid "path/(r:c:l):line"
+msgstr "path/(r:c:l):line"
+
+#: cd_fif_api.py:62
+msgid "dir/file(r):line"
+msgstr "dir/file(r):line"
+
+#: cd_fif_api.py:63
+msgid "dir/file(r:c:l):line"
+msgstr "dir/file(r:c:l):line"
+
+#: cd_fif_api.py:64
+msgid "dir/file/(r):line"
+msgstr "dir/file/(r):line"
+
+#: cd_fif_api.py:65
+msgid "dir/file/(r:c:l):line"
+msgstr "dir/file/(r:c:l):line"
+
+#: cd_fif_api.py:66
+msgid "detect"
+msgstr "выявлять"
+
+#: cd_fif_api.py:326
+msgid "{} for \"{}\" in \"{}\" from {} ({} matches in {}({}) files)"
+msgstr "{} для \"{}\" в \"{}\" из {} ({} фрагментов в {}({}) файлах)"
+
+#: cd_fif_api.py:336
+msgid "{} \"{}\" to \"{}\" in \"{}\" from {} ({} changes in {}({}) files)"
+msgstr "{} \"{}\" в \"{}\" в \"{}\" из {} ({} изменений в {}({}) файлах)"
+
+#: cd_fif_api.py:355 cd_fif_api.py:407
+msgid "[ESC?] Report: {}%"
+msgstr "[ESC?] Результаты: {}%"
+
+#: cd_fif_api.py:357 cd_fif_api.py:409
+msgid "(Report stopped on {}%) "
+msgstr "(Выдача Результатов прервана на {}%) "
+
+#: cd_fif_api.py:516 cd_fif_api.py:567
+msgid "No tab for navigation"
+msgstr "Нет таба для перехода"
+
+#: cd_fif_api.py:569
+msgid "No file for navigation"
+msgstr "Нет файла для перехода"
+
+#: cd_fif_api.py:662
+msgid "Line {} has bad data for navigation"
+msgstr "Строка {} не содержит данных для перехода"
+
+#: cd_fif_api.py:700 cd_fif_api.py:702
+msgid "Undefined report to jump. Fill new report or navigate with old one."
+msgstr "Результаты не подходят для перехода. Получите новые результаты."
+
+#: cd_fif_api.py:704 cd_fif_api.py:809
+msgid "Command doesn't work with multi-carets"
+msgstr "Команда не работает с несколькими каретками"
+
+#: cd_fif_api.py:723
+msgid "Line \"{}\":{} has no data for navigation"
+msgstr "Строка \"{}\":{} не содержит данных для перехода"
+
+#: cd_fif_api.py:749 cd_fif_api.py:752
+msgid "No data to jump"
+msgstr "Нет данных для перехода"
+
+#: cd_fif_api.py:820
+msgid "Line {} has no data for navigation"
+msgstr "Строка {} не содержит данных для перехода"
+
+#: cd_fif_api.py:1111
+msgid "[ESC?] Search: {}% [found {} matches in {}({}) files]"
+msgstr "[ESC?] Поиск: {}% [найдено {} фрагментов в {}({}) файлах]"
+
+#: cd_fif_api.py:1117
+msgid "(Search stopped on {}%) "
+msgstr "(Поиск прерван на {}%) "
+
+#: cd_fif_api.py:1182
+msgid "Cannot read \"{}\" (encoding={}/{}): {}"
+msgstr "Невозможно прочитать \"{}\" (кодировка={}/{}): {}"
+
+#: cd_fif_api.py:1252
+msgid "tab:"
+msgstr "таб:"
+
+#: cd_fif_api.py:1333
+msgid "[ESC?][Found {} file(s) in {} dir(s)] Picking in: {}"
+msgstr "[ESC?][Найдено {} файлов в {} папках] Просмотр: {}"
+
+#: cd_fif_api.py:1338
+msgid "(Picking stopped) "
+msgstr "(Просмотр прерван) "
+
+#: cd_fif_api.py:1447
+msgid "Stop?"
+msgstr "Прервать?"

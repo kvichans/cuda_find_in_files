@@ -1,5 +1,9 @@
+3.1.16 (2019-04-24)
+added: ru-translation
+added: button OK in dialogs "Advanced search options" and "Advanced tab report options"
+
 3.1.15 (2019-04-04)
-added: use Meta instead Ctrl on Mac OS
+added: on macOS, change default hotkeys from Ctrl+... to Command+... ("Meta" key)
 
 3.1.13 (2019-02-13)
 added: plugin events (double click, go to definition) work only if plugin already loaded (faster)
