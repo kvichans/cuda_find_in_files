@@ -1,3 +1,6 @@
+3.1.17 (2019-05-14)
+fixed: Clear lexer in Source panel
+
 3.1.16 (2019-04-24)
 added: ru-translation
 added: button OK in dialogs "Advanced search options" and "Advanced tab report options"
