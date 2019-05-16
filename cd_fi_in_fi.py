@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.17 2019-05-14'
+    '3.1.18 2019-05-15'
 ToDo: (see end of file)
 '''
 
@@ -30,8 +30,8 @@ MIN_API_VER     = '1.0.216' # STATUSBAR_SET_AUTOSTRETCH
 MIN_API_VER     = '1.0.246' # events for control 'editor'
 #MIN_API_VER     = '1.0.249' # on_menu in 'editor', 'val' in 'pages'
 
-pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                          #LOG     = (-9== 9)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                          #Tr.tr   = Tr(get_opt('fif_log_file', '')) if get_opt('fif_log_file', '') else Tr.tr
+pass;                          #LOG     = (-9== 9)         or get_opt('fif_LOG'   , False) # Do or dont logging.
 pass;                          #from pprint import pformat
 pass;                          #pf=lambda d:pformat(d,width=150)
 pass;                           ##!! "waits correction"
@@ -44,12 +44,13 @@ VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
 
 MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
-CFG_JSON= app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_find_in_files.json'
 
-CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
-USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
+CFG_PATH= app.app_path(app.APP_DIR_SETTINGS)+os.sep+CFG_FILE
+
+CLOSE_AFTER_GOOD= get_opt('fif_hide_if_success'         , False)
+USE_EDFIND_OPS  = get_opt('fif_use_edfind_opt_on_start' , False)
 DEF_LOC_ENCO    = 'cp1252' if sys.platform=='linux' else locale.getpreferredencoding()
-loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
+loc_enco        = get_opt('fif_locale_encoding', DEF_LOC_ENCO)
 
 totb_l          = [TOTB_NEW_TAB, TOTB_USED_TAB]
 shtp_l          = [SHTP_SHORT_R, SHTP_SHORT_RCL
@@ -88,9 +89,9 @@ def reload_opts():
     api_reload_opts()
     
     global CLOSE_AFTER_GOOD,USE_EDFIND_OPS, loc_enco, enco_l
-    CLOSE_AFTER_GOOD= apx.get_opt('fif_hide_if_success'         , False)
-    USE_EDFIND_OPS  = apx.get_opt('fif_use_edfind_opt_on_start' , False)
-    loc_enco        = apx.get_opt('fif_locale_encoding', DEF_LOC_ENCO)
+    CLOSE_AFTER_GOOD= get_opt('fif_hide_if_success'         , False)
+    USE_EDFIND_OPS  = get_opt('fif_use_edfind_opt_on_start' , False)
+    loc_enco        = get_opt('fif_locale_encoding', DEF_LOC_ENCO)
     enco_l          = ['{}, UTF-8, '+ENCO_DETD 
                       ,'UTF-8, {}, '+ENCO_DETD 
                       ,'{}, '       +ENCO_DETD 
@@ -177,8 +178,8 @@ class Command:
     @staticmethod
     def get_dcls():
         if Command.dcls is None:
-            stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                        if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+            stores  = json.loads(re.sub(r',\s*}', r'}', open(CFG_PATH).read()), object_pairs_hook=odict) \
+                        if os.path.exists(CFG_PATH) and os.path.getsize(CFG_PATH) != 0 else \
                       odict()
             Command.dcls    = stores.get('dcls', Command.dcls_def)
         return Command.dcls
@@ -191,20 +192,291 @@ class Command:
         return dlg_fif_opts()
    #class Command
 
-def dlg_fif_opts():
+FIF_META_OPTS=[
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Option allows to save separate search settings
+                (search text, source folder, files mask etc)
+                per each mentioned session or project.
+                Each item in the option is RegEx,
+                which is compared with the full path of session (project).
+                First matched item is used.""")),
+        "def": [],
+        "frm": "json",
+        "opt": "fif_sep_hist_for_sess_proj",
+        "chp": _("History"),
+        "tgs": []
+    },
+
+    {   "cmt": _("Copy options [.*], [aA], [\"w\"] from CudaText dialog to plugin's dialog."),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_use_edfind_opt_on_start",
+        "chp": _("Start"),
+        "tgs": ["start", "settings"]
+    },
+    {   "cmt": _("Use selection text from current file when dialog opens."),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_use_selection_on_start",
+        "chp": _("Start"),
+        "tgs": ["start"]
+    },
+    {   "cmt": _("Store Results between dialog call if setting is \"[ ]Send\"."),
+        "def": True,
+        "frm": "bool",
+        "opt": "fif_store_prev_results",
+        "chp": _("Start"),
+        "tgs": ["start"]
+    },
+
+    {   "cmt": re.sub(r'  +', r'', _(
+               """List of lexer names to use for report file.
+                  First available lexer is used.""")),
+        "def": [
+            "Search results",
+            "FiF"
+        ],
+        "frm": "json",
+        "opt": "fif_lexers",
+        "chp": _("Report"),
+        "tgs": ["lexer", "report"]
+    },
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Auto-write 'tab_size' to report's lexer-specific config,
+               if no such setting. Use 0 to skip.""")),
+        "def": 2,
+        "frm": "int",
+        "opt": "fif_lexer_auto_tab_size",
+        "chp": _("Report"),
+        "tgs": ["lexer", "report"]
+    },
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Allows Esc key to stop all stages of current search.
+                If false, Esc stops only the current stage.""")),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_esc_full_stop",
+        "chp": _("Searching"),
+        "tgs": ["searching", "stop"]
+    },
+
+    {   "cmt": _("Show report even if nothing found."),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_report_no_matches",
+        "chp": _("Report"),
+        "tgs": ["report", "comfort"]
+    },
+    {   "cmt": _("[x]Append: Need to fold previous results."),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_fold_prev_res",
+        "chp": _("Report"),
+        "tgs": ["report", "append", "comfort"]
+    },
+    {   "cmt": _("Close dialog if search has found matches."),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_hide_if_success",
+        "chp": "",
+        "tgs": ["comfort"]
+    },
+    {   "cmt": _("Length of substring (from field \"Find\"), which appears in the report document title."),
+        "def": 10,
+        "frm": "int",
+        "opt": "fif_len_target_in_title",
+        "chp": _("Report"),
+        "tgs": ["report", "comfort"]
+    },
+    {   "cmt": _("If report document has a filename, save report after filling it."),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_auto_save_if_file",
+        "chp": _("Report"),
+        "tgs": ["report", "file"]
+    },
+    {   "cmt": _("Activate document with report after filling it."),
+        "def": True,
+        "frm": "bool",
+        "opt": "fif_focus_to_rpt",
+        "chp": _("Report"),
+        "tgs": ["report", "comfort"]
+    },
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Save search details (\"Find\", \"In folder\", …) in the first line of report.
+                The info will be used in command \"Repeat search for this report-tab\".""")),
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_save_request_to_rpt",
+        "chp": _("Report"),
+        "tgs": ["report", "comfort"]
+    },
+
+    {   "cmt": _("Append specified string to the field 'Not in files'."),
+        "def": "/.svn /.git /.hg /.idea",
+        "frm": "str",
+        "opt": "fif_always_not_in_files",
+        "chp": _("Searching"),
+        "tgs": ["searching"]
+    },
+    {   "cmt": _("Size of buffer (at file start) to detect binary files."),
+        "def": 1024,
+        "frm": "int",
+        "opt": "fif_read_head_size(bytes)",
+        "chp": _("Searching"),
+        "tgs": ["searching", "internal"]
+    },
+    {   "cmt": _("If value>0, skip all files, which sizes are bigger than this value (in Kb)."),
+        "def": 0,
+        "frm": "int",
+        "opt": "fif_skip_file_size_more_Kb",
+        "chp": _("Searching"),
+        "tgs": ["searching", "scope"]
+    },
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Default encoding to read files.
+                If value is empty, then the following is used:
+                  cp1252 for Linux,
+                  preferred encoding from locale for others (Win, macOS, …).""")),  #! Shift uses chr(160)
+        "def": "",
+        "frm": "str",
+        "opt": "fif_locale_encoding",
+        "chp": _("Searching"),
+        "tgs": ["searching", "internal", "encoding"]
+    },
+
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Style to mark found fragment in report.
+                Full form:
+                   "fif_mark_style":{
+                     "color_back":"", 
+                     "color_font":"",
+                     "font_bold":false, 
+                     "font_italic":false,
+                     "color_border":"", 
+                     "borders":{"left":"","right":"","bottom":"","top":""}
+                   },
+                Color values: "" - skip, "#RRGGBB" - hex-digits
+                Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave" """)),  #! Shift uses chr(160)
+        "def": {"borders": {"bottom": "dotted"}},
+        "frm": "json",
+        "opt": "fif_mark_style",
+        "chp": _("Report"),
+        "tgs": ["report", "mark"]
+    },
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Style to mark replaced fragment in report (unique in line).
+                Full form:
+                   "fif_mark_true_replace_style":{
+                     "color_back":"", 
+                     "color_font":"",
+                     "font_bold":false, 
+                     "font_italic":false,
+                     "color_border":"", 
+                     "borders":{"left":"","right":"","bottom":"","top":""}
+                   },
+                Color values: "" - skip, "#RRGGBB" - hex-digits
+                Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave" """)),  #! Shift uses chr(160)
+        "def": {"borders": {"bottom": "solid"}},
+        "frm": "json",
+        "opt": "fif_mark_true_replace_style",
+        "chp": _("Report"),
+        "tgs": ["report", "mark"]
+    },
+    {   "cmt": re.sub(r'  +', r'', _(
+               """Style to mark replaced fragment in report (not unique in line).
+                Full form:
+                   "fif_mark_false_replace_style":{
+                     "color_back":"", 
+                     "color_font":"",
+                     "font_bold":false, 
+                     "font_italic":false,
+                     "color_border":"", 
+                     "borders":{"left":"","right":"","bottom":"","top":""}
+                   },
+                Color values: "" - skip, "#RRGGBB" - hex-digits
+                Values for border sides: "solid", "dash", "2px", "dotted", "rounded", "wave" """)),  #! Shift uses chr(160)
+        "def": {"borders": {"bottom":"wave"},"color_border":"#777"},
+        "frm": "json",
+        "opt": "fif_mark_false_replace_style",
+        "chp": _("Report"),
+        "tgs": ["report", "mark"]
+    },
+
+    {   "cmt": "Allows logging for all search stages.",
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_LOG",
+        "chp": "Logging",
+        "tgs": ["log", "internal"]
+    },
+    {   "cmt": "Allows logging for searching stage.",
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_FNDLOG",
+        "chp": "Logging",
+        "tgs": ["log", "internal"]
+    },
+    {   "cmt": "Allows logging for reporting stage.",
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_RPTLOG",
+        "chp": "Logging",
+        "tgs": ["log", "internal"]
+    },
+    {   "cmt": "Allows logging for navigation stage.",
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_NAVLOG",
+        "chp": "Logging",
+        "tgs": ["log", "internal"]
+    },
+    {   "cmt": "Append internal debug data to report.",
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_DBG_data_to_report",
+        "chp": "Logging",
+        "tgs": ["log", "internal"]
+    },
+    {   "cmt": "Specifies filename of log file.",
+        "def": "",
+        "frm": "file",
+        "opt": "fif_log_file",
+        "chp": "Logging",
+        "tgs": ["log", "internal"]
+    },
+    {   "cmt": "Allows logging about failed file reads (encoding errors).",
+        "def": False,
+        "frm": "bool",
+        "opt": "fif_log_encoding_fail",
+        "chp": "Logging",
+        "tgs": ["log", "internal", "encoding"]
+    }
+]
+def dlg_fif_opts(dlg=None):
     try:
         import cuda_options_editor as op_ed
-#       from cuda_options_editor import dlg_opt_editor
     except:
-        app.msg_box(_('To view/edit options install plugin "Options Editor"'),app.MB_OK)
-        return
+        return app.msg_box(_('To view/edit options install plugin "Options Editor"'),app.MB_OK)
+
+    dlg.store(what='save') if dlg else 0
+    # Transfer options from "user.json" to CFG_FILE
+    for opt_d in FIF_META_OPTS:
+        opt = opt_d['opt']
+        if 'no-no-no'!=apx.get_opt(opt, 'no-no-no', user_json=CFG_FILE):    continue    # Already transfered
+        opt_val_user = apx.get_opt(opt)
+        if opt_val_user is None:                                            continue    # Nothing to transfer
+        pass;                  #log("trans: opt,opt_val_user={}",(opt,opt_val_user))
+        apx.set_opt(opt, opt_val_user, user_json=CFG_FILE)
 
     try:
         op_ed.OptEdD(
-          path_keys_info=os.path.dirname(__file__)+os.sep+'fif_opts_def.json'
+          path_keys_info=FIF_META_OPTS
+#         path_keys_info=os.path.dirname(__file__)+os.sep+'fif_opts_def.json'
         , subset        ='fif-df.'
 #       , how           =dict(only_for_ul=True, only_with_def=True)
-        , how           =dict(only_for_ul=True, only_with_def=True, hide_fil=True)
+#       , how           =dict(only_for_ul=True, only_with_def=True, hide_fil=True)
+        , how           =dict(only_for_ul=True, only_with_def=True, hide_fil=True, stor_json=CFG_FILE)
         ).show(_('"Find in Files" options'))
     except Exception as ex:
         pass;                   log('ex={}',(ex))
@@ -212,6 +484,7 @@ def dlg_fif_opts():
 #       fif_opts    = json.loads(open(FIF_OPTS).read())
 #       op_ed.dlg_opt_editor('FiF options', fif_opts, subset='fif.')
 
+    dlg.store(what='load') if dlg else 0
     reload_opts()
    #def dlg_fif_opts
 
@@ -271,7 +544,7 @@ class PresetD:
                 self._restore(ps)
                 msg_status(_('Options is restored from preset')+': '+ps['name'])
             m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
-            open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
+            open(CFG_PATH, 'w').write(json.dumps(m.fif.stores, indent=4))
             return None
            #def save_close
             
@@ -456,7 +729,7 @@ class PresetD:
         pass;                  #LOG and log('ps={}',(ps))
         pset_l += [ps]
         m.fif.stores['pset']    = pset_l    #stores_main.update(stores)
-        open(CFG_JSON, 'w').write(json.dumps(m.fif.stores, indent=4))
+        open(CFG_PATH, 'w').write(json.dumps(m.fif.stores, indent=4))
         msg_status(_('Options is saved to preset: ')+ps['name'])
         return None
        #def save
@@ -762,11 +1035,11 @@ def dlg_nav_by_dclick():
         else:
             dcls[sca]   = sgns_l[vals[nnn]]
     Command.dcls    = dcls
-    stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+    stores  = json.loads(re.sub(r',\s*}', r'}', open(CFG_PATH).read()), object_pairs_hook=odict) \
+                if os.path.exists(CFG_PATH) and os.path.getsize(CFG_PATH) != 0 else \
               odict()
     stores['dcls']  = dcls
-    open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+    open(CFG_PATH, 'w').write(json.dumps(stores, indent=4))
    #def dlg_nav_by_dclick
 
 mask_h  = _('Space-separated file or folder masks.'
@@ -941,7 +1214,7 @@ def dlg_fif(what='', opts={}):
     return FifD(what, opts).show()
 
 def prefix_to_sep_stores(def_prefix=''):
-    sprd_res    = apx.get_opt('fif_sep_hist_for_sess_proj', [])
+    sprd_res    = get_opt('fif_sep_hist_for_sess_proj', [])
     sess_path   = app.app_path(app.APP_FILE_SESSION)
     pass;                      #log('sprd_res={}',(sprd_res))
     pass;                      #log('sess_path={}',(sess_path))
@@ -1027,7 +1300,7 @@ class FifD:
         ,   vals =self.get_fif_vals()
         ,   fid  ='what'
         ,   options = {'bindof':self
-                               ,'gen_repro_to_file':apx.get_opt('fif_repro_to_file', '')    #NOTE: fif_repro
+                               ,'gen_repro_to_file':get_opt('fif_repro_to_file', '')    #NOTE: fif_repro
                               #,'gen_repro_to_file':'repro_dlg_fif.py'
                    #,   'ctrl_to_meta':'need'                       # 'by_os' is default
                     }
@@ -1058,9 +1331,8 @@ class FifD:
         self.srcf.set_prop(app.PROP_GUTTER_STATES       , False)
         self.srcf.set_prop(app.PROP_GUTTER_FOLD         , False)
         self.srcf.set_prop(app.PROP_GUTTER_BM           , False)
-        self.srcf.set_text_all(_('(no source)'))
-        self.srcf.set_prop(app.PROP_RO                  , True)
-        self.srcf._loaded_file  = None
+        self.srcf_acts('set-no-src')
+
         statusbar   = self.ag.handle('stbr')
         app.statusbar_proc(statusbar, app.STATUSBAR_ADD_CELL            , tag=1)
         app.statusbar_proc(statusbar, app.STATUSBAR_SET_CELL_AUTOSTRETCH, tag=1, value=True)
@@ -1074,9 +1346,9 @@ class FifD:
         elif '0'==self.send_s and M.rslt_body:
             self.rslt.set_prop(app.PROP_RO                  , False)
             self.rslt.set_text_all(M.rslt_body)
-            if -1!=M.rslt_body_r:
-                self.rslt.set_caret(0, M.rslt_body_r) 
-                self.do_rslt_click('rslt', self.ag)
+#           if -1!=M.rslt_body_r:
+#               self.rslt.set_caret(0, M.rslt_body_r) 
+#               self.do_rslt_click('rslt', self.ag)
             self.rslt.set_prop(app.PROP_RO                  , True)
         self.ag.show(callbk_on_exit=lambda ag: self.do_exit('', ag))
         self.store()
@@ -1120,8 +1392,8 @@ class FifD:
         self.totb_i  = opts.get('totb', self.stores.get('totb',  0 ));  self.totb_i =  1  if self.totb_i== 0  else self.totb_i
         self.shtp_s  = opts.get('shtp', self.stores.get('shtp', '0'))
         self.cntx_s  = opts.get('cntx', self.stores.get('cntx', '0'))
-        nBf     = apx.get_opt('fif_context_width_before', apx.get_opt('fif_context_width', 1))  # old storing in user.json
-        nAf     = apx.get_opt('fif_context_width_after' , apx.get_opt('fif_context_width', 1))  # old storing in user.json
+        nBf     = get_opt('fif_context_width_before', get_opt('fif_context_width', 1))  # old storing in user.json
+        nAf     = get_opt('fif_context_width_after' , get_opt('fif_context_width', 1))  # old storing in user.json
         self.cntx_b  = opts.get('cntb', self.stores.get('cntb', nBf))
         self.cntx_a  = opts.get('cnta', self.stores.get('cnta', nAf))
         self.algn_s  = opts.get('algn', self.stores.get('algn', '0'))
@@ -1206,8 +1478,8 @@ class FifD:
     
     def store(self, what='save'):#, set=''):
         if what=='load':
-            self.stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=odict) \
-                            if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+            self.stores = json.loads(re.sub(r',\s*}', r'}', open(CFG_PATH).read()), object_pairs_hook=odict) \
+                            if os.path.exists(CFG_PATH) and os.path.getsize(CFG_PATH) != 0 else \
                            odict()
         if what=='save':
             hp  = self.hip
@@ -1238,7 +1510,7 @@ class FifD:
             self.stores['rslt_va']  = self.rslt_va
             self.stores['rslt_w']   = self.rslt_w
             self.stores['rslt_h']   = self.rslt_h
-            open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
+            open(CFG_PATH, 'w').write(json.dumps(self.stores, indent=4))
        #def store
     
     def upd_def_status(self, do_out=False):
@@ -1261,8 +1533,8 @@ class FifD:
             info_rp+= [(f(_('context-{}+{}'), self.cntx_b, self.cntx_a)
                                                     )]  if self.cntx_s=='1' else []
         
-        cap_fi  = ('Search: ' + ', '.join(info_fi)) if info_fi else ''
-        cap_rp  =               ', '.join(info_rp)  if info_rp else ''
+        cap_fi  = (_('Search: ') + ', '.join(info_fi)) if info_fi else ''
+        cap_rp  =                  ', '.join(info_rp)  if info_rp else ''
         self.status_s   = '; '.join([cap_fi, cap_rp]).strip('; ') if cap_fi or cap_rp else ''
         msg_status(self.status_s) if do_out else 0
        #def upd_def_status
@@ -1391,7 +1663,7 @@ class FifD:
                 ,('frst',d(tp='ed'  ,t=5+29*3   ,l=5+120,w=200                                              ))# 
                 ,('enc_',d(tp='lb'  ,tid='enco' ,l=5    ,w=120-5,cap='>'+_('&Encodings:')       ,hint=enco_h))# &e
                 ,('enco',d(tp='cb-r',t=5+29*4   ,l=5+120,w=200  ,items=ENCO_L                               ))# 
-                ,('okok',d(tp='bt'  ,t=150      ,l=280  ,w= 45  ,cap='OK'   ,def_bt=True    ,call=LMBD_HIDE ))# 
+                ,('okok',d(tp='bt'  ,t=150      ,l=260  ,w= 65  ,cap='OK'   ,def_bt=True    ,call=LMBD_HIDE ))# 
                         ][1:]
                 ,vals   = d(skip=self.skip_s
                            ,sort=self.sort_s
@@ -1489,7 +1761,7 @@ class FifD:
                 ,('cxbf',d(tp='sed' ,t=140      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
                 ,('cxa_',d(tp='lb'  ,tid='cxaf' ,l=  5  ,w= 80  ,cap='>'+_('A&fter:')                               ))# &f
                 ,('cxaf',d(tp='sed' ,t=169      ,l=100  ,w= 45  ,min_max_inc='0,9,1'                                ))# 
-                ,('okok',d(tp='bt'  ,tid='cxaf' ,l=280  ,w= 45  ,cap='OK'           ,def_bt=True    ,call=LMBD_HIDE ))# 
+                ,('okok',d(tp='bt'  ,tid='cxaf' ,l=260  ,w= 65  ,cap='OK'           ,def_bt=True    ,call=LMBD_HIDE ))# 
                         ][1:]
                 ,vals   = d(totb=self.totb_i
                            ,join=self.join_s
@@ -1560,7 +1832,7 @@ class FifD:
 
         self.stores['dlg.help.data'] = dlg_fif_help(self, self.stores.get('dlg.help.data'))
 
-        open(CFG_JSON, 'w').write(json.dumps(self.stores, indent=4))
+        open(CFG_PATH, 'w').write(json.dumps(self.stores, indent=4))
         ag.activate()
         return self.do_focus('what',ag)
        #def do_help
@@ -1634,12 +1906,7 @@ class FifD:
                     text    = tab_ed.get_text_all()
                     lexer   = tab_ed.get_prop(app.PROP_LEXER_FILE)
                 elif os.path.isfile(path):
-                    enc     = self.enc_srcf if self.enc_srcf else detect_encoding(path, M.encoding_detector)
-                    pass;      #log('enc={}',(enc))
-                    try:
-                        text= open(path, encoding=enc).read()
-                    except:
-                        text= open(path).read()
+                    text    = self.srcf_acts('load-body', par=path)
                     lexer   = app.lexer_proc(app.LEXER_DETECT, path)
                 self.srcf.set_text_all(text) 
                 self.srcf.set_prop(app.PROP_LEXER_FILE, lexer)
@@ -1649,6 +1916,64 @@ class FifD:
             nav_to_frag(self.srcf, rw, cl, ln, indent_vert=-3)
         return []
        #def do_rslt_click
+    
+    def srcf_acts(self, act, ag=None, par=None):
+        M,m     = self.__class__,self
+        if act=='show-enco':
+            return  '<'+_('detect')+'>' \
+                        if not self.enc_srcf else \
+                    f('<{}>', ENCO_L[int(self.enco_s)]) \
+                        if self.enc_srcf=='=' else \
+                    self.enc_srcf
+        
+        if act=='ask-enco':
+            encsNAC = ENCODINGS
+            encsN   = [nm for nm,al,cm in encsNAC]
+            enc_ind = encsN.index(self.enc_srcf)    if self.enc_srcf in encsN   else \
+                      1+len(encsN)                  if self.enc_srcf=='='       else \
+                        len(encsN)
+#           enc_ind = encsN.index(self.enc_srcf) if self.enc_srcf in encsN else len(encsN)
+            enc_ind = app.dlg_menu(app.MENU_LIST
+                    ,   '\n'.join([f('{}\t{}', nm+(f(' ({}) ', al) if al!='' else ''),  cm)  
+                                    for nm,al,cm in encsNAC] 
+                                 +['<'+_('detect')+'>']
+                                 +[f(_('<{}> (search setting)'), ENCO_L[int(self.enco_s)])])
+                    ,   focused=enc_ind
+                    ,   caption=_('Source encoding'))
+            if enc_ind is None: return []
+            if enc_ind == len(encsN):       # '<Detect>'
+                self.enc_srcf = ''
+            elif enc_ind == 1+len(encsN):   # '<As in searching>'
+                self.enc_srcf = '='
+            else:
+                self.enc_srcf = encsN[enc_ind]
+            self.stores['enc_srcf'] = self.enc_srcf
+            return self.do_rslt_click(self, 'rslt', ag)
+            
+        if act=='load-body':
+            path    = par
+            encsN   = [nm for nm,al,cm in ENCODINGS]
+            enc_l   = [self.enc_srcf]                       if self.enc_srcf in encsN   else \
+                      ENCO_L[int(self.enco_s)].split(', ')  if self.enc_srcf=='='       else \
+                      [ENCO_DETD]
+            text    = ''
+            for enc in enc_l:
+                enc_    = detect_encoding(path, M.encoding_detector) if enc==ENCO_DETD else enc
+                pass;           log('enc,enc_={}',(enc,enc_))
+                try:
+                    text= open(path, encoding=enc_).read()
+                    break#for
+                except:
+                    text= _('<ERROR. See "Source encoding" in menu>')
+            return text
+
+        if act=='set-no-src':
+            self.srcf._loaded_file  = None
+            self.srcf.set_prop(app.PROP_RO                  , False)
+            self.srcf.set_text_all(_('(no source)'))
+            self.srcf.set_prop(app.PROP_RO                  , True)
+            self.srcf.set_prop(app.PROP_LEXER_FILE, '')
+       #def srcf_acts
     
     def do_work(self, aid, ag, btn_m=''):
         M,m     = self.__class__,self
@@ -1878,13 +2203,10 @@ class FifD:
         self.progressor = None
         if '1'==self.send_s:
             return self.do_focus(aid,ag)
-        M.rslt_body     = self.rslt.get_text_all()
+        pass;                  #log("STORE_PREV_RSLT={}",(STORE_PREV_RSLT))
+        M.rslt_body     = self.rslt.get_text_all() if STORE_PREV_RSLT else ''
         M.rslt_body_r   = -1
-        self.srcf._loaded_file  = None
-        self.srcf.set_prop(app.PROP_RO                  , False)
-        self.srcf.set_text_all(_('(no source)'))
-        self.srcf.set_prop(app.PROP_RO                  , True)
-        self.srcf.set_prop(app.PROP_LEXER_FILE, '')
+        self.srcf_acts('set-no-src')
         return d(fid='rslt')
        #def do_work
        
@@ -1943,23 +2265,7 @@ class FifD:
         elif tag=='pres-save':  return self.do_pres('save', ag)
         elif tag=='cust-rprt':  return self.do_morp('morp', ag)
         elif tag=='cust-srch':  return self.do_mofi('mofi', ag)
-        elif tag=='cust-enco':  
-            encsNAC = ENCODINGS
-            encsN   = [nm for nm,al,cm in encsNAC]
-            enc_ind = encsN.index(self.enc_srcf) if self.enc_srcf in encsN else len(encsN)
-            enc_ind = app.dlg_menu(app.MENU_LIST
-                    ,   '\n'.join([f('{}\t{}', nm+(f(' ({}) ', al) if al!='' else ''),  cm)  
-                                    for nm,al,cm in encsNAC] 
-                                 +['<None>'])
-                    ,   focused=enc_ind
-                    ,   caption=_('Encodings'))
-            if enc_ind is None: return []
-            if enc_ind == len(encsN):   # '<None>'
-                self.enc_srcf = ''
-            else:
-                self.enc_srcf = encsN[enc_ind]
-            self.stores['enc_srcf'] = self.enc_srcf
-            return self.do_rslt_click(self, 'rslt', ag)
+        elif tag=='cust-enco':  return self.srcf_acts('ask-enco', ag)
 
         elif tag=='pres-tabs':  self.fold_s     = IN_OPEN_FILES
         elif tag=='pres-proj':  self.fold_s     = IN_PROJ_FOLDS
@@ -1967,7 +2273,7 @@ class FifD:
         elif tag=='cust-excl':  self.wo_excl    = not self.wo_excl
         elif tag=='cust-repl':  self.wo_repl    = not self.wo_repl
             
-        elif tag=='edit-opts':  dlg_fif_opts()
+        elif tag=='edit-opts':  dlg_fif_opts(self)
         elif tag=='edit-dcls':
             self.store(what='save')
             dlg_nav_by_dclick()
@@ -2165,7 +2471,8 @@ class FifD:
   ),d(tag='cust-srch'   ,key='Alt+E'        ,cap=  _('Extra options for s&earch…')
   ),d(tag='edit-opts'   ,key='Ctrl+E'       ,cap=  _('&View and edit engine options…')
   ),d(tag='edit-dcls'                       ,cap=  _('&Configure navigation with double-click in tab report…')
-  ),d(tag='cust-enco'                       ,cap=f(_('Source Encod&ing{}…'), f(' ({})', self.enc_srcf) if self.enc_srcf else ''),en=w_rslt
+  ),d(tag='cust-enco'                       ,cap=f(_('Source encod&ing{}…'), f(' ({})', self.srcf_acts('show-enco')))       ,en=w_rslt
+# ),d(tag='cust-enco'                       ,cap=f(_('Source Encod&ing{}…'), f(' ({})', self.enc_srcf) if self.enc_srcf else ''),en=w_rslt
   ),d(                                       cap='-'
   ),d(tag='cust-excl'   ,ch=not self.wo_excl,cap=f(_('Show "{}"')           , self.caps['excl'])
   ),d(tag='cust-repl'   ,ch=not self.wo_repl,cap=f(_('Show "{}" and "{}"')  , self.caps['repl']                 , repl_c)
@@ -2298,7 +2605,7 @@ class FifD:
         elif scam== 'c' and idc==ord('T'):          upd=m.do_work('!cnt', ag, btn_m='s/!cnt')       # Ctrl+T
         elif scam== 'c' and ord('1')<=idc<=ord('5'):upd=m.do_pres('prs'+chr(idc), ag)               # Ctrl+1..Ctrl+5
         elif scam== 'a' and ord('1')<=idc<=ord('5'):upd=m.wnen_menu(ag, 'relt'+chr(idc))            # Alt+1..Alt+5
-        elif scam== 'c' and idc==ord('E'):          dlg_fif_opts()                                  # Ctrl+E
+        elif scam== 'c' and idc==ord('E'):          dlg_fif_opts(self)                              # Ctrl+E
         else:                                       return 
         pass;                  #log('upd={}',(upd))
         ag._update_on_call(upd)
@@ -2646,4 +2953,6 @@ ToDo
 [+][at-kv][14jul18] Add opt fif_always_not_in_files to section Searching with def val '/.svn /.git /.hg'
 [ ][kv-kv][23jul18] ? Why need dlg_h0+=23 at Lin?
 [ ][kv-kv][24apr19] Allow menu Layout if [ ]Send. Only "over" item will be unenabled
+[ ][kv-kv][15may19] Add encodings into menu over Source
+[ ][kv-kv][15may19] ? Add *lexer path* to Results
 '''

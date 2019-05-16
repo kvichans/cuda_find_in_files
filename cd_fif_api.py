@@ -18,13 +18,16 @@ from    .chardet.universaldetector import UniversalDetector
 
 OrdDict = collections.OrderedDict
 
-pass;                           Tr.to_file=                   apx.get_opt('fif_log_file', '')
-pass;                          #Tr.tr   = Tr(apx.get_opt('fif_log_file', '')) if apx.get_opt('fif_log_file', '') else Tr.tr
-pass;                           LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
-pass;                           FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
-pass;                           RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
-pass;                           NAVLOG  = (-4== 4) and LOG or apx.get_opt('fif_NAVLOG', False)
-pass;                           DBG_DATA_TO_REPORT  =         apx.get_opt('fif_DBG_data_to_report', False)
+CFG_FILE= 'cuda_find_in_files.json'
+get_opt = lambda opt, defv=None: apx.get_opt(opt, defv, user_json=CFG_FILE)
+
+pass;                           Tr.to_file=                   get_opt('fif_log_file', '')
+pass;                          #Tr.tr   = Tr(get_opt('fif_log_file', '')) if get_opt('fif_log_file', '') else Tr.tr
+pass;                           LOG     = (-1== 1)         or get_opt('fif_LOG'   , False) # Do or dont logging.
+pass;                           FNDLOG  = (-2== 2) and LOG or get_opt('fif_FNDLOG', False)
+pass;                           RPTLOG  = (-3== 3) and LOG or get_opt('fif_RPTLOG', False)
+pass;                           NAVLOG  = (-4== 4) and LOG or get_opt('fif_NAVLOG', False)
+pass;                           DBG_DATA_TO_REPORT  =         get_opt('fif_DBG_data_to_report', False)
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 pass;                           ##!! waits correction
@@ -65,7 +68,7 @@ SHTP_SPARS_R    = _('dir/file/(r):line')
 SHTP_SPARS_RCL  = _('dir/file/(r:c:l):line')
 ENCO_DETD       = _('detect')
 
-lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
+lexers_l        = get_opt('fif_lexers'                  , ['Search results', 'FiF'])
 FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
 lexers_l        = list(map(lambda s: s.upper(), lexers_l))
 def fit_mark_style_for_attr(js:dict)->dict:
@@ -89,42 +92,45 @@ def fit_mark_style_for_attr(js:dict)->dict:
     if jsbr.get('right' , ''):       kwargs['border_right']  = V_L.index(jsbr['right' ])+1
     if jsbr.get('bottom', ''):       kwargs['border_down']   = V_L.index(jsbr['bottom'])+1
     if jsbr.get('top'   , ''):       kwargs['border_up']     = V_L.index(jsbr['top'   ])+1
+    pass;                      #log("kwargs={}",(kwargs))
     return kwargs
    #def fit_mark_style_for_attr
 def api_reload_opts():
     global                      LOG, FNDLOG, RPTLOG, NAVLOG, DBG_DATA_TO_REPORT
-    pass;                       LOG     = (-1== 1)         or apx.get_opt('fif_LOG'   , False) # Do or dont logging.
-    pass;                       FNDLOG  = (-2== 2) and LOG or apx.get_opt('fif_FNDLOG', False)
-    pass;                       RPTLOG  = (-3== 3) and LOG or apx.get_opt('fif_RPTLOG', False)
-    pass;                       NAVLOG  = (-4== 4) and LOG or apx.get_opt('fif_NAVLOG', False)
-    pass;                       DBG_DATA_TO_REPORT  =         apx.get_opt('fif_DBG_data_to_report', False)
+    pass;                       LOG     = (-1== 1)         or get_opt('fif_LOG'   , False) # Do or dont logging.
+    pass;                       FNDLOG  = (-2== 2) and LOG or get_opt('fif_FNDLOG', False)
+    pass;                       RPTLOG  = (-3== 3) and LOG or get_opt('fif_RPTLOG', False)
+    pass;                       NAVLOG  = (-4== 4) and LOG or get_opt('fif_NAVLOG', False)
+    pass;                       DBG_DATA_TO_REPORT  =         get_opt('fif_DBG_data_to_report', False)
 
     global FIF_LEXER,lexers_l,USE_SEL_ON_START,ESC_FULL_STOP,REPORT_FAIL,FOLD_PREV_RES,LEN_TRG_IN_TITLE
     global BLOCKSIZE,CONTEXT_WIDTH,SKIP_FILE_SIZE,AUTO_SAVE,FOCUS_TO_RPT,SAVE_REQ_TO_RPT,TAB_SIZE_IN_RPT
     global MARK_FIND_STYLE,MARK_TREPL_STYLE,MARK_FREPL_STYLE
-    global ALWAYS_EXCL
-    lexers_l        = apx.get_opt('fif_lexers'                  , ['Search results', 'FiF'])
+    global ALWAYS_EXCL,STORE_PREV_RSLT
+    lexers_l        = get_opt('fif_lexers'                  , ['Search results', 'FiF'])
     FIF_LEXER       = apx.choose_avail_lexer(lexers_l) #select_lexer(lexers_l)
     lexers_l        = list(map(lambda s: s.upper(), lexers_l))
-    USE_SEL_ON_START= apx.get_opt('fif_use_selection_on_start'  , False)
-    ESC_FULL_STOP   = apx.get_opt('fif_esc_full_stop'           , False)
-    REPORT_FAIL     = apx.get_opt('fif_report_no_matches'       , False)
-    FOLD_PREV_RES   = apx.get_opt('fif_fold_prev_res'           , False)
-    LEN_TRG_IN_TITLE= apx.get_opt('fif_len_target_in_title'     , 10)
-    BLOCKSIZE       = apx.get_opt('fif_read_head_size(bytes)'   , apx.get_opt('fif_read_head_size', 1024))
-    CONTEXT_WIDTH   = apx.get_opt('fif_context_width'           , 1)
-    SKIP_FILE_SIZE  = apx.get_opt('fif_skip_file_size_more_Kb'  , 0)
-    AUTO_SAVE       = apx.get_opt('fif_auto_save_if_file'       , False)
-    FOCUS_TO_RPT    = apx.get_opt('fif_focus_to_rpt'            , True)
-    SAVE_REQ_TO_RPT = apx.get_opt('fif_save_request_to_rpt'     , False)
-    TAB_SIZE_IN_RPT = apx.get_opt('fif_lexer_auto_tab_size'     , 2)
-    MARK_FIND_STYLE = apx.get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
-    MARK_TREPL_STYLE= apx.get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
-    MARK_FREPL_STYLE= apx.get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
+    USE_SEL_ON_START= get_opt('fif_use_selection_on_start'  , False)
+    ESC_FULL_STOP   = get_opt('fif_esc_full_stop'           , False)
+    REPORT_FAIL     = get_opt('fif_report_no_matches'       , False)
+    FOLD_PREV_RES   = get_opt('fif_fold_prev_res'           , False)
+    LEN_TRG_IN_TITLE= get_opt('fif_len_target_in_title'     , 10)
+    BLOCKSIZE       = get_opt('fif_read_head_size(bytes)'   , get_opt('fif_read_head_size', 1024))
+    CONTEXT_WIDTH   = get_opt('fif_context_width'           , 1)
+    SKIP_FILE_SIZE  = get_opt('fif_skip_file_size_more_Kb'  , 0)
+    AUTO_SAVE       = get_opt('fif_auto_save_if_file'       , False)
+    FOCUS_TO_RPT    = get_opt('fif_focus_to_rpt'            , True)
+    SAVE_REQ_TO_RPT = get_opt('fif_save_request_to_rpt'     , False)
+    TAB_SIZE_IN_RPT = get_opt('fif_lexer_auto_tab_size'     , 2)
+    MARK_FIND_STYLE = get_opt('fif_mark_style'              , {'borders':{'bottom':'dotted'}})
+    MARK_TREPL_STYLE= get_opt('fif_mark_true_replace_style' , {'borders':{'bottom':'solid'}})
+    MARK_FREPL_STYLE= get_opt('fif_mark_false_replace_style', {'borders':{'bottom':'wave'},'color_border':'#777'})
     MARK_FIND_STYLE = fit_mark_style_for_attr(MARK_FIND_STYLE)
     MARK_TREPL_STYLE= fit_mark_style_for_attr(MARK_TREPL_STYLE)
     MARK_FREPL_STYLE= fit_mark_style_for_attr(MARK_FREPL_STYLE)
-    ALWAYS_EXCL     = apx.get_opt('fif_always_not_in_files'     , '/.svn /.git /.hg /.idea')
+    ALWAYS_EXCL     = get_opt('fif_always_not_in_files'     , '/.svn /.git /.hg /.idea')
+    STORE_PREV_RSLT = get_opt('fif_store_prev_results'      , True)
+    pass;                      #log("STORE_PREV_RSLT={}",(STORE_PREV_RSLT))
    #def api_reload_opts
 api_reload_opts()
 if 'sw'==app.__name__:
@@ -167,6 +173,7 @@ def report_to_tab(rpt_data:dict
         app.file_open('')
         new_ed  = ed
         new_ed.set_prop(app.PROP_ENC,       'UTF-8')
+        pass;                  #log("_title_ext={}",(_title_ext))
         new_ed.set_prop(app.PROP_TAB_TITLE, _('Results')+_title_ext)  #??
         return new_ed
         
@@ -977,8 +984,8 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     spr_dirs= how_rpt['sprd']
 
     cntx    = how_rpt['cntx']
-    CONTEXT_WIDTH_U = apx.get_opt('fif_context_width_before'    , CONTEXT_WIDTH)
-    CONTEXT_WIDTH_D = apx.get_opt('fif_context_width_after'     , CONTEXT_WIDTH)
+    CONTEXT_WIDTH_U = get_opt('fif_context_width_before'    , CONTEXT_WIDTH)
+    CONTEXT_WIDTH_D = get_opt('fif_context_width_after'     , CONTEXT_WIDTH)
     extU_lns= CONTEXT_WIDTH_U if cntx else 0
     extD_lns= CONTEXT_WIDTH_D if cntx else 0
     pass;                      #LOG and log('repl_s,extU_lns,extD_lns={}',(repl_s,extU_lns,extD_lns))
@@ -988,7 +995,7 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     enco_l  = how_walk.get('enco', ['UTF-8'])
     pass;                       FNDLOG and log('enco_l={}',(enco_l))
     detector= UniversalDetector() if ENCO_DETD in enco_l else None
-    rpt_enc_fail= apx.get_opt('fif_log_encoding_fail', False)
+    rpt_enc_fail= get_opt('fif_log_encoding_fail', False)
 
     def find_for_body(   _body:str, _dept:int, _rsp_l:list, _rsp_i:dict):
         if pttn_r.search(_body):

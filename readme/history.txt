@@ -1,3 +1,7 @@
+3.1.18 (2019-05-15)
+added: List "encodings" from Search for Source
+added: Store all settings in "cuda_find_in_files.json"
+
 3.1.17 (2019-05-14)
 fixed: Clear lexer in Source panel
 
