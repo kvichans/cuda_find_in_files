@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.18 2019-05-15'
+    '3.1.19 2019-06-06'
 ToDo: (see end of file)
 '''
 
@@ -44,6 +44,7 @@ VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
 
 MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
+MENU_CENTERED   = app.MENU_CENTERED if app.app_api_version()>='1.0.27' else 0
 
 CFG_PATH= app.app_path(app.APP_DIR_SETTINGS)+os.sep+CFG_FILE
 
@@ -911,6 +912,14 @@ See: commands in menu/Scope.
  
 —————————————————————————————————————————————— 
  
+• "Age" (advanced search options).
+    {olde}
+ 
+• "First" (advanced search options).
+    {frst}
+ 
+—————————————————————————————————————————————— 
+ 
 • Long-term searches can be interrupted by ESC.
 Search has three stages: 
     picking files, 
@@ -938,6 +947,8 @@ def dlg_fif_help(fif, stores=None):
                   , incl=fif.caps['incl']
                   , excl=fif.caps['excl']
                   , fold=fif.caps['fold']
+                  , olde=olde_h
+                  , frst=frst_h
                   , tags=IN_OPEN_FILES
                   , proj=IN_PROJ_FOLDS)
     TREE_BODY   =_TREE_BODY.strip().format(
@@ -949,7 +960,7 @@ def dlg_fif_help(fif, stores=None):
     page        = stores.get('page', 0)
     ag_hlp      = DlgAgent(
               form  =dict( cap      =_('"Find in Files" help')
-                          ,w        = 930+10
+                          ,w        = 960+10
                           ,h        = 580+10
                           ,resize   = True
                           )
@@ -1087,16 +1098,16 @@ morp_h  = _('Advanced tab report options')
 menu_h  = _('Local menu'
             '\nCtrl+Click - Adjust vertical alignments...'
             )
-more_h  = _('Show/Hide advanced options'
-            '\nCtrl+Click   - Show/Hide "Not in files".'
-            '\nShift+Click - Show/Hide "Replace".'
-            '\n '
-            '\nAlt+V - Toggle visibility on cycle'
-            '\n   hidden "Not in files", hidden  "Replace"'
-            '\n   visible  "Not in files", hidden  "Replace"'
-            '\n   visible  "Not in files", visible   "Replace"'
-            '\n   hidden "Not in files", visible   "Replace"'
-            )
+#more_h  = _('Show/Hide advanced options'
+#           '\nCtrl+Click   - Show/Hide "Not in files".'
+#           '\nShift+Click - Show/Hide "Replace".'
+#           '\n '
+#           '\nAlt+V - Toggle visibility on cycle'
+#           '\n   hidden "Not in files", hidden  "Replace"'
+#           '\n   visible  "Not in files", hidden  "Replace"'
+#           '\n   visible  "Not in files", visible   "Replace"'
+#           '\n   hidden "Not in files", visible   "Replace"'
+#           )
 frst_h  = _('M[, F]'
             '\nStop after M fragments will be found.'
             '\nSearch only inside F first proper files.'
@@ -1891,6 +1902,7 @@ class FifD:
             M.rslt_body_r   = row
             path,rw,\
             cl, ln  = get_data4nav(self.rslt, row)
+            lexer   = ''
             pass;              #log('row, path,rw,cl,ln={}',(row,path,rw, cl, ln))
             msg_status(path) if path else 0
             if not path:    return []
@@ -1898,7 +1910,6 @@ class FifD:
                 self.srcf.set_prop(app.PROP_LEXER_FILE, '')
                 self.srcf._loaded_file  = path
                 text    = ''
-                lexer   = ''
                 self.srcf.set_prop(app.PROP_RO, False)
                 if path.startswith('tab:'):
                     tab_id  = int(path.split('/')[0].split(':')[1])
@@ -1913,12 +1924,19 @@ class FifD:
                 self.srcf.set_prop(app.PROP_RO, True)
                 pass;          #log('ok load path={}',(path))
             app.app_idle()                      # Hack to problem: PROP_LINE_TOP sometime skipped after set_prop(PROP_LEXER_FILE)
-            nav_to_frag(self.srcf, rw, cl, ln, indent_vert=-3)
+            self.srcf_acts('nav-to', par=(lexer, rw, cl, ln, -3))
+#           nav_to_frag(self.srcf, rw, cl, ln, indent_vert=-3)
         return []
        #def do_rslt_click
     
     def srcf_acts(self, act, ag=None, par=None):
         M,m     = self.__class__,self
+        
+        if act=='nav-to':
+            lexer, rw, cl, ln, indent_vert = par
+            nav_to_frag(self.srcf, rw, cl, ln, indent_vert=indent_vert)
+            return 
+        
         if act=='show-enco':
             return  '<'+_('detect')+'>' \
                         if not self.enc_srcf else \
@@ -1933,7 +1951,7 @@ class FifD:
                       1+len(encsN)                  if self.enc_srcf=='='       else \
                         len(encsN)
 #           enc_ind = encsN.index(self.enc_srcf) if self.enc_srcf in encsN else len(encsN)
-            enc_ind = app.dlg_menu(app.MENU_LIST
+            enc_ind = app.dlg_menu(app.MENU_LIST + MENU_CENTERED
                     ,   '\n'.join([f('{}\t{}', nm+(f(' ({}) ', al) if al!='' else ''),  cm)  
                                     for nm,al,cm in encsNAC] 
                                  +['<'+_('detect')+'>']
@@ -1959,7 +1977,7 @@ class FifD:
             text    = ''
             for enc in enc_l:
                 enc_    = detect_encoding(path, M.encoding_detector) if enc==ENCO_DETD else enc
-                pass;           log('enc,enc_={}',(enc,enc_))
+                pass;          #log('enc,enc_={}',(enc,enc_))
                 try:
                     text= open(path, encoding=enc_).read()
                     break#for
@@ -2120,6 +2138,8 @@ class FifD:
             ,sprd   =              self.sort_s=='0' and shtp_v not in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL)
             ,shtp   =    shtp_v if self.sort_s=='0' or  shtp_v     in (SHTP_SHORT_R, SHTP_SHORT_RCL, SHTP_SHRTS_R, SHTP_SHRTS_RCL) else SHTP_SHORT_R
             ,cntx   =    '1'==self.cntx_s and btn_p!='!rep'
+            ,cntb   =    self.cntx_b
+            ,cnta   =    self.cntx_a
             ,algn   =    '1'==self.algn_s
             ,join   =    '1'==self.join_s or  btn_m=='c/!fnd' # Append if Ctrl+Find
             )
@@ -2954,5 +2974,9 @@ ToDo
 [ ][kv-kv][23jul18] ? Why need dlg_h0+=23 at Lin?
 [ ][kv-kv][24apr19] Allow menu Layout if [ ]Send. Only "over" item will be unenabled
 [ ][kv-kv][15may19] Add encodings into menu over Source
-[ ][kv-kv][15may19] ? Add *lexer path* to Results
+[ ][kv-kv][15may19] ? Add *lexer path* to statusbar when Source by opt "lex-path for lexers: ['']"
+[ ][kv-kv][30may19] ? Add *lexer path* to "In files"/"In folder"
+[ ][kv-kv][06jun19] Add depth to report: +Search "**" in "**"(+2) 
+[ ][kv-kv][06jun19] Allow all tree in Results panel
+[ ][kv-kv][06jun19] bug: +-context
 '''

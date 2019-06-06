@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.3.16 2019-02-12'
+    '3.1.19 2019-06-06'
 ToDo: (see end of file)
 '''
 
@@ -984,10 +984,12 @@ def find_in_files(how_walk:dict, what_find:dict, what_save:dict, how_rpt:dict, p
     spr_dirs= how_rpt['sprd']
 
     cntx    = how_rpt['cntx']
-    CONTEXT_WIDTH_U = get_opt('fif_context_width_before'    , CONTEXT_WIDTH)
-    CONTEXT_WIDTH_D = get_opt('fif_context_width_after'     , CONTEXT_WIDTH)
-    extU_lns= CONTEXT_WIDTH_U if cntx else 0
-    extD_lns= CONTEXT_WIDTH_D if cntx else 0
+    extU_lns= how_rpt['cntb'] if cntx else 0
+    extD_lns= how_rpt['cnta'] if cntx else 0
+#   CONTEXT_WIDTH_U = get_opt('fif_context_width_before'    , CONTEXT_WIDTH)
+#   CONTEXT_WIDTH_D = get_opt('fif_context_width_after'     , CONTEXT_WIDTH)
+#   extU_lns= CONTEXT_WIDTH_U if cntx else 0
+#   extD_lns= CONTEXT_WIDTH_D if cntx else 0
     pass;                      #LOG and log('repl_s,extU_lns,extD_lns={}',(repl_s,extU_lns,extD_lns))
 #   ext_lns = CONTEXT_WIDTH if cntx else 0
 #   pass;                      #LOG and log('repl_s,ext_lns={}',(repl_s,ext_lns))
@@ -1305,7 +1307,7 @@ def collect_files(how_walk:dict, progressor=None)->tuple:       #NOTE: cllc
     pass;                      #LOG and log('incls={} incls_fo={}',incls, incls_fo)
     pass;                      #LOG and log('excls={} excls_fo={}',excls, excls_fo)
     
-    pass;                       log('age={}',(age))
+    pass;                      #log('age={}',(age))
     age_d   = []
     if age:
         age_u   = age[-1]
