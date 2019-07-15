@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.19 2019-06-06'
+    '3.1.20 2019-07-15'
 ToDo: (see end of file)
 '''
 
@@ -497,11 +497,15 @@ def report_to_tab(rpt_data:dict
 #   rpt_ed.set_text_line(0, line0)
 #   app.app_idle()
     if app.app_api_version()>='1.0.162':
-        pass;                   RPTLOG and log('rpt_ed.lexer_scan(row4crt) row4crt={}',row4crt)
-        rpt_ed.lexer_scan(row4crt)
+        if app.app_api_version()<'1.0.289':
+            pass;               RPTLOG and log('rpt_ed.lexer_scan(row4crt) row4crt={}',row4crt)
+            rpt_ed.lexer_scan(row4crt)
+        else:
+            pass;               RPTLOG and log('rpt_ed.action(app.EDACTION_LEXER_SCAN, row4crt) row4crt={}',row4crt)
+            rpt_ed.action(app.EDACTION_LEXER_SCAN, row4crt)
         
     pass;                      #RPTLOG and log('row4crt={}',row4crt)
-    rpt_ed.set_caret(      0, row4crt)
+    rpt_ed.set_caret(0, row4crt)
 
     if AUTO_SAVE and rpt_ed.get_filename() and os.path.isfile(rpt_ed.get_filename()):
         rpt_ed.save()

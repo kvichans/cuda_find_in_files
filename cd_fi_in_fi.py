@@ -903,12 +903,12 @@ Example.
     and in all subfolders a* except ab*.
  
 • Set special value "{tags}" (in short <t> or <Tabs>) for field "{fold}" to search in opened documents.
-Fields "{incl}" and "{excl}" will be to filter tab titles.
+Fields "{incl}" and "{excl}" will be used to filter tab titles, in this case.
 To search in all tabs, use mask "*" in field "{incl}".
-See: commands in menu/Scope.
+See also: menu items under button "=", "Scope".
  
 • Set special value "{proj}" (in short <p>) for field "{fold}" to search in project files.
-See: commands in menu/Scope.
+See also: menu items under button "=", "Scope".
  
 —————————————————————————————————————————————— 
  
@@ -965,7 +965,7 @@ def dlg_fif_help(fif, stores=None):
                           ,resize   = True
                           )
             , ctrls = [0
-                ,('tabs',dict(tp='pgs'  ,l=5,w=910  
+                ,('tabs',dict(tp='pgs'  ,l=5,w=960  
                                         ,t=5,h=580  ,a='lRtB'   ,items=[_('Hotkeys+Tricks')
                                                                        ,_('Hints')
                                                                        ,_('Tree types')]        ,val=page       ))
@@ -2978,5 +2978,12 @@ ToDo
 [ ][kv-kv][30may19] ? Add *lexer path* to "In files"/"In folder"
 [ ][kv-kv][06jun19] Add depth to report: +Search "**" in "**"(+2) 
 [ ][kv-kv][06jun19] Allow all tree in Results panel
-[ ][kv-kv][06jun19] bug: +-context
+[+][kv-kv][06jun19] bug: +-context
+[ ][kv-kv][06jun19] Add m-datetime for files in report by new opt
+[ ][kv-kv][19jun19] FIF4: cells for status: [walked dirs], [reported/matched/tested fns], [reported/found frags] 
+[ ][kv-kv][19jun19] FIF4: m-dt of files 
+[ ][kv-kv][19jun19] FIF4: lexer path of frags
+[ ][kv-kv][19jun19] FIF4: unsaved text of tabs
+[ ][kv-kv][19jun19] FIF4: yield based obj chain: report - finder in text - file/tab... - walker
+[ ][kv-kv][21jun19] bug! enco_l[enco_n] = enco_s
 '''
