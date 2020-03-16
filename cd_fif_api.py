@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.20 2019-07-15'
+    '3.1.20 2020-03-16'
 ToDo: (see end of file)
 '''
 
@@ -1231,6 +1231,8 @@ def prep_quoted_folders(mask:str)->list:
             mask:             /   "/a b/c"   m/n
             output:         ['/', '/a b/c', 'm/n']
     """
+    if ';' in mask:
+        return [f.strip() for f in mask.split(';')]
     mask    = mask.strip()
     flds    = mask.split(' ')
     if '"' in mask:

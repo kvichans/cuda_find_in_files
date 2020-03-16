@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.19 2019-06-06'
+    '3.1.20 2020-03-16'
 ToDo: (see end of file)
 '''
 
@@ -453,7 +453,21 @@ FIF_META_OPTS=[
         "chp": "Logging",
         "tgs": ["log", "internal", "encoding"]
     }
-]
+    ]
+
+#]   + ([] if app.app_api_version()<'1.0.289' else[  # Editor.action() with EDACTION_CODETREE_FILL and EDACTION_LEXER_SCAN
+#   {   "cmt": re.sub(r'  +', r'', _(
+#              """For these lexers to show in dialog statusbar
+#                 path into CodeTree to current fragment in Source panel.""")),
+#       "def": [
+#           "Python",
+#       ],
+#       "frm": "json",
+#       "opt": "fif_codetree_path_in_status",
+#       "chp": _("Report"),
+#       "tgs": ["lexer", "report"]
+#   }
+#   ])
 def dlg_fif_opts(dlg=None):
     try:
         import cuda_options_editor as op_ed
@@ -1407,6 +1421,7 @@ class FifD:
         nAf     = get_opt('fif_context_width_after' , get_opt('fif_context_width', 1))  # old storing in user.json
         self.cntx_b  = opts.get('cntb', self.stores.get('cntb', nBf))
         self.cntx_a  = opts.get('cnta', self.stores.get('cnta', nAf))
+        pass;                  #log("self.cntx_b,self.cntx_a={}",(self.cntx_b,self.cntx_a))
         self.algn_s  = opts.get('algn', self.stores.get('algn', '0'))
         self.skip_s  = opts.get('skip', self.stores.get('skip', '0'))
         self.sort_s  = opts.get('sort', self.stores.get('sort', '0'))
@@ -1601,6 +1616,7 @@ class FifD:
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
                           self.fold_s
+            self.fold_s = '"'+self.fold_s+'"' if ' ' in self.fold_s else self.fold_s;
 #           self.focused= 'fold'
         elif btn_m=='s/brow':   # [Shift+]BroDir = BroFile
             fn          = app.dlg_file(True, '', os.path.expanduser(self.fold_s), '')
@@ -1610,12 +1626,14 @@ class FifD:
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
                           self.fold_s
+            self.fold_s = '"'+self.fold_s+'"' if ' ' in self.fold_s else self.fold_s;
             self.dept_n = 1
         elif btn_m=='cfld' and ed.get_filename():
             self.fold_s = os.path.dirname(ed.get_filename())
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
                           self.fold_s
+            self.fold_s = '"'+self.fold_s+'"' if ' ' in self.fold_s else self.fold_s;
         elif btn_m=='s/cfld':   # [Shift+]CurDir = CurFile
             if not os.path.isfile(     ed.get_filename()):   return self.do_focus(aid,ag)   #continue#while_fif
             self.incl_s = os.path.basename(ed.get_filename())
@@ -1623,6 +1641,7 @@ class FifD:
             self.fold_s = self.fold_s.replace(os.path.expanduser('~'), '~', 1)      \
                             if self.fold_s.startswith(os.path.expanduser('~')) else \
                           self.fold_s
+            self.fold_s = '"'+self.fold_s+'"' if ' ' in self.fold_s else self.fold_s;
             self.dept_n = 1
             self.excl_s = ''
         elif btn_m=='c/cfld':   # [Ctrl+]CurDir  = InTabs
@@ -2056,6 +2075,7 @@ class FifD:
             msg_status(f(_('Fix quotes in the "{}" field'), self.caps['excl'])) 
             return {'fid':'excl'}
 
+        pass;                  #work_start  = time.monotonic()
         roots       = []
         if root_is_proj(self.fold_s) or root_is_tabs(self.fold_s):
             roots   = [self.fold_s]
@@ -2177,6 +2197,10 @@ class FifD:
         clfls   = rpt_info['cllc_files']
         frfls   = rpt_info['files']
         frgms   = rpt_info['frgms']
+
+        pass;                  #search_end    = time.monotonic()
+        pass;                  #print(f('search done: {:.2f} secs', search_end-work_start))
+
         ################################
         pass;                  #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
         fil_tabs= fil_tab+'s'   if clfls>1 else fil_tab
@@ -2227,6 +2251,9 @@ class FifD:
         M.rslt_body     = self.rslt.get_text_all() if STORE_PREV_RSLT else ''
         M.rslt_body_r   = -1
         self.srcf_acts('set-no-src')
+        pass;                  #work_end    = time.monotonic()
+        pass;                  #print(f('report done: {:.2f} secs', work_end-search_end))
+        pass;                  #print(f('woks   done: {:.2f} secs', work_end-work_start))
         return d(fid='rslt')
        #def do_work
        
@@ -2817,9 +2844,48 @@ def toggle_folding(ed_):
     ed_.folding(app.FOLDING_UNFOLD if folded else app.FOLDING_FOLD, index=fold_i)
    #def toggle_folding
 
-if __name__ == '__main__' :     # Tests
-    Command().show_dlg()    #??
+#####################################
+class CodeTreeAg:
+    """ Agent to build CodeTree for any text and get tree infos
+    """
+    
+    def __init__(self):
+        if app.app_api_version()<'1.0.289': return 
+        self.did= app.dlg_proc(0, app.DLG_CREATE)
+        idc     = app.dlg_proc(self.did, app.DLG_CTL_ADD, "editor")
+        app.dlg_proc(self.did, app.DLG_CTL_PROP_SET, index=idc, prop={'name':'ed', 'x': 0, 'y': 0, 'w':100, 'h':100})
+        idc     = app.dlg_proc(self.did, app.DLG_CTL_ADD, "treeview")
+        app.dlg_proc(self.did, app.DLG_CTL_PROP_SET, index=idc, prop={'name':'tr', 'x':10, 'y':100, 'w':100, 'h':100})
+        self.ed = app.Editor(app.dlg_proc(self.did, app.DLG_CTL_HANDLE, name='ed'))
+        self.tr =            app.dlg_proc(self.did, app.DLG_CTL_HANDLE, name='tr')
+       #def __init__
+       
+    def parse_text(self, text, lexer=''):
+        if app.app_api_version()<'1.0.289': return 
+        self.ed.set_text_all(text)
+        self.ed.set_prop(app.PROP_LEXER_FILE, lexer)
+        ok_scan = self.ed.action(app.EDACTION_LEXER_SCAN, 0)
+        ok_fill = self.ed.action(app.EDACTION_CODETREE_FILL, self.tr)
+    #   print("tid=",tid,"self.ed=",self.ed,"CODETREE_FILL is",ok)
+        nodes = app.tree_proc(self.tr, app.TREE_ITEM_ENUM, 0)
         
+       #def parse_text
+
+   #class CodeTreeAg:
+
+if __name__ == '__main__' :     # Tests
+    pass
+#   Command().show_dlg()    #??
+        
+#   app.app_log(app.LOG_CONSOLE_CLEAR, 'm')
+#   for smk in [smk for smk 
+#       in  sys.modules                             if 'cuda_find_in_files.tests.test_fif' in smk]:
+#       del sys.modules[smk]        # Avoid old module 
+#   import                                              cuda_find_in_files.tests.test_fif
+#   import unittest
+#   suite = unittest.TestLoader().loadTestsFromModule(  cuda_find_in_files.tests.test_fif)
+#   unittest.TextTestRunner(verbosity=0).run(suite)
+
 '''
 ToDo
 [+][kv-kv][25feb16] 'Sort files' with opts No/By date desc/By date asc 

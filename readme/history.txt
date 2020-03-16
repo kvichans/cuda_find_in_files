@@ -1,3 +1,7 @@
+3.1.20 (2020-03-16)
+added: Allow to separate folders in "In folder" with ";"
+added: Auto add Surrounding double quotes for dir with blanks after Browse and similar commands
+
 3.1.20 (2019-07-15)
 fixed: avoid deprecated API
 
