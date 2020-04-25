@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.20 2020-03-16'
+    '3.1.22 2020-04-25'
 ToDo: (see end of file)
 '''
 
@@ -2779,13 +2779,15 @@ class FifD:
                                                                                                                                                                                     
  ,('pb'  ,d(tp='pn'         ,ali=ALI_CL     ,vis=w_rslt                                                                             ))
 #,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,menu=m.do_menu 
- ,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu 
+ ,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down,menu=(lambda aid, ag, data='': False)
+#,('rslt',d(tp='edr',p='pb' ,ali=rslt_ali   ,en =w_rslt     ,w=m.rslt_w     ,w_min=M.RSLT_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu 
                                                             ,h=m.rslt_h     ,h_min=M.RSLT_H             ,on_caret    =m.do_rslt_click                               
                                                                                                         ,on_click_dbl=m.do_click_dbl))
  ,('sptr',d(tp='sp' ,p='pb' ,ali=rslt_ali   ,en =w_rslt     ,x=m.rslt_w+5
                                                             ,y=m.rslt_h+5                                                           )) 
 #,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,menu=m.do_menu  
- ,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu  
+ ,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down,menu=(lambda aid, ag, data='': False)
+#,('srcf',d(tp='edr',p='pb' ,ali=ALI_CL     ,en =w_rslt                     ,w_min=M.SRCF_W ,border='1'                                                             ,on_mouse_down=m.do_mouse_down#,menu=m.do_menu  
                                                                             ,h_min=M.SRCF_H             ,on_click_dbl=m.do_click_dbl))
                                                                                                                                       
  ,('stbr',d(tp='sb'         ,ali=ALI_BT         ))  # 
