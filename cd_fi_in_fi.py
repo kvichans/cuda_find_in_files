@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.22 2020-04-25'
+    '3.1.23 2020-06-01'
 ToDo: (see end of file)
 '''
 
@@ -2030,6 +2030,10 @@ class FifD:
 
         w_rslt  = '0'==self.send_s
         
+        if not self.fold_s:
+            msg_status( f(_('Fill the "{}" field'), self.caps['fold']))
+            return {'fid':'fold'}
+
         if btn_m=='!rep' \
         and app.ID_OK != app.msg_box(
              f(_('Do you want to replace in {}?'), 
