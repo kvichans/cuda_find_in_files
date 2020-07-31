@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.23 2020-06-01'
+    '3.1.24 2020-07-31'
 ToDo: (see end of file)
 '''
 
@@ -2203,7 +2203,7 @@ class FifD:
         frgms   = rpt_info['frgms']
 
         pass;                  #search_end    = time.monotonic()
-        pass;                  #print(f('search done: {:.2f} secs', search_end-work_start))
+        pass;                  #print(f('search done3: {:.2f} secs', search_end-work_start))
 
         ################################
         pass;                  #LOG and log('frgms={}, rpt_data=\n{}',frgms, pf(rpt_data))
@@ -2256,8 +2256,8 @@ class FifD:
         M.rslt_body_r   = -1
         self.srcf_acts('set-no-src')
         pass;                  #work_end    = time.monotonic()
-        pass;                  #print(f('report done: {:.2f} secs', work_end-search_end))
-        pass;                  #print(f('woks   done: {:.2f} secs', work_end-work_start))
+        pass;                  #print(f('report done3: {:.2f} secs', work_end-search_end))
+        pass;                  #print(f('works  done3: {:.2f} secs', work_end-work_start))
         return d(fid='rslt')
        #def do_work
        
@@ -2359,7 +2359,7 @@ class FifD:
                                         ,pred=lambda n:f(nm_tmpl, n) not in lays_d))     # First free #N after len()
                 while True:
                     pass;  #LOG and log('lt_nm={!r}',(lt_nm))
-                    lt_nm   = app.dlg_input('Name to save dialog and controls positions', lt_nm)
+                    lt_nm   = app.dlg_input(_('Name to save dialog and controls positions'), lt_nm)
                     if not lt_nm:   return []
                     lt_nm   = lt_nm.strip()
                     if not lt_nm:   return []
