@@ -279,7 +279,7 @@ def get_translation(plug_file):
             break
     return _
    #def get_translation
-
+_   = get_translation(__file__)
 
 def get_desktop_environment():
     #From http://stackoverflow.com/questions/2035657/what-is-my-current-desktop-environment
