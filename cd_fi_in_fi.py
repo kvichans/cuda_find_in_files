@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '3.1.24 2020-07-31'
+    '3.1.25 2021-07-09'
 ToDo: (see end of file)
 '''
 
@@ -44,7 +44,7 @@ VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
 
 MAX_HIST= apx.get_opt('ui_max_history_edits', 20)
-MENU_CENTERED   = app.MENU_CENTERED if app.app_api_version()>='1.0.27' else 0
+MENU_CENTERED   = app.DMENU_CENTERED if app.app_api_version()>='1.0.27' else 0
 
 CFG_PATH= app.app_path(app.APP_DIR_SETTINGS)+os.sep+CFG_FILE
 
@@ -1970,7 +1970,7 @@ class FifD:
                       1+len(encsN)                  if self.enc_srcf=='='       else \
                         len(encsN)
 #           enc_ind = encsN.index(self.enc_srcf) if self.enc_srcf in encsN else len(encsN)
-            enc_ind = app.dlg_menu(app.MENU_LIST + MENU_CENTERED
+            enc_ind = app.dlg_menu(app.DMENU_LIST + MENU_CENTERED
                     ,   '\n'.join([f('{}\t{}', nm+(f(' ({}) ', al) if al!='' else ''),  cm)  
                                     for nm,al,cm in encsNAC] 
                                  +['<'+_('detect')+'>']
