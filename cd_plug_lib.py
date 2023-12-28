@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '2.1.16 2018-05-14'
+    '2.1.17 2023-12-27'
 Content
     log                 Logger with timing
     get_translation     i18n
@@ -2415,14 +2415,14 @@ def deep_upd(dcts):
 def isint(what):    return isinstance(what, int)
    
 def unfold_line(ed_, row):
-    fold_l  = ed_.folding(app.FOLDING_GET_LIST)
+    fold_l  = ed_.folding(app.FOLDING_ENUM)
     pass;                      #log('row, fold_l={}',(row, fold_l))
     if not fold_l:  return 
 
-    r_fold_l= [(fold_i,fold_d,row-fold_d[0]) 
+    r_fold_l= [(fold_i,fold_d,row-fold_d['y']) 
                 for fold_i,fold_d in enumerate(fold_l) 
-                if fold_d[0] <= row <= fold_d[1] and
-                   fold_d[0] !=        fold_d[1]]         # [0]/[1] line of range start/end
+                if fold_d['y'] <= row <= fold_d['y2'] and
+                   fold_d['y'] !=        fold_d['y2']]         # [0]/[1] line of range start/end
     pass;                      #log('r_fold_l={}',(r_fold_l))
     if not r_fold_l:  return 
 
@@ -2430,7 +2430,7 @@ def unfold_line(ed_, row):
     
     for item in r_fold_l:
         fold_i, fold_d  = item[:2]
-        folded  = fold_d[4]
+        folded  = fold_d['folded']
         if folded:
             ed_.folding(app.FOLDING_UNFOLD, index=fold_i)
    #def unfold_line
