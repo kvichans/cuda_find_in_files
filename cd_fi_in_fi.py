@@ -16,7 +16,7 @@ import  cudax_lib           as apx
 
 from    .cd_plug_lib        import *
 from    .cd_fif_api         import *
-from    .chardet.universaldetector import UniversalDetector
+from    chardet.universaldetector import UniversalDetector
 from    .encodings          import *
 
 odict   = collections.OrderedDict

@@ -14,7 +14,7 @@ import  cudatext            as app
 from    cudatext        import ed
 import  cudax_lib           as apx
 from    .cd_plug_lib        import *
-from    .chardet.universaldetector import UniversalDetector
+from    chardet.universaldetector import UniversalDetector
 
 OrdDict = collections.OrderedDict
 
